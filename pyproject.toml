@@ -1,0 +1,91 @@
+[project]
+name = "tabicl"
+dynamic = ["version"]
+description = "TabICL: A Tabular Foundation Model for In-Context Learning on Large Data"
+readme = "README.md"
+authors = [
+    { name = "Jingang Qu", email = "jingang.qu@inria.fr" },
+    { name = "David Holzmüller" } ,
+    { name = "Marine Le Morvan" } ,
+    { name = "Gaël Varoquaux" } ,
+]
+license = { file = "LICENSE" }
+requires-python = ">=3.9,<3.13"
+keywords = ["tabular data", "foundation model", "TabICL", "in-context learning"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering",
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+    'Programming Language :: Python :: 3',
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "torch>=2.2,<3",  # to enjoy Flash Attention v2
+    "scikit-learn>=1.3.0,<1.7",
+    "numpy",
+    "scipy",
+    "einops>=0.7",
+    "psutil",
+    "tqdm>=4.64.0",
+    "huggingface-hub",
+]
+
+[build-system]
+requires = ["hatchling>=1.26.1"]  # https://github.com/pypa/hatch/issues/1818
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/tabicl/__about__.py"
+
+[project.urls]
+Documentation = "https://github.com/soda-inria/tabicl#readme"
+Issues = "https://github.com/soda-inria/tabicl/issues"
+Source = "https://github.com/soda-inria/tabicl"
+
+[tool.hatch.build.targets.sdist]
+only-include = ["src/tabicl", "LICENSE", "README.md"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tabicl"]
+
+[tool.hatch.envs.default]
+installer = "uv"
+features = []
+
+[tool.hatch.envs.hatch-test]
+default-args = ["tests"]
+installer = "uv"
+features = []
+
+[tool.pytest.ini_options]
+pythonpath = "src"  # to allow importing tabicl instead of src.tabicl
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+    "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:tabicl tests}"
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+parallel = true
+omit = [
+    "src/tabicl/__about__.py",
+]
+
+[tool.coverage.paths]
+tabicl = ["src"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "no cov",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
