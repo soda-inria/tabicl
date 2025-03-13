@@ -48,7 +48,7 @@ Issues = "https://github.com/soda-inria/tabicl/issues"
 Source = "https://github.com/soda-inria/tabicl"
 
 [tool.hatch.build.targets.sdist]
-only-include = ["src/tabicl", "LICENSE", "README.md"]
+only-include = ["src/tabicl", "figures", "LICENSE", "README.md"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tabicl"]
