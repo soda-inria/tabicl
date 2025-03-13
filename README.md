@@ -30,7 +30,7 @@ from tabicl import TabICLClassifier
 
 clf = TabICLClassifier()
 clf.fit(X_train, y_train)  # this is cheap
-clf.predict(y_test)  # in-context learning happens here
+clf.predict(X_test)  # in-context learning happens here
 ```
 
 The code above will automatically download the pre-trained checkpoint (~100MB) from Hugging Face Hub on first use and choose a GPU if available.
