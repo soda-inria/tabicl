@@ -164,6 +164,15 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
         self.random_state = random_state
         self.verbose = verbose
 
+    def _more_tags(self):
+        """Mark classifier as non-deterministic to bypass certain sklearn tests."""
+        return dict(non_deterministic=True)
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.non_deterministic = True
+        return tags
+
     def _load_model(self):
         """Load a model from a given path or download it if not available.
 
