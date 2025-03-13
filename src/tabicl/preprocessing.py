@@ -48,6 +48,7 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
         X : array-like of shape (n_samples, n_features)
             The training data. If a DataFrame, column types are used to determine
             appropriate transformations.
+
         y : None
             Ignored.
 
@@ -61,6 +62,12 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
             self.tfm_ = FunctionTransformer()
             return self
 
+        cat_cols = make_column_selector(dtype_include=["string", "object", "category", "boolean"])(X)
+        cat_pos = [X.columns.get_loc(col) for col in cat_cols]
+
+        numeric_cols = make_column_selector(dtype_include="number")(X)
+        numeric_pos = [X.columns.get_loc(col) for col in numeric_cols]
+
         self.tfm_ = ColumnTransformer(
             transformers=[
                 (
@@ -68,22 +75,23 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
                     OrdinalEncoder(
                         dtype=np.int64, handle_unknown="use_encoded_value", unknown_value=-1, encoded_missing_value=-1
                     ),
-                    make_column_selector(dtype_include=["string", "object", "category", "boolean"]),
+                    cat_pos,
                 ),
-                ("continuous", SimpleImputer(), make_column_selector(dtype_include="number")),
+                ("continuous", SimpleImputer(), numeric_pos),
             ]
         )
         self.tfm_.fit(X)
 
         selected_cols = []
-        for name, tfm, cols in self.tfm_.transformers_:
+        for name, tfm, pos in self.tfm_.transformers_:
             if tfm != "drop":
-                selected_cols.extend(list(cols))
-                print(f"Columns classified as {name}: {list(cols)}")
+                cols = list(X.columns[pos])
+                selected_cols.extend(cols)
+                print(f"Columns classified as {name}: {cols}")
 
-        non_selected_cols = set(X.columns).difference(set(selected_cols))
-        if len(non_selected_cols) >= 1:
-            warnings.warn(f"The following columns are not used due to their data type: {list(non_selected_cols)}")
+        dropped_cols = set(X.columns).difference(set(selected_cols))
+        if len(dropped_cols) >= 1:
+            print(f"The following columns are not used due to their data type: {list(dropped_cols)}")
 
         return self
 
@@ -141,6 +149,7 @@ class UniqueFeatureFilter(TransformerMixin, BaseEstimator):
         ----------
         X : array-like of shape (n_samples, n_features)
             The training data.
+
         y : None
             Ignored.
 
