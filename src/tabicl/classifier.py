@@ -15,6 +15,7 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn.preprocessing import LabelEncoder
 
 from huggingface_hub import hf_hub_download
+from huggingface_hub.utils import LocalEntryNotFoundError
 
 from .preprocessing import TransformToNumerical, EnsembleGenerator
 from .model.tabicl import TabICL
@@ -89,7 +90,7 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
 
     allow_auto_download: bool = True
         Whether to allow automatic download if the pretrained checkpoint cannot be found at the
-        specified model_path. Note that if model_path is None, automatic download is always enabled.
+        specified `model_path`.
 
     device : Optional[str or torch.device], default=None
         Device to use for inference. If None, defaults to CUDA if available, else CPU.
@@ -184,11 +185,22 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
         filename = "tabicl-classifier.ckpt"
 
         if self.model_path is None:
-            model_path = hf_hub_download(repo_id=repo_id, filename=filename)
-            checkpoint = torch.load(model_path, map_location="cpu", weights_only=True)
+            try:
+                model_path = hf_hub_download(repo_id=repo_id, filename=filename, local_files_only=True)
+                checkpoint = torch.load(model_path, map_location="cpu", weights_only=True)
+            except LocalEntryNotFoundError:
+                if self.allow_auto_download:
+                    print(f"Checkpoint not cached. Downloading from Hugging Face Hub ({repo_id})")
+                    model_path = hf_hub_download(repo_id=repo_id, filename=filename)
+                    checkpoint = torch.load(model_path, map_location="cpu", weights_only=True)
+                else:
+                    raise ValueError(
+                        f"Checkpoint not cached and automatic download is disabled.\n"
+                        f"Set allow_auto_download=True to download the checkpoint from Hugging Face Hub ({repo_id})."
+                    )
         else:
             if isinstance(self.model_path, str):
-                self.model_path = Path(self.model_path)
+                model_path = Path(self.model_path)
             else:
                 model_path = self.model_path
 
@@ -196,14 +208,16 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
                 checkpoint = torch.load(model_path, map_location="cpu", weights_only=True)
             else:
                 if self.allow_auto_download:
+                    print(f"Checkpoint not found. Downloading from Hugging Face Hub ({repo_id}) to {model_path}")
                     model_path.parent.mkdir(parents=True, exist_ok=True)
-                    hf_hub_download(repo_id=repo_id, filename=filename, local_dir=model_path.parent)
+                    cache_path = hf_hub_download(repo_id=repo_id, filename=filename, local_dir=model_path.parent)
+                    Path(cache_path).rename(model_path)
                     checkpoint = torch.load(model_path, map_location="cpu", weights_only=True)
                 else:
                     raise ValueError(
-                        f"Checkpoint not found at {model_path} and automatic download is disabled. "
+                        f"Checkpoint not found at {model_path} and automatic download is disabled.\n"
                         f"Either provide a valid checkpoint path, or set auto_download=True to download "
-                        f"the model from the Hugging Face Hub."
+                        f"the checkpoint from Hugging Face Hub ({repo_id})."
                     )
 
         assert "config" in checkpoint, "The checkpoint doesn't contain the model configuration."
