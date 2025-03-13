@@ -250,7 +250,7 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
             # Workaround for compatibility with scikit-learn prior to v1.6
             X, y = self._validate_data(X, y, dtype=None, cast_to_ndarray=False)
         else:
-            X, y = self._validate_data(X, y, dtype=None)
+            X, y = self._validate_data(X, y, dtype=None, skip_check_array=True)
 
         check_classification_targets(y)
 
@@ -385,7 +385,7 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
             # Workaround for compatibility with scikit-learn prior to v1.6
             X = self._validate_data(X, reset=False, dtype=None, cast_to_ndarray=False)
         else:
-            X = self._validate_data(X, reset=False, dtype=None)
+            X = self._validate_data(X, reset=False, dtype=None, skip_check_array=True)
 
         X = self.X_encoder_.transform(X)
 
