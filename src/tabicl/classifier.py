@@ -103,6 +103,12 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
     verbose : bool, default=False
         Whether to print detailed information during inference
 
+    n_jobs : int | None = None
+        Number of threads to use for PyTorch in case the model is run on CPU.
+        None means using the PyTorch default, which is the number of physical CPU cores.
+        Negative numbers mean that max(1, n_logical_cores + 1 + n_jobs) threads will be used.
+        In particular, n_jobs=-1 means that all logical cores will be used.
+
     Attributes
     ----------
     classes_ : ndarray of shape (n_classes,)
@@ -131,22 +137,23 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
     """
 
     def __init__(
-        self,
-        n_estimators: int = 32,
-        norm_methods: Optional[str | List[str]] = None,
-        feat_shuffle_method: str = "latin",
-        class_shift: bool = True,
-        outlier_threshold: float = 4.0,
-        softmax_temperature: float = 0.9,
-        average_logits: bool = True,
-        use_hierarchical: bool = True,
-        use_amp: bool = True,
-        batch_size: Optional[int] = 8,
-        model_path: Optional[str | Path] = None,
-        allow_auto_download: bool = True,
-        device: Optional[str | torch.device] = None,
-        random_state: int | None = 42,
-        verbose: bool = False,
+            self,
+            n_estimators: int = 32,
+            norm_methods: Optional[str | List[str]] = None,
+            feat_shuffle_method: str = "latin",
+            class_shift: bool = True,
+            outlier_threshold: float = 4.0,
+            softmax_temperature: float = 0.9,
+            average_logits: bool = True,
+            use_hierarchical: bool = True,
+            use_amp: bool = True,
+            batch_size: Optional[int] = 8,
+            model_path: Optional[str | Path] = None,
+            allow_auto_download: bool = True,
+            device: Optional[str | torch.device] = None,
+            random_state: int | None = 42,
+            verbose: bool = False,
+            n_jobs: int | None = None,
     ):
         self.n_estimators = n_estimators
         self.norm_methods = norm_methods
@@ -163,6 +170,7 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
         self.device = device
         self.random_state = random_state
         self.verbose = verbose
+        self.n_jobs = n_jobs
 
     def _more_tags(self):
         """Mark classifier as non-deterministic to bypass certain sklearn tests."""
@@ -403,6 +411,24 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
             # Reject 1D arrays to maintain sklearn compatibility
             raise ValueError(f"The provided input X is one-dimensional. Reshape your data.")
 
+        if self.n_jobs is not None:
+            assert self.n_jobs != 0
+            old_n_threads = torch.get_num_threads()
+
+            import multiprocessing as mp
+            n_logical_cores = mp.cpu_count()
+
+            if self.n_jobs > 0:
+                if self.n_jobs > n_logical_cores:
+                    warnings.warn(
+                        f'TabICL got n_jobs={self.n_jobs} but there are only {n_logical_cores} logical cores available.'
+                        f' Only {n_logical_cores} threads will be used.')
+                n_threads = max(n_logical_cores, self.n_jobs)
+            else:
+                n_threads = max(1, mp.cpu_count() + 1 + self.n_jobs)
+
+            torch.set_num_threads(n_threads)
+
         # Preserve DataFrame structure to retain column names and types for correct feature transformation
         if OLD_SKLEARN:
             # Workaround for compatibility with scikit-learn prior to v1.6
@@ -446,6 +472,9 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
         # Convert logits to probabilities if required
         if self.average_logits:
             avg = self.softmax(avg, axis=-1, temperature=self.softmax_temperature)
+
+        if self.n_jobs is not None:
+            torch.set_num_threads(old_n_threads)
 
         return avg
 
