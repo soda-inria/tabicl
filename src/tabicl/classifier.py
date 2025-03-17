@@ -43,7 +43,8 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
         Normalization methods to apply:
         - 'none': No normalization
         - 'power': Yeo-Johnson power transform
-        - 'quantile': Transform features using quantiles information
+        - 'quantile': Transform features to an approximately normal distribution.
+        - 'quantile_rtdl': Version of the quantile transform commonly used in papers of the RTDL group.
         - 'robust': Scale using median and quantiles
         Can be a single string or a list of methods to use across ensemble members.
         When set to None, it will use ["none", "power"].
