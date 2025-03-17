@@ -55,9 +55,11 @@ clf = TabICLClassifier(
   use_amp=True,                     # use automatic mixed precision for faster inference
   model_path=None,                  # where the model checkpoint is stored
   allow_auto_download=True,         # whether automatic download to the specified path is allowed
-  device='cpu',                     # specify device for inference
+  device=None,                      # specify device for inference
   random_state=42,                  # random seed for reproducibility
-  verbose=False                     # print detailed information during inference
+  n_jobs=None,                      # number of threads to use for PyTorch
+  verbose=False,                    # print detailed information during inference
+  inference_config=None,            # inference configuration for fine-grained control
 )
 ```
 
@@ -72,6 +74,7 @@ TabICL includes memory management to handle large datasets:
 
 ## Preprocessing
 
+### Simple built-in preprocessing
 If the input `X` to TabICL is a pandas DataFrame, TabICL will automatically:
 - Detect and ordinal encode categorical columns (including string, object, category, and boolean types)
 - Create a separate category for missing values in categorical features
@@ -84,7 +87,40 @@ For both input types, TabICL applies additional preprocessing:
 - Feature scaling and normalization
 - Feature shuffling for ensemble diversity
 
----
+### Advanced data preprocessing with skrub
+
+Real-world datasets often contain complex heterogeneous data that benefits from more sophisticated preprocessing. For these scenarios, we recommend [skrub](https://skrub-data.org/stable/index.html), a powerful library designed specifically for advanced tabular data preparation.
+
+**Why use skrub?**
+- Handles diverse data types (numerical, categorical, text, datetime, etc.)
+- Provides robust preprocessing for dirty data
+- Offers sophisticated feature engineering capabilities
+- Supports multi-table integration and joins
+
+#### Installation
+
+```bash
+pip install skrub -U
+```
+
+#### Basic Integration
+
+Use skrub's [TableVectorizer](https://skrub-data.org/stable/reference/generated/skrub.TableVectorizer.html) to transform your raw data before passing it to TabICLClassifier:
+
+```python
+from skrub import TableVectorizer
+from tabicl import TabICLClassifier
+from sklearn.pipeline import make_pipeline
+
+pipeline = make_pipeline(
+    TableVectorizer(),  # Automatically handles various data types
+    TabICLClassifier()
+)
+
+pipeline.fit(X_train, y_train)  # X should be a DataFrame
+predictions = pipeline.predict(X_test)
+```
+
 
 ## Key Features and Considerations:
 
@@ -102,7 +138,7 @@ For both input types, TabICL applies additional preprocessing:
   - TabICL is pretrained on datasets with up to 100 features.
   - TabICL can accommodate any number of features theoretically.
 
-- **Number of classes**: 
+- **Number of classes**:
   - TabICL is pretrained on datasets with up to 10 classes, so it natively supports a maximum of 10 classes.
   - However, TabICL can handle any number of classes thanks to its in-built hierarchical classification.
 
