@@ -8,6 +8,7 @@ from torch import nn, Tensor
 
 from .encoders import Encoder
 from .inference import InferenceManager
+from ..config import MgrConfig
 
 
 class RowInteraction(nn.Module):
@@ -83,14 +84,7 @@ class RowInteraction(nn.Module):
 
         self.out_ln = nn.LayerNorm(embed_dim) if norm_first else nn.Identity()
 
-        self.inference_mgr = InferenceManager(
-            enc_name="tf_row",
-            out_dim=embed_dim * self.num_cls,
-            out_no_seq=True,
-            min_batch_size=1,
-            safety_factor=0.8,
-            offload=False,
-        )
+        self.inference_mgr = InferenceManager(enc_name="tf_row", out_dim=embed_dim * self.num_cls, out_no_seq=True)
 
     def _aggregate_embeddings(self, embeddings: Tensor) -> Tensor:
         """Process a batch of rows through a transformer encoder.
@@ -127,9 +121,7 @@ class RowInteraction(nn.Module):
     def forward(
         self,
         embeddings: Tensor,
-        device: Optional[str | torch.device] = None,
-        use_amp: bool = True,
-        verbose: bool = False,
+        mgr_config: MgrConfig = None,
     ) -> Tensor:
         """Transform feature embeddings into row representations.
 
@@ -143,15 +135,8 @@ class RowInteraction(nn.Module):
              - C is the number of class tokens
              - E is the embedding dimension
 
-        device : Optional[str or torch.device], default=None
-            Device to use for inference. If None, defaults to torch.device("cuda") if available,
-            else torch.device("cpu")
-
-        use_amp : bool, default=True
-            Whether to enable automatic mixed precision during inference
-
-        verbose : bool, default=False
-            Whether to print detailed information during inference
+        mgr_config : MgrConfig, default=None
+            Configuration for InferenceManager
 
         Returns
         -------
@@ -159,7 +144,17 @@ class RowInteraction(nn.Module):
             Row representations of shape (B, T, C*E) where C is the number of class tokens
         """
         # Configure inference parameters
-        self.inference_mgr.configure_inference(device=device, use_amp=use_amp, verbose=verbose)
+        if mgr_config is None:
+            mgr_config = MgrConfig(
+                min_batch_size=1,
+                safety_factor=0.8,
+                offload=False,
+                auto_offload_pct=0.5,
+                device=None,
+                use_amp=True,
+                verbose=False,
+            )
+        self.inference_mgr.configure(**mgr_config)
 
         B, T = embeddings.shape[:2]
         cls_tokens = self.cls_tokens.expand(B, T, self.num_cls, self.embed_dim)

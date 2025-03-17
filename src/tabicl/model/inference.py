@@ -154,55 +154,49 @@ class InferenceManager:
     out_no_seq : bool, default=False
         Whether to remove sequence dimension from output tensor. If True,
         output shape will be (..., out_dim) instead of (..., seq_len, out_dim)
-
-    min_batch_size : int, default=1
-        Minimum batch size to try before raising an error. If OOM occurs even with
-        this batch size, inference cannot proceed.
-
-    safety_factor : float, default=0.8
-        Factor (0-1) to multiply estimated batch size by for conservative memory usage.
-        Lower values are safer but may result in more batches.
-
-    offload : bool or Literal["auto"], default="auto"
-        Whether to offload intermediate results to CPU to save GPU memory.
-        Options:
-        - True: Always offload to CPU
-        - False: Keep all tensors on GPU
-        - "auto": Offload if output size exceeds `auto_offload_pct` of available GPU memory
-          and enough CPU memory is available
-
-    auto_offload_pct : float, default=0.5
-        Threshold for automatic offloading when offload="auto".
-        If output size exceeds this percentage of available GPU memory, intermediate
-        results are offloaded to CPU in order to save GPU memory.
     """
 
-    def __init__(
+    def __init__(self, enc_name: str, out_dim: int, out_no_seq: bool = False):
+        self.enc_name = enc_name
+        self.out_dim = out_dim
+        self.out_no_seq = out_no_seq
+        self._is_configured = False  # Track if configure_inference has been called
+
+    def configure(
         self,
-        enc_name: str,
-        out_dim: int,
-        out_no_seq: bool = False,
         min_batch_size: int = 1,
         safety_factor: float = 0.8,
         offload: bool | Literal["auto"] = "auto",
         auto_offload_pct: float = 0.5,
-    ):
-        self.enc_name = enc_name
-        self.out_dim = out_dim
-        self.out_no_seq = out_no_seq
-        self.min_batch_size = min_batch_size
-        self.safety_factor = safety_factor
-        self.offload = offload
-        self.auto_offload_pct = auto_offload_pct
-        self._is_configured = False  # Track if configure_inference has been called
-
-    def configure_inference(
-        self, device: Optional[str | torch.device] = None, use_amp: bool = True, verbose: bool = False
+        device: Optional[str | torch.device] = None,
+        use_amp: bool = True,
+        verbose: bool = False,
     ):
         """Configure inference parameters.
 
         Parameters
         ----------
+        min_batch_size : int, default=1
+            Minimum batch size to try before raising an error. If OOM occurs even with
+            this batch size, inference cannot proceed.
+
+        safety_factor : float, default=0.8
+            Factor (0-1) to multiply estimated batch size by for conservative memory usage.
+            Lower values are safer but may result in more batches.
+
+        offload : bool or Literal["auto"], default="auto"
+            Whether to offload intermediate results to CPU to save GPU memory.
+            Options:
+            - True: Always offload to CPU
+            - False: Keep all tensors on GPU
+            - "auto": Offload if output size exceeds `auto_offload_pct` of available GPU memory
+            and enough CPU memory is available
+
+        auto_offload_pct : float, default=0.5
+            Threshold for automatic offloading when offload="auto".
+            If output size exceeds this percentage of available GPU memory, intermediate
+            results are offloaded to CPU in order to save GPU memory.
+
         device : Optional[str or torch.device], default=None
             Device to use for inference. If None, defaults to torch.device("cuda") if available,
             else torch.device("cpu")
@@ -213,6 +207,14 @@ class InferenceManager:
         verbose : bool, default=False
             Whether to show progress bars and logging information during inference
         """
+
+        self.min_batch_size = min_batch_size
+        self.safety_factor = safety_factor
+        self.offload = offload
+        self.auto_offload_pct = auto_offload_pct
+        self.use_amp = use_amp
+        self.verbose = verbose
+
         if device is None:
             self.exe_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         elif isinstance(device, str):
@@ -220,8 +222,6 @@ class InferenceManager:
         else:
             self.exe_device = device
 
-        self.use_amp = use_amp
-        self.verbose = verbose
         self._is_configured = True  # Mark as configured
 
     def to_exe_device(self, tensor: Tensor) -> Tensor:
@@ -359,12 +359,26 @@ class InferenceManager:
             )
 
         if not auto_batch:
+            # Move inputs to execution device
+            inputs_on_exe = {}
+            for name, value in inputs.items():
+                if isinstance(value, torch.Tensor):
+                    inputs_on_exe[name] = self.to_exe_device(value)
+                else:
+                    inputs_on_exe[name] = value
+
             with torch.no_grad():
                 if self.use_amp and self.exe_device.type == "cuda":
                     with torch.autocast(device_type="cuda"):
-                        return forward_fn(**inputs)
+                        outputs = forward_fn(**inputs_on_exe)
                 else:
-                    return forward_fn(**inputs)
+                    outputs = forward_fn(**inputs_on_exe)
+
+            # Move to CPU if needed
+            if self.offload:
+                return outputs.to(device="cpu")
+            else:
+                return outputs
 
         # CPU does not support batching temporarily
         if self.exe_device.type == "cpu":
@@ -433,12 +447,20 @@ class InferenceManager:
 
         # If we can process all data in one batch, do it
         if batch_size >= total_bs:
+            # Move inputs to execution device
+            inputs_on_exe = {}
+            for name, value in inputs.items():
+                if isinstance(value, torch.Tensor):
+                    inputs_on_exe[name] = self.to_exe_device(value)
+                else:
+                    inputs_on_exe[name] = value
+
             with torch.no_grad():
                 if self.use_amp and self.exe_device.type == "cuda":
                     with torch.autocast(device_type="cuda"):
-                        outputs = forward_fn(**inputs)
+                        outputs = forward_fn(**inputs_on_exe)
                 else:
-                    outputs = forward_fn(**inputs)
+                    outputs = forward_fn(**inputs_on_exe)
 
             # Move to CPU if needed
             if self.offload:

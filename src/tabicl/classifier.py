@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 from pathlib import Path
 from packaging import version
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 import numpy as np
 import torch
@@ -18,7 +18,9 @@ from huggingface_hub import hf_hub_download
 from huggingface_hub.utils import LocalEntryNotFoundError
 
 from .preprocessing import TransformToNumerical, EnsembleGenerator
+from .config import InferenceConfig
 from .model.tabicl import TabICL
+
 
 warnings.filterwarnings("ignore", category=FutureWarning, module="sklearn")
 OLD_SKLEARN = version.parse(sklearn.__version__) < version.parse("1.6")
@@ -100,14 +102,37 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
         Random seed for reproducibility of ensemble generation, affecting feature
         shuffling and other randomized operations.
 
-    verbose : bool, default=False
-        Whether to print detailed information during inference
-
     n_jobs : int | None = None
         Number of threads to use for PyTorch in case the model is run on CPU.
         None means using the PyTorch default, which is the number of physical CPU cores.
         Negative numbers mean that max(1, n_logical_cores + 1 + n_jobs) threads will be used.
         In particular, n_jobs=-1 means that all logical cores will be used.
+
+    verbose : bool, default=False
+        Whether to print detailed information during inference
+
+    inference_config: Optional[InferenceConfig | Dict[str, Dict[str, Any]]] = None
+        Configuration for inference settings. This parameter provides fine-grained control
+        over the three transformers in TabICL (column-wise, row-wise, and in-context learning).
+
+        WARNING: This parameter should only be used by advanced users who understand the internal
+        architecture of TabICL and need precise control over inference.
+
+        When None (default):
+            - A new InferenceConfig object is created with default settings
+            - The `device`, `use_amp`, and `verbose` parameters from the class initialization are
+              applied to all components (COL_CONFIG, ROW_CONFIG, ICL_CONFIG)
+
+        When Dict with allowed top-level keys "COL_CONFIG", "ROW_CONFIG", "ICL_CONFIG":
+            - A new InferenceConfig object is created with default settings
+            - Any values explicitly specified in the dictionary will override default defaults
+            - `device`, `use_amp`, and `verbose` from the class initialization are used if they are
+              not specified in the dictionary
+
+        When InferenceConfig:
+            - The provided InferenceConfig object is used directly without modification
+            - `device`, `use_amp`, and `verbose` from the class initialization are ignored
+            - All settings must be explicitly defined in the provided InferenceConfig object
 
     Attributes
     ----------
@@ -134,26 +159,30 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
 
     device_ : torch.device
         The device where the model is loaded and computations are performed.
+
+    inference_config_ : InferenceConfig
+        The inference configuration.
     """
 
     def __init__(
-            self,
-            n_estimators: int = 32,
-            norm_methods: Optional[str | List[str]] = None,
-            feat_shuffle_method: str = "latin",
-            class_shift: bool = True,
-            outlier_threshold: float = 4.0,
-            softmax_temperature: float = 0.9,
-            average_logits: bool = True,
-            use_hierarchical: bool = True,
-            use_amp: bool = True,
-            batch_size: Optional[int] = 8,
-            model_path: Optional[str | Path] = None,
-            allow_auto_download: bool = True,
-            device: Optional[str | torch.device] = None,
-            random_state: int | None = 42,
-            verbose: bool = False,
-            n_jobs: int | None = None,
+        self,
+        n_estimators: int = 32,
+        norm_methods: Optional[str | List[str]] = None,
+        feat_shuffle_method: str = "latin",
+        class_shift: bool = True,
+        outlier_threshold: float = 4.0,
+        softmax_temperature: float = 0.9,
+        average_logits: bool = True,
+        use_hierarchical: bool = True,
+        use_amp: bool = True,
+        batch_size: Optional[int] = 8,
+        model_path: Optional[str | Path] = None,
+        allow_auto_download: bool = True,
+        device: Optional[str | torch.device] = None,
+        random_state: int | None = 42,
+        n_jobs: Optional[int] = None,
+        verbose: bool = False,
+        inference_config: Optional[InferenceConfig | Dict] = None,
     ):
         self.n_estimators = n_estimators
         self.norm_methods = norm_methods
@@ -168,9 +197,10 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
         self.model_path = model_path
         self.allow_auto_download = allow_auto_download
         self.device = device
+        self.n_jobs = n_jobs
         self.random_state = random_state
         self.verbose = verbose
-        self.n_jobs = n_jobs
+        self.inference_config = inference_config
 
     def _more_tags(self):
         """Mark classifier as non-deterministic to bypass certain sklearn tests."""
@@ -292,9 +322,32 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
         else:
             self.device_ = self.device
 
+        # Load the pre-trained TabICL model
         self._load_model()
         self.model_.to(self.device_)
 
+        # Inference configuration
+        init_config = {
+            "COL_CONFIG": {"device": self.device_, "use_amp": self.use_amp, "verbose": self.verbose},
+            "ROW_CONFIG": {"device": self.device_, "use_amp": self.use_amp, "verbose": self.verbose},
+            "ICL_CONFIG": {"device": self.device_, "use_amp": self.use_amp, "verbose": self.verbose},
+        }
+        # If None, default settings in InferenceConfig
+        if self.inference_config is None:
+            self.inference_config_ = InferenceConfig()
+            self.inference_config_.update_from_dict(init_config)
+        # If dict, update default settings
+        elif isinstance(self.inference_config, dict):
+            self.inference_config_ = InferenceConfig()
+            for key, value in self.inference_config.items():
+                if key in init_config:
+                    init_config[key].update(value)
+            self.inference_config_.update_from_dict(init_config)
+        # If InferenceConfig, use as is
+        else:
+            self.inference_config_ = self.inference_config
+
+        # Encode class labels
         self.y_encoder_ = LabelEncoder()
         y = self.y_encoder_.fit_transform(y)
         self.classes_ = self.y_encoder_.classes_
@@ -312,9 +365,11 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
                 f"natively supported by the model. Therefore, hierarchical classification is used."
             )
 
+        #  Transform input features
         self.X_encoder_ = TransformToNumerical()
         X = self.X_encoder_.fit_transform(X)
 
+        # Fit ensemble generator to create multiple dataset views
         self.ensemble_generator_ = EnsembleGenerator(
             n_estimators=self.n_estimators,
             norm_methods=self.norm_methods or ["none", "power"],
@@ -377,9 +432,7 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
                     feature_shuffles=pattern_batch,
                     return_logits=True if self.average_logits else False,
                     softmax_temperature=self.softmax_temperature,
-                    device=self.device_,
-                    use_amp=self.use_amp,
-                    verbose=self.verbose,
+                    inference_config=self.inference_config_,
                 )
             outputs.append(out.cpu().numpy())
 
@@ -416,13 +469,15 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
             old_n_threads = torch.get_num_threads()
 
             import multiprocessing as mp
+
             n_logical_cores = mp.cpu_count()
 
             if self.n_jobs > 0:
                 if self.n_jobs > n_logical_cores:
                     warnings.warn(
-                        f'TabICL got n_jobs={self.n_jobs} but there are only {n_logical_cores} logical cores available.'
-                        f' Only {n_logical_cores} threads will be used.')
+                        f"TabICL got n_jobs={self.n_jobs} but there are only {n_logical_cores} logical cores available."
+                        f" Only {n_logical_cores} threads will be used."
+                    )
                 n_threads = max(n_logical_cores, self.n_jobs)
             else:
                 n_threads = max(1, mp.cpu_count() + 1 + self.n_jobs)

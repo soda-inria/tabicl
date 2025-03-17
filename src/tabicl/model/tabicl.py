@@ -7,6 +7,7 @@ from torch import nn, Tensor
 from .embedding import ColEmbedding
 from .interaction import RowInteraction
 from .learning import ICLearning
+from ..config import InferenceConfig
 
 
 class TabICL(nn.Module):
@@ -151,9 +152,7 @@ class TabICL(nn.Module):
         embed_with_test: bool = False,
         return_logits: bool = True,
         softmax_temperature: float = 0.9,
-        device: Optional[str | torch.device] = None,
-        use_amp: bool = True,
-        verbose: bool = False,
+        inference_config: InferenceConfig = None,
     ) -> Tensor:
         """Column-wise embedding -> row-wise interaction -> dataset-wise in-context learning.
 
@@ -185,15 +184,8 @@ class TabICL(nn.Module):
         softmax_temperature : float, default=0.9
             Temperature for the softmax function
 
-        device : Optional[str or torch.device], default=None
-            Device to use for inference. If None, defaults to torch.device("cuda") if available,
-            else torch.device("cpu")
-
-        use_amp : bool, default=True
-            Whether to enable automatic mixed precision during inference
-
-        verbose : bool, default=False
-            Whether to print detailed information during inference
+        inference_config: InferenceConfig
+            Inferenece configuration
 
         Returns
         -------
@@ -205,19 +197,18 @@ class TabICL(nn.Module):
         train_size = y_train.shape[1]
         assert train_size <= X.shape[1], "Number of training samples exceeds total samples"
 
+        if inference_config is None:
+            inference_config = InferenceConfig()
+
         # Column-wise embedding -> Row-wise interaction
         representations = self.row_interactor(
             self.col_embedder(
                 X,
                 train_size=None if embed_with_test else train_size,
                 feature_shuffles=feature_shuffles,
-                device=device,
-                use_amp=use_amp,
-                verbose=verbose,
+                mgr_config=inference_config.COL_CONFIG,
             ),
-            device=device,
-            use_amp=use_amp,
-            verbose=verbose,
+            mgr_config=inference_config.ROW_CONFIG,
         )
 
         # Dataset-wise in-context learning
@@ -226,9 +217,7 @@ class TabICL(nn.Module):
             y_train=y_train,
             return_logits=return_logits,
             softmax_temperature=softmax_temperature,
-            device=device,
-            use_amp=use_amp,
-            verbose=verbose,
+            mgr_config=inference_config.ICL_CONFIG,
         )
 
         return out

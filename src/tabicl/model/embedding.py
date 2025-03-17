@@ -8,6 +8,7 @@ from torch import nn, Tensor
 from .layers import SkippableLinear
 from .encoders import SetTransformer
 from .inference import InferenceManager
+from ..config import MgrConfig
 
 
 class ColEmbedding(nn.Module):
@@ -88,9 +89,7 @@ class ColEmbedding(nn.Module):
         self.out_b = SkippableLinear(embed_dim, embed_dim)
         self.ln_b = nn.LayerNorm(embed_dim) if norm_first else nn.Identity()
 
-        self.inference_mgr = InferenceManager(
-            enc_name="tf_col", out_dim=embed_dim, min_batch_size=1, safety_factor=0.8, offload="auto"
-        )
+        self.inference_mgr = InferenceManager(enc_name="tf_col", out_dim=embed_dim)
 
     @staticmethod
     def map_feature_shuffle(reference_pattern: List[int], other_pattern: List[int]) -> List[int]:
@@ -149,9 +148,7 @@ class ColEmbedding(nn.Module):
         X: Tensor,
         train_size: Optional[int] = None,
         feature_shuffles: Optional[List[List[int]]] = None,
-        device: Optional[str | torch.device] = None,
-        use_amp: bool = True,
-        verbose: bool = False,
+        mgr_config: MgrConfig = None,
     ) -> Tensor:
         """Transform input table into embeddings.
 
@@ -173,15 +170,8 @@ class ColEmbedding(nn.Module):
             When provided, indicates that X contains the same table with different feature orders.
             In this case, embeddings are computed once and then shuffled accordingly.
 
-        device : Optional[str or torch.device], default=None
-            Device to use for inference. If None, defaults to torch.device("cuda") if available,
-            else torch.device("cpu")
-
-        use_amp : bool, default=True
-            Whether to enable automatic mixed precision during inference
-
-        verbose : bool, default=False
-            Whether to print detailed information during inference
+        mgr_config : MgrConfig, default=None
+            Configuration for InferenceManager
 
         Returns
         -------
@@ -191,7 +181,17 @@ class ColEmbedding(nn.Module):
              - E is embedding dimension
         """
         # Configure inference parameters
-        self.inference_mgr.configure_inference(device=device, use_amp=use_amp, verbose=verbose)
+        if mgr_config is None:
+            mgr_config = MgrConfig(
+                min_batch_size=1,
+                safety_factor=0.8,
+                offload="auto",
+                auto_offload_pct=0.5,
+                device=None,
+                use_amp=True,
+                verbose=False,
+            )
+        self.inference_mgr.configure(**mgr_config)
 
         if feature_shuffles is None:
             # Processing all tables

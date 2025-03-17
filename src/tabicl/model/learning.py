@@ -9,6 +9,7 @@ from torch import nn, Tensor
 from .layers import ClassNode, OneHotAndLinear
 from .encoders import Encoder
 from .inference import InferenceManager
+from ..config import MgrConfig
 
 
 class ICLearning(nn.Module):
@@ -79,9 +80,7 @@ class ICLearning(nn.Module):
         self.y_encoder = OneHotAndLinear(max_classes, d_model)
         self.decoder = nn.Sequential(nn.Linear(d_model, d_model * 2), nn.GELU(), nn.Linear(d_model * 2, max_classes))
 
-        self.inference_mgr = InferenceManager(
-            enc_name="tf_icl", out_dim=max_classes, min_batch_size=1, safety_factor=0.8, offload=False
-        )
+        self.inference_mgr = InferenceManager(enc_name="tf_icl", out_dim=max_classes)
 
     def _grouping(self, num_classes: int) -> tuple[Tensor, int]:
         """Divide classes into balanced groups for hierarchical classification.
@@ -346,9 +345,7 @@ class ICLearning(nn.Module):
         y_train: Tensor,
         return_logits: bool = True,
         softmax_temperature: float = 0.9,
-        device: Optional[str | torch.device] = None,
-        use_amp: bool = True,
-        verbose: bool = False,
+        mgr_config: MgrConfig = None,
     ) -> Tensor:
         """In-context learning based on learned row representations.
 
@@ -370,15 +367,8 @@ class ICLearning(nn.Module):
         softmax_temperature : float, default=0.9
             Temperature for the softmax function
 
-        device : Optional[str or torch.device], default=None
-            Device to use for inference. If None, defaults to torch.device("cuda") if available,
-            else torch.device("cpu")
-
-        use_amp : bool, default=True
-            Whether to enable automatic mixed precision during inference
-
-        verbose : bool, default=False
-            Whether to print detailed information during inference
+        mgr_config : MgrConfig, default=None
+            Configuration for InferenceManager
 
         Returns
         -------
@@ -386,7 +376,17 @@ class ICLearning(nn.Module):
             Raw logits or probabilities for test samples of shape (B, T-train_size, num_classes)
         """
         # Configure inference parameters
-        self.inference_mgr.configure_inference(device=device, use_amp=use_amp, verbose=verbose)
+        if mgr_config is None:
+            mgr_config = MgrConfig(
+                min_batch_size=1,
+                safety_factor=0.8,
+                offload=False,
+                auto_offload_pct=0.5,
+                device=None,
+                use_amp=True,
+                verbose=False,
+            )
+        self.inference_mgr.configure(**mgr_config)
 
         num_classes = len(torch.unique(y_train[0]))
         assert all(
@@ -403,6 +403,10 @@ class ICLearning(nn.Module):
             out = []
             train_size = y_train.shape[1]
             for ri, yi in zip(R, y_train):
+                if mgr_config.offload:
+                    ri, yi = ri.cpu(), yi.cpu()
+                else:
+                    ri, yi = ri.to(mgr_config.device), yi.to(mgr_config.device)
                 self._fit_hierarchical(ri[:train_size], yi)
                 probs = self._predict_hierarchical(ri[train_size:])
                 out.append(probs)
