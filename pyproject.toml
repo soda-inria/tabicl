@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "TabICL: A Tabular Foundation Model for In-Context Learning on Large Data"
 readme = "README.md"
 authors = [
-    { name = "Jingang Qu", email = "jingang.qu@inria.fr" },
+    { name = "Jingang Qu" },
     { name = "David Holzmüller" } ,
     { name = "Marine Le Morvan" } ,
     { name = "Gaël Varoquaux" } ,
