@@ -87,7 +87,7 @@ For both input types, TabICL applies additional preprocessing:
 - Feature scaling and normalization
 - Feature shuffling for ensemble diversity
 
-### Advanced data preprocessing with skrub
+### Advanced data preprocessing with skrub <img src="https://skrub-data.github.io/stable/_static/skrub.svg" width="8%" alt="skrub logo" style="display: inline; margin-left: 5px; margin-right: 5px;">
 
 Real-world datasets often contain complex heterogeneous data that benefits from more sophisticated preprocessing. For these scenarios, we recommend [skrub](https://skrub-data.org/stable/index.html), a powerful library designed specifically for advanced tabular data preparation.
 
