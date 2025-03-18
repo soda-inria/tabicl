@@ -367,7 +367,7 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
             )
 
         #  Transform input features
-        self.X_encoder_ = TransformToNumerical()
+        self.X_encoder_ = TransformToNumerical(verbose=self.verbose)
         X = self.X_encoder_.fit_transform(X)
 
         # Fit ensemble generator to create multiple dataset views

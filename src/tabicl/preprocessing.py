@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import random
 import itertools
-import warnings
 from collections import OrderedDict
 from copy import deepcopy
 from typing import List, Optional
@@ -13,11 +12,12 @@ from sklearn.compose import ColumnTransformer, make_column_selector
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import (
+    FunctionTransformer,
+    OrdinalEncoder,
+    StandardScaler,
+    PowerTransformer,
     QuantileTransformer,
     RobustScaler,
-    PowerTransformer,
-    OrdinalEncoder,
-    FunctionTransformer, StandardScaler,
 )
 from sklearn.utils.validation import check_is_fitted
 
@@ -30,7 +30,8 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    None
+    verbose : bool, default=False
+        Whether to print information about column classifications.
 
     Attributes
     ----------
@@ -40,6 +41,9 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
            columns and SimpleImputer for numeric columns
          - If input is not a DataFrame: A FunctionTransformer that passes data through unchanged
     """
+
+    def __init__(self, verbose: bool = False):
+        self.verbose = verbose
 
     def fit(self, X, y=None):
         """Configure transformers for different column types in the input data.
@@ -83,16 +87,17 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
         )
         self.tfm_.fit(X)
 
-        selected_cols = []
-        for name, tfm, pos in self.tfm_.transformers_:
-            if tfm != "drop":
-                cols = list(X.columns[pos])
-                selected_cols.extend(cols)
-                print(f"Columns classified as {name}: {cols}")
+        if self.verbose:
+            selected_cols = []
+            for name, tfm, pos in self.tfm_.transformers_:
+                if tfm != "drop":
+                    cols = list(X.columns[pos])
+                    selected_cols.extend(cols)
+                    print(f"Columns classified as {name}: {cols}")
 
-        dropped_cols = set(X.columns).difference(set(selected_cols))
-        if len(dropped_cols) >= 1:
-            print(f"The following columns are not used due to their data type: {list(dropped_cols)}")
+            dropped_cols = set(X.columns).difference(set(selected_cols))
+            if len(dropped_cols) >= 1:
+                print(f"The following columns are not used due to their data type: {list(dropped_cols)}")
 
         return self
 
@@ -379,18 +384,73 @@ class CustomStandardScaler(TransformerMixin, BaseEstimator):
         return X_clipped
 
 
-# adapted from https://github.com/yandex-research/tabular-dl-tabr/blob/75105013189c76bc4f247633c2fb856bc948e579/lib/data.py#L262
-# following https://github.com/dholzmueller/pytabkit/blob/949bf81e3964f65a33dd2c252c3713c239c17b2d/pytabkit/models/utils.py#L431
 class RTDLQuantileTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, noise=1e-3, random_state=None, n_quantiles=1000, subsample=1_000_000_000,
-                 output_distribution="normal"):
+    """Quantile transformer adapted for tabular deep learning models.
+
+    This implementation is based on research from the RTDL group and adds noise to training
+    data before applying quantile transformation, improving robustness and generalization.
+    It also dynamically adjusts the number of quantiles based on data size.
+
+    Parameters
+    ----------
+    noise : float, default=1e-3
+        Magnitude of Gaussian noise to add relative to feature standard deviations.
+        Set to 0 to disable noise addition.
+
+    n_quantiles : int, default=1000
+        Maximum number of quantiles to use. The actual number used is dynamically
+        determined as min(X.shape[0] // 30, n_quantiles) with a minimum of 10.
+
+    subsample : int, default=1_000_000_000
+        Maximum number of samples used to estimate the quantiles for computational efficiency.
+
+    output_distribution : {'uniform', 'normal'}, default='normal'
+        Marginal distribution for the transformed data.
+
+    random_state : int or None, default=None
+        Seed for random number generation for reproducible noise and quantile sampling.
+
+    Attributes
+    ----------
+    normalizer_ : QuantileTransformer
+        Fitted transformer used to transform the data.
+
+    Notes
+    -----
+    Adapted from https://github.com/yandex-research/tabular-dl-tabr/blob/75105013189c76bc4f247633c2fb856bc948e579/lib/data.py#L262
+    following https://github.com/dholzmueller/pytabkit/blob/949bf81e3964f65a33dd2c252c3713c239c17b2d/pytabkit/models/utils.py#L431
+    """
+
+    def __init__(
+        self,
+        noise: float = 1e-3,
+        n_quantiles: int = 1000,
+        subsample: int = 1_000_000_000,
+        output_distribution: str = "normal",
+        random_state: Optional[int] = None,
+    ):
         self.noise = noise
-        self.random_state = random_state
         self.n_quantiles = n_quantiles
         self.subsample = subsample
         self.output_distribution = output_distribution
+        self.random_state = random_state
 
     def fit(self, X, y=None):
+        """Fit the quantile transformer to training data with optional noise addition.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The training data to fit the transformer.
+
+        y : None
+            Ignored. Kept for compatibility with scikit-learn's transformer interface.
+
+        Returns
+        -------
+        self : object
+            Returns self.
+        """
         # Calculate the number of quantiles based on data size
         n_quantiles = max(min(X.shape[0] // 30, self.n_quantiles), 10)
 
@@ -399,7 +459,7 @@ class RTDLQuantileTransformer(BaseEstimator, TransformerMixin):
             output_distribution=self.output_distribution,
             n_quantiles=n_quantiles,
             subsample=self.subsample,
-            random_state=self.random_state
+            random_state=self.random_state,
         )
 
         # Add noise if required
@@ -407,20 +467,53 @@ class RTDLQuantileTransformer(BaseEstimator, TransformerMixin):
 
         # Fit the normalizer
         normalizer.fit(X_modified)
-        # show that it's fitted
+
+        # Show that it's fitted
         self.normalizer_ = normalizer
 
         return self
 
     def transform(self, X, y=None):
+        """Transform data using the fitted quantile transformer.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The data to be transformed.
+
+        y : None
+            Ignored. Kept for compatibility with scikit-learn's transformer interface.
+
+        Returns
+        -------
+        X_transformed : ndarray of shape (n_samples, n_features)
+            The transformed data with distribution specified by output_distribution.
+        """
         check_is_fitted(self)
         return self.normalizer_.transform(X)
 
     def _add_noise(self, X):
+        """Add noise to the input data proportional to feature standard deviations.
+
+        The noise magnitude is controlled by the 'noise' parameter and is scaled
+        inversely to the standard deviation of each feature to ensure
+        consistent noise levels across features of different scales.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The input data to add noise to.
+
+        Returns
+        -------
+        X_noisy : ndarray of shape (n_samples, n_features)
+            The input data with added Gaussian noise.
+        """
         stds = np.std(X, axis=0, keepdims=True)
         noise_std = self.noise / np.maximum(stds, self.noise)
         rng = np.random.default_rng(self.random_state)
-        return X + noise_std * rng.standard_normal(X.shape)
+        X_noisy = X + noise_std * rng.standard_normal(X.shape)
+        return X_noisy
 
 
 class PreprocessingPipeline(TransformerMixin, BaseEstimator):
@@ -435,6 +528,9 @@ class PreprocessingPipeline(TransformerMixin, BaseEstimator):
 
     outlier_threshold : float, default=4.0
         Z-score threshold for outlier detection.
+
+    random_state : int or None, default=None
+        Random seed for reproducible normalization.
 
     Attributes
     ----------
@@ -454,9 +550,12 @@ class PreprocessingPipeline(TransformerMixin, BaseEstimator):
         The transofrmed training input data. Save it for later use to avoid recomputation.
     """
 
-    def __init__(self, normalization_method: str = "power", outlier_threshold: float = 4.0):
+    def __init__(
+        self, normalization_method: str = "power", outlier_threshold: float = 4.0, random_state: Optional[int] = None
+    ):
         self.normalization_method = normalization_method
         self.outlier_threshold = outlier_threshold
+        self.random_state = random_state
 
     def fit(self, X, y=None):
         """Fit the preprocessing pipeline.
@@ -485,12 +584,17 @@ class PreprocessingPipeline(TransformerMixin, BaseEstimator):
             if self.normalization_method == "power":
                 self.normalizer_ = PowerTransformer(method="yeo-johnson", standardize=True)
             elif self.normalization_method == "quantile":
-                self.normalizer_ = QuantileTransformer(output_distribution="normal", random_state=0)
+                self.normalizer_ = QuantileTransformer(output_distribution="normal", random_state=self.random_state)
             elif self.normalization_method == "quantile_rtdl":
-                # self.normalizer_ = RTDLQuantileTransformer(output_distribution="normal", random_state=0)
                 self.normalizer_ = Pipeline(
-                    [('quantile_rtdl', RTDLQuantileTransformer(output_distribution="normal", random_state=0)),
-                     ('std', StandardScaler())])
+                    [
+                        (
+                            "quantile_rtdl",
+                            RTDLQuantileTransformer(output_distribution="normal", random_state=self.random_state),
+                        ),
+                        ("std", StandardScaler()),
+                    ]
+                )
             elif self.normalization_method == "robust":
                 self.normalizer_ = RobustScaler(unit_variance=True)
             else:
@@ -723,13 +827,13 @@ class EnsembleGenerator(TransformerMixin, BaseEstimator):
     """
 
     def __init__(
-            self,
-            n_estimators: int,
-            norm_methods: str | List[str] | None = None,
-            feat_shuffle_method: str = "latin",
-            class_shift: bool = True,
-            outlier_threshold: float = 4.0,
-            random_state: Optional[int] = None,
+        self,
+        n_estimators: int,
+        norm_methods: str | List[str] | None = None,
+        feat_shuffle_method: str = "latin",
+        class_shift: bool = True,
+        outlier_threshold: float = 4.0,
+        random_state: Optional[int] = None,
     ):
         self.n_estimators = n_estimators
         self.norm_methods = norm_methods
@@ -787,7 +891,9 @@ class EnsembleGenerator(TransformerMixin, BaseEstimator):
         for norm_method in self.ensemble_configs_:
             if norm_method not in self.preprocessors_:
                 preprocessor = PreprocessingPipeline(
-                    normalization_method=norm_method, outlier_threshold=self.outlier_threshold
+                    normalization_method=norm_method,
+                    outlier_threshold=self.outlier_threshold,
+                    random_state=self.random_state,
                 )
                 preprocessor.fit(X)
                 self.preprocessors_[norm_method] = preprocessor
