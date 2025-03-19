@@ -435,7 +435,7 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
                     softmax_temperature=self.softmax_temperature,
                     inference_config=self.inference_config_,
                 )
-            outputs.append(out.cpu().numpy())
+            outputs.append(out.float().cpu().numpy())
 
         return np.concatenate(outputs, axis=0)
 
