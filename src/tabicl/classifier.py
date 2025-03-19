@@ -532,7 +532,8 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
         if self.n_jobs is not None:
             torch.set_num_threads(old_n_threads)
 
-        return avg
+        # Normalize probabilities to sum to 1
+        return avg / avg.sum(axis=1, keepdims=True)
 
     def predict(self, X):
         """Predict class labels for test samples.
