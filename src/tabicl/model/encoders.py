@@ -1,6 +1,6 @@
 from __future__ import annotations
-from typing import Optional
 
+from typing import Optional
 from torch import nn, Tensor
 
 from .layers import MultiheadAttentionBlock, InducedSelfAttentionBlock

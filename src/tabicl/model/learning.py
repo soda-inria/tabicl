@@ -1,15 +1,14 @@
 from __future__ import annotations
-from typing import Optional
+
 from collections import OrderedDict
 import math
-
 import torch
 from torch import nn, Tensor
 
 from .layers import ClassNode, OneHotAndLinear
 from .encoders import Encoder
 from .inference import InferenceManager
-from ..config import MgrConfig
+from .inference_config import MgrConfig
 
 
 class ICLearning(nn.Module):
@@ -339,7 +338,7 @@ class ICLearning(nn.Module):
 
         return process_node(self.root, R_test)
 
-    def forward(
+    def _inference_forward(
         self,
         R: Tensor,
         y_train: Tensor,
@@ -347,7 +346,7 @@ class ICLearning(nn.Module):
         softmax_temperature: float = 0.9,
         mgr_config: MgrConfig = None,
     ) -> Tensor:
-        """In-context learning based on learned row representations.
+        """In-context learning based on learned row representations for inference.
 
         Parameters
         ----------
@@ -413,5 +412,55 @@ class ICLearning(nn.Module):
             out = torch.stack(out, dim=0)
             if return_logits:
                 out = softmax_temperature * torch.log(out + 1e-6)
+
+        return out
+
+    def forward(
+        self,
+        R: Tensor,
+        y_train: Tensor,
+        return_logits: bool = True,
+        softmax_temperature: float = 0.9,
+        mgr_config: MgrConfig = None,
+    ) -> Tensor:
+        """In-context learning based on learned row representations.
+
+        Parameters
+        ----------
+        R : Tensor
+            Row representations of shape (B, T, D) where:
+             - B is the number of tables
+             - T is the number of samples (rows)
+             - D is the dimension of row representations
+
+        y_train : Tensor of shape (B, train_size)
+            Training targets, where train_size is the position to split
+            the input into training and test data
+
+        return_logits : bool, default=True
+            If True, return logits instead of probabilities. Used only in inference mode.
+
+        softmax_temperature : float, default=0.9
+            Temperature for the softmax function. Used only in inference mode.
+
+        mgr_config : MgrConfig, default=None
+            Configuration for InferenceManager. Used only in inference mode.
+
+        Returns
+        -------
+        Tensor
+            For training mode:
+              Raw logits of shape (B, T-train_size, max_classes), which will be further handled by the training code.
+
+            For inference mode:
+              Raw logits or probabilities for test samples of shape (B, T-train_size, num_classes).
+        """
+
+        if self.training:
+            train_size = y_train.shape[1]
+            out = self._icl_predictions(R, y_train)
+            out = out[:, train_size:]
+        else:
+            out = self._inference_forward(R, y_train, return_logits, softmax_temperature, mgr_config)
 
         return out

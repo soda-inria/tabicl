@@ -1,9 +1,16 @@
-[![test](https://github.com/soda-inria/tabicl/actions/workflows/testing.yml/badge.svg)](https://github.com/soda-inria/tabicl/actions/workflows/testing.yml)
+# TabICL: A Tabular Foundation Model for In-Context Learning on Large Data (ICML 2025)
 
-# TabICL: A Tabular Foundation Model for In-Context Learning on Large Data
+This repo is the official implementation of ["TabICL: A Tabular Foundation Model for In-Context Learning on Large Data"](https://arxiv.org/pdf/2502.05564) as well as the follow-ups. TabICL is a tabular foundation model. Currently, it is only for classification tasks.
 
-TabICL is a tabular foundation model like [TabPFN](https://www.nature.com/articles/s41586-024-08328-6). Currently, TabICL is only for classification tasks.
+## Updates
 
+***05/05/2025***
+
+We fully open-sourced our training code to reproduce our paper. The scripts folder provides the commands for [stage 1](./scripts/train_stage1.sh), [stage 2](./scripts/train_stage2.sh), and [stage 3](./scripts/train_stage3.sh) of curriculum training.
+
+***05/01/2025***
+
+Our paper was accepted to ICML 2025 🎉
 
 ## Architecture
 
@@ -18,7 +25,8 @@ TabICL processes tabular data through three sequential stages:
 ## Installation
 
 ```bash
-pip install tabicl
+cd tabicl
+pip install -e .
 ```
 
 ## Usage
@@ -156,10 +164,6 @@ TabICL has achieved excellent results on the [TALENT](https://github.com/qile200
 
 <img src="./figures/performance.png" width="100%" alt="Performance on TALENT" style="display: block; margin: auto;">
 <div style="margin-top: 30px;"></div>
-
-## Code Availability
-
-This repository currently only contains the inference code for TabICL. The pretraining code will probably be released in the future.
 
 ## Citation
 If you use TabICL for research purposes, 
