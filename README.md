@@ -6,9 +6,9 @@ This repo is the official implementation of ["TabICL: A Tabular Foundation Model
 
 ***05/05/2025***
 
-### Open-source training code 🥳
+### Open-source pretraining code 🥳
 
-After intensive refactoring, we fully open-sourced our training code to reproduce our paper. The scripts folder provides the commands for [stage 1](./scripts/train_stage1.sh), [stage 2](./scripts/train_stage2.sh), and [stage 3](./scripts/train_stage3.sh) of curriculum training.
+After intensive refactoring, we fully open-sourced our pretraining code to reproduce our paper. The scripts folder provides the commands for [stage 1](./scripts/train_stage1.sh), [stage 2](./scripts/train_stage2.sh), and [stage 3](./scripts/train_stage3.sh) of curriculum learning.
 
 ***05/01/2025***
 
