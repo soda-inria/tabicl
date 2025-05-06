@@ -4,6 +4,24 @@ This repo is the official implementation of ["TabICL: A Tabular Foundation Model
 
 ## Updates
 
+***05/06/2025***
+
+### Better-performing checkpoint 😄
+
+We are continuously improving TabICL, and as a by-product (Great thanks to [David Holzmüller](https://github.com/dholzmueller)'s efforts !!!), we have a better-performing checkpoint. `TabICLClassifier` now accepts a new parameter `checkpoint_version` to specify which pretrained checkpoint to use. The available options are:
+
+- `'tabicl-classifier-v1.1-0506.ckpt'` (default): The latest and best-performing version.
+- `'tabicl-classifier-v1-0208.ckpt'`: The version used in the original TabICL paper. Use this if you need to reproduce the results reported in the paper.
+- `'tabicl-classifier.ckpt'`: A legacy alias for `'tabicl-classifier-v1-0208.ckpt'` and will be removed in a future release.
+
+<div style="margin-top: 30px;"></div>
+<img src="./figures/TabICLv1.1_performance.png" width="70%" alt="Ranking of tabICLv1.1" style="display: block; margin: auto;">
+<div style="margin-top: 30px;"></div>
+
+<div style="margin-top: 30px;"></div>
+<img src="./figures/TabICLv1.1_perf_wrt_samples.png" width="90%" alt="Ranking vs. number of samples" style="display: block; margin: auto;">
+<div style="margin-top: 30px;"></div>
+
 ***05/05/2025***
 
 ### Open-source pretraining code 🥳
@@ -12,7 +30,7 @@ After intensive refactoring, we fully open-sourced our pretraining code to repro
 
 ***05/01/2025***
 
-Our paper was accepted to ICML 2025 🎉
+### Accepted to ICML 2025 🎉
 
 ## Architecture
 
@@ -53,23 +71,24 @@ TabICL offers a set of parameters to customize its behavior. The following examp
 from tabicl import TabICLClassifier
 
 clf = TabICLClassifier(
-  n_estimators=32,                  # number of ensemble members
-  norm_methods=["none", "power"],   # normalization methods to try
-  feat_shuffle_method="latin",      # feature permutation strategy
-  class_shift=True,                 # whether to apply cyclic shifts to class labels
-  outlier_threshold=4.0,            # z-score threshold for outlier detection and clipping
-  softmax_temperature=0.9,          # controls prediction confidence
-  average_logits=True,              # whether ensemble averaging is done on logits or probabilities
-  use_hierarchical=True,            # enable hierarchical classification for datasets with many classe
-  batch_size=8,                     # process this many ensemble members together (reduce RAM usage)
-  use_amp=True,                     # use automatic mixed precision for faster inference
-  model_path=None,                  # where the model checkpoint is stored
-  allow_auto_download=True,         # whether automatic download to the specified path is allowed
-  device=None,                      # specify device for inference
-  random_state=42,                  # random seed for reproducibility
-  n_jobs=None,                      # number of threads to use for PyTorch
-  verbose=False,                    # print detailed information during inference
-  inference_config=None,            # inference configuration for fine-grained control
+  n_estimators=32,                                        # number of ensemble members
+  norm_methods=["none", "power"],                         # normalization methods to try
+  feat_shuffle_method="latin",                            # feature permutation strategy
+  class_shift=True,                                       # whether to apply cyclic shifts to class labels
+  outlier_threshold=4.0,                                  # z-score threshold for outlier detection and clipping
+  softmax_temperature=0.9,                                # controls prediction confidence
+  average_logits=True,                                    # whether ensemble averaging is done on logits or probabilities
+  use_hierarchical=True,                                  # enable hierarchical classification for datasets with many classe
+  batch_size=8,                                           # process this many ensemble members together (reduce RAM usage)
+  use_amp=True,                                           # use automatic mixed precision for faster inference
+  model_path=None,                                        # where the model checkpoint is stored
+  allow_auto_download=True,                               # whether automatic download to the specified path is allowed
+  checkpoint_version="tabicl-classifier-v1.1-0506.ckpt",  # the version of pretrained checkpoint to use
+  device=None,                                            # specify device for inference
+  random_state=42,                                        # random seed for reproducibility
+  n_jobs=None,                                            # number of threads to use for PyTorch
+  verbose=False,                                          # print detailed information during inference
+  inference_config=None,                                  # inference configuration for fine-grained control
 )
 ```
 

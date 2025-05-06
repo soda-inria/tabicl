@@ -84,16 +84,30 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
         be slower.
 
     model_path : Optional[str | Path] = None
-        Path to the pre-trained model checkpoint file. If None, the model will be downloaded
-        automatically from Hugging Face Hub (repo: 'jingang/TabICL-clf', file: 'tabicl-classifier.ckpt')
-        and stored in the default Hugging Face cache directory (typically '~/.cache/huggingface/hub'
-        where '~' represents the user's home directory). The checkpoint should contain both 'config'
-        and 'state_dict' keys. If the path is provided but the file doesn't exist, it will be
-        downloaded to the specified location.
+        Path to the pre-trained model checkpoint file.
+        - If provided and the file exists, it's loaded directly.
+        - If provided but the file doesn't exist and `allow_auto_download` is true, the version
+          specified by `checkpoint_version` is downloaded from Hugging Face Hub (repo: 'jingang/TabICL-clf')
+          to this path.
+        - If `None` (default), the version specified by `checkpoint_version` is downloaded from
+          Hugging Face Hub (repo: 'jingang/TabICL-clf') and cached locally in the default
+          Hugging Face cache directory (typically `~/.cache/huggingface/hub`).
 
     allow_auto_download: bool = True
         Whether to allow automatic download if the pretrained checkpoint cannot be found at the
         specified `model_path`.
+
+    checkpoint_version : str, default='tabicl-classifier-v1.1-0506.ckpt'
+        Specifies which version of the pre-trained model checkpoint to use when `model_path`
+        is `None` or points to a non-existent file (and `allow_auto_download` is true).
+        Checkpoints are downloaded from https://huggingface.co/jingang/TabICL-clf.
+        Available versions:
+        - `'tabicl-classifier-v1.1-0506.ckpt'` (Default): The latest best-performing version.
+        - `'tabicl-classifier-v1-0208.ckpt'`: The version used in the original TabICL paper.
+          Use this for reproducing paper results.
+        - `'tabicl-classifier.ckpt'`: A legacy alias for `'tabicl-classifier-v1-0208.ckpt'`.
+          Maintained for backward compatibility but its use is discouraged and it may be
+          removed in a future release.
 
     device : Optional[str or torch.device], default=None
         Device to use for inference. If None, defaults to CUDA if available, else CPU.
@@ -179,6 +193,7 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
         batch_size: Optional[int] = 8,
         model_path: Optional[str | Path] = None,
         allow_auto_download: bool = True,
+        checkpoint_version: str = "tabicl-classifier-v1.1-0506.ckpt",
         device: Optional[str | torch.device] = None,
         random_state: int | None = 42,
         n_jobs: Optional[int] = None,
@@ -197,6 +212,7 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
         self.batch_size = batch_size
         self.model_path = model_path
         self.allow_auto_download = allow_auto_download
+        self.checkpoint_version = checkpoint_version
         self.device = device
         self.n_jobs = n_jobs
         self.random_state = random_state
@@ -215,63 +231,97 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
     def _load_model(self):
         """Load a model from a given path or download it if not available.
 
-        This method is responsible for loading the TabICL model from a checkpoint file.
-        If model_path is None or the file doesn't exist at the specified location,
-        it will download the model from the Hugging Face Hub.
-
-        The checkpoint file should contain:
-        - 'config': Model configuration parameters
-        - 'state_dict': The trained model weights
+        It uses `model_path` and `checkpoint_version` to determine the source.
+         - If `model_path` is specified and exists, it's used directly.
+         - If `model_path` is specified but doesn't exist (and auto-download is enabled),
+           the version specified by `checkpoint_version` is downloaded to `model_path`.
+         - If `model_path` is None, the version specified by `checkpoint_version` is downloaded
+           from Hugging Face Hub and cached in the default Hugging Face cache directory.
 
         Raises
         ------
         AssertionError
             If the checkpoint doesn't contain the required 'config' or 'state_dict' keys.
+
+        ValueError
+            If a checkpoint cannot be found or downloaded based on the settings.
         """
 
         repo_id = "jingang/TabICL-clf"
-        filename = "tabicl-classifier.ckpt"
+        filename = self.checkpoint_version
+
+        ckpt_legacy = "tabicl-classifier.ckpt"
+        ckpt_v1 = "tabicl-classifier-v1-0208.ckpt"
+        ckpt_v1_1 = "tabicl-classifier-v1.1-0506.ckpt"
+
+        if filename == ckpt_legacy:
+            info_message = (
+                f"INFO: You are using '{ckpt_legacy}'. This is a legacy alias for '{ckpt_v1}' "
+                f"and is maintained for backward compatibility. It may be removed in a future release.\n"
+                f"Please consider using '{ckpt_v1}' or the latest '{ckpt_v1_1}' directly.\n"
+                f"'{ckpt_legacy}' (effectively '{ckpt_v1}') is the version "
+                f"used in the original TabICL paper. For improved performance, consider using '{ckpt_v1_1}'.\n"
+            )
+        elif filename == ckpt_v1:
+            info_message = (
+                f"INFO: You are downloading '{ckpt_v1}', the version used in the original TabICL paper.\n"
+                f"A newer version, '{ckpt_v1_1}', is available and offers improved performance.\n"
+            )
+        elif filename == ckpt_v1_1:
+            info_message = (
+                f"INFO: You are downloading '{ckpt_v1_1}', the latest best-performing version of TabICL.\n"
+                f"To reproduce results from the original paper, please use '{ckpt_v1}'.\n"
+            )
+        else:
+            raise ValueError(
+                f"Invalid checkpoint version '{filename}'. Available ones are: '{ckpt_legacy}', '{ckpt_v1}', '{ckpt_v1_1}'."
+            )
 
         if self.model_path is None:
+            # Scenario 1: the model path is not provided, so download from HF Hub based on the checkpoint version
             try:
-                model_path = hf_hub_download(repo_id=repo_id, filename=filename, local_files_only=True)
-                checkpoint = torch.load(model_path, map_location="cpu", weights_only=True)
+                model_path_ = Path(hf_hub_download(repo_id=repo_id, filename=filename, local_files_only=True))
             except LocalEntryNotFoundError:
                 if self.allow_auto_download:
-                    print(f"Checkpoint not cached. Downloading from Hugging Face Hub ({repo_id})")
-                    model_path = hf_hub_download(repo_id=repo_id, filename=filename)
-                    checkpoint = torch.load(model_path, map_location="cpu", weights_only=True)
+                    print(info_message)
+                    print(f"Checkpoint '{filename}' not cached.\n Downloading from Hugging Face Hub ({repo_id}).\n")
+                    model_path_ = Path(hf_hub_download(repo_id=repo_id, filename=filename))
                 else:
                     raise ValueError(
-                        f"Checkpoint not cached and automatic download is disabled.\n"
+                        f"Checkpoint '{filename}' not cached and automatic download is disabled.\n"
                         f"Set allow_auto_download=True to download the checkpoint from Hugging Face Hub ({repo_id})."
                     )
+            if model_path_:
+                checkpoint = torch.load(model_path_, map_location="cpu", weights_only=True)
         else:
-            if isinstance(self.model_path, str):
-                model_path = Path(self.model_path)
+            # Scenario 2: the model path is provided
+            model_path_ = Path(self.model_path) if isinstance(self.model_path, str) else self.model_path
+            if model_path_.exists():
+                # Scenario 2a: the model path exists, load it directly
+                checkpoint = torch.load(model_path_, map_location="cpu", weights_only=True)
             else:
-                model_path = self.model_path
-
-            if model_path.exists():
-                checkpoint = torch.load(model_path, map_location="cpu", weights_only=True)
-            else:
+                # Scenario 2b: the model path does not exist, download the checkpoint version to this path
                 if self.allow_auto_download:
-                    print(f"Checkpoint not found. Downloading from Hugging Face Hub ({repo_id}) to {model_path}")
-                    model_path.parent.mkdir(parents=True, exist_ok=True)
-                    cache_path = hf_hub_download(repo_id=repo_id, filename=filename, local_dir=model_path.parent)
-                    Path(cache_path).rename(model_path)
-                    checkpoint = torch.load(model_path, map_location="cpu", weights_only=True)
+                    print(info_message)
+                    print(
+                        f"Checkpoint not found at '{model_path_}'.\n"
+                        f"Downloading '{filename}' from Hugging Face Hub ({repo_id}) to this location.\n"
+                    )
+                    model_path_.parent.mkdir(parents=True, exist_ok=True)
+                    cache_path = hf_hub_download(repo_id=repo_id, filename=filename, local_dir=model_path_.parent)
+                    Path(cache_path).rename(model_path_)
+                    checkpoint = torch.load(model_path_, map_location="cpu", weights_only=True)
                 else:
                     raise ValueError(
-                        f"Checkpoint not found at {model_path} and automatic download is disabled.\n"
-                        f"Either provide a valid checkpoint path, or set auto_download=True to download "
-                        f"the checkpoint from Hugging Face Hub ({repo_id})."
+                        f"Checkpoint not found at '{model_path_}' and automatic download is disabled.\n"
+                        f"Either provide a valid checkpoint path, or set allow_auto_download=True to download "
+                        f"'{filename}' from Hugging Face Hub ({repo_id})."
                     )
 
         assert "config" in checkpoint, "The checkpoint doesn't contain the model configuration."
         assert "state_dict" in checkpoint, "The checkpoint doesn't contain the model state."
 
-        self.model_path_ = model_path
+        self.model_path_ = model_path_
         self.model_ = TabICL(**checkpoint["config"])
         self.model_.load_state_dict(checkpoint["state_dict"])
         self.model_.eval()
