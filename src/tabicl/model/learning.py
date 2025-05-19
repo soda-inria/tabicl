@@ -85,7 +85,8 @@ class ICLearning(nn.Module):
         """Divide classes into balanced groups for hierarchical classification.
 
         This method implements a balanced partitioning strategy that divides classes
-        into approximately equal-sized groups to minimize tree depth.
+        into approximately equal-sized groups to minimize tree depth. The number of
+        groups formed at this level will not exceed `max_classes`.
 
         Parameters
         ----------
@@ -96,20 +97,24 @@ class ICLearning(nn.Module):
         -------
         tuple[Tensor, int]
             - group_assignments: Tensor mapping each class index to its assigned group (0-indexed)
-            - num_groups: Total number of groups created
+            - num_groups: Total number of groups created (will be <= max_classes)
 
         Notes
         -----
         For example, with max_classes=10 and num_classes=25:
-        - Creates ceil(25/10) = 3 groups
-        - Distributes classes as [9, 8, 8] elements per group
-        - Returns assignments tensor [0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2]
+        - Distributes 25 classes into 3 groups. Sizes: [9, 8, 8].
+        - Returns assignments tensor and num_groups = 3.
+
+        With max_classes=10 and num_classes=101:
+        - Distributes 101 classes into 10 groups. Sizes: [11, 10, 10, 10, 10, 10, 10, 10, 10, 10].
+        - Returns assignments tensor and num_groups = 10.
+        - The child node receiving 11 classes will be further divided into 2 groups: [6, 5].
         """
 
         if num_classes <= self.max_classes:
             return torch.zeros(num_classes, dtype=torch.int), 1
 
-        num_groups = math.ceil(num_classes / self.max_classes)
+        num_groups = min(math.ceil(num_classes / self.max_classes), self.max_classes)
         group_assignments = torch.zeros(num_classes, dtype=torch.int)
         current_pos = 0
 
