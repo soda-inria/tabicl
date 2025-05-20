@@ -44,9 +44,17 @@ TabICL processes tabular data through three sequential stages:
 
 ## Installation
 
+### Option 1: Installing `tabicl` from the Local Clone
+
 ```bash
 cd tabicl
 pip install -e .
+```
+
+### Option 2: Installing `tabicl` Directly from the Git Remote
+
+```bash
+pip install git+https://github.com/soda-inria/tabicl.git
 ```
 
 ## Usage
