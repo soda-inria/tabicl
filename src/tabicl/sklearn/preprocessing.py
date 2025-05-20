@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 import random
 import itertools
 from collections import OrderedDict
@@ -20,6 +21,35 @@ from sklearn.preprocessing import (
     RobustScaler,
 )
 from sklearn.utils.validation import check_is_fitted
+
+
+class RecursionLimitManager:
+    """Context manager to temporarily set the recursion limit.
+
+    Parameters
+    ----------
+    limit : int
+        The recursion limit to set temporarily.
+
+    Example
+    -------
+    >>> with RecursionLimitManager(4000):
+    >>>     # Perform operations that require a higher recursion limit
+    >>>     pass
+    """
+
+    def __init__(self, limit):
+        self.limit = limit
+        self.original_limit = None
+
+    def __enter__(self):
+        self.original_limit = sys.getrecursionlimit()
+        sys.setrecursionlimit(self.limit)
+        return self
+
+    def __exit__(self, type, value, traceback):
+        sys.setrecursionlimit(self.original_limit)
+        return False  # Return False to propagate exceptions
 
 
 class TransformToNumerical(TransformerMixin, BaseEstimator):
@@ -663,13 +693,24 @@ class FeatureShuffler:
         - 'latin': Latin square permutation
         - 'shift': Circular shift of features
 
+    max_features_for_latin : int, default=4000
+        Maximum number of features for which Latin square permutations are generated.
+        If the number of features exceeds this limit, random permutations are used instead.
+
     random_state : int or None, default=None
         Random seed for reproducible shuffling.
     """
 
-    def __init__(self, n_features: int, method: str = "latin", random_state: Optional[int] = None):
+    def __init__(
+        self,
+        n_features: int,
+        method: str = "latin",
+        max_features_for_latin: int = 4000,
+        random_state: Optional[int] = None,
+    ):
         self.n_features = n_features
         self.method = method
+        self.max_features_for_latin = max_features_for_latin
         self.random_state = random_state
 
     def shuffle(self, n_estimators: int) -> List[np.ndarray]:
@@ -698,26 +739,33 @@ class FeatureShuffler:
         self.rng_ = random.Random(self.random_state)
         feature_indices = list(range(self.n_features))
 
+        # Use the random method if n_features exceeds the limit for Latin square
+        if self.n_features > self.max_features_for_latin and self.method == "latin":
+            method = "random"
+        else:
+            method = self.method
+
         # No shuffling
-        if self.method == "none" or n_estimators == 1:
+        if method == "none" or n_estimators == 1:
             shuffle_patterns = [feature_indices]
 
         # Generate permutations based on method
-        if self.method == "shift":
+        if method == "shift":
             # All possible circular shifts
             shuffle_patterns = [feature_indices[-i:] + feature_indices[:-i] for i in range(self.n_features)]
-        elif self.method == "random":
+        elif method == "random":
             # Random permutations
             if self.n_features <= 5:
                 all_perms = [list(perm) for perm in itertools.permutations(feature_indices)]
                 shuffle_patterns = self.rng_.sample(all_perms, min(n_estimators, len(all_perms)))
             else:
                 shuffle_patterns = [self.rng_.sample(feature_indices, self.n_features) for _ in range(n_estimators)]
-        elif self.method == "latin":
+        elif method == "latin":
             # Latin square permutations
-            shuffle_patterns = self._latin_squares()
+            with RecursionLimitManager(100000):  # Set a higher recursion limit to avoid recursion error
+                shuffle_patterns = self._latin_squares()
         else:
-            raise ValueError(f"Unknown method: {self.method}. Use 'shift', 'random', 'latin', or 'none'.")
+            raise ValueError(f"Unknown method: {method}. Use 'shift', 'random', 'latin', or 'none'.")
 
         return shuffle_patterns
 
@@ -912,7 +960,9 @@ class EnsembleGenerator(TransformerMixin, BaseEstimator):
             - shift_offsets: OrderedDict mapping normalization methods to lists of class shift offsets
         """
 
-        shuffler = FeatureShuffler(self.n_features_in_, self.feat_shuffle_method, self.random_state)
+        shuffler = FeatureShuffler(
+            n_features=self.n_features_in_, method=self.feat_shuffle_method, random_state=self.random_state
+        )
         shuffle_patterns = shuffler.shuffle(self.n_estimators)
 
         if self.class_shift and self.n_estimators > 1:
