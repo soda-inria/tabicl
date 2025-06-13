@@ -1,3 +1,4 @@
+[![test](https://github.com/soda-inria/tabicl/actions/workflows/testing.yml/badge.svg)](https://github.com/soda-inria/tabicl/actions/workflows/testing.yml)
 [![Downloads](https://img.shields.io/pypi/dm/tabicl)](https://pypistats.org/packages/tabicl)
 
 # TabICL: A Tabular Foundation Model for In-Context Learning on Large Data (ICML 2025)
