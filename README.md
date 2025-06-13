@@ -1,3 +1,5 @@
+[![Downloads](https://img.shields.io/pypi/dm/tabicl)](https://pypistats.org/packages/tabicl)
+
 # TabICL: A Tabular Foundation Model for In-Context Learning on Large Data (ICML 2025)
 
 This repo is the official implementation of ["TabICL: A Tabular Foundation Model for In-Context Learning on Large Data"](https://arxiv.org/pdf/2502.05564) as well as the follow-ups. TabICL is a tabular foundation model. Currently, it is only for classification tasks.
