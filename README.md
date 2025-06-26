@@ -48,14 +48,21 @@ TabICL processes tabular data through three sequential stages:
 
 ## Installation
 
-### Option 1: Installing `tabicl` from the Local Clone
+### From [PyPI](https://pypi.org/project/tabicl)
 
 ```bash
-cd tabicl
-pip install -e .
+pip install tabicl
 ```
 
-### Option 2: Installing `tabicl` Directly from the Git Remote
+### From the source
+
+#### Option 1: Installing `tabicl` from the Local Clone
+
+```bash
+cd tabicl; pip install -e .
+```
+
+#### Option 2: Installing `tabicl` Directly from the Git Remote
 
 ```bash
 pip install git+https://github.com/soda-inria/tabicl.git
@@ -199,7 +206,7 @@ TabICL has achieved excellent results on the [TALENT](https://github.com/qile200
 <div style="margin-top: 30px;"></div>
 
 ## Citation
-If you use TabICL for research purposes, 
+If you use TabICL for research purposes,
 please cite our **[paper](https://arxiv.org/abs/2502.05564)**:
 ```bibtex
 @article{qu2025tabicl,
