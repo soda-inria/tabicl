@@ -382,7 +382,8 @@ class InferenceManager:
 
         # CPU does not support batching temporarily
         if self.exe_device.type == "cpu":
-            return forward_fn(**inputs)
+            with torch.no_grad():
+                return forward_fn(**inputs)
 
         # Extract dimension and dtype information from first tensor
         first_value = next(iter(inputs.values()))
