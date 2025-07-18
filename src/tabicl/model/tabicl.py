@@ -7,8 +7,10 @@ from .embedding import ColEmbedding
 from .interaction import RowInteraction
 from .learning import ICLearning
 from .inference_config import InferenceConfig
+from .tabpfn_arch.model.transformer import PerFeatureTransformer as ContextCompressionTransformer
+from .tabpfn_arch.model.config import ModelConfig as TabPFNModelConfig
 
-
+import torch
 class TabICL(nn.Module):
     """A Tabular In-Context Learning Foundation Model.
 
@@ -142,6 +144,19 @@ class TabICL(nn.Module):
             activation=activation,
             norm_first=norm_first,
         )
+        self.context_compression_transformer = ContextCompressionTransformer(
+            model_config=TabPFNModelConfig(
+                emsize=32, # TODO: make this configurable
+                features_per_group=1, # TODO: make this configurable
+                max_num_classes=max_classes,
+                nhead=2, # TODO: make this configurable
+                num_buckets=2, # TODO: make this configurable
+                max_num_features=50, # TODO: make this configurable
+                remove_duplicate_features=True, # TODO: make this configurable
+            ),
+            max_classes=max_classes,
+        )
+        
 
     def _train_forward(
         self, X: Tensor, y_train: Tensor, d: Optional[Tensor] = None, embed_with_test: bool = False
@@ -174,7 +189,11 @@ class TabICL(nn.Module):
         B, T, H = X.shape
         train_size = y_train.shape[1]
         assert train_size <= T, "Number of training samples exceeds total samples"
-
+        X_train = X[:, :train_size, :]  # Training samples
+        X_test = X[:, train_size:, :]  # Test samples
+        #TODO: this following line assumes that we only compress rows, not columns
+        compressed_X_train, y_train = self.context_compression_transformer(train_x=X_train, test_x=None, train_y=y_train)
+        X = torch.cat([compressed_X_train, X_test], dim=1)  # Concatenate compressed training and test samples
         # Check if d is provided and has the same length as the number of features
         if d is not None and len(d.unique()) == 1 and d[0] == H:
             d = None
@@ -241,7 +260,11 @@ class TabICL(nn.Module):
 
         train_size = y_train.shape[1]
         assert train_size <= X.shape[1], "Number of training samples exceeds total samples"
-
+        X_train = X[:, :train_size, :]  # Training samples
+        X_test = X[:, train_size:, :]  # Test samples
+        #TODO: this following line assumes that we only compress rows, not columns
+        compressed_X_train, y_train = self.context_compression_transformer(train_x=X_train, test_x=None, train_y=y_train)
+        X = torch.cat([compressed_X_train, X_test], dim=1)  # Concatenate compressed training and test samples
         if inference_config is None:
             inference_config = InferenceConfig()
 
