@@ -501,8 +501,6 @@ class PerFeatureTransformer(nn.Module):
                     new_categorical_inds.append(subgroup_indices)
 
             categorical_inds_to_use = new_categorical_inds
-        print(y.keys())
-        print(y["main"].shape, single_eval_pos_)
         for k in y:
             if y[k].ndim == 1:
                 y[k] = y[k].unsqueeze(-1)
@@ -539,7 +537,6 @@ class PerFeatureTransformer(nn.Module):
             y[k] = y[k].transpose(0, 1)  # b s 1 -> s b 1
 
         # making sure no label leakage ever happens
-        print(y["main"].shape, single_eval_pos_)
         y["main"][single_eval_pos_:] = torch.nan
         
         embedded_y = self.y_encoder(
@@ -595,7 +592,6 @@ class PerFeatureTransformer(nn.Module):
 
         # b s f e + b s 1 e -> b s f+1 e
         embedded_input = torch.cat((embedded_x, embedded_y.unsqueeze(2)), dim=2)
-        return embedded_input, embedded_y
         return self.compressor_projector(embedded_input)
 
     def add_embeddings(  # noqa: C901, PLR0912
