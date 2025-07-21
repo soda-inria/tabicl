@@ -592,7 +592,8 @@ class PerFeatureTransformer(nn.Module):
 
         # b s f e + b s 1 e -> b s f+1 e
         embedded_input = torch.cat((embedded_x, embedded_y.unsqueeze(2)), dim=2)
-        return self.compressor_projector(embedded_input)
+        comp_xy = self.compressor_projector(embedded_input)
+        return comp_xy.view(comp_xy.size(0), comp_xy.size(1), -1)
 
     def add_embeddings(  # noqa: C901, PLR0912
         self,
