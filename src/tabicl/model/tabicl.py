@@ -191,15 +191,14 @@ class TabICL(nn.Module):
         X_train = X[:, :train_size, :]  # Training samples
         X_test = X[:, train_size:, :]  # Test samples
         #TODO: this following line assumes that we only compress rows, not columns
-        print(X_train.shape, X.shape)
         compressed_X_train, y_train = self.context_compression_transformer(train_x=X_train, test_x=None, train_y=y_train)
         #flip the first and second dimensions
         compressed_X_train = compressed_X_train.permute(1, 0, 2)  # Shape: (B, H, train_size)
         y_train = y_train.permute(1, 0)  # Shape: (train_size, B)
-        print(X.shape)
-        print(compressed_X_train.shape, X_test.shape)
         X = torch.cat([compressed_X_train, X_test], dim=1)  # Concatenate compressed training and test samples
-        print(X.shape)
+        print('y_train shape after compression:', y_train.shape)
+        print('Compressed X train shape:', compressed_X_train.shape)
+        print('X test shape:', X_test.shape)
         # Check if d is provided and has the same length as the number of features
         if d is not None and len(d.unique()) == 1 and d[0] == H:
             d = None
