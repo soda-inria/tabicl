@@ -129,6 +129,7 @@ class PerFeatureTransformer(nn.Module):
             list[torch.Tensor | tuple[torch.Tensor, torch.Tensor]] | None
         ) = None,
         cache_trainset_representation: bool = False,
+        row_compression_percentage: float = 10,
         # TODO: List explicitly
         **layer_kwargs: Any,
     ):
@@ -277,6 +278,7 @@ class PerFeatureTransformer(nn.Module):
         self.seed = config.seed
         
         self.compressor_projector = CompressorProjector(input_dim=config.emsize, output_dim=1)
+        self.row_compression_percentage = row_compression_percentage
 
     def reset_save_peak_mem_factor(self, factor: int | None = None) -> None:
         """Sets the save_peak_mem_factor for all layers.
@@ -593,7 +595,24 @@ class PerFeatureTransformer(nn.Module):
         # b s f e + b s 1 e -> b s f+1 e
         embedded_input = torch.cat((embedded_x, embedded_y.unsqueeze(2)), dim=2)
         comp_xy = self.compressor_projector(embedded_input)
-        return comp_xy.view(comp_xy.size(0), comp_xy.size(1), -1)
+        comp_xy = comp_xy.view(comp_xy.size(0), comp_xy.size(1), -1)
+        comp_x = comp_xy[:, :, :-1]  # b s f
+        comp_y = comp_xy[:, :, -1:]  # b s 1
+        comp_y = comp_y.squeeze(-1)  # b s 1 -> b s
+        if self.row_compression_percentage > 0:
+            num_rows = comp_x.shape[0]
+            num_rows_to_keep = int(
+                num_rows * (1 - self.row_compression_percentage / 100)
+            )
+            if num_rows_to_keep < 1:
+                raise ValueError(
+                    f"Row compression percentage {self.row_compression_percentage} "
+                    "is too high, resulting in less than 1 row to keep."
+                )
+            indices_to_keep = range(num_rows_to_keep)
+            comp_x = comp_x[indices_to_keep,:, :]
+            comp_y = comp_y[indices_to_keep, :]
+        return comp_x, comp_y
 
     def add_embeddings(  # noqa: C901, PLR0912
         self,
@@ -828,3 +847,5 @@ class CompressorProjector(nn.Module):
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.projector(x)        
+
+        
