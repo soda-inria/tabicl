@@ -594,7 +594,29 @@ class PerFeatureTransformer(nn.Module):
 
         # b s f e + b s 1 e -> b s f+1 e
         embedded_input = torch.cat((embedded_x, embedded_y.unsqueeze(2)), dim=2)
-        comp_xy = self.compressor_projector(embedded_input)
+
+        if torch.isnan(embedded_input).any():
+            raise ValueError(
+                f"There should be no NaNs in the encoded x and y."
+                "Check that you do not feed NaNs or use a NaN-handling enocder."
+                "Your embedded x and y returned the following:"
+                f"{torch.isnan(embedded_x).any()=} | {torch.isnan(embedded_y).any()=}",
+            )
+        del embedded_y, embedded_x
+
+        encoder_out = self.transformer_encoder(
+            (
+                embedded_input
+                if not self.transformer_decoder
+                else embedded_input[:, :single_eval_pos_]
+            ),
+            single_eval_pos=single_eval_pos,
+            half_layers=half_layers,
+            cache_trainset_representation=self.cache_trainset_representation,
+        )  # b s f+1 e -> b s f+1 e
+
+
+        comp_xy = self.compressor_projector(encoder_out)
         comp_xy = comp_xy.view(comp_xy.size(0), comp_xy.size(1), -1)
         comp_x = comp_xy[:, :, :-1]  # b s f
         comp_y = comp_xy[:, :, -1:]  # b s 1
