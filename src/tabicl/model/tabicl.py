@@ -312,15 +312,15 @@ class TabICL(nn.Module):
         return out
 
     def forward(
-            self,
-            X: Tensor,
-            y_train: Tensor,
-            d: Optional[Tensor] = None,
-            feature_shuffles: Optional[List[List[int]]] = None,
-            embed_with_test: bool = False,
-            return_logits: bool = True,
-            softmax_temperature: float = 0.9,
-            inference_config: InferenceConfig = None,
+        self,
+        X: Tensor,
+        y_train: Tensor,
+        d: Optional[Tensor] = None,
+        feature_shuffles: Optional[List[List[int]]] = None,
+        embed_with_test: bool = False,
+        return_logits: bool = True,
+        softmax_temperature: float = 0.9,
+        inference_config: InferenceConfig = None,
     ) -> Tensor:
         """Column-wise embedding -> row-wise interaction -> dataset-wise in-context learning.
 
