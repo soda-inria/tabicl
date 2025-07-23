@@ -22,7 +22,7 @@ import joblib
 import torch
 from torch import nn
 
-from tabpfn.inference import InferenceEngine
+# from tabpfn.inference import InferenceEngine
 from .bar_distribution import BarDistribution, FullSupportBarDistribution
 from .config import ModelConfig
 from .encoders import (
@@ -698,7 +698,7 @@ def load_model(
         assert len(criterion_state_keys) == 0, criterion_state_keys
 
     model = load_model_from_config(config=config, loss_criterion=loss_criterion)
-    model.load_state_dict(state_dict)
+    model.load_state_dict(state_dict, strict=False)
     model.eval()
 
     return model, loss_criterion, config
