@@ -78,22 +78,22 @@ class TabICL(nn.Module):
     """
 
     def __init__(
-            self,
-            max_classes: int = 10,
-            embed_dim: int = 128,
-            col_num_blocks: int = 3,
-            col_nhead: int = 4,
-            col_num_inds: int = 128,
-            row_num_blocks: int = 3,
-            row_nhead: int = 8,
-            row_num_cls: int = 4,
-            row_rope_base: float = 100000,
-            icl_num_blocks: int = 12,
-            icl_nhead: int = 4,
-            ff_factor: int = 2,
-            dropout: float = 0.0,
-            activation: str | callable = "gelu",
-            norm_first: bool = True,
+        self,
+        max_classes: int = 10,
+        embed_dim: int = 128,
+        col_num_blocks: int = 3,
+        col_nhead: int = 4,
+        col_num_inds: int = 128,
+        row_num_blocks: int = 3,
+        row_nhead: int = 8,
+        row_num_cls: int = 4,
+        row_rope_base: float = 100000,
+        icl_num_blocks: int = 12,
+        icl_nhead: int = 4,
+        ff_factor: int = 2,
+        dropout: float = 0.0,
+        activation: str | callable = "gelu",
+        norm_first: bool = True,
     ):
         super().__init__()
         self.max_classes = max_classes
@@ -161,15 +161,14 @@ class TabICL(nn.Module):
         else:
             self.context_compression_transformer = ContextCompressionTransformer(
                 config=TabPFNModelConfig(
-                    emsize=32,
-                    features_per_group=1,
+                    emsize=32,  # TODO: make this configurable
+                    features_per_group=1,  # TODO: make this configurable
                     max_num_classes=max_classes,
-                    nhead=2,
-                    num_buckets=2,
-                    max_num_features=50,
-                    remove_duplicate_features=True,
+                    nhead=2,  # TODO: make this configurable
+                    num_buckets=2,  # TODO: make this configurable
+                    max_num_features=50,  # TODO: make this configurable
+                    remove_duplicate_features=True,  # TODO: make this configurable
                 ),
-                n_out=max_classes,  # <- replaces the old `max_classes=` arg
             )
 
     def _train_forward(
