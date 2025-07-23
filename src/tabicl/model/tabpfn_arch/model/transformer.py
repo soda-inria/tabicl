@@ -173,7 +173,7 @@ class PerFeatureTransformer(nn.Module):
         if encoder is None:
             encoder = SequentialEncoder(
                 LinearInputEncoderStep(
-                    num_features=1,
+                    num_features=config.features_per_group or 1,
                     emsize=config.emsize,
                     replace_nan_by_zero=False,
                     bias=True,
