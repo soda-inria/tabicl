@@ -94,6 +94,7 @@ class TabICL(nn.Module):
         dropout: float = 0.0,
         activation: str | callable = "gelu",
         norm_first: bool = True,
+        finetune_compressor: bool = False,
     ):
         super().__init__()
         self.max_classes = max_classes
@@ -147,8 +148,12 @@ class TabICL(nn.Module):
             activation=activation,
             norm_first=norm_first,
         )
-        finetune = True
-        if finetune:
+
+        self.context_compression_transformer = self._build_compressor(finetune_compressor)
+
+
+    def _build_compressor(self, finetune_compressor: bool):
+        if finetune_compressor:
             model, _, _ = load_model_criterion_config(
                 model_path=None,
                 check_bar_distribution_criterion=False,
@@ -157,19 +162,19 @@ class TabICL(nn.Module):
                 version="v2",
                 download=True,
             )
-            self.context_compression_transformer = model
-        else:
-            self.context_compression_transformer = ContextCompressionTransformer(
-                config=TabPFNModelConfig(
-                    emsize=32,  # TODO: make this configurable
-                    features_per_group=1,  # TODO: make this configurable
-                    max_num_classes=max_classes,
-                    nhead=2,  # TODO: make this configurable
-                    num_buckets=2,  # TODO: make this configurable
-                    max_num_features=50,  # TODO: make this configurable
-                    remove_duplicate_features=True,  # TODO: make this configurable
-                ),
-            )
+            return model
+
+        return ContextCompressionTransformer(
+            config=TabPFNModelConfig(
+                emsize=32,  # TODO: make this configurable
+                features_per_group=1,  # TODO: make this configurable
+                max_num_classes=self.max_classes,
+                nhead=2,  # TODO: make this configurable
+                num_buckets=2,  # TODO: make this configurable
+                max_num_features=50,  # TODO: make this configurable
+                remove_duplicate_features=True,  # TODO: make this configurable
+            ),
+        )
 
     def _train_forward(
         self, X: Tensor, y_train: Tensor, d: Optional[Tensor] = None, embed_with_test: bool = False
