@@ -55,6 +55,8 @@ class TrainerCompFinetuner:
     def _freeze_predictor(self):
         """Freeze the ICL predictor to prevent its parameters from being updated during training."""
         self.raw_model.icl_predictor.eval()
+        self.raw_model.col_embedder.eval()
+        self.raw_model.row_interactor.eval()
         for param in self.raw_model.icl_predictor.parameters():
             param.requires_grad = False
         for param in self.raw_model.col_embedder.parameters():
