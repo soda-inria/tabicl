@@ -176,6 +176,39 @@ class TabICL(nn.Module):
             ),
         )
 
+    def _compress(self, X: Tensor, y_train: Tensor, train_size: int) -> Tensor:
+        """Compress the input tensor X using the context compression transformer.
+
+        Parameters
+        ----------
+        X : Tensor
+            Input tensor of shape (B, T, H) where:
+             - B is the number of tables
+             - T is the number of samples (rows)
+             - H is the number of features (columns)
+
+        y : Tensor
+            Labels of shape (B, T) where:
+             - B is the number of tables
+             - T is the number of samples (rows)
+        
+        train_size : int     
+
+        Returns
+        -------
+        Tensor
+            Compressed tensor of shape (B, T, H') where H' is the compressed feature dimension.
+        """
+        X_train = X[:, :train_size, :]  # Training samples
+        X_test = X[:, train_size:, :]  # Test samples
+        #TODO: this following line assumes that we only compress rows, not columns
+        compressed_X_train, y_train = self.context_compression_transformer(train_x=X_train, test_x=None, train_y=y_train)
+        #flip the first and second dimensions
+        compressed_X_train = compressed_X_train.permute(1, 0, 2)  # Shape: (B, H, train_size)
+        y_train = y_train.permute(1, 0)  # Shape: (train_size, B)
+        X_compressed = torch.cat([compressed_X_train, X_test], dim=1)  # Concatenate compressed training and test samples
+        return X_compressed, y_train
+    
     def _train_forward(
         self, X: Tensor, y_train: Tensor, d: Optional[Tensor] = None, embed_with_test: bool = False
     ) -> Tensor:
@@ -207,28 +240,18 @@ class TabICL(nn.Module):
         B, T, H = X.shape
         train_size = y_train.shape[1]
         assert train_size <= T, "Number of training samples exceeds total samples"
-        X_train = X[:, :train_size, :]  # Training samples
-        X_test = X[:, train_size:, :]  # Test samples
-        #TODO: this following line assumes that we only compress rows, not columns
-        compressed_X_train, y_train = self.context_compression_transformer(train_x=X_train, test_x=None, train_y=y_train)
-        #flip the first and second dimensions
-        compressed_X_train = compressed_X_train.permute(1, 0, 2)  # Shape: (B, H, train_size)
-        y_train = y_train.permute(1, 0)  # Shape: (train_size, B)
-        X = torch.cat([compressed_X_train, X_test], dim=1)  # Concatenate compressed training and test samples
-        print('y_train shape after compression:', y_train.shape)
-        print('Compressed X train shape:', compressed_X_train.shape)
-        print('X test shape:', X_test.shape)
+        X_compressed, y_train_compressed = self._compress(X=X, y_train=y_train, train_size=train_size)
         # Check if d is provided and has the same length as the number of features
         if d is not None and len(d.unique()) == 1 and d[0] == H:
             d = None
 
         # Column-wise embedding -> Row-wise interaction
         representations = self.row_interactor(
-            self.col_embedder(X, d=d, train_size=None if embed_with_test else train_size), d=d
+            self.col_embedder(X_compressed, d=d, train_size=None if embed_with_test else train_size), d=d
         )
 
         # Dataset-wise in-context learning
-        out = self.icl_predictor(representations, y_train=y_train)
+        out = self.icl_predictor(representations, y_train=y_train_compressed)
 
         return out
 
@@ -284,20 +307,14 @@ class TabICL(nn.Module):
 
         train_size = y_train.shape[1]
         assert train_size <= X.shape[1], "Number of training samples exceeds total samples"
-        X_train = X[:, :train_size, :]  # Training samples
-        X_test = X[:, train_size:, :]  # Test samples
-        #TODO: this following line assumes that we only compress rows, not columns
-        compressed_X_train, y_train = self.context_compression_transformer(train_x=X_train, test_x=None, train_y=y_train)
-        print(X.shape)
-        X = torch.cat([compressed_X_train, X_test], dim=1)  # Concatenate compressed training and test samples
-        print(X.shape)
+        X_compressed, y_train_compressed = self._compress(X, y_train, train_size)
         if inference_config is None:
             inference_config = InferenceConfig()
 
         # Column-wise embedding -> Row-wise interaction
         representations = self.row_interactor(
             self.col_embedder(
-                X,
+                X_compressed,
                 train_size=None if embed_with_test else train_size,
                 feature_shuffles=feature_shuffles,
                 mgr_config=inference_config.COL_CONFIG,
@@ -308,7 +325,7 @@ class TabICL(nn.Module):
         # Dataset-wise in-context learning
         out = self.icl_predictor(
             representations,
-            y_train=y_train,
+            y_train=y_train_compressed,
             return_logits=return_logits,
             softmax_temperature=softmax_temperature,
             mgr_config=inference_config.ICL_CONFIG,
