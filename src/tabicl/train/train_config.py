@@ -198,6 +198,21 @@ def build_parser():
     # Compression Config
     parser.add_argument("--use_compressor", action="store_true", help="Whether to use compressor")
     parser.add_argument("--row_compression_percentage", type=float, default=0.5, help="Percentage of rows to compress")
+    parser.add_argument(
+        "--pretrained_ckpt", type=str, default=None,
+        help=(
+            "• Absolute / relative path to a .ckpt file that was trained without the\n"
+            "  compressor, OR\n"
+            "• One of the official filenames:\n"
+            "    tabicl-classifier.ckpt\n"
+            "    tabicl-classifier-v1-0208.ckpt\n"
+            "    tabicl-classifier-v1.1-0506.ckpt\n"
+            "  In that case the file is looked up in the local HF cache and—if\n"
+            "  not present—downloaded from the repo jingang/TabICL-clf when\n"
+            "  --allow_auto_download is set.\n"
+            "If omitted (default) training starts from random initialisation."
+        )
+    )
 
     ###########################################################################
     ###### Checkpointing ######################################################
