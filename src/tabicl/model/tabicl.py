@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional, List
 from torch import nn, Tensor
 
+from .tabcompressor import CompressorProjector, TabCompressor
 from .embedding import ColEmbedding
 from .interaction import RowInteraction
 from .learning import ICLearning
@@ -94,7 +95,8 @@ class TabICL(nn.Module):
         dropout: float = 0.0,
         activation: str | callable = "gelu",
         norm_first: bool = True,
-        finetune_compressor: bool = False,
+        use_compressor: bool = True,
+        row_compression_percentage: float = 10
     ):
         super().__init__()
         self.max_classes = max_classes
@@ -148,35 +150,32 @@ class TabICL(nn.Module):
             activation=activation,
             norm_first=norm_first,
         )
+        self.use_compressor = use_compressor
+        self.row_compression_percentage = row_compression_percentage
+        self.compressor_projector = None
+        if self.use_compressor:
+            self.context_compression_transformer = self._build_compressor()
+        else:
+            self.context_compression_transformer = None  # nothing to build
 
-        self.context_compression_transformer = self._build_compressor(finetune_compressor)
 
-
-    def _build_compressor(self, finetune_compressor: bool):
-        if finetune_compressor:
-            model, _, _ = load_model_criterion_config(
-                model_path=None,
-                check_bar_distribution_criterion=False,
-                cache_trainset_representation=False,
-                which="classifier",
-                version="v2",
-                download=True,
-            )
-            return model
-
-        return ContextCompressionTransformer(
-            config=TabPFNModelConfig(
-                emsize=32,  # TODO: make this configurable
-                features_per_group=1,  # TODO: make this configurable
-                max_num_classes=self.max_classes,
-                nhead=2,  # TODO: make this configurable
-                num_buckets=2,  # TODO: make this configurable
-                max_num_features=50,  # TODO: make this configurable
-                remove_duplicate_features=True,  # TODO: make this configurable
-            ),
+    def _build_compressor(self):
+        return TabCompressor(
+            embed_dim=self.embed_dim,
+            col_num_blocks=self.col_num_blocks,
+            col_nhead=self.col_nhead,
+            col_num_inds=self.col_num_inds,
+            row_num_blocks=self.row_num_blocks,
+            row_nhead=self.row_nhead,
+            row_num_cls=self.row_num_cls,
+            row_rope_base=self.row_rope_base,
+            ff_factor=self.ff_factor,
+            dropout=self.dropout,
+            activation=self.activation,
+            norm_first=self.norm_first,
         )
 
-    def _compress(self, X: Tensor, y_train: Tensor, train_size: int) -> Tensor:
+    def _compress(self, X: Tensor, y_train: Tensor, train_size: int):
         """Compress the input tensor X using the context compression transformer.
 
         Parameters
@@ -191,24 +190,39 @@ class TabICL(nn.Module):
             Labels of shape (B, T) where:
              - B is the number of tables
              - T is the number of samples (rows)
-        
-        train_size : int     
+
+        train_size : int
 
         Returns
         -------
         Tensor
             Compressed tensor of shape (B, T, H') where H' is the compressed feature dimension.
         """
-        X_train = X[:, :train_size, :]  # Training samples
-        X_test = X[:, train_size:, :]  # Test samples
-        #TODO: this following line assumes that we only compress rows, not columns
-        compressed_X_train, y_train = self.context_compression_transformer(train_x=X_train, test_x=None, train_y=y_train)
-        #flip the first and second dimensions
-        compressed_X_train = compressed_X_train.permute(1, 0, 2)  # Shape: (B, H, train_size)
-        y_train = y_train.permute(1, 0)  # Shape: (train_size, B)
-        X_compressed = torch.cat([compressed_X_train, X_test], dim=1)  # Concatenate compressed training and test samples
+        B, _, H = X.shape
+        if not self.use_compressor:
+            return X, y_train
+
+        enc_train = self.context_compression_transformer(X[:, :train_size])  # (B, train, H)
+
+        if self.compressor_projector is None:
+            self.compressor_projector = CompressorProjector(
+                input_dim=enc_train.size(-1),  # d_enc from the headless TabICL encoder
+                output_dim=H  # project back to original width
+            ).to(enc_train.device)
+
+        enc_train = self.compressor_projector(enc_train)  # (B, train, H)
+
+        if self.row_compression_percentage > 0:
+            keep = max(1, int(train_size * (1 - self.row_compression_percentage / 100)))
+            perm = torch.randperm(train_size, device=X.device)[:keep]
+            enc_train = enc_train[:, perm]
+            y_train = y_train[:, perm]
+
+        X_test = X[:, train_size:]
+        X_compressed = torch.cat([enc_train, X_test], dim=1)  # (B, T, H)
+
         return X_compressed, y_train
-    
+
     def _train_forward(
         self, X: Tensor, y_train: Tensor, d: Optional[Tensor] = None, embed_with_test: bool = False
     ) -> Tensor:
@@ -241,13 +255,19 @@ class TabICL(nn.Module):
         train_size = y_train.shape[1]
         assert train_size <= T, "Number of training samples exceeds total samples"
         X_compressed, y_train_compressed = self._compress(X=X, y_train=y_train, train_size=train_size)
+        effective_train_size = y_train_compressed.shape[1]
         # Check if d is provided and has the same length as the number of features
         if d is not None and len(d.unique()) == 1 and d[0] == H:
             d = None
 
         # Column-wise embedding -> Row-wise interaction
         representations = self.row_interactor(
-            self.col_embedder(X_compressed, d=d, train_size=None if embed_with_test else train_size), d=d
+            self.col_embedder(
+                X_compressed,
+                d=d,  # or mgr_config in inference
+                train_size=None if embed_with_test else effective_train_size
+            ),
+            d=d
         )
 
         # Dataset-wise in-context learning
@@ -296,7 +316,7 @@ class TabICL(nn.Module):
             Temperature for the softmax function
 
         inference_config: InferenceConfig
-            Inferenece configuration
+            Inference configuration
 
         Returns
         -------
@@ -308,6 +328,7 @@ class TabICL(nn.Module):
         train_size = y_train.shape[1]
         assert train_size <= X.shape[1], "Number of training samples exceeds total samples"
         X_compressed, y_train_compressed = self._compress(X, y_train, train_size)
+        effective_train_size = y_train_compressed.shape[1]
         if inference_config is None:
             inference_config = InferenceConfig()
 
@@ -315,7 +336,7 @@ class TabICL(nn.Module):
         representations = self.row_interactor(
             self.col_embedder(
                 X_compressed,
-                train_size=None if embed_with_test else train_size,
+                train_size=None if embed_with_test else effective_train_size,
                 feature_shuffles=feature_shuffles,
                 mgr_config=inference_config.COL_CONFIG,
             ),
