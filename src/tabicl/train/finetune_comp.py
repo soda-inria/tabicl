@@ -7,9 +7,13 @@ import functools
 from contextlib import nullcontext
 
 import math
+from pathlib import Path
+
 import numpy as np
 
 import torch
+from huggingface_hub import hf_hub_download
+from huggingface_hub.errors import LocalEntryNotFoundError
 from torch import nn
 from torch import optim
 import torch.nn.functional as F
@@ -34,6 +38,23 @@ warnings.filterwarnings(
 
 
 
+def _resolve_tabicl_ckpt(filename: str,
+                         allow_download: bool = True,
+                         repo: str = "jingang/TabICL-clf") -> Path:
+    """
+    Return a local Path to the requested checkpoint.
+    Download from HF Hub if it's not cached and downloading is allowed.
+    """
+    try:
+        return Path(hf_hub_download(repo_id=repo,
+                                    filename=filename,
+                                    local_files_only=True))
+    except LocalEntryNotFoundError:
+        if not allow_download:
+            raise FileNotFoundError(f"{filename} not cached; enable download or provide a local file.")
+        print(f"Downloading '{filename}' from {repo} …")
+        return Path(hf_hub_download(repo_id=repo, filename=filename))
+
 
 
 
@@ -50,7 +71,8 @@ class TrainerCompFinetuner:
         self.configure_optimizer()
         self.configure_amp()
         self.load_checkpoint()
-        self._freeze_predictor()
+        # Whether to freeze the ICL predictor and related components
+        # self._freeze_predictor()
     
     def _freeze_predictor(self):
         """Freeze the ICL predictor to prevent its parameters from being updated during training."""
@@ -141,31 +163,59 @@ class TrainerCompFinetuner:
         else:
             self.wandb_run = None
 
+
     def build_model(self):
-        """Build and initialize the TabICL model."""
+        """Create TabICL, optionally load a checkpoint."""
 
-        self.model_config = {
-            "max_classes": self.config.max_classes,
-            "embed_dim": self.config.embed_dim,
-            "col_num_blocks": self.config.col_num_blocks,
-            "col_nhead": self.config.col_nhead,
-            "col_num_inds": self.config.col_num_inds,
-            "row_num_blocks": self.config.row_num_blocks,
-            "row_nhead": self.config.row_nhead,
-            "row_num_cls": self.config.row_num_cls,
-            "row_rope_base": self.config.row_rope_base,
-            "icl_num_blocks": self.config.icl_num_blocks,
-            "icl_nhead": self.config.icl_nhead,
-            "ff_factor": self.config.ff_factor,
-            "dropout": self.config.dropout,
-            "activation": self.config.activation,
-            "norm_first": self.config.norm_first,
-            "use_compressor": self.config.use_compressor,
-            "row_compression_percentage": self.config.row_compression_percentage,
-        }
+        ckpt_arg = getattr(self.config, "pretrained_ckpt", None)
+        model_cfg: dict
 
-        model = TabICL(**self.model_config)
-        model.to(device=self.config.device)
+        if ckpt_arg:
+            ckpt_path = Path(ckpt_arg)
+            if not ckpt_path.exists():
+                ckpt_path = _resolve_tabicl_ckpt(
+                    filename=ckpt_arg,
+                    allow_download=getattr(self.config, "allow_auto_download", True)
+                )
+
+            ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=True)
+            model_cfg = ckpt["config"].copy()
+
+            model_cfg.update({
+                "use_compressor": self.config.use_compressor,
+                "row_compression_percentage": self.config.row_compression_percentage
+            })
+
+            # build model & load backbone checkpoint (only compressor weights should be missing)
+            model = TabICL(**model_cfg).to(self.config.device)
+            missing, unexpected = model.load_state_dict(ckpt["state_dict"],
+                                                        strict=False)
+            if self.master_process:
+                print(f"Loaded legacy checkpoint from {ckpt_path}")
+                print(f"  Missing keys (new compressor): {len(missing)}  "
+                      f"Unexpected: {len(unexpected)}")
+        else:
+            # start from scratch → gather hyper-params from CLI
+            model_cfg = {
+                "max_classes": self.config.max_classes,
+                "embed_dim": self.config.embed_dim,
+                "col_num_blocks": self.config.col_num_blocks,
+                "col_nhead": self.config.col_nhead,
+                "col_num_inds": self.config.col_num_inds,
+                "row_num_blocks": self.config.row_num_blocks,
+                "row_nhead": self.config.row_nhead,
+                "row_num_cls": self.config.row_num_cls,
+                "row_rope_base": self.config.row_rope_base,
+                "icl_num_blocks": self.config.icl_num_blocks,
+                "icl_nhead": self.config.icl_nhead,
+                "ff_factor": self.config.ff_factor,
+                "dropout": self.config.dropout,
+                "activation": self.config.activation,
+                "norm_first": self.config.norm_first,
+                "use_compressor": self.config.use_compressor,
+                "row_compression_percentage": self.config.row_compression_percentage
+            }
+            model = TabICL(**model_cfg).to(self.config.device)
 
         if self.master_process:
             num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
