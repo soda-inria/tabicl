@@ -160,6 +160,8 @@ class TrainerCompFinetuner:
             "dropout": self.config.dropout,
             "activation": self.config.activation,
             "norm_first": self.config.norm_first,
+            "use_compressor": self.config.use_compressor,
+            "row_compression_percentage": self.config.row_compression_percentage,
         }
 
         model = TabICL(**self.model_config)
