@@ -203,14 +203,17 @@ class TabICL(nn.Module):
             return X, y_train
 
         enc_train = self.context_compression_transformer(X[:, :train_size])  # (B, train, H)
+        enc_test = self.context_compression_transformer(X[:, train_size:])
 
-        if self.compressor_projector is None:
-            self.compressor_projector = CompressorProjector(
-                input_dim=enc_train.size(-1),  # d_enc from the headless TabICL encoder
-                output_dim=H  # project back to original width
-            ).to(enc_train.device)
-
-        enc_train = self.compressor_projector(enc_train)  # (B, train, H)
+        # TO USE THE COMPRESSOR PROJECTOR WE HAVE TO INSTANTIATE IT FOR EACH BATCH, SINCE BATCHES WILL HAVE
+        # DIFFERENT NUMBER OF FEATURES.
+        # if self.compressor_projector is None:
+        #     self.compressor_projector = CompressorProjector(
+        #         input_dim=enc_train.size(-1),  # d_enc from the headless TabICL encoder
+        #         output_dim=H  # project back to original width
+        #     ).to(enc_train.device)
+        #
+        # enc_train = self.compressor_projector(enc_train)  # (B, train, H)
 
         if self.row_compression_percentage > 0:
             keep = max(1, int(train_size * (1 - self.row_compression_percentage / 100)))
@@ -218,8 +221,7 @@ class TabICL(nn.Module):
             enc_train = enc_train[:, perm]
             y_train = y_train[:, perm]
 
-        X_test = X[:, train_size:]
-        X_compressed = torch.cat([enc_train, X_test], dim=1)  # (B, T, H)
+        X_compressed = torch.cat([enc_train, enc_test], dim=1)  # (B, T, H)
 
         return X_compressed, y_train
 
