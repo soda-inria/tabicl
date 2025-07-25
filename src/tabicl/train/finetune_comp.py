@@ -156,6 +156,7 @@ class TrainerCompFinetuner:
                 config=self.config,
                 resume="allow",
                 mode=self.config.wandb_mode,
+                settings=wandb.Settings(init_timeout=300)
             )
 
             with open(id_path, "w") as f:
