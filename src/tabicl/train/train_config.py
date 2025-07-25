@@ -195,6 +195,10 @@ def build_parser():
         "--norm_first", default=True, type=str2bool, help="If True, use pre-norm transformer architecture"
     )
 
+    # Compression Config
+    parser.add_argument("--use_compressor", action="store_true", help="Whether to use compressor")
+    parser.add_argument("--row_compression_percentage", type=float, default=0.5, help="Percentage of rows to compress")
+
     ###########################################################################
     ###### Checkpointing ######################################################
     ###########################################################################
