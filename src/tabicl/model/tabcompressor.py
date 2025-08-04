@@ -14,6 +14,8 @@ class TabCompressor(nn.Module):
     def __init__(
         self,
         *,
+        max_features: int,
+        row_compression_percentage: float,
         embed_dim: int = 128,
         col_num_blocks: int = 3,
         col_nhead: int = 4,
@@ -53,11 +55,24 @@ class TabCompressor(nn.Module):
         )
 
         self.d_enc = embed_dim * row_num_cls
+        self.projector = CompressorProjector(
+            input_dim=self.d_enc,  # d_enc from the headless TabICL encoder
+            output_dim=max_features  # project back to original width
+        )
+        self.row_compression_percentage = row_compression_percentage
 
 
-    def forward(self, X: Tensor) -> Tensor:
+    def forward(self, X: Tensor, y: Tensor) -> Tensor:
+        train_size, _, _ = X.shape
         reps = self.row_interactor(self.col_embedder(X, train_size=None))
-        return reps
+        
+        if self.row_compression_percentage > 0:
+            keep = max(1, int(train_size * (1 - self.row_compression_percentage / 100)))
+            #perm = torch.randperm(train_size, device=X.device)[:keep]
+            perm = range(keep)  # For testing purposes, use the first `keep` rows
+            reps = reps[:, perm]
+            y = y[:, perm]
+        return reps, y
 
 
 class CompressorProjector(nn.Module):

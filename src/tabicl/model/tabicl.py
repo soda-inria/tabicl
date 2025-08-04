@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Optional, List
 from torch import nn, Tensor
 
-from .tabcompressor import CompressorProjector, TabCompressor
+from .tabcompressor import TabCompressor
 from .embedding import ColEmbedding
 from .interaction import RowInteraction
 from .learning import ICLearning
@@ -96,7 +96,9 @@ class TabICL(nn.Module):
         activation: str | callable = "gelu",
         norm_first: bool = True,
         use_compressor: bool = True,
-        row_compression_percentage: float = 10
+        row_compression_percentage: float = 10,
+        compressor_arch: str = "tabpfn",
+        compressor_max_features: int = 1000,
     ):
         super().__init__()
         self.max_classes = max_classes
@@ -153,6 +155,8 @@ class TabICL(nn.Module):
         self.use_compressor = use_compressor
         self.row_compression_percentage = row_compression_percentage
         self.compressor_projector = None
+        self.compressor_arch = compressor_arch
+        self.compressor_max_features = compressor_max_features
         if self.use_compressor:
             self.context_compression_transformer = self._build_compressor()
         else:
@@ -160,20 +164,34 @@ class TabICL(nn.Module):
 
 
     def _build_compressor(self):
-        return TabCompressor(
-            embed_dim=self.embed_dim,
-            col_num_blocks=self.col_num_blocks,
-            col_nhead=self.col_nhead,
-            col_num_inds=self.col_num_inds,
-            row_num_blocks=self.row_num_blocks,
-            row_nhead=self.row_nhead,
-            row_num_cls=self.row_num_cls,
-            row_rope_base=self.row_rope_base,
-            ff_factor=self.ff_factor,
-            dropout=self.dropout,
-            activation=self.activation,
-            norm_first=self.norm_first,
-        )
+        """Build the context compression transformer based on the specified architecture."""
+        if self.compressor_arch == "tabpfn":
+            # Load the TabPFN model configuration
+            model, _, _ = load_model_criterion_config(
+                model_path=None,
+                check_bar_distribution_criterion=False,
+                cache_trainset_representation=False,
+                which="classifier",
+                version="v2",
+                download=True,
+            )
+            return model
+        elif self.compressor_arch == "tabicl":
+            return TabCompressor(
+                embed_dim=self.embed_dim,
+                col_num_blocks=self.col_num_blocks,
+                col_nhead=self.col_nhead,
+                col_num_inds=self.col_num_inds,
+                row_num_blocks=self.row_num_blocks,
+                row_nhead=self.row_nhead,
+                row_num_cls=self.row_num_cls,
+                row_rope_base=self.row_rope_base,
+                ff_factor=self.ff_factor,
+                dropout=self.dropout,
+                activation=self.activation,
+                norm_first=self.norm_first,
+                max_features=self.compressor_max_features,
+            )
 
     def _compress(self, X: Tensor, y_train: Tensor, train_size: int):
         """Compress the input tensor X using the context compression transformer.
@@ -202,26 +220,13 @@ class TabICL(nn.Module):
         if not self.use_compressor:
             return X, y_train
 
-        enc_train = self.context_compression_transformer(X[:, :train_size])  # (B, train, H)
-        enc_test = self.context_compression_transformer(X[:, train_size:])
+        enc_train, y_train = self.context_compression_transformer(
+            X[:, :train_size, :], y_train
+        )
+        X_test = X[:, train_size:, :]
 
-        # TO USE THE COMPRESSOR PROJECTOR WE HAVE TO INSTANTIATE IT FOR EACH BATCH, SINCE BATCHES WILL HAVE
-        # DIFFERENT NUMBER OF FEATURES.
-        # if self.compressor_projector is None:
-        #     self.compressor_projector = CompressorProjector(
-        #         input_dim=enc_train.size(-1),  # d_enc from the headless TabICL encoder
-        #         output_dim=H  # project back to original width
-        #     ).to(enc_train.device)
-        #
-        # enc_train = self.compressor_projector(enc_train)  # (B, train, H)
 
-        if self.row_compression_percentage > 0:
-            keep = max(1, int(train_size * (1 - self.row_compression_percentage / 100)))
-            perm = torch.randperm(train_size, device=X.device)[:keep]
-            enc_train = enc_train[:, perm]
-            y_train = y_train[:, perm]
-
-        X_compressed = torch.cat([enc_train, enc_test], dim=1)  # (B, T, H)
+        X_compressed = torch.cat([enc_train, X_test], dim=1)  # (B, T, H)
 
         return X_compressed, y_train
 
