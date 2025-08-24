@@ -745,12 +745,10 @@ class FeatureShuffler:
         else:
             method = self.method
 
-        # No shuffling
         if method == "none" or n_estimators == 1:
+            # No shuffling
             shuffle_patterns = [feature_indices]
-
-        # Generate permutations based on method
-        if method == "shift":
+        elif method == "shift":
             # All possible circular shifts
             shuffle_patterns = [feature_indices[-i:] + feature_indices[:-i] for i in range(self.n_features)]
         elif method == "random":
