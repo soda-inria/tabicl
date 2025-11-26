@@ -10,7 +10,7 @@ authors = [
     { name = "Gaël Varoquaux" } ,
 ]
 license = { file = "LICENSE" }
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.9,<3.14"
 keywords = ["tabular data", "foundation model", "TabICL", "in-context learning"]
 classifiers = [
     "Intended Audience :: Science/Research",
@@ -23,6 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
     "torch>=2.2,<3",  # to enjoy Flash Attention v2
