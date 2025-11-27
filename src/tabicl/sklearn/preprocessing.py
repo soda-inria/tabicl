@@ -22,6 +22,8 @@ from sklearn.preprocessing import (
 )
 from sklearn.utils.validation import check_is_fitted
 
+from .sklearn_utils import validate_data
+
 
 class RecursionLimitManager:
     """Context manager to temporarily set the recursion limit.
@@ -194,7 +196,7 @@ class UniqueFeatureFilter(TransformerMixin, BaseEstimator):
         self : object
             Returns self.
         """
-        X = self._validate_data(X)
+        X = validate_data(self, X)
 
         # If there are very few samples, keep all features
         if X.shape[0] <= self.threshold:
@@ -223,7 +225,7 @@ class UniqueFeatureFilter(TransformerMixin, BaseEstimator):
             Transformed array with selected features.
         """
         check_is_fitted(self)
-        X = self._validate_data(X, reset=False)
+        X = validate_data(self, X, reset=False)
 
         return X[:, self.features_to_keep_]
 
@@ -281,7 +283,7 @@ class OutlierRemover(TransformerMixin, BaseEstimator):
         self : object
             Returns self.
         """
-        X = self._validate_data(X)
+        X = validate_data(self, X)
 
         # First stage: Identify outliers using initial statistics
         self.means_ = np.nanmean(X, axis=0)
@@ -330,7 +332,7 @@ class OutlierRemover(TransformerMixin, BaseEstimator):
             Transformed array with clipped values.
         """
         check_is_fitted(self)
-        X = self._validate_data(X, reset=False)
+        X = validate_data(self, X, reset=False)
         X = np.maximum(-np.log1p(np.abs(X)) + self.lower_bounds_, X)
         X = np.minimum(np.log1p(np.abs(X)) + self.upper_bounds_, X)
 
@@ -385,7 +387,7 @@ class CustomStandardScaler(TransformerMixin, BaseEstimator):
         self : object
             Returns self.
         """
-        X = self._validate_data(X)
+        X = validate_data(self, X)
 
         self.mean_ = np.mean(X, axis=0)
         self.scale_ = np.std(X, axis=0) + self.epsilon
@@ -406,7 +408,7 @@ class CustomStandardScaler(TransformerMixin, BaseEstimator):
             Transformed array after scaling and clipping.
         """
         check_is_fitted(self)
-        X = self._validate_data(X, reset=False)
+        X = validate_data(self, X, reset=False)
 
         X_scaled = (X - self.mean_) / self.scale_
         X_clipped = np.clip(X_scaled, self.clip_min, self.clip_max)
@@ -603,7 +605,7 @@ class PreprocessingPipeline(TransformerMixin, BaseEstimator):
         self : object
             Returns self.
         """
-        X = self._validate_data(X)
+        X = validate_data(self, X)
 
         # 1. Apply standard scaling
         self.standard_scaler_ = CustomStandardScaler()
@@ -657,7 +659,7 @@ class PreprocessingPipeline(TransformerMixin, BaseEstimator):
             Preprocessed data.
         """
         check_is_fitted(self)
-        X = self._validate_data(X, reset=False, copy=True)
+        X = validate_data(self, X, reset=False, copy=True)
         # Standard scaling
         X = self.standard_scaler_.transform(X)
         # Normalization
@@ -909,7 +911,10 @@ class EnsembleGenerator(TransformerMixin, BaseEstimator):
         self : object
             Fitted generator.
         """
-        self._validate_data(X, y)
+        if y is None:
+            raise ValueError(f"{self.__class__.__name__} requires y to be passed, but the target y is None")
+
+        validate_data(self, X, y)
 
         if self.norm_methods is None:
             self.norm_methods_ = ["none", "power"]

@@ -2,13 +2,11 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
-from packaging import version
 from typing import Optional, List, Dict
 
 import numpy as np
 import torch
 
-import sklearn
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_is_fitted
@@ -18,12 +16,12 @@ from huggingface_hub import hf_hub_download
 from huggingface_hub.utils import LocalEntryNotFoundError
 
 from .preprocessing import TransformToNumerical, EnsembleGenerator
+from .sklearn_utils import validate_data
 from tabicl import InferenceConfig
 from tabicl import TabICL
 
 
 warnings.filterwarnings("ignore", category=FutureWarning, module="sklearn")
-OLD_SKLEARN = version.parse(sklearn.__version__) < version.parse("1.6")
 
 
 class TabICLClassifier(ClassifierMixin, BaseEstimator):
@@ -357,12 +355,10 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
             If the number of classes exceeds the model's maximum supported classes
             and hierarchical classification is disabled.
         """
+        if y is None:
+            raise ValueError(f"{self.__class__.__name__} requires y to be passed, but the target y is None")
 
-        if OLD_SKLEARN:
-            # Workaround for compatibility with scikit-learn prior to v1.6
-            X, y = self._validate_data(X, y, dtype=None, cast_to_ndarray=False)
-        else:
-            X, y = self._validate_data(X, y, dtype=None, skip_check_array=True)
+        X, y = validate_data(self, X, y, dtype=None, skip_check_array=True)
 
         check_classification_targets(y)
 
@@ -536,12 +532,7 @@ class TabICLClassifier(ClassifierMixin, BaseEstimator):
             torch.set_num_threads(n_threads)
 
         # Preserve DataFrame structure to retain column names and types for correct feature transformation
-        if OLD_SKLEARN:
-            # Workaround for compatibility with scikit-learn prior to v1.6
-            X = self._validate_data(X, reset=False, dtype=None, cast_to_ndarray=False)
-        else:
-            X = self._validate_data(X, reset=False, dtype=None, skip_check_array=True)
-
+        X = validate_data(self, X, reset=False, dtype=None, skip_check_array=True)
         X = self.X_encoder_.transform(X)
 
         data = self.ensemble_generator_.transform(X)
