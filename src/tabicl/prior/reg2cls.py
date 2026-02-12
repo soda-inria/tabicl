@@ -10,24 +10,25 @@ import torch.nn.functional as F
 
 
 def torch_nanstd(input, dim=None, keepdim=False, ddof=0, *, dtype=None) -> Tensor:
-    """Calculates the standard deviation of a tensor, ignoring NaNs, using NumPy internally.
+    """Calculate the standard deviation of a tensor, ignoring NaNs, using NumPy internally.
 
     Parameters
     ----------
     input : Tensor
         The input tensor.
 
-    dim : int or tuple[int], optional
-        The dimension or dimensions to reduce. Defaults to None (reduce all dimensions).
+    dim : int or tuple of int, optional
+        The dimension or dimensions to reduce. Defaults to None (reduce all
+        dimensions).
 
-    keepdim : bool, optional
-        Whether the output tensor has `dim` retained or not. Defaults to False.
+    keepdim : bool, default=False
+        Whether the output tensor has `dim` retained or not.
 
-    ddof : int, optional
+    ddof : int, default=0
         Delta Degrees of Freedom.
 
     dtype : torch.dtype, optional
-        The desired data type of returned tensor. Defaults to None.
+        The desired data type of returned tensor.
 
     Returns
     -------
@@ -45,22 +46,23 @@ def torch_nanstd(input, dim=None, keepdim=False, ddof=0, *, dtype=None) -> Tenso
 
 
 def standard_scaling(input: Tensor, clip_value: float = 100) -> Tensor:
-    """Standardizes features by removing the mean and scaling to unit variance.
+    """Standardize features by removing the mean and scaling to unit variance.
 
-    NaNs are ignored in mean/std calculation.
+    Computes :math:`(x - \mu) / \sigma` where NaNs are ignored in the
+    :math:`\mu` and :math:`\sigma` calculation.
 
     Parameters
     ----------
     input : Tensor
-        Input tensor of shape (T, H), where T is sequence length, H is features.
+        Input tensor of shape ``(T, H)``, where T is sequence length, H is features.
 
-    clip_value : float, optional, default=100
+    clip_value : float, default=100
         The value to clip the standardized input to, preventing extreme outliers.
 
     Returns
     -------
     Tensor
-        The standardized input, clipped between -clip_value and clip_value.
+        The standardized input, clipped between ``-clip_value`` and ``clip_value``.
     """
     mean = torch.nanmean(input, dim=0)
     std = torch_nanstd(input, dim=0, ddof=1 if input.shape[0] > 1 else 0).clip(min=1e-6)
@@ -70,14 +72,17 @@ def standard_scaling(input: Tensor, clip_value: float = 100) -> Tensor:
 
 
 def outlier_removing(input: Tensor, threshold: float = 4.0) -> Tensor:
-    """Clamps outliers in the input tensor based on a specified number of standard deviations (threshold).
+    """Clamp outliers in the input tensor based on a specified number of standard deviations.
+
+    Values outside :math:`[\mu - k\sigma,\; \mu + k\sigma]` are clamped,
+    where :math:`k` is the threshold.
 
     Parameters
     ----------
     input : Tensor
-        Input tensor of shape (T, H).
+        Input tensor of shape ``(T, H)``.
 
-    threshold : float, optional, default=4.0
+    threshold : float, default=4.0
         Number of standard deviations to use as the cutoff.
 
     Returns
@@ -115,17 +120,17 @@ def outlier_removing(input: Tensor, threshold: float = 4.0) -> Tensor:
 
 
 def permute_classes(input: Tensor) -> Tensor:
-    """Label encoding and permute classes.
+    """Label-encode and permute classes.
 
     Parameters
     ----------
     input : Tensor
-        Target of shape (T,) containing class labels.
+        Target of shape ``(T,)`` containing class labels.
 
     Returns
     -------
     Tensor
-        Target with potentially permuted labels (T,).
+        Target with potentially permuted labels of shape ``(T,)``.
     """
     unique_vals, _ = torch.unique(input, return_inverse=True)
     num_classes = len(unique_vals)
@@ -151,43 +156,42 @@ class BalancedBinarize(nn.Module):
         super().__init__()
 
     def forward(self, input: Tensor) -> Tensor:
-        """
+        """Binarize input based on median.
+
         Parameters
         ----------
         input : Tensor
-            Input of shape (T,).
+            Input of shape ``(T,)``.
 
         Returns
         -------
         Tensor
-            Binarized output (0 or 1) of shape (T,).
+            Binarized output (0 or 1) of shape ``(T,)``.
         """
         return (input > torch.median(input)).float()
 
 
 class MulticlassAssigner(nn.Module):
-    """Transforms the input into discrete classes using rank-based or value-based thresholding.
+    """Transform the input into discrete classes using rank-based or value-based thresholding.
 
-    Input shape: (T,) -> Output shape: (T,)
+    Input shape: ``(T,)`` -> Output shape: ``(T,)``
+
+    Parameters
+    ----------
+    num_classes : int
+        The target number of discrete classes to output.
+
+    mode : str, default="rank"
+        The method used to determine class boundaries:
+        - "rank": Boundaries are randomly sampled from the input.
+        - "value": Boundaries are randomly sampled from a normal distribution.
+
+    ordered_prob : float, default=0.2
+        Probability of keeping the natural class order.
     """
 
     def __init__(self, num_classes: int, mode: str = "rank", ordered_prob: float = 0.2):
-        """
-        Initializes the MulticlassAssigner.
-
-        Parameters
-        ----------
-        num_classes : int
-            The target number of discrete classes to output.
-
-        mode : str, default="rank"
-            The method used to determine class boundaries:
-            - "rank": Boundaries are randomly sampled from the input.
-            - "value": Boundaries are randomly sampled from a normal distribution.
-
-        ordered_prob : float, default=0.2
-            Probability of keeping the natural class order.
-        """
+        """Initialize the MulticlassAssigner."""
         super().__init__()
         if num_classes < 2:
             raise ValueError("The number of classes must be at least 2 for MulticlassAssigner.")
@@ -197,16 +201,18 @@ class MulticlassAssigner(nn.Module):
         self.mode = mode
 
     def forward(self, input: Tensor) -> Tensor:
-        """
+        """Assign class labels to continuous input values.
+
         Parameters
         ----------
         input : Tensor
-            Input of shape (T,).
+            Input of shape ``(T,)``.
 
         Returns
         -------
         Tensor
-            Class labels of shape (T,) with integer values [0, num_classes-1].
+            Class labels of shape ``(T,)`` with integer values
+            ``[0, num_classes-1]``.
         """
 
         T = input.shape[0]
@@ -233,25 +239,34 @@ class MulticlassAssigner(nn.Module):
 
 
 class Reg2Cls(nn.Module):
-    """Transforms a single regression dataset (features X, targets y) into a classification format
-    through feature processing (categorical conversion, normalization) and target transformation
-    (regression-to-classification).
+    """Transform a regression dataset into a classification format.
+
+    Applies feature processing (categorical conversion, normalization) and target
+    transformation (regression-to-classification) to features X and targets y.
 
     Parameters
     ----------
-    hyperparameters : dict
+    hp : dict
         Configuration dictionary containing settings for feature processing and
         target transformation. Expected keys include:
         - num_classes (int): Number of classes for classification conversion.
-        - max_features (int): Maximum number of features allowed (defines output feature dim).
-        - multiclass_type (str): Strategy for multiclass conversion ('rank' or 'value').
-        - balanced (bool): Whether to enforce balanced classes (currently only for binary).
+        - max_features (int): Maximum number of features allowed (defines output
+          feature dim).
+        - multiclass_type (str): Strategy for multiclass conversion ('rank' or
+          'value').
+        - balanced (bool): Whether to enforce balanced classes (currently only
+          for binary).
         - multiclass_ordered_prob (float): Prob. of keeping natural class order.
-        - cat_prob (float, optional): Probability of converting features to categorical.
-        - max_categories (int, optional): Max categories for categorical conversion.
-        - scale_by_max_features (bool): Whether to scale features by proportion used.
-        - permute_features (bool, optional): Whether to randomly permute features. Defaults to True.
-        - permute_labels (bool, optional): Whether to randomly permute final class labels. Defaults to True.
+        - cat_prob (float, optional): Probability of converting features to
+          categorical.
+        - max_categories (int, optional): Max categories for categorical
+          conversion.
+        - scale_by_max_features (bool): Whether to scale features by proportion
+          used.
+        - permute_features (bool, optional): Whether to randomly permute features.
+          Defaults to True.
+        - permute_labels (bool, optional): Whether to randomly permute final class
+          labels. Defaults to True.
 
     Attributes
     ----------
@@ -280,22 +295,23 @@ class Reg2Cls(nn.Module):
             raise ValueError(f"Invalid number of classes: {num_classes}")
 
     def forward(self, X: Tensor, y: Tensor) -> tuple[Tensor, Tensor]:
-        """Processes a single dataset (X, y) according to the initialized hyperparameters.
+        """Process a single dataset (X, y) according to the initialized hyperparameters.
 
         Parameters
         ----------
         X : Tensor
-            Features of shape (T, H), where H is the number of features.
+            Features of shape ``(T, H)``, where H is the number of features.
 
         y : Tensor
-            Targets of shape (T,).
+            Targets of shape ``(T,)``.
 
         Returns
         -------
-        tuple[Tensor, Tensor]
-            A tuple containing:
-            - Processed features of shape (T, max_features).
-            - Processed targets of shape (T,).
+        X_out : Tensor
+            Processed features of shape ``(T, max_features)``.
+
+        y_out : Tensor
+            Processed targets of shape ``(T,)``.
         """
         if X.ndim != 2 or y.ndim != 1 or X.shape[0] != y.shape[0]:
             raise ValueError(f"Input shapes mismatch or incorrect dims. X: {X.shape}, y: {y.shape}")
@@ -312,19 +328,20 @@ class Reg2Cls(nn.Module):
         return X.float(), y.float()
 
     def _num2cat(self, X: Tensor) -> Tensor:
-        """Converts some features to categorical based on hyperparameters.
+        """Convert some features to categorical based on hyperparameters.
 
         Operates inplace conceptually, returns the modified tensor.
 
         Parameters
         ----------
         X : Tensor
-            Feature tensor of shape (T, H).
+            Feature tensor of shape ``(T, H)``.
 
         Returns
         -------
         Tensor
-            Feature tensor with some columns potentially converted to categorical (T, H).
+            Feature tensor with some columns potentially converted to categorical
+            of shape ``(T, H)``.
         """
 
         if random.random() < self.hp.get("cat_prob", 0.2):
@@ -345,12 +362,12 @@ class Reg2Cls(nn.Module):
         Parameters
         ----------
         X : Tensor
-            Feature tensor of shape (T, H).
+            Feature tensor of shape ``(T, H)``.
 
         Returns
         -------
         Tensor
-            Normalized feature tensor (T, H).
+            Normalized feature tensor of shape ``(T, H)``.
         """
 
         num_features = X.shape[1]

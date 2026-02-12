@@ -22,7 +22,14 @@ def train_size_type(value):
 
 
 def build_parser():
-    """Build parser with all TabICL training arguments."""
+    """Build an argument parser with all TabICL training arguments.
+
+    Returns
+    -------
+    argparse.ArgumentParser
+        Configured argument parser with all training, model, and
+        checkpoint arguments.
+    """
     parser = argparse.ArgumentParser()
 
     ###########################################################################

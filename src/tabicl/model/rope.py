@@ -1,18 +1,17 @@
 """
-Rotary positional embedding 
+Rotary positional embedding
 
 Copy from https://github.com/lucidrains/rotary-embedding-torch
 """
 
 from __future__ import annotations
+from typing import Literal
+
 from math import pi
-
-import torch
-from torch import nn, einsum, broadcast_tensors, Tensor
-
 from einops import rearrange, repeat
 
-from typing import Literal
+import torch
+from torch import nn, einsum, Tensor, broadcast_tensors
 
 
 def exists(val):
@@ -29,23 +28,79 @@ def broadcat(tensors, dim=-1):
     return torch.cat(broadcasted_tensors, dim=dim)
 
 
-def rotate_half(x):
-    """rotary embedding helper functions"""
+def rotate_half_interleaved(x):
+    """Interleaved rotation: pairs ``(0,1), (2,3), (4,5)``, etc.
+
+    Given input ``[..., d]``, rearranges to ``[..., d/2, 2]`` and rotates pairs.
+    Used by default in most RoPE implementations (e.g. LLaMA).
+    """
     x = rearrange(x, "... (d r) -> ... d r", r=2)
     x1, x2 = x.unbind(dim=-1)
     x = torch.stack((-x2, x1), dim=-1)
     return rearrange(x, "... d r -> ... (d r)")
 
 
+def rotate_half_contiguous(x):
+    """Rotate by splitting into contiguous first and second halves.
+
+    Given input ``[..., d]``, splits into ``[..., :d/2]`` and ``[..., d/2:]``
+    and rotates. Returns ``[-x2, x1]`` where ``x1`` is the first half and
+    ``x2`` is the second half.
+    """
+    half = x.shape[-1] // 2
+    x1 = x[..., :half]
+    x2 = x[..., half:]
+    return torch.cat([-x2, x1], dim=-1)
+
+
 @torch.autocast("cuda", enabled=False)
-def apply_rotary_emb(freqs, t, start_index=0, scale=1.0, seq_dim=-2):
+def apply_rotary_emb(freqs, t, start_index=0, scale=1.0, seq_dim=-2, interleaved=True):
+    """Apply rotary embeddings to tensor.
+
+    Computes :math:`x \\cdot \\cos(\\theta) + \\text{rotate}(x) \\cdot \\sin(\\theta)`
+    for the portion of the input that overlaps with the frequency tensor.
+
+    Parameters
+    ----------
+    freqs : Tensor
+        Frequency tensor for rotation. For interleaved mode, shape is
+        ``(..., dim)`` where ``dim = 2 * half``. For non-interleaved mode,
+        shape is ``(..., half)``.
+
+    t : Tensor
+        Input tensor to rotate.
+
+    start_index : int, default=0
+        Starting index for rotation in the last dimension.
+
+    scale : float, default=1.0
+        Scaling factor for the rotation.
+
+    seq_dim : int, default=-2
+        Sequence dimension.
+
+    interleaved : bool, default=True
+        If True, uses interleaved rotation where dimension pairs are
+        ``(0,1), (2,3)``, etc. If False, uses non-interleaved rotation
+        where the embedding is split into first half ``[0:d//2]`` and
+        second half ``[d//2:d]``.
+
+    Returns
+    -------
+    Tensor
+        Rotated tensor, same shape as ``t``.
+    """
     dtype = t.dtype
 
     if t.ndim == 3:
         seq_len = t.shape[seq_dim]
         freqs = freqs[-seq_len:]
 
-    rot_dim = freqs.shape[-1]
+    if interleaved:
+        rot_dim = freqs.shape[-1]
+    else:
+        rot_dim = freqs.shape[-1] * 2  # Non-interleaved: freqs has shape (L, half)
+
     end_index = start_index + rot_dim
 
     assert (
@@ -58,7 +113,18 @@ def apply_rotary_emb(freqs, t, start_index=0, scale=1.0, seq_dim=-2):
     t_right = t[..., end_index:]
 
     # Apply rotary embeddings without modifying t in place
-    t_transformed = (t_middle * freqs.cos() * scale) + (rotate_half(t_middle) * freqs.sin() * scale)
+    # Formula: x * cos + rotate(x) * sin
+    if interleaved:
+        # Interleaved mode: dimension pairs are (0,1), (2,3), etc.
+        # freqs has shape (..., rot_dim) where rot_dim = dim
+        t_transformed = (t_middle * freqs.cos() * scale) + (rotate_half_interleaved(t_middle) * freqs.sin() * scale)
+    else:
+        # Non-interleaved mode: split embedding into first half [0:d//2] and second half [d//2:d]
+        # freqs has shape (..., half) for non-interleaved mode
+        # Expand to full dim by concatenating: [f0, f1, ..., f0, f1, ...]
+        cos_freq = torch.cat([freqs.cos(), freqs.cos()], dim=-1) * scale
+        sin_freq = torch.cat([freqs.sin(), freqs.sin()], dim=-1) * scale
+        t_transformed = (t_middle * cos_freq) + (rotate_half_contiguous(t_middle) * sin_freq)
 
     out = torch.cat((t_left, t_transformed, t_right), dim=-1)
 
@@ -76,83 +142,68 @@ def apply_learned_rotations(rotations, t, start_index=0, freq_ranges=None):
 
 
 class RotaryEmbedding(nn.Module):
-    """
-    RotaryEmbedding is a module that implements rotary positional embeddings for
-    use in transformer models. Rotary embeddings encode positional information
-    in a way that allows continuous rotation of embeddings, enhancing the model's
-    ability to capture long-range dependencies and positional relations.
+    """Rotary positional embeddings for use in transformer models.
 
-    Attributes:
-        dim (int):
-            The dimension of the embeddings.
+    Rotary embeddings encode positional information in a way that allows
+    continuous rotation of embeddings, enhancing the model's ability to
+    capture long-range dependencies and positional relations.
 
-        custom_freqs (Tensor | None):
-            Custom frequency tensor for the embeddings.
-            If None, default frequencies based on the 'freqs_for' parameter are used.
+    Attributes
+    ----------
+    dim : int
+        The dimension of the embeddings.
 
-        freqs_for (Literal['lang', 'pixel', 'constant']):
-            Specifies the type of frequencies to use:
-            'lang' for language, 'pixel' for image data, or 'constant' for a fixed frequency.
+    interleaved : bool
+        If True, uses interleaved rotation where dimension pairs are
+        ``(0,1), (2,3)``, etc. If False, uses non-interleaved rotation
+        where the embedding is split into first half ``[0:d//2]`` and
+        second half ``[d//2:d]``.
 
-        theta (float):
-            A base scaling factor for the rotary embeddings.
+    custom_freqs : Tensor or None
+        Custom frequency tensor for the embeddings.
+        If None, default frequencies based on ``freqs_for`` are used.
 
-        max_freq (int):
-            The maximum frequency for pixel-based embeddings.
+    freqs_for : {'lang', 'pixel', 'constant'}
+        Specifies the type of frequencies to use:
+        ``'lang'`` for language, ``'pixel'`` for image data, or
+        ``'constant'`` for a fixed frequency.
 
-        num_freqs (int):
-            The number of frequencies to use when 'freqs_for' is 'constant'.
+    theta : float
+        A base scaling factor for the rotary embeddings.
 
-        learned_freq (bool):
-            If True, the frequencies are learnable parameters.
+    max_freq : int
+        The maximum frequency for pixel-based embeddings.
 
-        use_xpos (bool):
-            If True, uses extrapolatable rotary embeddings (XPOS).
+    num_freqs : int
+        The number of frequencies to use when ``freqs_for='constant'``.
 
-        xpos_scale_base (float):
-            The base scaling factor used for XPOS.
+    learned_freq : bool
+        If True, the frequencies are learnable parameters.
 
-        interpolate_factor (float):
-            Factor by which the sequence length is interpolated.
+    use_xpos : bool
+        If True, uses extrapolatable rotary embeddings (XPOS).
 
-        theta_rescale_factor (float):
-            Rescaling factor applied to theta for longer sequence lengths.
+    xpos_scale_base : float
+        The base scaling factor used for XPOS.
 
-        seq_before_head_dim (bool):
-            If True, sequences are handled before the head dimension.
+    interpolate_factor : float
+        Factor by which the sequence length is interpolated.
 
-        cache_if_possible (bool):
-            If True, caches computed frequencies and scales to optimize performance.
+    theta_rescale_factor : float
+        Rescaling factor applied to theta for longer sequence lengths.
 
-    Methods:
-        tmp_store(key, value):
-            Temporarily stores a value in a non-persistent buffer.
+    seq_before_head_dim : bool
+        If True, sequences are handled before the head dimension.
 
-        get_seq_pos(seq_len, device, dtype, offset=0):
-            Computes the sequence positions used in the rotary embedding process.
-
-        rotate_queries_or_keys(t, seq_dim=None, offset=0, scale=None):
-            Applies rotary embedding to queries or keys.
-
-        rotate_queries_with_cached_keys(q, k, seq_dim=None, offset=0):
-            Rotates queries and cached keys for efficient attention computation.
-
-        rotate_queries_and_keys(q, k, seq_dim=None):
-            Rotates both queries and keys simultaneously, particularly when using XPOS.
-
-        get_scale(t, seq_len=None, offset=0):
-            Computes scaling factors for XPOS.
-
-        get_axial_freqs(*dims):
-            Computes frequencies for axial positions, used in pixel-based embeddings.
-
-        forward(t, seq_len=None, offset=0):
-            Computes and applies the rotary embeddings based on the input tensor `t`.
+    cache_if_possible : bool
+        If True, caches computed frequencies and scales to optimize
+        performance.
     """
 
     def __init__(
         self,
         dim,
+        interleaved=True,
         custom_freqs: Tensor | None = None,
         freqs_for: Literal["lang", "pixel", "constant"] = "lang",
         theta=10000,
@@ -207,6 +258,9 @@ class RotaryEmbedding(nn.Module):
         assert interpolate_factor >= 1.0
         self.interpolate_factor = interpolate_factor
 
+        # interleaved rotation mode
+        self.interleaved = interleaved
+
         # xpos
 
         self.use_xpos = use_xpos
@@ -243,12 +297,17 @@ class RotaryEmbedding(nn.Module):
 
         seq = self.get_seq_pos(seq_len, device=device, dtype=dtype, offset=offset)
 
-        freqs = self.forward(seq, seq_len=seq_len, offset=offset)
+        if self.interleaved:
+            freqs = self.forward(seq, seq_len=seq_len, offset=offset)
+        else:
+            # For non-interleaved mode, compute freqs without repetition
+            # freqs shape: (seq_len, half) instead of (seq_len, dim)
+            freqs = einsum("..., f -> ... f", seq.type(self.freqs.dtype), self.freqs)
 
         if seq_dim == -3:
             freqs = rearrange(freqs, "n d -> n 1 d")
 
-        return apply_rotary_emb(freqs, t, scale=default(scale, 1.0), seq_dim=seq_dim)
+        return apply_rotary_emb(freqs, t, scale=default(scale, 1.0), seq_dim=seq_dim, interleaved=self.interleaved)
 
     def rotate_queries_with_cached_keys(self, q, k, seq_dim=None, offset=0):
         dtype, device, seq_dim = q.dtype, q.device, default(seq_dim, self.default_seq_dim)
@@ -280,15 +339,19 @@ class RotaryEmbedding(nn.Module):
 
         seq = self.get_seq_pos(seq_len, dtype=dtype, device=device)
 
-        freqs = self.forward(seq, seq_len=seq_len)
+        if self.interleaved:
+            freqs = self.forward(seq, seq_len=seq_len)
+        else:
+            # For non-interleaved mode, compute freqs without repetition
+            freqs = einsum("..., f -> ... f", seq.type(self.freqs.dtype), self.freqs)
         scale = self.get_scale(seq, seq_len=seq_len).to(dtype)
 
         if seq_dim == -3:
             freqs = rearrange(freqs, "n d -> n 1 d")
             scale = rearrange(scale, "n d -> n 1 d")
 
-        rotated_q = apply_rotary_emb(freqs, q, scale=scale, seq_dim=seq_dim)
-        rotated_k = apply_rotary_emb(freqs, k, scale=scale**-1, seq_dim=seq_dim)
+        rotated_q = apply_rotary_emb(freqs, q, scale=scale, seq_dim=seq_dim, interleaved=self.interleaved)
+        rotated_k = apply_rotary_emb(freqs, k, scale=scale**-1, seq_dim=seq_dim, interleaved=self.interleaved)
 
         rotated_q = rotated_q.type(q.dtype)
         rotated_k = rotated_k.type(k.dtype)

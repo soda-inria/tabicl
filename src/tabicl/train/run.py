@@ -224,10 +224,7 @@ class Trainer:
             self.raw_model = model
 
     def configure_prior(self):
-        """
-        Sets up a tabular dataset generator that creates synthetic datasets
-        during training with controllable properties and data distributions.
-        """
+        """Set up a tabular dataset generator for synthetic data during training."""
 
         if self.config.prior_dir is None:
             # Generate prior data on the fly
@@ -377,10 +374,7 @@ class Trainer:
         torch.save(checkpoint, checkpoint_path)
 
     def manage_checkpoint(self):
-        """
-        Manages the number of temporary checkpoints by deleting the oldest ones
-        if the count exceeds `max_checkpoints`. Permanent checkpoints are ignored.
-        """
+        """Manage temporary checkpoints by deleting the oldest when limit is exceeded."""
         ckpt_dir = self.config.checkpoint_dir
         limit = self.config.max_checkpoints
 
@@ -464,8 +458,7 @@ class Trainer:
                 wandb.log(results, step=self.curr_step)
 
     def validate_micro_batch(self, micro_seq_len, micro_train_size):
-        """
-        Validate consistent sequence length and train size within a micro batch.
+        """Validate consistent sequence length and train size within a micro batch.
 
         Ensures all datasets in a micro batch share the same sequence length and
         train/test split position, required for efficient batch processing during
@@ -473,16 +466,20 @@ class Trainer:
 
         Parameters
         ----------
-        micro_seq_len : Tensor (micro_batch_size,)
-            Sequence lengths for each dataset.
+        micro_seq_len : Tensor
+            Sequence lengths for each dataset, shape ``(micro_batch_size,)``.
 
-        micro_train_size : Tensor (micro_batch_size,)
-            Training sizes (split positions) for each dataset.
+        micro_train_size : Tensor
+            Training sizes (split positions) for each dataset, shape
+            ``(micro_batch_size,)``.
 
         Returns
         -------
-        tuple (int, int)
-            The common (seq_len, train_size) for the micro batch.
+        seq_len : int
+            The common sequence length for the micro batch.
+
+        train_size : int
+            The common train size for the micro batch.
 
         Raises
         ------
@@ -501,32 +498,33 @@ class Trainer:
         return seq_len, train_size
 
     def align_micro_batch(self, micro_X, micro_y, micro_d, seq_len):
-        """
-        Truncate micro batch tensors to required dimensions.
+        """Truncate micro batch tensors to required dimensions.
 
         Truncates sequence length and feature dimensions to the validated `seq_len`
-        and the maximum active features (`micro_d.max()`) respectively. This optimizes
-        memory and computation by removing unused tensor elements.
+        and the maximum active features (``micro_d.max()``) respectively. This
+        optimizes memory and computation by removing unused tensor elements.
 
         Parameters
         ----------
-        micro_X : Tensor (B, T, H)
-            Input features per dataset.
+        micro_X : Tensor
+            Input features per dataset of shape ``(B, T, H)``.
 
-        micro_y : Tensor (B, T)
-            Target labels per dataset.
+        micro_y : Tensor
+            Target labels per dataset of shape ``(B, T)``.
 
-        micro_d : Tensor (B,)
-            Number of active features per dataset.
+        micro_d : Tensor
+            Number of active features per dataset of shape ``(B,)``.
 
         seq_len : int
             Validated sequence length for this micro batch.
 
         Returns
         -------
-        tuple (Tensor, Tensor)
-            Truncated (micro_X, micro_y) tensors with shapes
-            (B, seq_len, micro_d.max()) and (B, seq_len).
+        micro_X : Tensor
+            Truncated features of shape ``(B, seq_len, micro_d.max())``.
+
+        micro_y : Tensor
+            Truncated labels of shape ``(B, seq_len)``.
         """
         # Truncate sequence length
         if micro_X.shape[1] > seq_len:
@@ -548,18 +546,19 @@ class Trainer:
         Parameters
         ----------
         micro_batch : tuple
-            (micro_X, micro_y, micro_d, micro_seq_len, micro_train_size) tensors for the micro batch
+            (micro_X, micro_y, micro_d, micro_seq_len, micro_train_size) tensors
+            for the micro batch.
 
         micro_batch_idx : int
-            Index of the current micro batch
+            Index of the current micro batch.
 
         num_micro_batches : int
-            Total number of micro batches
+            Total number of micro batches.
 
         Returns
         -------
         dict
-            Result dictionary
+            Result dictionary with 'ce' and 'accuracy' keys.
         """
         micro_X, micro_y, micro_d, micro_seq_len, micro_train_size = micro_batch
         seq_len, train_size = self.validate_micro_batch(micro_seq_len, micro_train_size)
@@ -596,20 +595,21 @@ class Trainer:
         return micro_results
 
     def run_batch(self, batch):
-        """
-        Trains the model on a batch of datasets. Handles gradient accumulation by
-        splitting the batch into micro-batches. Supports variable-sized datasets
-        by padding. Skips micro-batches on CUDA OOM errors. Updates model
-        parameters and returns loss and accuracy metrics.
+        """Train the model on a batch of datasets.
+
+        Handles gradient accumulation by splitting the batch into micro-batches.
+        Supports variable-sized datasets by padding. Skips micro-batches on CUDA
+        OOM errors. Updates model parameters and returns loss and accuracy metrics.
 
         Parameters
         ----------
-        batch: tuple
+        batch : tuple
             Contains tensors (X, y, d, seq_len, train_size) for the batch.
-            X and y can be Tensors or NestedTensors (for variable sequence lengths).
+            X and y can be Tensors or NestedTensors (for variable sequence
+            lengths).
 
         Returns
-        ------
+        -------
         dict
             Dictionary containing 'ce' (cross-entropy loss) and 'accuracy'.
 

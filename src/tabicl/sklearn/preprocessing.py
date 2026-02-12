@@ -33,11 +33,11 @@ class RecursionLimitManager:
     limit : int
         The recursion limit to set temporarily.
 
-    Example
-    -------
+    Examples
+    --------
     >>> with RecursionLimitManager(4000):
-    >>>     # Perform operations that require a higher recursion limit
-    >>>     pass
+    ...     # Perform operations that require a higher recursion limit
+    ...     pass
     """
 
     def __init__(self, limit):
@@ -55,7 +55,7 @@ class RecursionLimitManager:
 
 
 class TransformToNumerical(TransformerMixin, BaseEstimator):
-    """Transforms non-numerical data in a DataFrame to numerical representations.
+    """Transform non-numerical data in a DataFrame to numerical representations.
 
     This transformer automatically detects and converts categorical variables, text features,
     and boolean data types into numerical representations suitable for machine learning models.
@@ -69,9 +69,11 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
     ----------
     tfm_ : ColumnTransformer or FunctionTransformer
         The fitted transformer that handles the conversion of different column types.
-         - If input is a DataFrame: A ColumnTransformer with OrdinalEncoder for categorical
-           columns and SimpleImputer for numeric columns
-         - If input is not a DataFrame: A FunctionTransformer that passes data through unchanged
+
+        - If input is a DataFrame: a ``ColumnTransformer`` with ``OrdinalEncoder``
+          for categorical columns and ``SimpleImputer`` for numeric columns.
+        - If input is not a DataFrame: a ``FunctionTransformer`` that passes data
+          through unchanged.
     """
 
     def __init__(self, verbose: bool = False):
@@ -91,7 +93,7 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        self : object
+        self : TransformToNumerical
             Returns self.
         """
         if not hasattr(X, "columns"):  # proxy way to check whether X is a dataframe without importing pandas
@@ -170,11 +172,13 @@ class UniqueFeatureFilter(TransformerMixin, BaseEstimator):
 
     Notes
     -----
-    1. Features with unique values <= threshold are removed.
-    2. When the input dataset has very few samples (n_samples <= threshold), all features are preserved
+    1. Features with unique values <= ``threshold`` are removed.
+    2. When the input dataset has very few samples
+       (:math:`n_{\\text{samples}} \\le \\text{threshold}`), all features are preserved
        regardless of their unique value counts. This is a safety mechanism because:
-       - With few samples, it's difficult to reliably assess feature variability
-       - A feature might appear constant in few samples but vary in the complete dataset
+
+       - With few samples, it's difficult to reliably assess feature variability.
+       - A feature might appear constant in few samples but vary in the complete dataset.
     """
 
     def __init__(self, threshold: int = 1):
@@ -233,18 +237,19 @@ class UniqueFeatureFilter(TransformerMixin, BaseEstimator):
 class OutlierRemover(TransformerMixin, BaseEstimator):
     """Transformer that clips extreme values based on training data distribution.
 
-    This implementation uses a two-stage Z-score based approach to identify and clip outliers:
-    1. First stage: Identify values beyond z standard deviations and mark as missing
-    2. Second stage: Recompute statistics without outliers for more robust bounds
-    3. Final stage: Apply log-based clipping to maintain data distribution
+    This implementation uses a two-stage Z-score based approach to identify and
+    clip outliers:
+
+    1. First stage: Identify values with :math:`|z| > \text{threshold}` standard
+       deviations and mark as missing.
+    2. Second stage: Recompute statistics without outliers for more robust bounds.
+    3. Final stage: Apply log-based clipping to maintain data distribution.
 
     Parameters
     ----------
     threshold : float, default=4.0
-        Values beyond this number of standard deviations are considered outliers.
-
-    copy : bool, default=True
-        If False, try to avoid a copy and do inplace clipping instead.
+        Values beyond this number of standard deviations are considered outliers,
+        i.e., values with :math:`|z| > \text{threshold}`.
 
     Attributes
     ----------
@@ -258,10 +263,12 @@ class OutlierRemover(TransformerMixin, BaseEstimator):
         Standard deviation values per feature after removing outliers.
 
     lower_bounds_ : ndarray of shape (n_features_in_,)
-        Lower bounds for clipping.
+        Lower bounds for clipping,
+        :math:`\\mu - \\text{threshold} \\cdot \\sigma`.
 
     upper_bounds_ : ndarray of shape (n_features_in_,)
-        Upper bounds for clipping.
+        Upper bounds for clipping,
+        :math:`\\mu + \\text{threshold} \\cdot \\sigma`.
     """
 
     def __init__(self, threshold: float = 4.0):
@@ -280,7 +287,7 @@ class OutlierRemover(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        self : object
+        self : OutlierRemover
             Returns self.
         """
         X = validate_data(self, X)
@@ -321,6 +328,16 @@ class OutlierRemover(TransformerMixin, BaseEstimator):
     def transform(self, X):
         """Clip values based on learned bounds with log-based adjustments.
 
+        Values are clipped using soft bounds:
+
+        .. math::
+
+            x_{\\text{clipped}} = \\max\\bigl(-\\log(1+|x|) + L,\\; x\\bigr)
+
+            x_{\\text{clipped}} = \\min\\bigl(\\log(1+|x|) + U,\\; x\\bigr)
+
+        where :math:`L` and :math:`U` are the lower and upper bounds.
+
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
@@ -342,9 +359,8 @@ class OutlierRemover(TransformerMixin, BaseEstimator):
 class CustomStandardScaler(TransformerMixin, BaseEstimator):
     """Custom implementation of standard scaling with clipping.
 
-    This scaler computes the mean and standard deviation of the training data,
-    adds a small epsilon to the standard deviation to avoid division by zero,
-    and clips the transformed values to a reasonable range.
+    Computes the z-score :math:`z = (x - \\mu) / (\\sigma + \\epsilon)` and clips
+    the result to ``[clip_min, clip_max]``.
 
     Parameters
     ----------
@@ -355,7 +371,8 @@ class CustomStandardScaler(TransformerMixin, BaseEstimator):
         Upper bound for clipping transformed values.
 
     epsilon : float, default=1e-6
-        Small constant added to the standard deviation to avoid division by zero.
+        Small constant :math:`\\epsilon` added to the standard deviation to avoid
+        division by zero.
 
     Attributes
     ----------
@@ -363,7 +380,8 @@ class CustomStandardScaler(TransformerMixin, BaseEstimator):
         The mean value for each feature in the training set.
 
     scale_ : ndarray of shape (n_features,)
-        The standard deviation for each feature in the training set with epsilon added.
+        The standard deviation for each feature in the training set with
+        :math:`\\epsilon` added.
     """
 
     def __init__(self, clip_min: float = -100, clip_max: float = 100, epsilon: float = 1e-6):
@@ -384,9 +402,14 @@ class CustomStandardScaler(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        self : object
+        self : CustomStandardScaler
             Returns self.
         """
+
+        if len(X.shape) == 1:
+            # If X is a 1D array, reshape it to 2D
+            X = X.reshape(-1, 1)
+
         X = validate_data(self, X)
 
         self.mean_ = np.mean(X, axis=0)
@@ -407,13 +430,44 @@ class CustomStandardScaler(TransformerMixin, BaseEstimator):
         X_out : ndarray of shape (n_samples, n_features)
             Transformed array after scaling and clipping.
         """
+        if len(X.shape) == 1:
+            is_vector = True
+            X = X.reshape(-1, 1)
+        else:
+            is_vector = False
+
         check_is_fitted(self)
         X = validate_data(self, X, reset=False)
 
         X_scaled = (X - self.mean_) / self.scale_
         X_clipped = np.clip(X_scaled, self.clip_min, self.clip_max)
 
-        return X_clipped
+        return X_clipped.reshape(-1) if is_vector else X_clipped
+
+    def inverse_transform(self, X):
+        """Scale back the data to the original representation.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The data to inverse transform.
+
+        Returns
+        -------
+        X_out : ndarray of shape (n_samples, n_features)
+            Transformed array in original scale.
+        """
+        if len(X.shape) == 1:
+            is_vector = True
+            X = X.reshape(-1, 1)
+        else:
+            is_vector = False
+
+        check_is_fitted(self)
+        X = validate_data(self, X, reset=False)
+        X_out = X * self.scale_ + self.mean_
+
+        return X_out.reshape(-1) if is_vector else X_out
 
 
 class RTDLQuantileTransformer(BaseEstimator, TransformerMixin):
@@ -421,7 +475,8 @@ class RTDLQuantileTransformer(BaseEstimator, TransformerMixin):
 
     This implementation is based on research from the RTDL group and adds noise to training
     data before applying quantile transformation, improving robustness and generalization.
-    It also dynamically adjusts the number of quantiles based on data size.
+    It also dynamically adjusts the number of quantiles based on data size as
+    :math:`\\min(n_{\\text{samples}} / 30,\\; \\text{n\\_quantiles})` with a minimum of 10.
 
     Parameters
     ----------
@@ -431,10 +486,12 @@ class RTDLQuantileTransformer(BaseEstimator, TransformerMixin):
 
     n_quantiles : int, default=1000
         Maximum number of quantiles to use. The actual number used is dynamically
-        determined as min(X.shape[0] // 30, n_quantiles) with a minimum of 10.
+        determined as :math:`\\min(\\lfloor n / 30 \\rfloor, \\text{n\\_quantiles})`
+        with a minimum of 10.
 
     subsample : int, default=1_000_000_000
-        Maximum number of samples used to estimate the quantiles for computational efficiency.
+        Maximum number of samples used to estimate the quantiles for computational
+        efficiency.
 
     output_distribution : {'uniform', 'normal'}, default='normal'
         Marginal distribution for the transformed data.
@@ -476,11 +533,11 @@ class RTDLQuantileTransformer(BaseEstimator, TransformerMixin):
             The training data to fit the transformer.
 
         y : None
-            Ignored. Kept for compatibility with scikit-learn's transformer interface.
+            Ignored.
 
         Returns
         -------
-        self : object
+        self : RTDLQuantileTransformer
             Returns self.
         """
         # Calculate the number of quantiles based on data size
@@ -514,12 +571,13 @@ class RTDLQuantileTransformer(BaseEstimator, TransformerMixin):
             The data to be transformed.
 
         y : None
-            Ignored. Kept for compatibility with scikit-learn's transformer interface.
+            Ignored.
 
         Returns
         -------
         X_transformed : ndarray of shape (n_samples, n_features)
-            The transformed data with distribution specified by output_distribution.
+            The transformed data with distribution specified by
+            ``output_distribution``.
         """
         check_is_fitted(self)
         return self.normalizer_.transform(X)
@@ -556,10 +614,12 @@ class PreprocessingPipeline(TransformerMixin, BaseEstimator):
     Parameters
     ----------
     normalization_method : str, default='power'
-        Method for normalization: 'power', 'quantile', 'quantile_tabr', 'robust', 'none'.
+        Method for normalization: ``'power'``, ``'quantile'``,
+        ``'quantile_rtdl'``, ``'robust'``, ``'none'``.
 
     outlier_threshold : float, default=4.0
-        Z-score threshold for outlier detection.
+        Z-score threshold for outlier detection. Values with
+        :math:`|z| > \text{threshold}` are considered outliers.
 
     random_state : int or None, default=None
         Random seed for reproducible normalization.
@@ -572,14 +632,17 @@ class PreprocessingPipeline(TransformerMixin, BaseEstimator):
     standard_scaler_ : CustomStandardScaler
         The fitted standard scaler.
 
-    normalizer_ : sklearn transformers
-        The fitted normalization transformer (PowerTransformer, QuantileTransformer, RTDLQuantileTransformer, RobustScaler).
+    normalizer_ : sklearn transformer or None
+        The fitted normalization transformer (``PowerTransformer``,
+        ``QuantileTransformer``, ``RTDLQuantileTransformer``, or
+        ``RobustScaler``). ``None`` when ``normalization_method='none'``.
 
     outlier_remover_ : OutlierRemover
         The fitted outlier remover.
 
     X_transformed_ : ndarray of shape (n_samples, n_features)
-        The transofrmed training input data. Save it for later use to avoid recomputation.
+        The transformed training input data. Saved for later use to avoid
+        recomputation.
     """
 
     def __init__(
@@ -602,7 +665,7 @@ class PreprocessingPipeline(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        self : object
+        self : PreprocessingPipeline
             Returns self.
         """
         X = validate_data(self, X)
@@ -677,27 +740,28 @@ class PreprocessingPipeline(TransformerMixin, BaseEstimator):
         return X
 
 
-class FeatureShuffler:
-    """Utility that generates feature permutations for ensemble creation.
+class Shuffler:
+    """Utility that generates permutations for ensemble creation.
 
-    This class provides methods to create different types of feature permutations
+    This class provides methods to create different types of permutations
     that can be used when creating ensemble variants of datasets.
 
     Parameters
     ----------
-    n_features : int
-        Number of features in the dataset.
+    n_elements : int
+        Number of elements to shuffle.
 
     method : str, default='latin'
-        Method used for feature shuffling:
-        - 'none': No shuffling
-        - 'random': Random permutation
-        - 'latin': Latin square permutation
-        - 'shift': Circular shift of features
+        Method used for shuffling:
+        - ``'none'``: No shuffling.
+        - ``'random'``: Random permutation.
+        - ``'latin'``: Latin square permutation.
+        - ``'shift'``: Circular shift of elements.
 
-    max_features_for_latin : int, default=4000
-        Maximum number of features for which Latin square permutations are generated.
-        If the number of features exceeds this limit, random permutations are used instead.
+    max_elements_for_latin : int, default=4000
+        Maximum number of elements for which Latin square permutations are
+        generated. If the number of elements exceeds this limit, random
+        permutations are used instead.
 
     random_state : int or None, default=None
         Random seed for reproducible shuffling.
@@ -705,61 +769,66 @@ class FeatureShuffler:
 
     def __init__(
         self,
-        n_features: int,
+        n_elements: int,
         method: str = "latin",
-        max_features_for_latin: int = 4000,
+        max_elements_for_latin: int = 4000,
         random_state: Optional[int] = None,
     ):
-        self.n_features = n_features
+        self.n_elements = n_elements
         self.method = method
-        self.max_features_for_latin = max_features_for_latin
+        self.max_elements_for_latin = max_elements_for_latin
         self.random_state = random_state
 
     def shuffle(self, n_estimators: int) -> List[np.ndarray]:
-        """Generate feature shuffling patterns for ensemble diversity.
+        """Generate shuffling patterns for ensemble diversity.
 
-        Creates permutations of feature indices according to the specified method,
-        which can be used to reorder features when creating ensemble variants.
+        Creates permutations of indices according to the specified method,
+        which can be used to reorder elements when creating ensemble variants.
 
         Parameters
         ----------
         n_estimators : int
-            Number of feature permutations to generate.
-            - For 'none' method: Always returns a single pattern with no shuffling
-            - For 'shift' method: Generates all possible circular shifts of features
-            - For 'latin' method: Generates Latin square permutations
-            - For 'random' method: For small feature sets (≤5), samples from all possible
-              permutations; otherwise generates random permutations
+            Number of permutations to generate.
+
+            - For ``'none'`` method: Always returns a single pattern with no shuffling.
+            - For ``'shift'`` method: Generates all possible circular shifts.
+            - For ``'latin'`` method: Generates Latin square permutations.
+            - For ``'random'`` method: For small element sets
+              (:math:`n_{\\text{elements}} \\le 5`), samples from all possible
+              permutations; otherwise generates random permutations.
 
         Returns
         -------
         list of ndarray
-            List of feature permutation arrays, where each array contains
-            indices that can be used to shuffle features.
+            List of permutation arrays, where each array contains
+            indices that can be used to shuffle elements.
         """
 
         self.rng_ = random.Random(self.random_state)
-        feature_indices = list(range(self.n_features))
+        indices = list(range(self.n_elements))
 
-        # Use the random method if n_features exceeds the limit for Latin square
-        if self.n_features > self.max_features_for_latin and self.method == "latin":
+        # Use the random method if n_elements exceeds the limit for Latin square
+        if self.n_elements > self.max_elements_for_latin and self.method == "latin":
             method = "random"
         else:
             method = self.method
 
+        # No shuffling
         if method == "none" or n_estimators == 1:
-            # No shuffling
-            shuffle_patterns = [feature_indices]
-        elif method == "shift":
+            shuffle_patterns = [indices]
+            return shuffle_patterns
+
+        # Generate permutations based on method
+        if method == "shift":
             # All possible circular shifts
-            shuffle_patterns = [feature_indices[-i:] + feature_indices[:-i] for i in range(self.n_features)]
+            shuffle_patterns = [indices[-i:] + indices[:-i] for i in range(self.n_elements)]
         elif method == "random":
             # Random permutations
-            if self.n_features <= 5:
-                all_perms = [list(perm) for perm in itertools.permutations(feature_indices)]
+            if self.n_elements <= 5:
+                all_perms = [list(perm) for perm in itertools.permutations(indices)]
                 shuffle_patterns = self.rng_.sample(all_perms, min(n_estimators, len(all_perms)))
             else:
-                shuffle_patterns = [self.rng_.sample(feature_indices, self.n_features) for _ in range(n_estimators)]
+                shuffle_patterns = [self.rng_.sample(indices, self.n_elements) for _ in range(n_estimators)]
         elif method == "latin":
             # Latin square permutations
             with RecursionLimitManager(100000):  # Set a higher recursion limit to avoid recursion error
@@ -770,12 +839,12 @@ class FeatureShuffler:
         return shuffle_patterns
 
     def _latin_squares(self):
-        """Generate Latin squares for feature shuffling.
+        """Generate Latin squares for shuffling.
 
         Returns
         -------
         list
-            List of feature permutations forming a Latin square.
+            List of permutations forming a Latin square.
         """
 
         def _shuffle_transpose_shuffle(matrix):
@@ -798,47 +867,61 @@ class FeatureShuffler:
                     square[i].insert(i, sym)
                 return square
 
-        symbols = list(range(self.n_features))
+        symbols = list(range(self.n_elements))
         square = _rls(symbols)
-        feature_shuffles = _shuffle_transpose_shuffle(square)
+        shuffles = _shuffle_transpose_shuffle(square)
 
-        return [list(shuffle) for shuffle in feature_shuffles]
+        return [list(shuffle) for shuffle in shuffles]
 
 
 class EnsembleGenerator(TransformerMixin, BaseEstimator):
     """Generate ensemble variants for robust tabular prediction with TabICL.
 
     This class creates diverse data variants through:
-    1. Applying different normalization techniques
-    2. Permuting feature orders to exploit position-invariance in transformer architectures
-    3. Shifting class labels to prevent overfitting to specific class index patterns
+
+    1. Applying different normalization techniques.
+    2. Permuting feature orders to exploit position-invariance in transformer
+       architectures.
+    3. For classification: Shuffling class labels to prevent overfitting to
+       specific class index patterns.
 
     Parameters
     ----------
+    classification : bool
+        Whether to generate ensembles for classification tasks.
+
     n_estimators : int
         Number of ensemble variants to generate.
 
     norm_methods : str or list[str] or None, default=None
         Normalization methods to apply:
-        - 'none': No normalization
-        - 'power': Yeo-Johnson power transform
-        - 'quantile': Transform feature distribution to approximately Gaussian, using the empirical quantiles.
-        - 'quantile_rtdl': Version of the quantile transform used typically in papers by the RTDL group.
-        - 'robust': Scale using median and quantiles
-    If set to None, ['none', 'power'] will be applied.
+        - ``'none'``: No normalization.
+        - ``'power'``: Yeo-Johnson power transform.
+        - ``'quantile'``: Transform feature distribution to approximately
+          Gaussian, using the empirical quantiles.
+        - ``'quantile_rtdl'``: Version of the quantile transform used
+          typically in papers by the RTDL group.
+        - ``'robust'``: Scale using median and quantiles.
+        If set to None, ``['none', 'power']`` will be applied.
 
     feat_shuffle_method : str, default='latin'
         Feature permutation strategy:
-        - 'none': No shuffling and preserve original feature order
-        - 'shift': Circular shifting
-        - 'random': Random permutation
-        - 'latin': Latin square patterns
+        - ``'none'``: No shuffling and preserve original feature order.
+        - ``'shift'``: Circular shifting.
+        - ``'random'``: Random permutation.
+        - ``'latin'``: Latin square patterns.
 
-    class_shift : bool, default=True
-        Whether to apply cyclic shifts to class labels.
+    class_shuffle_method : str, default='shift'
+        Class label permutation strategy for classification tasks
+        (``classification=True``):
+        - ``'none'``: No shuffling and preserve original class labels.
+        - ``'shift'``: Circular shifting.
+        - ``'random'``: Random permutation.
+        - ``'latin'``: Latin square patterns.
 
     outlier_threshold : float, default=4.0
-        Z-score threshold for outlier detection and clipping.
+        Z-score threshold for outlier detection and clipping. Values with
+        :math:`|z| > \text{threshold}` are considered outliers.
 
     random_state : int or None, default=None
         Seed for reproducible ensemble generation.
@@ -849,7 +932,7 @@ class EnsembleGenerator(TransformerMixin, BaseEstimator):
         Number of input features after filtering.
 
     n_classes_ : int
-        Number of unique target classes.
+        Number of unique target classes for classification.
 
     unique_filter_ : UniqueFeatureFilter
         Filter that removes features with only one unique value.
@@ -859,13 +942,16 @@ class EnsembleGenerator(TransformerMixin, BaseEstimator):
 
     ensemble_configs_ : OrderedDict
         Generated ensemble configurations, organized by normalization method.
-        Keys are normalization methods and values are lists of (feature_pattern, shift_offset) tuples.
+        Keys are normalization methods and values are lists of
+        ``(X_shuffle, y_pattern)`` tuples, where ``y_pattern`` is a class
+        shuffle for classification or ``None`` for regression.
 
-    feature_shuffle_patterns_ : OrderedDict
+    feature_shuffles_ : OrderedDict
         Maps normalization methods to lists of feature index permutations.
 
-    class_shift_offsets_ : OrderedDict
-        Maps normalization methods to lists of class shift offsets.
+    class_shuffles_ : OrderedDict
+        Maps normalization methods to lists of class index permutations for
+        classification.
 
     X_ : ndarray
         Training feature data after filtering.
@@ -876,17 +962,22 @@ class EnsembleGenerator(TransformerMixin, BaseEstimator):
 
     def __init__(
         self,
+        classification: bool,
         n_estimators: int,
         norm_methods: str | List[str] | None = None,
         feat_shuffle_method: str = "latin",
-        class_shift: bool = True,
+        class_shuffle_method: str = "shift",
         outlier_threshold: float = 4.0,
         random_state: Optional[int] = None,
     ):
+        self.classification = classification
         self.n_estimators = n_estimators
         self.norm_methods = norm_methods
         self.feat_shuffle_method = feat_shuffle_method
-        self.class_shift = class_shift
+
+        assert class_shuffle_method in ["none", "shift", "random", "latin"], "Invalid class shuffle method."
+        self.class_shuffle_method = class_shuffle_method
+
         self.outlier_threshold = outlier_threshold
         self.random_state = random_state
 
@@ -894,9 +985,10 @@ class EnsembleGenerator(TransformerMixin, BaseEstimator):
         """Create ensemble configurations and fit preprocessing pipelines.
 
         This method:
-        1. Removes features with only one unique value
-        2. Generates diverse ensemble configurations
-        3. Fits preprocessing pipelines for each normalization method
+
+        1. Removes features with only one unique value.
+        2. Generates diverse ensemble configurations.
+        3. Fits preprocessing pipelines for each normalization method.
 
         Parameters
         ----------
@@ -908,12 +1000,9 @@ class EnsembleGenerator(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        self : object
+        self : EnsembleGenerator
             Fitted generator.
         """
-        if y is None:
-            raise ValueError(f"{self.__class__.__name__} requires y to be passed, but the target y is None")
-
         validate_data(self, X, y)
 
         if self.norm_methods is None:
@@ -933,11 +1022,16 @@ class EnsembleGenerator(TransformerMixin, BaseEstimator):
 
         # override n_features_in_ to account for unique feature filtering
         self.n_features_in_ = X.shape[1]
-        self.n_classes_ = len(np.unique(y))
+        if self.classification:
+            self.n_classes_ = len(np.unique(y))
 
         self.rng_ = random.Random(self.random_state)
-        self.ensemble_configs_, self.feature_shuffle_patterns_, self.class_shift_offsets_ = self._generate_ensemble()
+        self.ensemble_configs_, self.feature_shuffles_, y_patterns = self._generate_ensemble()
 
+        if self.classification:
+            self.class_shuffles_ = y_patterns
+
+        # Fit preprocessing pipelines
         self.preprocessors_ = {}
         for norm_method in self.ensemble_configs_:
             if norm_method not in self.preprocessors_:
@@ -956,86 +1050,135 @@ class EnsembleGenerator(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        tuple
-            Three-element tuple containing:
-            - ensemble_configs: OrderedDict mapping normalization methods to shuffle-shift configs
-            - shuffle_patterns: OrderedDict mapping normalization methods to lists of feature shuffle patterns
-            - shift_offsets: OrderedDict mapping normalization methods to lists of class shift offsets
+        ensemble_configs : OrderedDict
+            Maps normalization methods to shuffle configs.
+
+        X_shuffle_dict : OrderedDict
+            Maps normalization methods to lists of feature shuffle patterns.
+
+        y_pattern_dict : OrderedDict
+            Maps normalization methods to lists of class shuffles for
+            classification or ``None`` patterns for regression.
         """
 
-        shuffler = FeatureShuffler(
-            n_features=self.n_features_in_, method=self.feat_shuffle_method, random_state=self.random_state
+        # Generate feature shuffle patterns
+        feat_shuffler = Shuffler(
+            n_elements=self.n_features_in_, method=self.feat_shuffle_method, random_state=self.random_state
         )
-        shuffle_patterns = shuffler.shuffle(self.n_estimators)
+        X_shuffles = feat_shuffler.shuffle(self.n_estimators)
 
-        if self.class_shift and self.n_estimators > 1:
-            shift_offsets = self.rng_.sample(range(self.n_classes_), self.n_classes_)
+        if self.classification:
+            # For classification, generate class shuffle patterns
+            class_shuffler = Shuffler(
+                n_elements=self.n_classes_, method=self.class_shuffle_method, random_state=self.random_state
+            )
+            y_patterns = class_shuffler.shuffle(self.n_estimators)
         else:
-            shift_offsets = [0]
+            y_patterns = [None]
 
-        shuffle_shift_configs = list(itertools.product(shuffle_patterns, shift_offsets))
-        self.rng_.shuffle(shuffle_shift_configs)
+        # Create configurations combining feature and target patterns
+        shuffle_configs = list(itertools.product(X_shuffles, y_patterns))
+        self.rng_.shuffle(shuffle_configs)
 
-        shuffle_shift_norm_configs = list(itertools.product(shuffle_shift_configs, self.norm_methods_))
-        shuffle_shift_norm_configs = shuffle_shift_norm_configs[: self.n_estimators]
+        shuffle_norm_configs = list(itertools.product(shuffle_configs, self.norm_methods_))
+        shuffle_norm_configs = shuffle_norm_configs[: self.n_estimators]
 
         # Reorganize configs so that those with the same normalization method are grouped together
-        used_methods = list(set([config[1] for config in shuffle_shift_norm_configs]))
+        used_methods = list(set([config[1] for config in shuffle_norm_configs]))
 
         ensemble_configs = OrderedDict()
-        shuffle_patterns = OrderedDict()
-        shift_offsets = OrderedDict()
+        X_shuffle_dict = OrderedDict()
+        y_pattern_dict = OrderedDict()
 
         for method in used_methods:
-            shuffle_shift_configs = [config[0] for config in shuffle_shift_norm_configs if config[1] == method]
-            shuffle_patterns[method] = [config[0] for config in shuffle_shift_configs]
-            shift_offsets[method] = [config[1] for config in shuffle_shift_configs]
-            ensemble_configs[method] = shuffle_shift_configs
+            shuffle_configs = [config[0] for config in shuffle_norm_configs if config[1] == method]
+            X_shuffle_dict[method] = [config[0] for config in shuffle_configs]
+            y_pattern_dict[method] = [config[1] for config in shuffle_configs]
+            ensemble_configs[method] = shuffle_configs
 
-        return ensemble_configs, shuffle_patterns, shift_offsets
+        return ensemble_configs, X_shuffle_dict, y_pattern_dict
 
-    def transform(self, X):
-        """Combines training and test data to create different in-context learning prompts.
-
-        For each normalization method:
-        1. Preprocesses data once using the fitted pipeline for that method
-        2. Applies each feature permutation and class shift within that method's group
+    def transform(self, X=None, mode="both"):
+        """Create ensemble data variants for in-context learning.
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
-            Test input data to be combined with training data.
+        X : array-like of shape (n_samples, n_features) or None
+            Test input data. Required when mode is ``'both'`` or ``'test'``.
+            Can be ``None`` when mode is ``'train'``.
+
+        mode : str, default='both'
+            Controls what data is returned:
+
+            - ``'both'``: Combines training and test data. Returns
+              ``OrderedDict`` mapping normalization methods to
+              ``(X_ensemble[n_variants, n_train+n_test, n_features], y_ensemble[n_variants, n_train])``.
+            - ``'train'``: Returns only preprocessed and shuffled training
+              data. Returns ``OrderedDict`` mapping normalization methods to
+              ``(X_train_ensemble[n_variants, n_train, n_features], y_ensemble[n_variants, n_train])``.
+            - ``'test'``: Returns only preprocessed and shuffled test data.
+              Returns ``OrderedDict`` mapping normalization methods to
+              ``(X_test_ensemble[n_variants, n_test, n_features],)``.
 
         Returns
         -------
         OrderedDict
-            Dictionary mapping normalization methods to tuples of (X_ensemble, y_ensemble) where:
-            - X_ensemble: array of shape (n_variants_for_method, n_samples_combined, n_features)
-              Contains the preprocessed and feature-permuted combined data
-            - y_ensemble: array of shape (n_variants_for_method, n_samples_train)
-              Contains the class-shifted training labels
+            Dictionary mapping normalization methods to data tuples.
         """
 
         check_is_fitted(self, ["ensemble_configs_"])
+        assert mode in ("both", "train", "test"), f"Invalid mode: {mode}"
 
-        # Unique feature filtering
+        if mode == "train":
+            y = self.y_
+            data = OrderedDict()
+            for norm_method, shuffle_configs in self.ensemble_configs_.items():
+                X_preprocessed = self.preprocessors_[norm_method].X_transformed_
+                X_ensemble = []
+                y_ensemble = []
+                for feat_shuffle, y_pattern in shuffle_configs:
+                    X_ensemble.append(X_preprocessed[:, feat_shuffle])
+                    if self.classification:
+                        y_ensemble.append(np.array(y_pattern)[y.astype(int)])
+                    else:
+                        y_ensemble.append(y)
+                data[norm_method] = (np.stack(X_ensemble, axis=0), np.stack(y_ensemble, axis=0))
+            return data
+
+        # mode == "test" or "both" requires X
+        assert X is not None, "X is required when mode is 'test' or 'both'"
         X = self.unique_filter_.transform(X)
-        y = self.y_
 
+        if mode == "test":
+            data = OrderedDict()
+            for norm_method, shuffle_configs in self.ensemble_configs_.items():
+                X_test_preprocessed = self.preprocessors_[norm_method].transform(X)
+                X_ensemble = []
+                for feat_shuffle, _ in shuffle_configs:
+                    X_ensemble.append(X_test_preprocessed[:, feat_shuffle])
+                data[norm_method] = (np.stack(X_ensemble, axis=0),)
+            return data
+
+        # mode == "both"
+        y = self.y_
         data = OrderedDict()
-        for norm_method, shuffle_shift_configs in self.ensemble_configs_.items():
-            # Apply preprocessing
+        for norm_method, shuffle_configs in self.ensemble_configs_.items():
             preprocessor = self.preprocessors_[norm_method]
             X_variant = np.concatenate(
                 [preprocessor.X_transformed_, preprocessor.transform(X)],
                 axis=0,
             )
-            # Shuffle features and shift class labels
             X_ensemble = []
             y_ensemble = []
-            for shuffle_pattern, shift_offset in shuffle_shift_configs:
-                X_ensemble.append(X_variant[:, shuffle_pattern])
-                y_ensemble.append((y + shift_offset) % self.n_classes_)
+            for feat_shuffle, y_pattern in shuffle_configs:
+                X_ensemble.append(X_variant[:, feat_shuffle])
+
+                if self.classification:
+                    # Apply class shuffle for classification
+                    y_ensemble.append(np.array(y_pattern)[y.astype(int)])
+                else:
+                    y_ensemble.append(y)
+
             data[norm_method] = (np.stack(X_ensemble, axis=0), np.stack(y_ensemble, axis=0))
 
         return data

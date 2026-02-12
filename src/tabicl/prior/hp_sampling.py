@@ -47,10 +47,10 @@ def uniform_int_sampler(a, b):
 
 
 class HpSampler(nn.Module):
-    """
-    A modular hyperparameter sampler that supports both basic and meta-distributions.
+    """A modular hyperparameter sampler that supports both basic and meta-distributions.
 
     Meta-distributions include:
+
     - meta_beta: Beta distribution with sampled parameters
     - meta_gamma: Gamma distribution with sampled parameters
     - meta_trunc_norm: Truncated normal with sampled parameters
@@ -58,14 +58,20 @@ class HpSampler(nn.Module):
     - meta_choice: Categorical distribution with sampled probabilities
     - meta_choice_mixed: Mixed categorical with sampled probabilities
 
-    Parameters:
-        distribution (str): Name of the distribution to use
-        device (str): Device to use for tensor operations
-        **kwargs: Distribution-specific parameters such as:
-            - min, max: bounds for uniform distributions
-            - scale: scaling factor for beta distribution
-            - lower_bound: minimum value for truncated distributions
-            - choice_values: possible values for categorical distributions
+    Parameters
+    ----------
+    distribution : str
+        Name of the distribution to use.
+
+    device : str
+        Device to use for tensor operations.
+
+    **kwargs : dict
+        Distribution-specific parameters such as:
+        - min, max: bounds for uniform distributions
+        - scale: scaling factor for beta distribution
+        - lower_bound: minimum value for truncated distributions
+        - choice_values: possible values for categorical distributions
     """
 
     def __init__(self, distribution, device, **kwargs):
@@ -234,28 +240,32 @@ class HpSampler(nn.Module):
 
 
 class HpSamplerList(nn.Module):
-    """
-    A container for multiple hyperparameter samplers that handles batch sampling.
+    """A container for multiple hyperparameter samplers that handles batch sampling.
 
-    Parameters:
-        hyperparameters (dict): Dictionary mapping parameter names to their sampling configurations
-        device (str): Device to use for tensor operations
+    Parameters
+    ----------
+    hyperparameters : dict
+        Dictionary mapping parameter names to their sampling configurations.
 
-    Example:
-        hp_config = {
-            'learning_rate': {
-                'distribution': 'meta_trunc_norm_log_scaled',
-                'min_mean': 1e-4,
-                'max_mean': 1e-1
-            },
-            'num_layers': {
-                'distribution': 'uniform_int',
-                'min': 2,
-                'max': 10
-            }
-        }
-        sampler = HpSamplerList(hp_config, device='cuda')
-        params = sampler.sample()  # Returns dict with sampled values
+    device : str
+        Device to use for tensor operations.
+
+    Examples
+    --------
+    >>> hp_config = {
+    ...     'learning_rate': {
+    ...         'distribution': 'meta_trunc_norm_log_scaled',
+    ...         'min_mean': 1e-4,
+    ...         'max_mean': 1e-1,
+    ...     },
+    ...     'num_layers': {
+    ...         'distribution': 'uniform_int',
+    ...         'min': 2,
+    ...         'max': 10,
+    ...     },
+    ... }
+    >>> sampler = HpSamplerList(hp_config, device='cuda')
+    >>> params = sampler.sample()  # Returns dict with sampled values
     """
 
     def __init__(self, hyperparameters, device):

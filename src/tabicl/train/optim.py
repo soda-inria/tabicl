@@ -58,20 +58,35 @@ def get_cosine_with_restarts(
     lr_end: float = 0.0,
     last_epoch: int = -1,
 ):
-    """
-    Create a learning rate scheduler with warmup, cosine decay, hard restarts, and amplitude scaling.
+    """Create a learning rate scheduler with warmup, cosine decay, hard restarts, and amplitude scaling.
 
-    Args:
-        optimizer (Optimizer): The optimizer for which to schedule the learning rate.
-        num_warmup_steps (int): Number of warmup steps.
-        num_training_steps (int): Total number of training steps.
-        num_cycles (int, optional): Number of hard restarts. Defaults to 1.
-        amplitude_decay (float, optional): Factor to exponentially decay the max LR per cycle. Defaults to 1.0.
-        lr_end (float, optional): Minimum learning rate at the end of each cycle. Defaults to 0.0.
-        last_epoch (int, optional): The index of the last epoch. Defaults to -1.
+    Parameters
+    ----------
+    optimizer : Optimizer
+        The optimizer for which to schedule the learning rate.
 
-    Returns:
-        LambdaLR: A learning rate scheduler.
+    num_warmup_steps : int
+        Number of warmup steps.
+
+    num_training_steps : int
+        Total number of training steps.
+
+    num_cycles : int, default=1
+        Number of hard restarts.
+
+    amplitude_decay : float, default=1.0
+        Factor to exponentially decay the max LR per cycle.
+
+    lr_end : float, default=0.0
+        Minimum learning rate at the end of each cycle.
+
+    last_epoch : int, default=-1
+        The index of the last epoch.
+
+    Returns
+    -------
+    LambdaLR
+        A learning rate scheduler.
     """
     lr_init = optimizer.defaults["lr"]
     if lr_end > lr_init:
@@ -90,7 +105,7 @@ def get_cosine_with_restarts(
 
 
 def get_scheduler(config, optimizer):
-    """Get the learning rate scheduler based on configuration."""
+    """Get the learning rate scheduler based on the training configuration."""
 
     if config.warmup_proportion >= 0:
         warmup_steps = config.max_steps * config.warmup_proportion

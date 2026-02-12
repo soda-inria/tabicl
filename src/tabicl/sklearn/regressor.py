@@ -9,10 +9,9 @@ from typing import Optional, List, Dict
 import numpy as np
 import torch
 
-from sklearn.base import ClassifierMixin
+from sklearn.base import RegressorMixin
+from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
-from sklearn.utils.multiclass import check_classification_targets
-from sklearn.preprocessing import LabelEncoder
 
 from huggingface_hub import hf_hub_download
 from huggingface_hub.utils import LocalEntryNotFoundError
@@ -24,13 +23,12 @@ from .sklearn_utils import validate_data, _num_samples
 from tabicl import TabICL, TabICLCache, InferenceConfig
 
 
-class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
-    """Tabular In-Context Learning (TabICL) Classifier with scikit-learn interface.
+class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
+    """Tabular In-Context Learning (TabICL) Regressor with scikit-learn interface.
 
-    This classifier applies TabICL to tabular data classification, using an ensemble
+    This regressor applies TabICL to tabular data regression, using an ensemble
     of transformed dataset views to improve predictions. The ensemble members are
-    created by applying different normalization methods, feature permutations,
-    and class label shifts.
+    created by applying different normalization methods and feature permutations.
 
     Parameters
     ----------
@@ -54,37 +52,16 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         - 'random': Random permutation of features
         - 'latin': Latin square patterns for systematic feature permutations
 
-    class_shuffle_method : str, default='shift'
-        Class label permutation strategy:
-        - 'none': No shuffling and preserve original class labels
-        - 'shift': Circular shifting of class labels
-        - 'random': Random permutation of class labels
-        - 'latin': Latin square patterns for systematic class permutations
-
     outlier_threshold : float, default=4.0
         Z-score threshold for outlier detection and clipping. Values with
         :math:`|z| > \text{threshold}` are considered outliers.
 
-    softmax_temperature : float, default=0.9
-        Temperature parameter :math:`\tau` for the softmax function, applied as
-        :math:`\text{softmax}(x / \tau)`. Lower values make predictions more
-        confident, higher values make them more conservative.
-
-    average_logits : bool, default=True
-        Whether to average the logits (True) or probabilities (False) of ensemble members.
-        Averaging logits often produces better calibrated probabilities.
-
-    support_many_classes : bool, default=True
-        Whether to enable many-class support which performs mixed-radix ensembling during
-        column-wise embedding and hierarchical classification during in-context learning.
-        Required when the number of classes exceeds the model's max_classes limit.
-
-    batch_size : Optional[int] = 8
+    batch_size : Optional[int], default=8
         Batch size for inference. If None, all ensemble members are processed in a single batch.
         Adjust this parameter based on available memory. Lower values use less memory but may
         be slower.
 
-    model_path : Optional[str | Path] = None
+    model_path : Optional[str or Path], default=None
         Path to the pre-trained model checkpoint file.
         - If provided and the file exists, it's loaded directly.
         - If provided but the file doesn't exist and `allow_auto_download` is true, the version
@@ -98,14 +75,10 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         Whether to allow automatic download if the pretrained checkpoint cannot be found at the
         specified `model_path`.
 
-    checkpoint_version : str, default='tabicl-classifier-v2-20260212.ckpt'
+    checkpoint_version : str, default='tabicl-regressor-v2-20260212.ckpt'
         Specifies which version of the pre-trained model checkpoint to use when `model_path`
         is `None` or points to a non-existent file (and `allow_auto_download` is true).
         Checkpoints are downloaded from https://huggingface.co/jingang/TabICL.
-        Available versions:
-        - `'tabicl-classifier-v2-20260212.ckpt'` (Default): The latest best-performing version, used in our TabICLv2 paper.
-        - `'tabicl-classifier-v1.1-20250506.ckpt'`: An enhanced version of TabICLv1 using a precursor of the v2 prior.
-        - `'tabicl-classifier-v1-20250208.ckpt'`: The version used in our TabICLv1 paper.
 
     device : Optional[str or torch.device], default=None
         Device to use for inference. If None, defaults to CUDA if available, else CPU.
@@ -196,12 +169,6 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
     Attributes
     ----------
-    classes_ : ndarray of shape (n_classes,)
-        Class labels known to the classifier.
-
-    n_classes_ : int
-        Number of classes in the training data.
-
     n_features_in_ : int
         Number of features in the training data.
 
@@ -215,8 +182,8 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
     X_encoder_ : TransformToNumerical
         Encoder for transforming input features to numerical values.
 
-    y_encoder_ : LabelEncoder
-        Encoder for transforming class labels to integers and back.
+    y_scaler_ : StandardScaler
+        Scaler for transforming target values.
 
     ensemble_generator_ : EnsembleGenerator
         Fitted ensemble generator that creates multiple dataset views.
@@ -242,7 +209,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
     model_kv_cache_ : OrderedDict[str, TabICLCache] or None
         Pre-computed KV caches for training data, keyed by normalization method.
-        Created when ``fit()`` is called with ``kv_cache=True``. When set, ``predict_proba()``
+        Created when ``fit()`` is called with ``kv_cache=True``. When set, ``predict()``
         reuses the cached key-value projections instead of re-processing training data,
         enabling faster inference on multiple test sets.
     """
@@ -252,15 +219,11 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         n_estimators: int = 8,
         norm_methods: Optional[str | List[str]] = None,
         feat_shuffle_method: str = "latin",
-        class_shuffle_method: str = "shift",
         outlier_threshold: float = 4.0,
-        softmax_temperature: float = 0.9,
-        average_logits: bool = True,
-        support_many_classes: bool = True,
         batch_size: Optional[int] = 8,
         model_path: Optional[str | Path] = None,
         allow_auto_download: bool = True,
-        checkpoint_version: str = "tabicl-classifier-v2-20260212.ckpt",
+        checkpoint_version: str = "tabicl-regressor-v2-20260212.ckpt",
         device: Optional[str | torch.device] = None,
         use_amp: bool | str = "auto",
         use_fa3: bool | str = "auto",
@@ -274,11 +237,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         self.n_estimators = n_estimators
         self.norm_methods = norm_methods
         self.feat_shuffle_method = feat_shuffle_method
-        self.class_shuffle_method = class_shuffle_method
         self.outlier_threshold = outlier_threshold
-        self.softmax_temperature = softmax_temperature
-        self.average_logits = average_logits
-        self.support_many_classes = support_many_classes
         self.batch_size = batch_size
         self.model_path = model_path
         self.allow_auto_download = allow_auto_download
@@ -315,34 +274,12 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         repo_id = "jingang/TabICL"
         filename = self.checkpoint_version
 
-        ckpt_v1 = "tabicl-classifier-v1-20250208.ckpt"
-        ckpt_v1_1 = "tabicl-classifier-v1.1-20250506.ckpt"
-        ckpt_v2 = "tabicl-classifier-v2-20260212.ckpt"
-
-        if filename == ckpt_v2:
-            info_message = f"INFO: You are downloading '{ckpt_v2}', the latest best-performing version, used in our TabICLv2 paper.\n"
-        elif filename == ckpt_v1_1:
-            info_message = (
-                f"INFO: You are downloading '{ckpt_v1_1}', an enhanced version of TabICLv1.\n"
-                f"A newer version, '{ckpt_v2}', is available and offers improved performance.\n"
-            )
-        elif filename == ckpt_v1:
-            info_message = (
-                f"INFO: You are downloading '{ckpt_v1}', the version used in our TabICLv1 paper.\n"
-                f"A newer version, '{ckpt_v2}', is available and offers improved performance.\n"
-            )
-        else:
-            raise ValueError(
-                f"Invalid checkpoint version '{filename}'. Available ones are: '{ckpt_v1}', '{ckpt_v1_1}', '{ckpt_v2}'."
-            )
-
         if self.model_path is None:
             # Scenario 1: the model path is not provided, so download from HF Hub based on the checkpoint version
             try:
                 model_path_ = Path(hf_hub_download(repo_id=repo_id, filename=filename, local_files_only=True))
             except LocalEntryNotFoundError:
                 if self.allow_auto_download:
-                    print(info_message)
                     print(f"Checkpoint '{filename}' not cached.\n Downloading from Hugging Face Hub ({repo_id}).\n")
                     model_path_ = Path(hf_hub_download(repo_id=repo_id, filename=filename))
                 else:
@@ -361,7 +298,6 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
             else:
                 # Scenario 2b: the model path does not exist, download the checkpoint version to this path
                 if self.allow_auto_download:
-                    print(info_message)
                     print(
                         f"Checkpoint not found at '{model_path_}'.\n"
                         f"Downloading '{filename}' from Hugging Face Hub ({repo_id}) to this location.\n"
@@ -381,23 +317,26 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         assert "state_dict" in checkpoint, "The checkpoint doesn't contain the model state."
 
         self.model_path_ = model_path_
-        self.model_ = TabICL(**checkpoint["config"])
-        self.model_config_ = checkpoint["config"]
+
+        config = checkpoint["config"]
+        self.model_ = TabICL(**config)
+        self.model_config_ = config
         self.model_.load_state_dict(checkpoint["state_dict"])
         self.model_.eval()
 
-    def fit(self, X: np.ndarray, y: np.ndarray, kv_cache: bool | str = False) -> TabICLClassifier:
-        """Fit the classifier to training data.
+    def fit(self, X: np.ndarray, y: np.ndarray, kv_cache: bool | str = False) -> TabICLRegressor:
+        """Fit the regressor to training data.
 
         Prepares the model for prediction by:
-        1. Encoding class labels using LabelEncoder
+
+        1. Scaling target values using StandardScaler
         2. Converting input features to numerical values
         3. Fitting the ensemble generator to create transformed dataset views
         4. Loading the pre-trained TabICL model
         5. Optionally pre-computing KV caches for training data to speed up inference
 
         The model itself is not trained on the data; it uses in-context learning
-        at inference time.
+        at inference time. This method only prepares the data transformations.
 
         Parameters
         ----------
@@ -405,11 +344,11 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
             Training input data.
 
         y : array-like of shape (n_samples,)
-            Training target labels.
+            Training target values.
 
         kv_cache : bool or str, default=False
             Controls caching of training data computations to speed up subsequent
-            ``predict_proba``/``predict`` calls.
+            ``predict`` calls.
             - False: No caching.
             - True or "kv": Cache key-value projections from both column embedding
               and ICL transformer layers. Fast inference but memory-heavy for large
@@ -420,21 +359,29 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
         Returns
         -------
-        self : TabICLClassifier
-            Fitted classifier instance.
-
-        Raises
-        ------
-        ValueError
-            If the number of classes exceeds the model's maximum supported classes
-            and many-class support is disabled.
+        self : TabICLRegressor
+            Fitted regressor instance.
         """
 
         if y is None:
-            raise ValueError("This classifier requires y to be passed, but the target y is None.")
+            raise ValueError("This regressor requires y to be passed, but the target y is None.")
 
         X, y = validate_data(self, X, y, dtype=None, skip_check_array=True)
-        check_classification_targets(y)
+
+        # Ensure y is numeric
+        y = np.asarray(y, dtype=np.float32)
+
+        # Warn and flatten 2D column-vector y
+        if y.ndim == 2 and y.shape[1] == 1:
+            from sklearn.exceptions import DataConversionWarning
+
+            warnings.warn(
+                "A column-vector y was passed when a 1d array was expected. Please change "
+                "the shape of y to (n_samples, ), for example using ravel().",
+                DataConversionWarning,
+                stacklevel=2,
+            )
+            y = y.ravel()
 
         # Device setup
         self._resolve_device()
@@ -447,48 +394,24 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         self._load_model()
         self.model_.to(self.device_)
 
-        # Encode class labels
-        self.y_encoder_ = LabelEncoder()
-        y = self.y_encoder_.fit_transform(y)
-        self.classes_ = self.y_encoder_.classes_
-        self.n_classes_ = len(self.y_encoder_.classes_)
+        # Scale target values
+        self.y_scaler_ = StandardScaler()
+        y_scaled = self.y_scaler_.fit_transform(y.reshape(-1, 1)).flatten()
 
-        if self.n_classes_ > self.model_.max_classes:
-            if kv_cache:
-                raise ValueError(
-                    f"KV caching is not supported when the number of classes ({self.n_classes_}) exceeds the max number "
-                    f"of classes ({self.model_.max_classes}) natively supported by the model."
-                )
-
-            if not self.support_many_classes:
-                raise ValueError(
-                    f"The number of classes ({self.n_classes_}) exceeds the max number of classes ({self.model_.max_classes}) "
-                    f"natively supported by the model. Consider enabling many-class support which performs mixed-radix "
-                    f"ensembling during column-wise embedding and hierarchical classification during in-context learning."
-                )
-
-            if self.verbose:
-                print(
-                    f"The number of classes ({self.n_classes_}) exceeds the max number of classes ({self.model_.max_classes}) "
-                    f"natively supported by the model. Therefore, many-class strategy is enabled to perform mixed-radix "
-                    f"ensembling during column-wise embedding and hierarchical classification during in-context learning."
-                )
-
-        #  Transform input features
+        # Transform input features
         self.X_encoder_ = TransformToNumerical(verbose=self.verbose)
         X = self.X_encoder_.fit_transform(X)
 
         # Fit ensemble generator to create multiple dataset views
         self.ensemble_generator_ = EnsembleGenerator(
-            classification=True,
+            classification=False,
             n_estimators=self.n_estimators,
             norm_methods=self.norm_methods or ["none", "power"],
             feat_shuffle_method=self.feat_shuffle_method,
-            class_shuffle_method=self.class_shuffle_method,
             outlier_threshold=self.outlier_threshold,
             random_state=self.random_state,
         )
-        self.ensemble_generator_.fit(X, y)
+        self.ensemble_generator_.fit(X, y_scaled)
 
         self.model_kv_cache_ = None
         if kv_cache:
@@ -522,7 +445,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
                 X_batch = torch.from_numpy(X_batch).float().to(self.device_)
                 y_batch = torch.from_numpy(y_batch).float().to(self.device_)
                 with torch.no_grad():
-                    self.model_.forward_with_cache(
+                    self.model_.predict_stats_with_cache(
                         X_train=X_batch,
                         y_train=y_batch,
                         use_cache=False,
@@ -537,8 +460,12 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
             self.model_kv_cache_[norm_method] = TabICLCache.concat(caches)
 
     def _batch_forward(
-        self, Xs: np.ndarray, ys: np.ndarray, feature_shuffles: Optional[np.ndarray] = None
-    ) -> np.ndarray:
+        self,
+        Xs: np.ndarray,
+        ys: np.ndarray,
+        output_type: str | list[str] = "mean",
+        alphas: Optional[List[float]] = None,
+    ) -> np.ndarray | dict[str, np.ndarray]:
         """Process model forward passes in batches to manage memory efficiently.
 
         This method handles the batched inference through the TabICL model,
@@ -554,48 +481,61 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
             Training labels of shape ``(n_datasets, train_size)``, where ``train_size``
             is the number of samples used for in-context learning.
 
-        feature_shuffles : list or None, default=None
-            Lists of feature shuffle patterns to be applied to each ensemble member.
-            If None, no feature shuffling is applied.
+        output_type : str or list of str, default="mean"
+            Type of output to return (``"mean"``, ``"median"``, ``"variance"``,
+            or ``"quantiles"``).
+
+        alphas : list of float or None, default=None
+            Probability levels to return if ``output_type`` includes ``"quantiles"``.
 
         Returns
         -------
-        np.ndarray
-            Model outputs (logits or probabilities) of shape
-            ``(n_datasets, test_size, n_classes)`` where
-            ``test_size = n_samples - train_size``.
+        np.ndarray or dict[str, np.ndarray]
+            Model outputs. Shape depends on ``output_type``.
         """
 
         batch_size = self.batch_size or Xs.shape[0]
         n_batches = np.ceil(Xs.shape[0] / batch_size)
         Xs = np.array_split(Xs, n_batches)
         ys = np.array_split(ys, n_batches)
-        if feature_shuffles is None:
-            feature_shuffles = [None] * n_batches
-        else:
-            feature_shuffles = np.array_split(feature_shuffles, n_batches)
 
-        outputs = []
-        for X_batch, y_batch, shuffle_batch in zip(Xs, ys, feature_shuffles):
+        output_type = [output_type] if isinstance(output_type, str) else output_type
+        results = {key: [] for key in output_type}
+
+        for X_batch, y_batch in zip(Xs, ys):
             X_batch = torch.from_numpy(X_batch).float().to(self.device_)
             y_batch = torch.from_numpy(y_batch).float().to(self.device_)
-            if shuffle_batch is not None:
-                shuffle_batch = shuffle_batch.tolist()
 
             with torch.no_grad():
-                out = self.model_(
-                    X=X_batch,
-                    y_train=y_batch,
-                    feature_shuffles=shuffle_batch,
-                    return_logits=True if self.average_logits else False,
-                    softmax_temperature=self.softmax_temperature,
+                out = self.model_.predict_stats(
+                    X_batch,
+                    y_batch,
+                    output_type=output_type,
+                    alphas=alphas,
                     inference_config=self.inference_config_,
                 )
-            outputs.append(out.float().cpu().numpy())
+                if isinstance(out, dict):
+                    for key in output_type:
+                        results[key].append(out[key].float().cpu().numpy())
+                else:
+                    results[output_type[0]].append(out.float().cpu().numpy())
 
-        return np.concatenate(outputs, axis=0)
+        # Concatenate batches
+        for key in results:
+            results[key] = np.concatenate(results[key], axis=0)
 
-    def _batch_forward_with_cache(self, Xs: np.ndarray, kv_cache: TabICLCache) -> np.ndarray:
+        if len(output_type) == 1:
+            return results[output_type[0]]
+
+        return results
+
+    def _batch_forward_with_cache(
+        self,
+        Xs: np.ndarray,
+        kv_cache: TabICLCache,
+        output_type: str | list[str] = "mean",
+        alphas: Optional[List[float]] = None,
+    ) -> np.ndarray | dict[str, np.ndarray]:
         """Process model forward passes using a pre-computed KV cache.
 
         The cache is sliced along the batch dimension to match each batch.
@@ -608,18 +548,26 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         kv_cache : TabICLCache
             Single KV cache for all estimators of a normalization method.
 
+        output_type : str or list of str, default="mean"
+            Type of output to return (``"mean"``, ``"median"``, ``"variance"``,
+            or ``"quantiles"``).
+
+        alphas : list of float or None, default=None
+            Probability levels to return if ``output_type`` includes ``"quantiles"``.
+
         Returns
         -------
-        np.ndarray
-            Model outputs (logits or probabilities) of shape
-            ``(n_datasets, test_size, n_classes)``.
+        np.ndarray or dict[str, np.ndarray]
+            Model outputs. Shape depends on ``output_type``.
         """
         n_total = Xs.shape[0]
         batch_size = self.batch_size or n_total
         n_batches = int(np.ceil(n_total / batch_size))
         Xs_split = np.array_split(Xs, n_batches)
 
-        outputs = []
+        output_type = [output_type] if isinstance(output_type, str) else output_type
+        results = {key: [] for key in output_type}
+
         offset = 0
         for X_batch in Xs_split:
             bs = X_batch.shape[0]
@@ -628,18 +576,32 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
             X_batch = torch.from_numpy(X_batch).float().to(self.device_)
             with torch.no_grad():
-                out = self.model_.forward_with_cache(
+                out = self.model_.predict_stats_with_cache(
                     X_test=X_batch,
+                    output_type=output_type,
+                    alphas=alphas,
                     cache=cache_subset,
-                    return_logits=True if self.average_logits else False,
-                    softmax_temperature=self.softmax_temperature,
                     inference_config=self.inference_config_,
                 )
-            outputs.append(out.float().cpu().numpy())
-        return np.concatenate(outputs, axis=0)
+                if isinstance(out, dict):
+                    for key in output_type:
+                        results[key].append(out[key].float().cpu().numpy())
+                else:
+                    results[output_type[0]].append(out.float().cpu().numpy())
 
-    def predict_proba(self, X: np.ndarray) -> np.ndarray:
-        """Predict class probabilities for test samples.
+        # Concatenate batches
+        for key in results:
+            results[key] = np.concatenate(results[key], axis=0)
+
+        if len(output_type) == 1:
+            return results[output_type[0]]
+
+        return results
+
+    def predict(
+        self, X: np.ndarray, output_type: str | list[str] = "mean", alphas: Optional[List[float]] = None
+    ) -> np.ndarray | dict[str, np.ndarray]:
+        """Predict target values for test samples.
 
         Applies the ensemble of TabICL models to make predictions, with each ensemble
         member providing predictions that are then averaged. The method:
@@ -647,23 +609,43 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         1. Transforms input data using the fitted encoders
         2. Applies the ensemble generator to create multiple views
         3. Forwards each view through the model
-        4. Corrects for class shuffles
-        5. Averages predictions across ensemble members
+        4. Averages predictions across ensemble members
+        5. Inverse transforms predictions to original scale
 
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
             Test samples for prediction.
 
+        output_type : str or list of str, default="mean"
+            Determines the type of output to return.
+            - If ``"mean"``, returns the mean over the predicted distribution.
+            - If ``"median"``, returns the median over the predicted distribution.
+            - If ``"quantiles"``, returns the quantiles of the predicted distribution.
+              The parameter ``alphas`` determines which quantiles are returned.
+            - If a list of str, returns multiple types of outputs as specified in the list.
+
+        alphas : list of float or None, default=None
+            The probability levels to return if ``output_type="quantiles"``.
+
+            By default, the ``[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]``
+            quantiles are returned. The predictions per quantile match
+            the input order.
+
         Returns
         -------
-        np.ndarray of shape (n_samples, n_classes)
-            Class probabilities for each test sample.
+        np.ndarray of shape (n_samples,) or dict[str, np.ndarray]
+            An array of shape ``(n_samples,)`` if ``output_type`` is ``"mean"`` or
+            ``"median"``, or an array of shape ``(n_samples, n_quantiles)`` if
+            ``output_type`` is ``"quantiles"``.
+
+            If ``output_type`` is a list of str, returns a dictionary with keys as
+            specified in the list and values as the corresponding predictions.
         """
         check_is_fitted(self)
         if isinstance(X, np.ndarray) and len(X.shape) == 1:
             # Reject 1D arrays to maintain sklearn compatibility
-            raise ValueError(f"The provided input X is one-dimensional. Reshape your data.")
+            raise ValueError("The provided input X is one-dimensional. Reshape your data.")
 
         # Check if prediction is possible
         has_kv_cache = hasattr(self, "model_kv_cache_") and self.model_kv_cache_ is not None
@@ -699,68 +681,53 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         X = validate_data(self, X, reset=False, dtype=None, skip_check_array=True)
         X = self.X_encoder_.transform(X)
 
+        output_type = [output_type] if isinstance(output_type, str) else list(output_type)
+
         if hasattr(self, "model_kv_cache_") and self.model_kv_cache_ is not None:
             # Cache exists: forward only test data and use the pre-computed cache for training data
             test_data = self.ensemble_generator_.transform(X, mode="test")
-            outputs = []
+            results = {key: [] for key in output_type}
             for norm_method, (Xs_test,) in test_data.items():
                 kv_cache = self.model_kv_cache_[norm_method]
-                outputs.append(self._batch_forward_with_cache(Xs_test, kv_cache))
-            outputs = np.concatenate(outputs, axis=0)
+                batch_out = self._batch_forward_with_cache(Xs_test, kv_cache, output_type=output_type, alphas=alphas)
+                if isinstance(batch_out, dict):
+                    for key in output_type:
+                        results[key].append(batch_out[key])
+                else:
+                    results[output_type[0]].append(batch_out)
         else:
             # No cache: forward both training and test data
             data = self.ensemble_generator_.transform(X, mode="both")
-            outputs = []
-            for norm_method, (Xs, ys) in data.items():
-                feature_shuffles = self.ensemble_generator_.feature_shuffles_[norm_method]
-                outputs.append(self._batch_forward(Xs, ys, feature_shuffles))
-            outputs = np.concatenate(outputs, axis=0)
+            results = {key: [] for key in output_type}
+            for Xs, ys in data.values():
+                batch_out = self._batch_forward(Xs, ys, output_type=output_type, alphas=alphas)
+                if isinstance(batch_out, dict):
+                    for key in output_type:
+                        results[key].append(batch_out[key])
+                else:
+                    results[output_type[0]].append(batch_out)
 
-        # Extract class shuffle patterns from ensemble generator
-        class_shuffles = []
-        for shuffles in self.ensemble_generator_.class_shuffles_.values():
-            class_shuffles.extend(shuffles)
+        # Concatenate across ensemble members and apply inverse transform
+        final_results = {}
+        for key in output_type:
+            arr = np.concatenate(results[key], axis=0)
+            n_estimators = arr.shape[0]
+            n_samples = arr.shape[1]
 
-        # Determine actual number of ensemble members
-        # May be fewer than requested if dataset has quite limited features and classes
-        n_estimators = len(class_shuffles)
-
-        # Aggregate predictions from all ensemble members, correcting for class shuffles
-        avg = np.zeros_like(outputs[0])
-        for i, shuffle in enumerate(class_shuffles):
-            out = outputs[i]
-            avg += out[..., shuffle]
-
-        # Calculate ensemble average
-        avg /= n_estimators
-
-        # Convert logits to probabilities
-        if self.average_logits:
-            avg = self.softmax(avg, axis=-1, temperature=self.softmax_temperature)
+            if arr.ndim == 2:
+                # mean, variance, or median: (n_estimators, n_samples)
+                arr = self.y_scaler_.inverse_transform(arr.reshape(-1, 1)).reshape(n_estimators, n_samples)
+                final_results[key] = np.mean(arr, axis=0)
+            else:
+                # quantiles: (n_estimators, n_samples, n_quantiles)
+                n_quantiles = arr.shape[2]
+                arr = self.y_scaler_.inverse_transform(arr.reshape(-1, 1)).reshape(n_estimators, n_samples, n_quantiles)
+                final_results[key] = np.mean(arr, axis=0)
 
         if self.n_jobs is not None:
             torch.set_num_threads(old_n_threads)
 
-        # Normalize probabilities
-        return avg / avg.sum(axis=1, keepdims=True)
+        if len(output_type) == 1:
+            return final_results[output_type[0]]
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
-        """Predict class labels for test samples.
-
-        Uses predict_proba to get class probabilities and returns the class with
-        the highest probability for each sample.
-
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            Test samples for prediction.
-
-        Returns
-        -------
-        array-like of shape (n_samples,)
-            Predicted class labels for each test sample.
-        """
-        proba = self.predict_proba(X)
-        y = np.argmax(proba, axis=1)
-
-        return self.y_encoder_.inverse_transform(y)
+        return final_results

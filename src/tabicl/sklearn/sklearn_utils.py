@@ -1,9 +1,9 @@
 """Utility functions for sklearn compatibility.
 
-This module provides some scikit-learn utils that can be used across different
+This module provides scikit-learn utility functions that work across different
 versions of scikit-learn, eliminating the need for version-specific handling.
 
-Copied from: https://github.com/scikit-learn/scikit-learn/blob/1eb422d6c5/sklearn/utils/validation.py
+Adapted from: https://github.com/scikit-learn/scikit-learn/blob/1eb422d6c5/sklearn/utils/validation.py
 """
 
 from __future__ import annotations
@@ -34,8 +34,9 @@ def _get_feature_names(X):
 
     Returns
     -------
-    names: ndarray or None
-        Feature names of `X`. Unrecognized array containers will return `None`.
+    names : ndarray or None
+        Feature names of ``X``. Unrecognized array containers will return
+        ``None``.
     """
     feature_names = None
 
@@ -69,7 +70,7 @@ def _get_feature_names(X):
 
 
 def _check_feature_names(estimator, X, *, reset: bool) -> None:
-    """Set or check the `feature_names_in_` attribute of an estimator.
+    """Set or check the ``feature_names_in_`` attribute of an estimator.
 
     Parameters
     ----------
@@ -80,7 +81,7 @@ def _check_feature_names(estimator, X, *, reset: bool) -> None:
         The input samples.
 
     reset : bool
-        Whether to reset the `feature_names_in_` attribute.
+        Whether to reset the ``feature_names_in_`` attribute.
         If False, the input will be checked for consistency with
         feature names of data provided when reset was last True.
     """
@@ -154,12 +155,12 @@ def _num_features(X) -> int:
     Parameters
     ----------
     X : array-like
-        array-like to get the number of features.
+        Array-like to get the number of features.
 
     Returns
     -------
     features : int
-        Number of features
+        Number of features.
     """
     type_ = type(X)
     if type_.__module__ == "builtins":
@@ -193,7 +194,7 @@ def _num_features(X) -> int:
 
 
 def _check_n_features(estimator, X, reset: bool) -> None:
-    """Set the `n_features_in_` attribute, or check against it on an estimator.
+    """Set the ``n_features_in_`` attribute, or check against it on an estimator.
 
     Parameters
     ----------
@@ -204,9 +205,9 @@ def _check_n_features(estimator, X, reset: bool) -> None:
         The input samples.
 
     reset : bool
-        If True, the `n_features_in_` attribute is set to `X.shape[1]`.
+        If True, the ``n_features_in_`` attribute is set to ``X.shape[1]``.
         If False and the attribute exists, then check that it is equal to
-        `X.shape[1]`. If False and the attribute does *not* exist, then
+        ``X.shape[1]``. If False and the attribute does *not* exist, then
         the check is skipped.
     """
     try:
@@ -317,8 +318,8 @@ def validate_data(
 ):
     """Validate input data and set or check feature names and counts of the input.
 
-    This is a standalone version of sklearn's validate_data function that works
-    across different sklearn versions.
+    This is a standalone version of sklearn's ``validate_data`` function that
+    works across different sklearn versions.
 
     Parameters
     ----------
@@ -326,36 +327,37 @@ def validate_data(
         The estimator to validate the input for.
 
     X : {array-like, sparse matrix, dataframe} of shape (n_samples, n_features), \
-            default='no validation'
+            default='no_validation'
         The input samples.
-        If `'no_validation'`, no validation is performed on `X`.
+        If ``'no_validation'``, no validation is performed on ``X``.
 
     y : array-like of shape (n_samples,), default='no_validation'
         The targets.
-        - If `None`, only X is validated.
-        - If `'no_validation'`, only X is validated.
+        - If ``None``, only ``X`` is validated.
+        - If ``'no_validation'``, only ``X`` is validated.
 
     reset : bool, default=True
-        Whether to reset the `n_features_in_` attribute.
+        Whether to reset the ``n_features_in_`` attribute.
         If False, the input will be checked for consistency with data
         provided when reset was last True.
 
     validate_separately : False or tuple of dicts, default=False
-        Only used if `y` is not `None`.
-        If `False`, call check_X_y. Else, it must be a tuple of kwargs
-        to be used for calling check_array on X and y respectively.
+        Only used if ``y`` is not ``None``.
+        If ``False``, call ``check_X_y``. Else, it must be a tuple of kwargs
+        to be used for calling ``check_array`` on ``X`` and ``y`` respectively.
 
     skip_check_array : bool, default=False
-        If `True`, `X` and `y` are unchanged and only `feature_names_in_` and
-        `n_features_in_` are checked.
+        If ``True``, ``X`` and ``y`` are unchanged and only
+        ``feature_names_in_`` and ``n_features_in_`` are checked.
 
     **check_params : kwargs
-        Parameters passed to check_array or check_X_y.
+        Parameters passed to ``check_array`` or ``check_X_y``.
 
     Returns
     -------
     out : {ndarray, sparse matrix} or tuple of these
-        The validated input. A tuple is returned if both `X` and `y` are validated.
+        The validated input. A tuple is returned if both ``X`` and ``y``
+        are validated.
     """
     from sklearn.utils.validation import check_array, check_X_y
 

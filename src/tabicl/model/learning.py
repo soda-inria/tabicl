@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Optional, Union
 from collections import OrderedDict
 import math
 import torch
@@ -7,51 +8,72 @@ from torch import nn, Tensor
 
 from .layers import ClassNode, OneHotAndLinear
 from .encoders import Encoder
+from .kv_cache import KVCache
 from .inference import InferenceManager
-from .inference_config import MgrConfig
+from .inference_config import MgrConfig, InferenceConfig
 
 
 class ICLearning(nn.Module):
-    """Dataset-wise in-context learning with automatic hierarchical classification support.
-
-    This module implements in-context learning that:
-    1. Takes row representations and training labels as input
-    2. Conditions the model on training examples
-    3. Makes predictions for test examples based on learned patterns
-    4. Automatically handles both small and large label spaces
+    """Dataset-wise in-context learning.
 
     Parameters
     ----------
+    out_dim : int
+        Output dimension of the model.
+
     max_classes : int
-        Number of classes that the model supports natively. If the number of classes
-        in the dataset exceeds this value, hierarchical classification is used.
+        Determines the task type and output behavior:
+        - If max_classes=0: The model performs regression using quantile prediction.
+        - If max_classes>0: The model performs classification. This value specifies
+          the number of classes the model supports natively. If the number of classes
+          in the dataset exceeds this value, hierarchical classification is used.
 
     d_model : int
-        Model dimension
+        Model dimension.
 
     num_blocks : int
-        Number of blocks used in the ICL encoder
+        Number of blocks used in the ICL encoder.
 
     nhead : int
-        Number of attention heads of the ICL encoder
+        Number of attention heads of the ICL encoder.
 
     dim_feedforward : int
-        Dimension of the feedforward network of the ICL encoder
+        Dimension of the feedforward network of the ICL encoder.
 
     dropout : float, default=0.0
-        Dropout probability
+        Dropout probability.
 
     activation : str or unary callable, default="gelu"
         The activation function used in the feedforward network, can be
-        either string ("relu" or "gelu") or unary callable
+        either string ("relu" or "gelu") or unary callable.
 
     norm_first : bool, default=True
-        If True, uses pre-norm architecture (LayerNorm before attention and feedforward)
+        If True, uses pre-norm architecture (LayerNorm before attention and feedforward).
+
+    bias_free_ln : bool, default=False
+        If True, removes bias from all LayerNorm layers.
+
+    ssmax : bool or str, default=False
+        Type of scalable softmax to use in the ICL encoder.
+        If True, equivalent to "qassmax-mlp-elementwise".
+        If False, equivalent to "none".
+        If a string, uses the specified scalable softmax type.
+        Options include:
+            - "none": No scaling applied
+            - "ssmax": :math:`q_{\\text{scaled}} = q \\cdot (s \\cdot \\log n)` where s is learnable per-head parameter
+            - "ssmax-mlp": Uses MLP to compute scaling factors based on sequence length
+            - "ssmax-mlp-elementwise": Elementwise scaling per head dimension using MLP
+            - "qassmax-mlp": Query-aware scaling: :math:`\\text{scale} = \\text{base\\_mlp}(\\log n) \\cdot (1 + \\tanh(\\text{query\\_mlp}(q)))`
+            - "qassmax-mlp-elementwise": Elementwise query-aware scaling
+
+    recompute : bool, default=False
+        If True, uses gradient checkpointing to save memory at the cost of additional computation.
     """
 
     def __init__(
         self,
         max_classes: int,
+        out_dim: int,
         d_model: int,
         num_blocks: int,
         nhead: int,
@@ -59,8 +81,12 @@ class ICLearning(nn.Module):
         dropout: float = 0.0,
         activation: str | callable = "gelu",
         norm_first: bool = True,
+        bias_free_ln: bool = False,
+        ssmax: Union[bool, str] = False,
+        recompute: bool = False,
     ):
         super().__init__()
+
         self.max_classes = max_classes
         self.norm_first = norm_first
 
@@ -72,14 +98,20 @@ class ICLearning(nn.Module):
             dropout=dropout,
             activation=activation,
             norm_first=norm_first,
+            bias_free_ln=bias_free_ln,
+            ssmax=ssmax,
+            recompute=recompute,
         )
         if self.norm_first:
-            self.ln = nn.LayerNorm(d_model)
+            self.ln = nn.LayerNorm(d_model, bias=not bias_free_ln)
 
-        self.y_encoder = OneHotAndLinear(max_classes, d_model)
-        self.decoder = nn.Sequential(nn.Linear(d_model, d_model * 2), nn.GELU(), nn.Linear(d_model * 2, max_classes))
+        if max_classes > 0:  # Classification
+            self.y_encoder = OneHotAndLinear(max_classes, d_model)
+        else:  # Regression
+            self.y_encoder = nn.Linear(1, d_model)
 
-        self.inference_mgr = InferenceManager(enc_name="tf_icl", out_dim=max_classes)
+        self.decoder = nn.Sequential(nn.Linear(d_model, d_model * 2), nn.GELU(), nn.Linear(d_model * 2, out_dim))
+        self.inference_mgr = InferenceManager(enc_name="tf_icl", out_dim=out_dim)
 
     def _grouping(self, num_classes: int) -> tuple[Tensor, int]:
         """Divide classes into balanced groups for hierarchical classification.
@@ -91,13 +123,15 @@ class ICLearning(nn.Module):
         Parameters
         ----------
         num_classes : int
-            Total number of unique classes to partition into groups
+            Total number of unique classes to partition into groups.
 
         Returns
         -------
-        tuple[Tensor, int]
-            - group_assignments: Tensor mapping each class index to its assigned group (0-indexed)
-            - num_groups: Total number of groups created (will be <= max_classes)
+        group_assignments : Tensor
+            Tensor mapping each class index to its assigned group (0-indexed).
+
+        num_groups : int
+            Total number of groups created (will be <= max_classes).
 
         Notes
         -----
@@ -133,23 +167,24 @@ class ICLearning(nn.Module):
         """Recursively build a node in the hierarchical classification tree.
 
         For each node, this method either:
+
         1. Creates a leaf node if the number of classes is small enough to handle directly
         2. Splits classes into groups and recursively creates child nodes for each group
 
         Parameters
         ----------
         node : ClassNode
-            Current node being constructed in the tree
+            Current node being constructed in the tree.
 
         R : Tensor
             Row representations of shape (num_samples, D) where num_samples is the number of
-            examples assigned to this node
+            examples assigned to this node.
 
         y : Tensor
-            Targets of shape (num_samples,) corresponding to the samples in R
+            Targets of shape (num_samples,) corresponding to the samples in R.
 
         current_depth : int
-            Current depth in the hierarchical tree (root = 0)
+            Current depth in the hierarchical tree (root = 0).
         """
 
         unique_classes = torch.unique(y).int()
@@ -185,10 +220,10 @@ class ICLearning(nn.Module):
         Parameters
         ----------
         R_train : Tensor
-            Row representations of training data of shape (train_size, D)
+            Row representations of training data of shape (train_size, D).
 
         y_train : Tensor
-            Training targets of shape (train_size,)
+            Training targets of shape (train_size,).
         """
 
         self.root = ClassNode(depth=0)
@@ -212,17 +247,30 @@ class ICLearning(nn.Module):
              - T is the number of samples (rows)
              - D is the dimension of row representations
 
-        y_train : Tensor of shape (B, train_size)
-            Training targets, where train_size is the position to split
-            the input into training and test data
+        y_train : Tensor
+            Training targets of shape (B, train_size), where train_size is the position
+            to split the input into training and test data.
+
+        Returns
+        -------
+        Tensor
+            Predictions of shape (B, T, out_dim):
+
+            - For regression (max_classes=0): out_dim = num_quantiles
+            - For classification (max_classes>0): out_dim = max_classes
         """
 
         train_size = y_train.shape[1]
-        R[:, :train_size] = R[:, :train_size] + self.y_encoder(y_train.float())
-        src = self.tf_icl(R, attn_mask=train_size)
+        if self.max_classes > 0:  # Classification
+            Ry_train = self.y_encoder(y_train.float())
+        else:  # Regression
+            Ry_train = self.y_encoder(y_train.unsqueeze(-1))
+        R[:, :train_size] = R[:, :train_size] + Ry_train
+
+        src = self.tf_icl(R, train_size=train_size)
         if self.norm_first:
             src = self.ln(src)
-        out = self.decoder(src)  # (B, T, max_classes)
+        out = self.decoder(src)
 
         return out
 
@@ -244,33 +292,48 @@ class ICLearning(nn.Module):
              - T is the number of samples (rows)
              - D is the dimension of row representations
 
-        y_train : Tensor of shape (B, train_size)
-            Training targets, where train_size is the position to split
-            the input into training and test data
+        y_train : Tensor
+            Training targets of shape (B, train_size), where train_size is the position
+            to split the input into training and test data.
 
         return_logits : bool, default=False
-            If True, return logits instead of probabilities
+            If True, return logits instead of probabilities.
 
         softmax_temperature : float, default=0.9
-            Temperature for the softmax function
+            Temperature for the softmax function.
 
         auto_batch : bool, default=True
-            Whether to use InferenceManager to automatically split inputs into smaller batches
+            Whether to use InferenceManager to automatically split inputs into smaller batches.
+
+        Returns
+        -------
+        Tensor
+            For regression (max_classes=0):
+                Predictions of shape (B, test_size, num_quantiles), where test_size = T - train_size
+
+            For classification (max_classes>0):
+                If return_logits=True: Logits of shape (B, test_size, num_classes)
+                If return_logits=False: Probabilities of shape (B, test_size, num_classes)
         """
 
-        train_size = y_train.shape[1]
-        num_classes = len(torch.unique(y_train[0]))
         out = self.inference_mgr(
             self._icl_predictions, inputs=OrderedDict([("R", R), ("y_train", y_train)]), auto_batch=auto_batch
         )
-        out = out[:, train_size:, :num_classes]
 
-        if not return_logits:
-            out = torch.softmax(out / softmax_temperature, dim=-1)
+        train_size = y_train.shape[1]
+        if self.max_classes == 0:
+            out = out[:, train_size:]
+        else:
+            num_classes = len(torch.unique(y_train[0]))
+            out = out[:, train_size:, :num_classes]
+            if not return_logits:
+                out = torch.softmax(out / softmax_temperature, dim=-1)
 
         return out
 
-    def _predict_hierarchical(self, R_test: Tensor, softmax_temperature: float = 0.9) -> Tensor:
+    def _predict_hierarchical(
+        self, R_test: Tensor, softmax_temperature: float = 0.9, inference_recurrence: Optional[int] = None
+    ) -> Tensor:
         """Generate predictions using the hierarchical classification tree.
 
         This method traverses the tree from leaves to root, computing probabilities at each level
@@ -279,15 +342,15 @@ class ICLearning(nn.Module):
         Parameters
         ----------
         R_test : Tensor
-            Row representations of test data of shape (test_size, D)
+            Row representations of test data of shape (test_size, D).
 
         softmax_temperature : float, default=0.9
-            Temperature for the softmax function
+            Temperature for the softmax function.
 
         Returns
         -------
         Tensor
-            Probability over all classes, shape (test_size, C)
+            Probability over all classes, shape (test_size, C).
         """
 
         test_size = R_test.shape[0]
@@ -361,62 +424,62 @@ class ICLearning(nn.Module):
              - T is the number of samples (rows)
              - D is the dimension of row representations
 
-        y_train : Tensor of shape (B, train_size)
-            Training targets, where train_size is the position to split
-            the input into training and test data
+        y_train : Tensor
+            Training targets of shape (B, train_size), where train_size is the position
+            to split the input into training and test data.
 
         return_logits : bool, default=True
-            If True, return logits instead of probabilities
+            If True, return logits instead of probabilities.
 
         softmax_temperature : float, default=0.9
-            Temperature for the softmax function
+            Temperature for the softmax function.
 
         mgr_config : MgrConfig, default=None
-            Configuration for InferenceManager
+            Configuration for InferenceManager.
 
         Returns
         -------
         Tensor
-            Raw logits or probabilities for test samples of shape (B, T-train_size, num_classes)
+            For regression (max_classes=0):
+                Predictions of shape (B, test_size, num_quantiles), where test_size = T - train_size
+
+            For classification (max_classes>0):
+                If return_logits=True: Logits of shape (B, test_size, num_classes)
+                If return_logits=False: Probabilities of shape (B, test_size, num_classes)
         """
         # Configure inference parameters
         if mgr_config is None:
-            mgr_config = MgrConfig(
-                min_batch_size=1,
-                safety_factor=0.8,
-                offload=False,
-                auto_offload_pct=0.5,
-                device=None,
-                use_amp=True,
-                verbose=False,
-            )
+            mgr_config = InferenceConfig().ICL_CONFIG
         self.inference_mgr.configure(**mgr_config)
 
-        num_classes = len(torch.unique(y_train[0]))
-        assert all(
-            len(torch.unique(yi)) == num_classes for yi in y_train
-        ), "All tables must have the same number of classes"
+        if self.max_classes == 0:  # Regression
+            out = self._predict_standard(R, y_train)
+        else:  # Classification
+            num_classes = len(torch.unique(y_train[0]))
+            assert all(
+                len(torch.unique(yi)) == num_classes for yi in y_train
+            ), "All tables must have the same number of classes"
 
-        if num_classes <= self.max_classes:
-            # Standard classification
-            out = self._predict_standard(
-                R, y_train, return_logits=return_logits, softmax_temperature=softmax_temperature
-            )
-        else:
-            # Hierarchical classification
-            out = []
-            train_size = y_train.shape[1]
-            for ri, yi in zip(R, y_train):
-                if mgr_config.offload:
-                    ri, yi = ri.cpu(), yi.cpu()
-                else:
-                    ri, yi = ri.to(mgr_config.device), yi.to(mgr_config.device)
-                self._fit_hierarchical(ri[:train_size], yi)
-                probs = self._predict_hierarchical(ri[train_size:])
-                out.append(probs)
-            out = torch.stack(out, dim=0)
-            if return_logits:
-                out = softmax_temperature * torch.log(out + 1e-6)
+            if num_classes <= self.max_classes:
+                # Standard classification
+                out = self._predict_standard(
+                    R, y_train, return_logits=return_logits, softmax_temperature=softmax_temperature
+                )
+            else:
+                # Hierarchical classification
+                out = []
+                train_size = y_train.shape[1]
+                for ri, yi in zip(R, y_train):
+                    if mgr_config.offload:
+                        ri, yi = ri.cpu(), yi.cpu()
+                    else:
+                        ri, yi = ri.to(mgr_config.device), yi.to(mgr_config.device)
+                    self._fit_hierarchical(ri[:train_size], yi)
+                    probs = self._predict_hierarchical(ri[train_size:])
+                    out.append(probs)
+                out = torch.stack(out, dim=0)
+                if return_logits:
+                    out = softmax_temperature * torch.log(out + 1e-6)
 
         return out
 
@@ -438,9 +501,9 @@ class ICLearning(nn.Module):
              - T is the number of samples (rows)
              - D is the dimension of row representations
 
-        y_train : Tensor of shape (B, train_size)
-            Training targets, where train_size is the position to split
-            the input into training and test data
+        y_train : Tensor
+            Training targets of shape (B, train_size), where train_size is the position
+            to split the input into training and test data.
 
         return_logits : bool, default=True
             If True, return logits instead of probabilities. Used only in inference mode.
@@ -455,10 +518,18 @@ class ICLearning(nn.Module):
         -------
         Tensor
             For training mode:
-              Raw logits of shape (B, T-train_size, max_classes), which will be further handled by the training code.
+                Predictions of shape (B, test_size, out_dim):
+
+                - For regression (max_classes=0): out_dim = num_quantiles
+                - For classification (max_classes>0): out_dim = max_classes
 
             For inference mode:
-              Raw logits or probabilities for test samples of shape (B, T-train_size, num_classes).
+                For regression (max_classes=0):
+                    Predictions of shape (B, test_size, num_quantiles)
+
+                For classification (max_classes>0):
+                    If return_logits=True: Logits of shape (B, test_size, num_classes)
+                    If return_logits=False: Probabilities of shape (B, test_size, num_classes)
         """
 
         if self.training:
@@ -467,5 +538,292 @@ class ICLearning(nn.Module):
             out = out[:, train_size:]
         else:
             out = self._inference_forward(R, y_train, return_logits, softmax_temperature, mgr_config)
+
+        return out
+
+    def prepare_repr_cache(self, R: Tensor, y_train: Tensor) -> Tensor:
+        """Add target embedding to train representations.
+
+        Parameters
+        ----------
+        R : Tensor
+            Row representations of shape (B, T, D) where:
+             - B is the number of tables
+             - T is the number of samples (rows)
+             - D is the dimension of row representations
+
+        y_train : Tensor
+            Training targets of shape (B, train_size), where train_size is the position
+            to split the input into training and test data.
+
+        Returns
+        -------
+        Tensor
+            Full representations with y_train baked into the train portion,
+            shape (B, T, D).
+        """
+
+        train_size = y_train.shape[1]
+        if self.max_classes > 0:
+            Ry_train = self.y_encoder(y_train.float())
+        else:
+            Ry_train = self.y_encoder(y_train.unsqueeze(-1))
+        R[:, :train_size] = R[:, :train_size] + Ry_train
+
+        return R
+
+    def _icl_predictions_repr_cache(self, R: Tensor, train_size: int) -> Tensor:
+        """In-context learning predictions with representation cache.
+
+        This method does not add target embedding because it is already
+        baked into the cached train representations.
+
+        Parameters
+        ----------
+        R : Tensor
+            Full representations of shape (B, T, D) where
+            R[:, :train_size] has y_train already baked in.
+
+        train_size : int
+            Number of training samples.
+
+        Returns
+        -------
+        Tensor
+            Predictions of shape (B, T, out_dim).
+        """
+
+        src = self.tf_icl(R, train_size=train_size)
+        if self.norm_first:
+            src = self.ln(src)
+        out = self.decoder(src)
+
+        return out
+
+    def forward_with_repr_cache(
+        self,
+        R: Tensor,
+        train_size: int,
+        num_classes: Optional[int] = None,
+        return_logits: bool = True,
+        softmax_temperature: float = 0.9,
+        mgr_config: MgrConfig = None,
+    ) -> Tensor:
+        """In-context learning with representation cache.
+
+        Runs the ICL transformer on pre-assembled representations where
+        the training portion already has y_train baked in.
+
+        Parameters
+        ----------
+        R : Tensor
+            Full representations of shape (B, T, D) where
+            R[:, :train_size] has y_train already baked in.
+
+        train_size : int
+            Number of training samples.
+
+        num_classes : Optional[int], default=None
+            Number of classes for classification tasks.
+
+        return_logits : bool, default=True
+            If True, return raw logits instead of probabilities.
+
+        softmax_temperature : float, default=0.9
+            Temperature for the softmax function.
+
+        mgr_config : MgrConfig, default=None
+            Configuration for InferenceManager. If None, uses the default
+            ICL_CONFIG from InferenceConfig.
+
+        Returns
+        -------
+        Tensor
+            For regression (max_classes=0):
+                Predictions of shape (B, test_size, num_quantiles)
+
+            For classification (max_classes>0):
+                If return_logits=True: Logits of shape (B, test_size, num_classes)
+                If return_logits=False: Probabilities of shape (B, test_size, num_classes)
+        """
+
+        if mgr_config is None:
+            mgr_config = InferenceConfig().ICL_CONFIG
+        self.inference_mgr.configure(**mgr_config)
+
+        out = self.inference_mgr(
+            self._icl_predictions_repr_cache,
+            inputs=OrderedDict([("R", R), ("train_size", train_size)]),
+        )
+
+        out = out[:, train_size:]
+        if self.max_classes > 0:
+            assert num_classes is not None, "num_classes must be provided for classification"
+            out = out[..., :num_classes]
+            if not return_logits:
+                out = torch.softmax(out / softmax_temperature, dim=-1)
+
+        return out
+
+    def _icl_predictions_with_cache(
+        self,
+        R: Tensor,
+        icl_cache: KVCache,
+        y_train: Optional[Tensor] = None,
+        use_cache: bool = False,
+        store_cache: bool = True,
+    ) -> Tensor:
+        """In-context learning predictions with KV caching.
+
+        Parameters
+        ----------
+        R : Tensor
+            Row representations of shape (B, T, D).
+
+        icl_cache : KVCache
+            Cache object for storing/retrieving K/V projections.
+
+        y_train : Optional[Tensor], default=None
+            Training targets of shape (B, train_size). Required when store_cache=True;
+            ignored when use_cache=True.
+
+        use_cache : bool, default=False
+            Whether to use cached values to avoid redundant computation.
+
+        store_cache : bool, default=True
+            Whether to store computed values in cache.
+
+        Returns
+        -------
+        Tensor
+            Predictions of shape (B, T, out_dim) or (B, test_size, out_dim) when use_cache=True:
+
+            - For regression (max_classes=0): out_dim = num_quantiles
+            - For classification (max_classes>0): out_dim = max_classes
+        """
+        # When using cache, skip y_train embedding — it's already baked
+        # into the cached K/V projections from the store_cache pass.
+        if store_cache:
+            assert y_train is not None, "y_train must be provided when store_cache=True"
+            train_size = y_train.shape[1]
+
+            if self.max_classes > 0:  # Classification
+                Ry_train = self.y_encoder(y_train.float())
+            else:  # Regression
+                Ry_train = self.y_encoder(y_train.unsqueeze(-1))
+            R[:, :train_size] = R[:, :train_size] + Ry_train
+
+        src = self.tf_icl.forward_with_cache(
+            R,
+            icl_cache=icl_cache,
+            train_size=train_size if store_cache else None,
+            use_cache=use_cache,
+            store_cache=store_cache,
+        )
+        if self.norm_first:
+            src = self.ln(src)
+        out = self.decoder(src)
+
+        return out
+
+    def forward_with_cache(
+        self,
+        R: Tensor,
+        icl_cache: KVCache,
+        y_train: Optional[Tensor] = None,
+        num_classes: Optional[int] = None,
+        return_logits: bool = True,
+        softmax_temperature: float = 0.9,
+        use_cache: bool = False,
+        store_cache: bool = True,
+        mgr_config: MgrConfig = None,
+    ) -> Tensor:
+        """In-context learning with KV caching support.
+
+        Parameters
+        ----------
+        R : Tensor
+            Row representations of shape (B, T, D).
+
+        icl_cache : KVCache
+            Cache object for storing/retrieving K/V projections.
+
+        y_train : Optional[Tensor], default=None
+            Training targets of shape (B, train_size). Required when store_cache=True;
+            ignored when use_cache=True.
+
+        num_classes : Optional[int], default=None
+            Number of classes for classification. If None, computed from y_train.
+            When use_cache=True, this should be provided from the cache.
+
+        return_logits : bool, default=True
+            If True, return logits instead of probabilities.
+
+        softmax_temperature : float, default=0.9
+            Temperature for the softmax function.
+
+        use_cache : bool, default=False
+            Whether to use cached values to avoid redundant computation.
+
+        store_cache : bool, default=True
+            Whether to store computed values in cache.
+
+        mgr_config : MgrConfig, default=None
+            Configuration for InferenceManager. If None, uses the default
+            ICL_CONFIG from InferenceConfig.
+
+        Returns
+        -------
+        Tensor
+            For regression (max_classes=0):
+                Predictions of shape (B, test_size, num_quantiles)
+
+            For classification (max_classes>0):
+                If return_logits=True: Logits of shape (B, test_size, num_classes)
+                If return_logits=False: Probabilities of shape (B, test_size, num_classes)
+        """
+
+        if use_cache == store_cache:
+            raise ValueError("Exactly one of use_cache or store_cache must be True")
+
+        if store_cache:
+            assert y_train is not None, "y_train must be provided when store_cache=True"
+            # many-class classification is not supported with caching
+            if self.max_classes > 0:
+                num_classes = len(torch.unique(y_train[0]))
+                if num_classes > self.max_classes:
+                    raise ValueError(
+                        f"KV caching is not supported for classification with more classes "
+                        f"({num_classes}) than max_classes ({self.max_classes}). Hierarchical classification "
+                        f"requires multiple forward passes which is incompatible with caching."
+                    )
+        else:
+            assert num_classes is not None, "num_classes must be provided when use_cache=True"
+
+        if mgr_config is None:
+            mgr_config = InferenceConfig().ICL_CONFIG
+        self.inference_mgr.configure(**mgr_config)
+
+        out = self.inference_mgr(
+            self._icl_predictions_with_cache,
+            inputs=OrderedDict(
+                [
+                    ("R", R),
+                    ("icl_cache", icl_cache),
+                    ("y_train", y_train),
+                    ("use_cache", use_cache),
+                    ("store_cache", store_cache),
+                ]
+            ),
+        )
+
+        if store_cache:
+            train_size = y_train.shape[1]
+            out = out[:, train_size:]
+
+        if self.max_classes > 0:
+            out = out[..., :num_classes]
+            if not return_logits:
+                out = torch.softmax(out / softmax_temperature, dim=-1)
 
         return out

@@ -64,7 +64,7 @@ class MLPSCM(nn.Module):
     hidden_dim : int, default=20
         The dimensionality of the hidden representations within the MLP layers.
         If `is_causal=True`, this is automatically increased if it's smaller than
-        `num_outputs + 2 * num_features` to ensure enough intermediate variables
+        ``num_outputs + 2 * num_features`` to ensure enough intermediate variables
         are generated for sampling `X` and `y`.
 
     mlp_activations : default=nn.Tanh
@@ -92,8 +92,8 @@ class MLPSCM(nn.Module):
     scale_init_std_by_dropout : bool, default=True
         Whether to scale the `init_std` during weight initialization to compensate
         for the variance reduction caused by dropout. If `True`, `init_std` is
-        divided by `sqrt(1 - dropout_prob)` or `sqrt(keep_prob)` depending on the
-        initialization method.
+        divided by :math:`\sqrt{1 - p_{\text{dropout}}}` or
+        :math:`\sqrt{p_{\text{keep}}}` depending on the initialization method.
 
     sampling : str, default="normal"
         The method used by `XSampler` to generate the initial 'cause' variables.
@@ -266,8 +266,7 @@ class MLPSCM(nn.Module):
         return X, y
 
     def handle_outputs(self, causes, outputs):
-        """
-        Handles outputs based on whether causal or not.
+        """Handle outputs based on whether causal or not.
 
         If causal, sample inputs and target from the graph.
         If not causal, directly use causes as inputs and last output as target.
@@ -275,18 +274,18 @@ class MLPSCM(nn.Module):
         Parameters
         ----------
         causes : torch.Tensor
-            Causes of shape (seq_len, num_causes)
+            Causes of shape ``(seq_len, num_causes)``.
 
         outputs : list of torch.Tensor
-            List of output tensors from MLP layers
+            List of output tensors from MLP layers.
 
         Returns
         -------
         X : torch.Tensor
-            Input features (seq_len, num_features)
+            Input features of shape ``(seq_len, num_features)``.
 
         y : torch.Tensor
-            Target (seq_len, num_outputs)
+            Target of shape ``(seq_len, num_outputs)``.
         """
         if self.is_causal:
             outputs_flat = torch.cat(outputs, dim=-1)

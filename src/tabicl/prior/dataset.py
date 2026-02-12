@@ -45,8 +45,7 @@ warnings.filterwarnings(
 
 
 class Prior:
-    """
-    Abstract base class for dataset prior generators.
+    """Abstract base class for dataset prior generators.
 
     Defines the interface and common functionality for different types of
     synthetic dataset generators.
@@ -54,37 +53,37 @@ class Prior:
     Parameters
     ----------
     batch_size : int, default=256
-        Total number of datasets to generate per batch
+        Total number of datasets to generate per batch.
 
     min_features : int, default=2
-        Minimum number of features per dataset
+        Minimum number of features per dataset.
 
     max_features : int, default=100
-        Maximum number of features per dataset
+        Maximum number of features per dataset.
 
     max_classes : int, default=10
-        Maximum number of target classes
+        Maximum number of target classes.
 
-    min_seq_len : int, default=None
-        Minimum samples per dataset. If None, uses max_seq_len
+    min_seq_len : int, optional
+        Minimum samples per dataset. If None, uses max_seq_len.
 
     max_seq_len : int, default=1024
-        Maximum samples per dataset
+        Maximum samples per dataset.
 
     log_seq_len : bool, default=False
-        If True, sample sequence length from a log-uniform distribution
+        If True, sample sequence length from a log-uniform distribution.
 
-    min_train_size : int|float, default=0.1
+    min_train_size : int or float, default=0.1
         Position or ratio for train/test split start. If int, absolute position.
         If float between 0 and 1, specifies a fraction of sequence length.
 
-    max_train_size : int|float, default=0.9
+    max_train_size : int or float, default=0.9
         Position or ratio for train/test split end. If int, absolute position.
         If float between 0 and 1, specifies a fraction of sequence length.
 
     replay_small : bool, default=False
         If True, occasionally sample smaller sequence lengths with
-        specific distributions to ensure model robustness on smaller datasets
+        specific distributions to ensure model robustness on smaller datasets.
     """
 
     def __init__(
@@ -118,23 +117,23 @@ class Prior:
 
     @staticmethod
     def validate_train_size_range(min_train_size: Union[int, float], max_train_size: Union[int, float]) -> None:
-        """
-        Checks if the training size range is valid.
+        """Check if the training size range is valid.
 
         Parameters
         ----------
-        min_train_size : int|float
-            Minimum training size (position or ratio)
+        min_train_size : int or float
+            Minimum training size (position or ratio).
 
-        max_train_size : int|float
-            Maximum training size (position or ratio)
+        max_train_size : int or float
+            Maximum training size (position or ratio).
 
         Raises
         ------
         AssertionError
-            If training size range is invalid
+            If training size range is invalid.
+
         ValueError
-            If training size types are mismatched or invalid
+            If training size types are mismatched or invalid.
         """
         # Check for numeric types only
         if not isinstance(min_train_size, (int, float)) or not isinstance(max_train_size, (int, float)):
@@ -152,8 +151,7 @@ class Prior:
     def sample_seq_len(
         min_seq_len: Optional[int], max_seq_len: int, log: bool = False, replay_small: bool = False
     ) -> int:
-        """
-        Selects a random sequence length within the specified range.
+        """Select a random sequence length within the specified range.
 
         This method provides flexible sampling strategies for dataset sizes, including
         occasional re-sampling of smaller sequence lengths for better training diversity.
@@ -164,20 +162,20 @@ class Prior:
             Minimum sequence length. If None, returns max_seq_len directly.
 
         max_seq_len : int
-            Maximum sequence length
+            Maximum sequence length.
 
         log : bool, default=False
             If True, sample from a log-uniform distribution to better
-            cover the range of possible sizes
+            cover the range of possible sizes.
 
         replay_small : bool, default=False
             If True, occasionally sample smaller sequence lengths with
-            specific distributions to ensure model robustness on smaller datasets
+            specific distributions to ensure model robustness on smaller datasets.
 
         Returns
         -------
         int
-            The sampled sequence length
+            The sampled sequence length.
         """
         if min_seq_len is None:
             return max_seq_len
@@ -200,34 +198,33 @@ class Prior:
 
     @staticmethod
     def sample_train_size(min_train_size: Union[int, float], max_train_size: Union[int, float], seq_len: int) -> int:
-        """
-        Selects a random training size within the specified range.
+        """Select a random training size within the specified range.
 
         This method handles both absolute position and fractional ratio approaches
         for determining the training/test split point.
 
         Parameters
         ----------
-        min_train_size : int|float
+        min_train_size : int or float
             Minimum training size. If int, used as absolute position.
             If float between 0 and 1, used as ratio of sequence length.
 
-        max_train_size : int|float
+        max_train_size : int or float
             Maximum training size. If int, used as absolute position.
             If float between 0 and 1, used as ratio of sequence length.
 
         seq_len : int
-            Total sequence length
+            Total sequence length.
 
         Returns
         -------
         int
-            The sampled training size position
+            The sampled training size position.
 
         Raises
         ------
         ValueError
-            If training size range has incompatible types
+            If training size range has incompatible types.
         """
         if isinstance(min_train_size, int) and isinstance(max_train_size, int):
             train_size = np.random.randint(min_train_size, max_train_size)
@@ -240,8 +237,7 @@ class Prior:
 
     @staticmethod
     def adjust_max_features(seq_len: int, max_features: int) -> int:
-        """
-        Adjusts the maximum number of features based on the sequence length.
+        """Adjust the maximum number of features based on the sequence length.
 
         This method implements an adaptive feature limit that scales inversely
         with sequence length. Longer sequences are restricted to fewer features
@@ -251,15 +247,15 @@ class Prior:
         Parameters
         ----------
         seq_len : int
-            Sequence length (number of samples)
+            Sequence length (number of samples).
 
         max_features : int
-            Original maximum number of features
+            Original maximum number of features.
 
         Returns
         -------
         int
-            Adjusted maximum number of features, ensuring computational feasibility
+            Adjusted maximum number of features, ensuring computational feasibility.
         """
         if seq_len <= 10240:
             return min(100, max_features)
@@ -280,8 +276,7 @@ class Prior:
 
     @staticmethod
     def delete_unique_features(X: Tensor, d: Tensor) -> Tuple[Tensor, Tensor]:
-        """
-        Removes features that have only one unique value across all samples.
+        """Remove features that have only one unique value across all samples.
 
         Single-value features provide no useful information for learning since they
         have zero variance. This method identifies and removes such constant features
@@ -291,21 +286,20 @@ class Prior:
         Parameters
         ----------
         X : Tensor
-            Input features tensor of shape (B, T, H) where:
-            - B is batch size
-            - T is sequence length
-            - H is feature dimensionality
+            Input features tensor of shape ``(B, T, H)`` where B is batch size,
+            T is sequence length, and H is feature dimensionality.
 
         d : Tensor
-            Number of features per dataset of shape (B,), indicating how many
-            features are actually used in each dataset (rest is padding)
+            Number of features per dataset of shape ``(B,)``, indicating how many
+            features are actually used in each dataset (rest is padding).
 
         Returns
         -------
-        tuple
-            (X_new, d_new) where:
-            - X_new is the filtered tensor with non-informative features removed
-            - d_new is the updated feature count per dataset
+        X_new : Tensor
+            The filtered tensor with non-informative features removed.
+
+        d_new : Tensor
+            The updated feature count per dataset.
         """
 
         def filter_unique_features(xi: Tensor, di: int) -> Tuple[Tensor, Tensor]:
@@ -328,8 +322,7 @@ class Prior:
 
     @staticmethod
     def sanity_check(X: Tensor, y: Tensor, train_size: int, n_attempts: int = 10, min_classes: int = 2) -> bool:
-        """
-        Verifies that both train and test sets contain all classes.
+        """Verify that both train and test sets contain all classes.
 
         For in-context learning to work properly, we need both the train and test
         sets to contain examples from all classes. This method checks this condition
@@ -338,24 +331,24 @@ class Prior:
         Parameters
         ----------
         X : Tensor
-            Input features tensor of shape (B, T, H)
+            Input features tensor of shape ``(B, T, H)``.
 
         y : Tensor
-            Target labels tensor of shape (B, T)
+            Target labels tensor of shape ``(B, T)``.
 
         train_size : int
-            Position to split the data into train and test sets
+            Position to split the data into train and test sets.
 
         n_attempts : int, default=10
-            Number of random permutations to try for fixing invalid splits
+            Number of random permutations to try for fixing invalid splits.
 
         min_classes : int, default=2
-            Minimum number of classes required in both train and test sets
+            Minimum number of classes required in both train and test sets.
 
         Returns
         -------
         bool
-            True if all datasets have valid splits, False otherwise
+            True if all datasets have valid splits, False otherwise.
         """
 
         def is_valid_split(yi: Tensor) -> bool:
@@ -395,76 +388,78 @@ class Prior:
 
 
 class SCMPrior(Prior):
-    """
-    Generates synthetic datasets using Structural Causal Models (SCM).
+    """Generate synthetic datasets using Structural Causal Models (SCM).
 
     The data generation process follows a hierarchical structure:
+
     1. Generate a list of parameters for each dataset, respecting group/subgroup sharing.
-    2. Process the parameter list to generate datasets, applying necessary transformations and checks.
+    2. Process the parameter list to generate datasets, applying necessary
+       transformations and checks.
 
     Parameters
     ----------
     batch_size : int, default=256
-        Total number of datasets to generate per batch
+        Total number of datasets to generate per batch.
 
     batch_size_per_gp : int, default=4
-        Number of datasets per group, sharing similar characteristics
+        Number of datasets per group, sharing similar characteristics.
 
-    batch_size_per_subgp : int, default=None
-        Number of datasets per subgroup, with more similar causal structures
-        If None, defaults to batch_size_per_gp
+    batch_size_per_subgp : int, optional
+        Number of datasets per subgroup, with more similar causal structures.
+        If None, defaults to batch_size_per_gp.
 
     min_features : int, default=2
-        Minimum number of features per dataset
+        Minimum number of features per dataset.
 
     max_features : int, default=100
-        Maximum number of features per dataset
+        Maximum number of features per dataset.
 
     max_classes : int, default=10
-        Maximum number of target classes
+        Maximum number of target classes.
 
-    min_seq_len : int, default=None
+    min_seq_len : int, optional
         Minimum samples per dataset. If None, uses max_seq_len directly.
 
     max_seq_len : int, default=1024
-        Maximum samples per dataset
+        Maximum samples per dataset.
 
     log_seq_len : bool, default=False
-        If True, sample sequence length from a log-uniform distribution
+        If True, sample sequence length from a log-uniform distribution.
 
-    seq_len_per_gp : bool = False
-        If True, sample sequence length per group, allowing variable-sized datasets
+    seq_len_per_gp : bool, default=False
+        If True, sample sequence length per group, allowing variable-sized datasets.
 
-    min_train_size : int|float, default=0.1
+    min_train_size : int or float, default=0.1
         Position or ratio for train/test split start. If int, absolute position.
         If float between 0 and 1, specifies a fraction of sequence length.
 
-    max_train_size : int|float, default=0.9
+    max_train_size : int or float, default=0.9
         Position or ratio for train/test split end. If int, absolute position.
         If float between 0 and 1, specifies a fraction of sequence length.
 
     replay_small : bool, default=False
         If True, occasionally sample smaller sequence lengths with
-        specific distributions to ensure model robustness on smaller datasets
+        specific distributions to ensure model robustness on smaller datasets.
 
     prior_type : str, default="mlp_scm"
-        Type of prior: 'mlp_scm' (default), 'tree_scm', or 'mix_scm'
-        'mix_scm' randomly selects between 'mlp_scm' and 'tree_scm' based on probabilities.
+        Type of prior: 'mlp_scm' (default), 'tree_scm', or 'mix_scm'.
+        'mix_scm' randomly selects between 'mlp_scm' and 'tree_scm' based on
+        probabilities.
 
     fixed_hp : dict, default=DEFAULT_FIXED_HP
-        Fixed structural configuration parameters
+        Fixed structural configuration parameters.
 
     sampled_hp : dict, default=DEFAULT_SAMPLED_HP
-        Parameters sampled during generation
+        Parameters sampled during generation.
 
     n_jobs : int, default=-1
         Number of parallel jobs to run (-1 means using all processors).
 
     num_threads_per_generate : int, default=1
-        Number of threads per job for dataset generation
+        Number of threads per job for dataset generation.
 
     device : str, default="cpu"
-        Computation device ('cpu' or 'cuda')
+        Computation device ('cpu' or 'cuda').
     """
 
     def __init__(
@@ -513,21 +508,19 @@ class SCMPrior(Prior):
         self.device = device
 
     def hp_sampling(self) -> Dict[str, Any]:
-        """
-        Sample hyperparameters for dataset generation.
+        """Sample hyperparameters for dataset generation.
 
         Returns
         -------
         dict
-            Dictionary with sampled hyperparameters merged with fixed ones
+            Dictionary with sampled hyperparameters merged with fixed ones.
         """
         hp_sampler = HpSamplerList(self.sampled_hp, device=self.device)
         return hp_sampler.sample()
 
     @torch.no_grad()
     def generate_dataset(self, params: Dict[str, Any]) -> Tuple[Tensor, Tensor, Tensor]:
-        """
-        Generates a single valid dataset based on the provided parameters.
+        """Generate a single valid dataset based on the provided parameters.
 
         Parameters
         ----------
@@ -537,11 +530,14 @@ class SCMPrior(Prior):
 
         Returns
         -------
-        tuple
-            (X, y, d) where:
-            - X: Features tensor of shape (seq_len, max_features)
-            - y: Labels tensor of shape (seq_len,)
-            - d: Number of active features after filtering (scalar Tensor)
+        X : Tensor
+            Features tensor of shape ``(seq_len, max_features)``.
+
+        y : Tensor
+            Labels tensor of shape ``(seq_len,)``.
+
+        d : Tensor
+            Number of active features after filtering (scalar Tensor).
         """
 
         if params["prior_type"] == "mlp_scm":
@@ -566,32 +562,32 @@ class SCMPrior(Prior):
 
     @torch.no_grad()
     def get_batch(self, batch_size: Optional[int] = None) -> Tuple[Tensor, Tensor, Tensor, Tensor, Tensor]:
-        """
-        Generates a batch of datasets by first creating a parameter list and then processing it.
+        """Generate a batch of datasets by first creating a parameter list and then processing it.
 
         Parameters
         ----------
         batch_size : int, optional
-            Batch size override. If None, uses self.batch_size
+            Batch size override. If None, uses self.batch_size.
 
         Returns
         -------
         X : Tensor or NestedTensor
-            Features tensor. If seq_len_per_gp=False, shape is (batch_size, seq_len, max_features).
+            Features tensor. If seq_len_per_gp=False, shape is
+            ``(batch_size, seq_len, max_features)``.
             If seq_len_per_gp=True, returns a NestedTensor.
 
         y : Tensor or NestedTensor
-            Labels tensor. If seq_len_per_gp=False, shape is (batch_size, seq_len).
+            Labels tensor. If seq_len_per_gp=False, shape is ``(batch_size, seq_len)``.
             If seq_len_per_gp=True, returns a NestedTensor.
 
         d : Tensor
-            Number of active features per dataset after filtering, shape (batch_size,)
+            Number of active features per dataset after filtering, shape ``(batch_size,)``.
 
         seq_lens : Tensor
-            Sequence length for each dataset, shape (batch_size,)
+            Sequence length for each dataset, shape ``(batch_size,)``.
 
         train_sizes : Tensor
-            Position for train/test split for each dataset, shape (batch_size,)
+            Position for train/test split for each dataset, shape ``(batch_size,)``.
         """
         batch_size = batch_size or self.batch_size
 
@@ -709,8 +705,7 @@ class SCMPrior(Prior):
         return X, y, d, seq_lens, train_sizes
 
     def get_prior(self) -> str:
-        """
-        Determine which prior type to use for generation.
+        """Determine which prior type to use for generation.
 
         For 'mix_scm' prior type, randomly selects between available priors
         based on configured probabilities.
@@ -718,7 +713,7 @@ class SCMPrior(Prior):
         Returns
         -------
         str
-            The selected prior type name
+            The selected prior type name.
         """
         if self.prior_type == "mix_scm":
             return np.random.choice(["mlp_scm", "tree_scm"], p=self.fixed_hp.get("mix_probas", [0.7, 0.3]))
@@ -727,42 +722,44 @@ class SCMPrior(Prior):
 
 
 class DummyPrior(Prior):
-    """This class creates purely random data. This is useful for testing and debugging
-    without the computational overhead of SCM-based generation.
+    """Create purely random data for testing and debugging.
+
+    This is useful for testing and debugging without the computational overhead
+    of SCM-based generation.
 
     Parameters
     ----------
     batch_size : int, default=256
-        Number of datasets to generate
+        Number of datasets to generate.
 
     min_features : int, default=2
-        Minimum number of features per dataset
+        Minimum number of features per dataset.
 
     max_features : int, default=100
-        Maximum number of features per dataset
+        Maximum number of features per dataset.
 
     max_classes : int, default=10
-        Maximum number of target classes
+        Maximum number of target classes.
 
-    min_seq_len : int, default=None
+    min_seq_len : int, optional
         Minimum samples per dataset. If None, uses max_seq_len directly.
 
     max_seq_len : int, default=1024
-        Maximum samples per dataset
+        Maximum samples per dataset.
 
     log_seq_len : bool, default=False
-        If True, sample sequence length from a log-uniform distribution
+        If True, sample sequence length from a log-uniform distribution.
 
-    min_train_size : int|float, default=0.1
+    min_train_size : int or float, default=0.1
         Position or ratio for train/test split start. If int, absolute position.
         If float between 0 and 1, specifies a fraction of sequence length.
 
-    max_train_size : int|float, default=0.9
+    max_train_size : int or float, default=0.9
         Position or ratio for train/test split end. If int, absolute position.
         If float between 0 and 1, specifies a fraction of sequence length.
 
     device : str, default="cpu"
-        Computation device
+        Computation device.
     """
 
     def __init__(
@@ -793,34 +790,33 @@ class DummyPrior(Prior):
 
     @torch.no_grad()
     def get_batch(self, batch_size: Optional[int] = None) -> Tuple[Tensor, Tensor, Tensor, Tensor, Tensor]:
-        """
-        Generates a batch of random datasets for testing purposes.
+        """Generate a batch of random datasets for testing purposes.
 
         Parameters
         ----------
         batch_size : int, optional
-            Batch size override, if None, uses self.batch_size
+            Batch size override, if None, uses self.batch_size.
 
         Returns
         -------
         X : Tensor
-            Features tensor of shape (batch_size, seq_len, max_features).
+            Features tensor of shape ``(batch_size, seq_len, max_features)``.
             Contains random Gaussian values for all features.
 
         y : Tensor
-            Labels tensor of shape (batch_size, seq_len).
+            Labels tensor of shape ``(batch_size, seq_len)``.
             Contains randomly assigned class labels.
 
         d : Tensor
-            Number of features per dataset of shape (batch_size,).
+            Number of features per dataset of shape ``(batch_size,)``.
             Always set to max_features for DummyPrior.
 
         seq_lens : Tensor
-            Sequence length for each dataset of shape (batch_size,).
+            Sequence length for each dataset of shape ``(batch_size,)``.
             All datasets share the same sequence length.
 
         train_sizes : Tensor
-            Position for train/test split for each dataset of shape (batch_size,).
+            Position for train/test split for each dataset of shape ``(batch_size,)``.
             All datasets share the same split position.
         """
 
@@ -841,56 +837,55 @@ class DummyPrior(Prior):
 
 
 class PriorDataset(IterableDataset):
-    """
-    Main dataset class that provides an infinite iterator over synthetic tabular datasets.
+    """Main dataset class that provides an infinite iterator over synthetic tabular datasets.
 
     Parameters
     ----------
     batch_size : int, default=256
-        Total number of datasets to generate per batch
+        Total number of datasets to generate per batch.
 
     batch_size_per_gp : int, default=4
-        Number of datasets per group, sharing similar characteristics
+        Number of datasets per group, sharing similar characteristics.
 
-    batch_size_per_subgp : int, default=None
-        Number of datasets per subgroup, with more similar causal structures
-        If None, defaults to batch_size_per_gp
+    batch_size_per_subgp : int, optional
+        Number of datasets per subgroup, with more similar causal structures.
+        If None, defaults to batch_size_per_gp.
 
     min_features : int, default=2
-        Minimum number of features per dataset
+        Minimum number of features per dataset.
 
     max_features : int, default=100
-        Maximum number of features per dataset
+        Maximum number of features per dataset.
 
     max_classes : int, default=10
-        Maximum number of target classes
+        Maximum number of target classes.
 
-    min_seq_len : int, default=None
+    min_seq_len : int, optional
         Minimum samples per dataset. If None, uses max_seq_len directly.
 
     max_seq_len : int, default=1024
-        Maximum samples per dataset
+        Maximum samples per dataset.
 
     log_seq_len : bool, default=False
-        If True, sample sequence length from a log-uniform distribution
+        If True, sample sequence length from a log-uniform distribution.
 
-    seq_len_per_gp : bool = False
-        If True, sample sequence length per group, allowing variable-sized datasets
+    seq_len_per_gp : bool, default=False
+        If True, sample sequence length per group, allowing variable-sized datasets.
 
-    min_train_size : int|float, default=0.1
+    min_train_size : int or float, default=0.1
         Position or ratio for train/test split start. If int, absolute position.
         If float between 0 and 1, specifies a fraction of sequence length.
 
-    max_train_size : int|float, default=0.9
+    max_train_size : int or float, default=0.9
         Position or ratio for train/test split end. If int, absolute position.
         If float between 0 and 1, specifies a fraction of sequence length.
 
     replay_small : bool, default=False
         If True, occasionally sample smaller sequence lengths with
-        specific distributions to ensure model robustness on smaller datasets
+        specific distributions to ensure model robustness on smaller datasets.
 
     prior_type : str, default="mlp_scm"
-        Type of prior: 'mlp_scm' (default), 'tree_scm', 'mix_scm', or 'dummy'
+        Type of prior: 'mlp_scm' (default), 'tree_scm', 'mix_scm', or 'dummy'.
 
         1. SCM-based: Structural causal models with complex feature relationships
          - 'mlp_scm': MLP-based causal models
@@ -900,19 +895,19 @@ class PriorDataset(IterableDataset):
         2. Dummy: Randomly generated datasets for debugging
 
     scm_fixed_hp : dict, default=DEFAULT_FIXED_HP
-        Fixed parameters for SCM-based priors
+        Fixed parameters for SCM-based priors.
 
     scm_sampled_hp : dict, default=DEFAULT_SAMPLED_HP
-        Parameters sampled during generation
+        Parameters sampled during generation.
 
     n_jobs : int, default=-1
-        Number of parallel jobs to run (-1 means using all processors)
+        Number of parallel jobs to run (-1 means using all processors).
 
     num_threads_per_generate : int, default=1
-        Number of threads per job for dataset generation
+        Number of threads per job for dataset generation.
 
     device : str, default="cpu"
-        Computation device ('cpu' or 'cuda')
+        Computation device ('cpu' or 'cuda').
     """
 
     def __init__(
@@ -994,64 +989,62 @@ class PriorDataset(IterableDataset):
         self.prior_type = prior_type
 
     def get_batch(self, batch_size: Optional[int] = None) -> Tuple[Tensor, Tensor, Tensor, Tensor, Tensor]:
-        """
-        Generate a new batch of datasets.
+        """Generate a new batch of datasets.
 
         Parameters
         ----------
         batch_size : int, optional
-            If provided, overrides the default batch size for this call
+            If provided, overrides the default batch size for this call.
 
         Returns
         -------
         X : Tensor or NestedTensor
             1. For SCM-based priors:
-             - If seq_len_per_gp=False, shape is (batch_size, seq_len, max_features).
+             - If seq_len_per_gp=False, shape is ``(batch_size, seq_len, max_features)``.
              - If seq_len_per_gp=True, returns a NestedTensor.
 
-            2. For DummyPrior, random Gaussian values of (batch_size, seq_len, max_features).
+            2. For DummyPrior, random Gaussian values of
+            ``(batch_size, seq_len, max_features)``.
 
-        X : Tensor or NestedTensor
+        y : Tensor or NestedTensor
             1. For SCM-based priors:
-             - If seq_len_per_gp=False, shape is (batch_size, seq_len).
+             - If seq_len_per_gp=False, shape is ``(batch_size, seq_len)``.
              - If seq_len_per_gp=True, returns a NestedTensor.
 
-            2. For DummyPrior, random class labels of (batch_size, seq_len).
+            2. For DummyPrior, random class labels of ``(batch_size, seq_len)``.
 
         d : Tensor
-            Number of active features per dataset of shape (batch_size,).
+            Number of active features per dataset of shape ``(batch_size,)``.
 
         seq_lens : Tensor
-            Sequence length for each dataset of shape (batch_size,).
+            Sequence length for each dataset of shape ``(batch_size,)``.
 
         train_sizes : Tensor
-            Position for train/test split for each dataset of shape (batch_size,).
+            Position for train/test split for each dataset of shape ``(batch_size,)``.
         """
         return self.prior.get_batch(batch_size)
 
     def __iter__(self) -> "PriorDataset":
-        """
-        Returns an iterator that yields batches indefinitely.
+        """Return an iterator that yields batches indefinitely.
 
         Returns
         -------
         self
-            Returns self as an iterator
+            Returns self as an iterator.
         """
         return self
 
     def __next__(self) -> Tuple[Tensor, Tensor, Tensor, Tensor, Tensor]:
-        """
-        Returns the next batch from the iterator. Since this is an infinite
-        iterator, it never raises StopIteration and instead continuously generates
-        new synthetic data batches.
+        """Return the next batch from the iterator.
+
+        Since this is an infinite iterator, it never raises StopIteration
+        and instead continuously generates new synthetic data batches.
         """
         with DisablePrinting():
             return self.get_batch()
 
     def __repr__(self) -> str:
-        """
-        Returns a string representation of the dataset.
+        """Return a string representation of the dataset.
 
         Provides a detailed view of the dataset configuration for debugging
         and logging purposes.
@@ -1059,7 +1052,7 @@ class PriorDataset(IterableDataset):
         Returns
         -------
         str
-            A formatted string with dataset parameters
+            A formatted string with dataset parameters.
         """
         return (
             f"PriorDataset(\n"

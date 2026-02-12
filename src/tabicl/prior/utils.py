@@ -20,6 +20,7 @@ class XSampler:
     """Input sampler for generating features for prior datasets.
 
     Supports multiple feature distribution types:
+
     - Normal: Standard normal distribution
     - Multinomial: Categorical features with random number of categories
     - Zipf: Power law distributed features
@@ -28,19 +29,19 @@ class XSampler:
     Parameters
     ----------
     seq_len : int
-        Length of sequence to generate
+        Length of sequence to generate.
 
     num_features : int
-        Number of features to generate
+        Number of features to generate.
 
     pre_stats : bool
-        Whether to pre-generate statistics for the input features
+        Whether to pre-generate statistics for the input features.
 
     sampling : str, default='mixed'
-        Feature sampling strategy ('normal', 'mixed', 'uniform')
+        Feature sampling strategy ('normal', 'mixed', 'uniform').
 
     device : str, default='cpu'
-        Device to store tensors on
+        Device to store tensors on.
     """
 
     def __init__(self, seq_len, num_features, pre_stats=False, sampling="mixed", device="cpu"):
@@ -65,7 +66,7 @@ class XSampler:
         Returns
         -------
         X : torch.Tensor
-            Generated features of shape (seq_len, num_features)
+            Generated features of shape ``(seq_len, num_features)``.
         """
         samplers = {"normal": self.sample_normal_all, "mixed": self.sample_mixed, "uniform": self.sample_uniform}
         if self.sampling not in samplers:

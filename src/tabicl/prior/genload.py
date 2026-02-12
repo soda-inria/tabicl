@@ -52,20 +52,20 @@ def dense2sparse(
     Parameters
     ----------
     dense_tensor : torch.Tensor
-        Input tensor of shape (num_rows, num_cols) where each row may contain
-        trailing zeros beyond the valid entries
+        Input tensor of shape ``(num_rows, num_cols)`` where each row may contain
+        trailing zeros beyond the valid entries.
 
     row_lengths : torch.Tensor
-        Tensor of shape (num_rows,) specifying the number of valid entries
-        in each row of the dense tensor
+        Tensor of shape ``(num_rows,)`` specifying the number of valid entries
+        in each row of the dense tensor.
 
     dtype : torch.dtype, default=torch.float32
-        Output data type for the sparse representation
+        Output data type for the sparse representation.
 
     Returns
     -------
     torch.Tensor
-        1D tensor of shape (sum(row_lengths),) containing only the valid entries
+        1D tensor of shape ``(sum(row_lengths),)`` containing only the valid entries.
     """
 
     assert dense_tensor.dim() == 2, "dense_tensor must be 2D"
@@ -95,21 +95,22 @@ def sparse2dense(
     Parameters
     ----------
     sparse_tensor : torch.Tensor
-        1D tensor containing the valid entries from the original dense tensor
+        1D tensor containing the valid entries from the original dense tensor.
 
     row_lengths : torch.Tensor
-        Number of valid entries for each row in the output tensor
+        Number of valid entries for each row in the output tensor.
 
-    max_len : Optional[int], default=None
-        Maximum length for each row in the output. If None, uses max(row_lengths)
+    max_len : int, optional
+        Maximum length for each row in the output. If None, uses
+        ``max(row_lengths)``.
 
     dtype : torch.dtype, default=torch.float32
-        Output data type for the dense representation
+        Output data type for the dense representation.
 
     Returns
     -------
     torch.Tensor
-        Dense tensor of shape (num_rows, max_len) with zeros padding
+        Dense tensor of shape ``(num_rows, max_len)`` with zeros padding.
     """
 
     assert sparse_tensor.dim() == 1, "data must be 1D"
@@ -175,16 +176,16 @@ def cat_slice_nested_tensors(tensors: List, dim=0) -> SliceNestedTensor:
 
     Parameters
     ----------
-    tensors : List
-        List of tensors to concatenate
+    tensors : list
+        List of tensors to concatenate.
 
     dim : int, default=0
-        Dimension along which to concatenate
+        Dimension along which to concatenate.
 
     Returns
     -------
     SliceNestedTensor
-        Concatenated tensor wrapped in SliceNestedTensor
+        Concatenated tensor wrapped in SliceNestedTensor.
     """
     # Extract the wrapped nested tensors
     nested_tensors = [t.nested_tensor if isinstance(t, SliceNestedTensor) else t for t in tensors]
@@ -192,36 +193,36 @@ def cat_slice_nested_tensors(tensors: List, dim=0) -> SliceNestedTensor:
 
 
 class LoadPriorDataset(IterableDataset):
-    """Loads pre-generated prior data sequentially for distributed training.
+    """Load pre-generated prior data sequentially for distributed training.
 
     Parameters
     ----------
     data_dir : str or Path
-        Directory containing the batch files
+        Directory containing the batch files.
 
     batch_size : int, default=512
-        Number of datasets to return in each iteration
+        Number of datasets to return in each iteration.
 
     ddp_world_size : int, default=1
-        Total number of distributed processes
+        Total number of distributed processes.
 
     ddp_rank : int, default=0
-        Rank of current process
+        Rank of current process.
 
     start_from : int, default=0
-        Batch index to start loading from
+        Batch index to start loading from.
 
     max_batches : int, optional
         Maximum number of batches to load. If None, load indefinitely.
 
     timeout : int, default=60
-        Maximum time in seconds to wait for a batch file
+        Maximum time in seconds to wait for a batch file.
 
     delete_after_load : bool, default=False
-        Whether to delete batch files after loading them
+        Whether to delete batch files after loading them.
 
     device : str, default='cpu'
-        Device to load tensors to
+        Device to load tensors to.
     """
 
     def __init__(
@@ -274,7 +275,7 @@ class LoadPriorDataset(IterableDataset):
         Returns
         -------
         tuple
-            A tuple containing X, y, d, seq_lens, train_sizes and the size of the batch
+            A tuple containing (X, y, d, seq_lens, train_sizes, batch_size).
         """
         batch_file = self.data_dir / f"batch_{self.current_idx:06d}.pt"
 
@@ -320,13 +321,20 @@ class LoadPriorDataset(IterableDataset):
 
         Returns
         -------
-        tuple
-            A tuple containing:
-            - X: Input features [batch_size, seq_len, features] or nested tensor
-            - y: Target labels [batch_size, seq_len] or nested tensor
-            - d: Number of features per dataset
-            - seq_lens: Sequence length for each dataset
-            - train_sizes: Position at which to split training and evaluation data
+        X : Tensor or NestedTensor
+            Input features ``[batch_size, seq_len, features]`` or nested tensor.
+
+        y : Tensor or NestedTensor
+            Target labels ``[batch_size, seq_len]`` or nested tensor.
+
+        d : Tensor
+            Number of features per dataset.
+
+        seq_lens : Tensor
+            Sequence length for each dataset.
+
+        train_sizes : Tensor
+            Position at which to split training and evaluation data.
         """
         # Check if we've reached the maximum number of batches and have no buffered data
         if self.max_batches is not None and self.current_idx >= self.max_batches and (self.buffer_size == 0):
@@ -415,13 +423,12 @@ class LoadPriorDataset(IterableDataset):
         return X_out, y_out, d_out, seq_lens_out, train_sizes_out
 
     def __repr__(self) -> str:
-        """
-        Returns a string representation of the LoadPriorDataset.
+        """Return a string representation of the LoadPriorDataset.
 
         Returns
         -------
         str
-            A formatted string with dataset parameters
+            A formatted string with dataset parameters.
         """
         repr_str = (
             f"LoadPriorDataset(\n"
@@ -524,23 +531,24 @@ class SavePriorDataset:
         Parameters
         ----------
         batch_idx : int
-            Index of the current batch used for file naming
+            Index of the current batch used for file naming.
 
         X : torch.Tensor
-            Input features tensor, either in dense format [batch_size, seq_len, features]
-            or in nested tensor format for variable sequence lengths
+            Input features tensor, either in dense format
+            ``[batch_size, seq_len, features]`` or in nested tensor format for
+            variable sequence lengths.
 
         y : torch.Tensor
-            Target labels tensor
+            Target labels tensor.
 
         d : torch.Tensor
-            Number of features for each dataset
+            Number of features for each dataset.
 
         seq_lens : torch.Tensor
-            Sequence length for each dataset
+            Sequence length for each dataset.
 
         train_sizes : torch.Tensor
-            Position at which to split training and evaluation data
+            Position at which to split training and evaluation data.
         """
 
         if self.args.seq_len_per_gp:
@@ -637,7 +645,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--prior_type",
         type=str,
-        default="graph_scm",
+        default="mix_scm",
         choices=["mlp_scm", "tree_scm", "mix_scm"],
         help="Type of prior to use",
     )
