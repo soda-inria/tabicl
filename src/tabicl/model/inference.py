@@ -444,10 +444,17 @@ class AsyncCopyManager:
         # Get a pinned buffer
         pinned_buf = self.buffer_pool.get(tuple(gpu_tensor.shape), gpu_tensor.dtype)
 
+        # Capture compute stream before switching context
+        compute_stream = torch.cuda.current_stream(device=self.device)
+
+        # Tell the caching allocator that copy_stream is also using gpu_tensor's memory,
+        # so it won't be reclaimed until the copy completes.
+        gpu_tensor.record_stream(self._copy_stream)
+
         # Async copy GPU -> pinned buffer on dedicated stream
         with torch.cuda.stream(self._copy_stream):
             # Wait for compute stream to finish producing gpu_tensor
-            self._copy_stream.wait_stream(torch.cuda.current_stream(device=self.device))
+            self._copy_stream.wait_stream(compute_stream)
             pinned_buf.copy_(gpu_tensor, non_blocking=True)
             event = torch.cuda.Event()
             event.record(self._copy_stream)
