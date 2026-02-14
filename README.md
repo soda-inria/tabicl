@@ -257,3 +257,7 @@ please cite our papers for **[TabICL](https://arxiv.org/abs/2502.05564)** and **
 - [Jingang Qu](https://github.com/jingangQu)
 - [David Holzmüller](https://github.com/dholzmueller)
 - [Marine Le Morvan](https://github.com/marineLM)
+
+## Star history
+
+[![Star History Chart](https://api.star-history.com/svg?repos=soda-inria/tabicl&type=date&legend=top-left)](https://www.star-history.com/#soda-inria/tabicl&type=date&legend=top-left)
