@@ -143,8 +143,22 @@ class TabICLBaseEstimator(BaseEstimator):
                 "offload": self.offload_mode,
                 "disk_offload_dir": self.disk_offload_dir,
             },
-            "ROW_CONFIG": {"device": self.device_, "use_amp": use_amp, "use_fa3": use_fa3, "verbose": self.verbose},
-            "ICL_CONFIG": {"device": self.device_, "use_amp": use_amp, "use_fa3": use_fa3, "verbose": self.verbose},
+            "ROW_CONFIG": {
+                "device": self.device_,
+                "use_amp": use_amp,
+                "use_fa3": use_fa3,
+                "verbose": self.verbose,
+                "offload": self.offload_mode,
+                "disk_offload_dir": self.disk_offload_dir,
+            },
+            "ICL_CONFIG": {
+                "device": self.device_,
+                "use_amp": use_amp,
+                "use_fa3": use_fa3,
+                "verbose": self.verbose,
+                "offload": self.offload_mode,
+                "disk_offload_dir": self.disk_offload_dir,
+            },
         }
         if self.inference_config is None:
             self.inference_config_ = InferenceConfig()
