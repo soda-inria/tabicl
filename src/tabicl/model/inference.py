@@ -181,6 +181,17 @@ class OffloadMode(Enum):
 
 
 @dataclass
+class OffloadReason:
+    """Structured reason for offload mode resolution."""
+
+    key: str
+    detail: Optional[str] = None
+
+    def __str__(self):
+        return f"{self.key}: {self.detail}" if self.detail else self.key
+
+
+@dataclass
 class OffloadConfig:
     """Configuration for offloading behavior."""
 
@@ -762,11 +773,11 @@ class InferenceManager:
         Returns
         -------
         float
-            Available GPU memory in megabytes, or infinity if CUDA is not
+            Available GPU memory in megabytes, or 0.0 if CUDA is not
             available or execution device is CPU.
         """
         if not torch.cuda.is_available() or self.exe_device.type != "cuda":
-            return float("inf")
+            return 0.0
         torch.cuda.synchronize()
         torch.cuda.empty_cache()
         return torch.cuda.mem_get_info(self.exe_device)[0] / (1024 * 1024)
@@ -863,62 +874,96 @@ class InferenceManager:
 
     def _resolve_offload_mode(
         self, output_mb: float, gpu_free_mb: float, cpu_free_mb: float, disk_free_mb: float
-    ) -> Tuple[OffloadMode, str]:
-        """Resolve actual offload mode for AUTO, returns (mode, reason).
+    ) -> Tuple[OffloadMode, OffloadReason]:
+        """Resolve actual offload mode, returns (mode, reason).
+
+        For user-requested modes, the requested mode is used if it fits.
+        Otherwise, modes fall back: GPU -> CPU -> DISK -> CPU(swap as last resort).
+
+        For AUTO mode, the priority is:
+            GPU (if within threshold) -> CPU -> DISK -> CPU(swap as last resort).
 
         Note: CPU mode can use either pinned or non-pinned memory.
         - Pinned memory: faster for async GPU-CPU transfers, but locks physical memory
         - Non-pinned memory: slower transfers, but can use virtual memory (swap)
-
-        For large outputs, we prefer non-pinned CPU memory over disk when CPU memory is available.
-        Disk offload is only available when disk_offload_dir is set.
         """
-        # Disk offload is only available if disk_offload_dir is configured
-        disk_available = self.disk_offload_dir is not None
-        effective_disk = max(0, disk_free_mb - self.disk_min_free_mb) if disk_available else 0
 
+        has_gpu = gpu_free_mb > 0
+        has_disk = self.disk_offload_dir is not None
+        effective_disk = max(0, disk_free_mb - self.disk_min_free_mb) if has_disk else 0
+
+        safe_cpu_mb = cpu_free_mb * self.cpu_safety_factor
+        safe_disk_mb = effective_disk * self.disk_safety_factor
+
+        gpu_fits = has_gpu and output_mb <= gpu_free_mb
+        cpu_fits = output_mb <= safe_cpu_mb
+        disk_fits = has_disk and output_mb <= safe_disk_mb
+
+        # User-requested mode with cascading fallback
+        # If the requested mode fails, downgrade one tier at a time: GPU -> CPU -> DISK -> CPU (swap as last resort)
         if self.offload_mode != OffloadMode.AUTO:
-            # User explicitly requested a mode - respect it
-            if self.offload_mode == OffloadMode.DISK and not disk_available:
-                raise ValueError(
-                    "Disk offload requested but disk_offload_dir is not configured. "
-                    "Please specify disk_offload_dir in the configuration."
-                )
-            # For CPU mode, only check if there's enough CPU memory (pinned vs non-pinned handled in allocate)
-            if self.offload_mode == OffloadMode.CPU:
-                if output_mb > cpu_free_mb * self.cpu_safety_factor:
-                    # Not enough CPU memory, fall back to disk if available
-                    if disk_available:
-                        return OffloadMode.DISK, f"cpu_requested_but_oom_disk_fallback"
-                    # No disk available, CPU will be attempted anyway (may fail or use swap)
-            return self.offload_mode, "user_requested"
+            requested = self.offload_mode
 
-        # AUTO logic
-        if gpu_free_mb == float("inf"):
-            # No GPU, must use CPU or disk
-            if cpu_free_mb * self.cpu_safety_factor >= output_mb:
-                return OffloadMode.CPU, "no_gpu_cpu_fits"
-            if disk_available and effective_disk * self.disk_safety_factor >= output_mb:
-                return OffloadMode.DISK, "no_gpu_disk_fallback"
-            # Nothing fits well, try CPU anyway (may use swap)
-            return OffloadMode.CPU, "no_gpu_no_disk_cpu_fallback"
+            if requested == OffloadMode.GPU:
+                if gpu_fits:
+                    return OffloadMode.GPU, OffloadReason(
+                        "user_gpu_fits", f"{output_mb:.0f}MB <= {gpu_free_mb:.0f}MB gpu free"
+                    )
+                elif cpu_fits:
+                    return OffloadMode.CPU, OffloadReason("user_gpu_fails", "gpu (requested) tight -> cpu")
+                elif disk_fits:
+                    return OffloadMode.DISK, OffloadReason("user_gpu_fails", "gpu (requested) tight, cpu tight -> disk")
+                else:
+                    return OffloadMode.CPU, OffloadReason(
+                        "user_gpu_fails", "gpu (requested) tight, cpu tight, disk tight -> cpu (swap)"
+                    )
 
-        # Check if output fits on GPU
-        output_pct = output_mb / max(gpu_free_mb, 1e-6)
-        if output_pct <= self.auto_offload_threshold:
-            return OffloadMode.GPU, f"output_pct({output_pct:.3f})<=threshold({self.auto_offload_threshold:.3f})"
+            if requested == OffloadMode.CPU:
+                if cpu_fits:
+                    return OffloadMode.CPU, OffloadReason(
+                        "user_cpu_fits", f"{output_mb:.0f}MB <= {safe_cpu_mb:.0f}MB safe cpu free"
+                    )
+                elif disk_fits:
+                    return OffloadMode.DISK, OffloadReason("user_cpu_fails", "cpu (requested) tight -> disk")
+                else:
+                    return OffloadMode.CPU, OffloadReason(
+                        "user_cpu_fails", "cpu (requested) tight, disk tight -> cpu (swap)"
+                    )
 
-        # GPU too tight - decide between CPU and disk
-        # Prefer CPU if there's enough memory (pinned or not)
-        if cpu_free_mb * self.cpu_safety_factor >= output_mb:
-            return OffloadMode.CPU, "gpu_tight_cpu_fits"
+            if requested == OffloadMode.DISK:
+                if not has_disk:
+                    raise ValueError(
+                        "Disk offload requested but disk_offload_dir is not configured. "
+                        "Please specify disk_offload_dir in the configuration."
+                    )
 
-        # CPU too tight, try disk if available
-        if disk_available and effective_disk * self.disk_safety_factor >= output_mb:
-            return OffloadMode.DISK, "gpu_tight_cpu_tight_disk_fits"
+                if disk_fits:
+                    return OffloadMode.DISK, OffloadReason(
+                        "user_disk_fits", f"{output_mb:.0f}MB <= {safe_disk_mb:.0f}MB safe disk free"
+                    )
+                else:
+                    return OffloadMode.CPU, OffloadReason("user_disk_fails", "disk (requested) tight -> cpu (swap)")
 
-        # Nothing fits well, use CPU as it can use swap if needed
-        return OffloadMode.CPU, "all_tight_cpu_fallback"
+        # AUTO mode
+        output_pct = output_mb / max(gpu_free_mb, 1e-6) if has_gpu else 1.0
+        gpu_within_threshold = has_gpu and output_pct <= self.auto_offload_threshold
+
+        if gpu_within_threshold:
+            return OffloadMode.GPU, OffloadReason(
+                "auto_gpu_fits",
+                f"{output_mb:.0f}MB <= {self.auto_offload_threshold * gpu_free_mb:.0f}MB safe gpu free",
+            )
+        elif cpu_fits:
+            return OffloadMode.CPU, OffloadReason(
+                "auto_cpu_fits", f"gpu tight -> cpu ({output_mb:.0f}MB <= {safe_cpu_mb:.0f}MB safe cpu free)"
+            )
+        elif disk_fits:
+            return OffloadMode.DISK, OffloadReason(
+                "auto_disk_fits",
+                f"gpu tight, cpu tight -> disk ({output_mb:.0f}MB <= {safe_disk_mb:.0f}MB safe disk free)",
+            )
+        else:
+            return OffloadMode.CPU, OffloadReason("auto_cpu_swap", "gpu tight, cpu tight, disk tight -> cpu (swap)")
 
     def _allocate_output_buffer(
         self,
