@@ -141,6 +141,19 @@ Install the forecast dependencies first:
 pip install tabicl[forecast]
 ```
 
+`TabICLForecaster` accepts the following parameters:
+
+```python
+from tabicl import TabICLForecaster
+
+forecaster = TabICLForecaster(
+    max_context_length=4096,  # max historical timesteps to use as context
+    temporal_features=DEFAULT_FEATURES,  # timestep index, calendar patterns, and seasonality
+    output_selection="mean",  # point prediction method: "mean" or "median"
+    tabicl_config=None,  # passed to TabICLRegressor; None uses default settings
+)
+```
+
 The following example shows how it works for univariate forecasting:
 
 ```python
@@ -188,6 +201,12 @@ Pre-training code for v2 will be released upon publication.
 We provide a minimal implementation of the TabICLv2 architecture 
 [here](https://github.com/soda-inria/nanotabicl), 
 for educational and experimental purposes.
+
+## TODO
+
+- [ ] Documentation
+- [ ] Integrate [skrub](https://skrub-data.org/) into tabicl for better handling of diverse data types, especially textual features
+- [ ] Multi-GPU parallel inference
 
 ## FAQ
 
