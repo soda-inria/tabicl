@@ -37,7 +37,13 @@ though its accuracy may degrade at some point.
 ```bash
 pip install tabicl
 ```
-For pretraining, use `pip install tabicl[pretrain]` instead.
+
+Optional dependencies can be installed as needed:
+```bash
+pip install tabicl[forecast]   # time series forecasting
+pip install tabicl[pretrain]   # pre-training
+pip install tabicl[all]        # everything
+```
 
 ## Basic usage
 
@@ -125,6 +131,50 @@ clf = TabICLClassifier(
 - **TabICLv1.1**: TabICLv1 post-trained on an early version of the v2 prior. Classification only.
 - **TabICLv1**: Original model. Classification only.
   TabICLv1 and v1.1 originally used `n_estimators=32`; we reduced the default to 8 afterwards.
+
+## Time series forecasting
+
+TabICL can be used for zero-shot time series forecasting via `TabICLForecaster`.
+Install the forecast dependencies first:
+
+```bash
+pip install tabicl[forecast]
+```
+
+The following example shows how it works for univariate forecasting:
+
+```python
+import pandas as pd
+from tabicl import TabICLForecaster
+from tabicl.forecast import TimeSeriesDataFrame, plot_forecast
+
+df = pd.read_csv(
+    "https://autogluon.s3.amazonaws.com/datasets/timeseries/australian_electricity_subset/test.csv",
+    parse_dates=["timestamp"],
+)
+data = TimeSeriesDataFrame.from_data_frame(df)
+
+prediction_length = 96
+selected_items = data.item_ids[:2]
+train_data, test_data = data.train_test_split(prediction_length)
+
+context_df = train_data.reset_index()
+context_df = context_df[context_df["item_id"].isin(selected_items)]
+test_df = test_data.reset_index()
+test_df = test_df[test_df["item_id"].isin(selected_items)]
+test_df = test_df.groupby("item_id").tail(prediction_length)
+
+forecaster = TabICLForecaster(max_context_length=10240)
+pred_df = forecaster.predict_df(context_df, prediction_length=prediction_length)
+fig, axes = plot_forecast(context_df=context_df, pred_df=pred_df, test_df=test_df)
+```
+
+<img src="./figures/tabiclv2_time_series.png" width="60%" alt="Runtimes for different hardware and sample sizes" style="display: block; margin: auto;">
+
+
+`TabICLForecaster` is heavily inspired by [TabPFN-TS](https://arxiv.org/abs/2501.02945v3),
+and most of the code is directly copied from [tabpfn-time-series](https://github.com/PriorLabs/tabpfn-time-series).
+We may later improve it to enhance the ability of TabICL for time series forecasting.
 
 ## Pre-training
 

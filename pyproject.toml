@@ -37,12 +37,19 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+forecast = [                                                                                                                                                                                                        
+    "pandas>=2.1.2",
+    "gluonts>=0.16.0",  # calendar features
+    "statsmodels>=0.14.5",  # seasonal detection
+    "matplotlib>=3.10.3",  # plotting
+]
 pretrain = [
-    "transformers",  # only used in optim for schedules  (maybe implement them natively to remove the dependency?)
+    "transformers",  # only used in optim for schedules
     "xgboost",  # used in the TabICLv1 prior
     "wandb",  # logging in pre-training
-    "joblib",  # parallelize dataset generation
-    "pandas",  # used in tests / eval
+]
+all = [
+    "tabicl[forecast,pretrain]",
 ]
 
 [build-system]
