@@ -205,7 +205,6 @@ for educational and experimental purposes.
 ## TODO
 
 - [ ] Documentation
-- [ ] Integrate [skrub](https://skrub-data.org/) into tabicl for better handling of diverse data types, especially textual features
 - [ ] Multi-GPU parallel inference
 
 ## FAQ
