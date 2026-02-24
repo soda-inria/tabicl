@@ -1,4 +1,3 @@
-# Copied from https://github.com/PriorLabs/tabpfn-time-series
 from __future__ import annotations
 
 import numpy as np
@@ -6,6 +5,52 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from tabicl.forecast.ts_dataframe import TimeSeriesDataFrame
+
+
+_COLORS = {
+    "context": "royalblue",
+    "forecast": "tomato",
+    "actual": "darkslateblue",
+}
+
+
+def _index_contained_in(tsdf_a: TimeSeriesDataFrame, tsdf_b: TimeSeriesDataFrame) -> bool:
+    """Check whether the index of ``tsdf_a`` is contained in ``tsdf_b``.
+
+    Parameters
+    ----------
+    tsdf_a : TimeSeriesDataFrame
+        First time series DataFrame.
+
+    tsdf_b : TimeSeriesDataFrame
+        Second time series DataFrame.
+
+    Returns
+    -------
+    bool
+        ``True`` if all index entries in ``tsdf_a`` are also in ``tsdf_b``.
+    """
+    return tsdf_a.index.isin(tsdf_b.index).all()
+
+
+def _resolve_item_ids(df: TimeSeriesDataFrame, item_ids: list | None) -> pd.Index:
+    """Return validated item IDs or all available ones."""
+    available = df.index.get_level_values("item_id").unique()
+    if item_ids is None:
+        return available
+    if not set(item_ids).issubset(available):
+        raise ValueError(f"Item IDs {item_ids} not found in the dataframe")
+    return pd.Index(item_ids)
+
+
+def _create_subplots(n: int):
+    """Create vertically stacked subplots, always returning a list of axes."""
+    fig, axes = plt.subplots(n, 1, figsize=(10, 3 * n))
+    if n == 1:
+        axes = [axes]
+    elif isinstance(axes, np.ndarray):
+        axes = list(axes)
+    return fig, axes
 
 
 def plot_forecast(
@@ -21,7 +66,7 @@ def plot_forecast(
     """Plot forecast with historical context and optional ground truth.
 
     Converts pandas DataFrames from the ``predict_df`` API to
-    ``TimeSeriesDataFrame`` and delegates to ``plot_pred_and_actual_ts``.
+    ``TimeSeriesDataFrame`` and delegates to ``plot_predictions``.
 
     Parameters
     ----------
@@ -51,41 +96,35 @@ def plot_forecast(
     linewidth : float, default=1.8
         Line thickness for all plot lines.
     """
-
-    # Add dummy item_id if not present
     if "item_id" not in context_df.columns:
         context_df = context_df.copy()
         context_df["item_id"] = 0
 
-    # Limit context length per item
     context_df = context_df.groupby("item_id").tail(context_length)
 
-    # Build test_df from prediction timestamps if not provided
     if test_df is None:
-        # Create a synthetic test_df with NaN targets (no ground truth to show)
-        test_records = []
-        for item_id in pred_df.index.get_level_values(0).unique():
-            pred_item = pred_df.loc[item_id]
-            for ts in pred_item.index:
-                test_records.append(
-                    {
-                        "item_id": item_id,
-                        "timestamp": ts,
-                        "target": np.nan,
-                    }
-                )
-        test_df = pd.DataFrame(test_records)
+        # Build test_df from prediction timestamps using MultiIndex extraction
+        unique_items = pred_df.index.get_level_values(0).unique()
+        records = []
+        for item_id in unique_items:
+            pred_timestamps = pred_df.loc[item_id].index
+            item_records = pd.DataFrame({
+                "item_id": item_id,
+                "timestamp": pred_timestamps,
+                "target": np.nan,
+            })
+            records.append(item_records)
+        test_df = pd.concat(records, ignore_index=True)
     else:
         if "item_id" not in test_df.columns:
             test_df = test_df.copy()
             test_df["item_id"] = 0
 
-    # Convert to TimeSeriesDataFrame
     train_tsdf = TimeSeriesDataFrame.from_data_frame(context_df)
     test_tsdf = TimeSeriesDataFrame.from_data_frame(test_df)
     pred_tsdf = TimeSeriesDataFrame(pred_df)
 
-    return plot_pred_and_actual_ts(
+    return plot_predictions(
         pred=pred_tsdf,
         train=train_tsdf,
         test=test_tsdf,
@@ -96,29 +135,7 @@ def plot_forecast(
     )
 
 
-def is_subset(tsdf_A: TimeSeriesDataFrame, tsdf_B: TimeSeriesDataFrame) -> bool:
-    """Check whether the index of ``tsdf_A`` is a subset of ``tsdf_B``.
-
-    Parameters
-    ----------
-    tsdf_A : TimeSeriesDataFrame
-        First time series DataFrame.
-
-    tsdf_B : TimeSeriesDataFrame
-        Second time series DataFrame.
-
-    Returns
-    -------
-    bool
-        ``True`` if all index entries in ``tsdf_A`` are also in ``tsdf_B``.
-    """
-
-    tsdf_index_set_A, tsdf_index_set_B = set(tsdf_A.index), set(tsdf_B.index)
-
-    return tsdf_index_set_A.issubset(tsdf_index_set_B)
-
-
-def plot_time_series(
+def plot_series(
     df: TimeSeriesDataFrame,
     item_ids: list[int] | None = None,
     in_single_plot: bool = False,
@@ -133,13 +150,13 @@ def plot_time_series(
     df : TimeSeriesDataFrame
         Time series data to plot.
 
-    item_ids : list of int or None, default=None
+    item_ids : list[int] | None, default=None
         Item IDs to plot. If ``None``, plots all items.
 
     in_single_plot : bool, default=False
         If ``True``, overlay all time series in a single plot.
 
-    y_limit : tuple of (float, float) or None, default=None
+    y_limit : tuple[float, float] | None, default=None
         Y-axis limits ``(min, max)``.
 
     show_points : bool, default=False
@@ -153,21 +170,12 @@ def plot_time_series(
     ValueError
         If any ``item_ids`` are not found in the DataFrame.
     """
-
-    if item_ids is None:
-        item_ids = df.index.get_level_values("item_id").unique()
-
-    elif not set(item_ids).issubset(df.index.get_level_values("item_id").unique()):
-        raise ValueError(f"Item IDs {item_ids} not found in the dataframe")
+    ids = _resolve_item_ids(df, item_ids)
 
     if not in_single_plot:
-        # create subplots
-        fig, axes = plt.subplots(len(item_ids), 1, figsize=(10, 3 * len(item_ids)), sharex=True)
+        _, axes = _create_subplots(len(ids))
 
-        if len(item_ids) == 1:
-            axes = [axes]
-
-        for ax, item_id in zip(axes, item_ids):
+        for ax, item_id in zip(axes, ids):
             df_item = df.xs(item_id, level="item_id")
             ax.plot(df_item.index, df_item[target_col])
             if show_points:
@@ -186,7 +194,7 @@ def plot_time_series(
 
     else:
         fig, ax = plt.subplots(1, 1, figsize=(10, 3))
-        for item_id in item_ids:
+        for item_id in ids:
             df_item = df.xs(item_id, level="item_id")
             ax.plot(df_item.index, df_item[target_col], label=f"Item ID: {item_id}")
             if show_points:
@@ -205,7 +213,7 @@ def plot_time_series(
     plt.show()
 
 
-def plot_actual_ts(
+def plot_splits(
     train: TimeSeriesDataFrame,
     test: TimeSeriesDataFrame,
     item_ids: list[int] | None = None,
@@ -221,7 +229,7 @@ def plot_actual_ts(
     test : TimeSeriesDataFrame
         Test (future) time series data.
 
-    item_ids : list of int or None, default=None
+    item_ids : list[int] | None, default=None
         Item IDs to plot. If ``None``, plots all items.
 
     show_points : bool, default=False
@@ -232,22 +240,14 @@ def plot_actual_ts(
     ValueError
         If any ``item_ids`` are not found in the training DataFrame.
     """
+    ids = _resolve_item_ids(train, item_ids)
+    _, axes = _create_subplots(len(ids))
 
-    if item_ids is None:
-        item_ids = train.index.get_level_values("item_id").unique()
-
-    elif not set(item_ids).issubset(train.index.get_level_values("item_id").unique()):
-        raise ValueError(f"Item IDs {item_ids} not found in the dataframe")
-
-    _, ax = plt.subplots(len(item_ids), 1, figsize=(10, 3 * len(item_ids)))
-
-    ax = [ax] if not isinstance(ax, np.ndarray) else ax
-
-    def plot_single_item(ax, item_id):
+    def _plot_single_item(ax, item_id):
         train_item = train.xs(item_id, level="item_id")
         test_item = test.xs(item_id, level="item_id")
 
-        if is_subset(train_item, test_item):
+        if _index_contained_in(train_item, test_item):
             ground_truth = test_item["target"]
         else:
             ground_truth = pd.concat([train_item[["target"]], test_item[["target"]]])
@@ -261,14 +261,14 @@ def plot_actual_ts(
         ax.set_title(f"Item ID: {item_id}")
         ax.legend()
 
-    for i, item_id in enumerate(item_ids):
-        plot_single_item(ax[i], item_id)
+    for i, item_id in enumerate(ids):
+        _plot_single_item(axes[i], item_id)
 
     plt.tight_layout()
     plt.show()
 
 
-def plot_pred_and_actual_ts(
+def plot_predictions(
     pred: TimeSeriesDataFrame,
     train: TimeSeriesDataFrame,
     test: TimeSeriesDataFrame,
@@ -296,7 +296,7 @@ def plot_pred_and_actual_ts(
     test : TimeSeriesDataFrame
         Actual (test) time series data.
 
-    item_ids : list of int or None, default=None
+    item_ids : list[int] | None, default=None
         Item IDs to plot. If ``None``, plots all items.
 
     show_quantiles : bool, default=True
@@ -315,15 +315,10 @@ def plot_pred_and_actual_ts(
         if ``pred`` and ``test`` have mismatched shapes and ``pred`` is
         not a subset of ``test``.
     """
-
-    if item_ids is None:
-        item_ids = train.index.get_level_values("item_id").unique()
-
-    elif not set(item_ids).issubset(train.index.get_level_values("item_id").unique()):
-        raise ValueError(f"Item IDs {item_ids} not found in the dataframe")
+    ids = _resolve_item_ids(train, item_ids)
 
     if pred.shape[0] != test.shape[0]:
-        if not is_subset(pred, test):
+        if not _index_contained_in(pred, test):
             raise ValueError("Pred and Test have different number of items and Pred is not a subset of Test")
 
         filled_pred = test.copy()
@@ -332,18 +327,12 @@ def plot_pred_and_actual_ts(
             filled_pred.loc[pred.index, col] = pred[col]
         pred = filled_pred
 
-    assert pred.shape[0] == test.shape[0]
+    if pred.shape[0] != test.shape[0]:
+        raise ValueError("Pred and Test shapes still mismatch after alignment")
 
-    fig, axes = plt.subplots(len(item_ids), 1, figsize=(10, 3 * len(item_ids)))
+    fig, axes = _create_subplots(len(ids))
 
-    axes = [axes] if not isinstance(axes, np.ndarray) else axes
-
-    # Colors: blue for context, orange for forecast, teal for ground truth
-    color_context = "royalblue"
-    color_forecast = "tomato"
-    color_actual = "darkslateblue"
-
-    def plot_single_item(ax, item_id):
+    def _plot_single_item(ax, item_id):
         pred_item = pred.xs(item_id, level="item_id")
         train_item = train.xs(item_id, level="item_id")
         test_item = test.xs(item_id, level="item_id")
@@ -353,14 +342,14 @@ def plot_pred_and_actual_ts(
             train_item.index,
             train_item["target"],
             label="History",
-            color=color_context,
+            color=_COLORS["context"],
             linewidth=linewidth,
         )
         if show_points:
             ax.scatter(
                 train_item.index,
                 train_item["target"],
-                color=color_context,
+                color=_COLORS["context"],
                 s=8,
                 alpha=0.6,
             )
@@ -372,7 +361,7 @@ def plot_pred_and_actual_ts(
                 test_item.index,
                 test_item["target"],
                 label="Future",
-                color=color_actual,
+                color=_COLORS["actual"],
                 linewidth=linewidth,
                 alpha=0.8,
             )
@@ -380,7 +369,7 @@ def plot_pred_and_actual_ts(
                 ax.scatter(
                     test_item.index,
                     test_item["target"],
-                    color=color_actual,
+                    color=_COLORS["actual"],
                     s=8,
                     alpha=0.6,
                 )
@@ -390,7 +379,7 @@ def plot_pred_and_actual_ts(
             pred_item.index,
             pred_item["target"],
             label="Forecast",
-            color=color_forecast,
+            color=_COLORS["forecast"],
             linewidth=linewidth,
         )
 
@@ -405,7 +394,7 @@ def plot_pred_and_actual_ts(
                     pred_item.index,
                     pred_item[lower_quantile],
                     pred_item[upper_quantile],
-                    color=color_forecast,
+                    color=_COLORS["forecast"],
                     alpha=0.2,
                     label=f"{lower_quantile}-{upper_quantile} Quantile",
                 )
@@ -417,8 +406,8 @@ def plot_pred_and_actual_ts(
         ax.set_title(f"Item ID: {item_id}")
         ax.legend(loc="upper left", bbox_to_anchor=(0, 1))
 
-    for i, item_id in enumerate(item_ids):
-        plot_single_item(axes[i], item_id)
+    for i, item_id in enumerate(ids):
+        _plot_single_item(axes[i], item_id)
 
     plt.tight_layout()
     return fig, axes

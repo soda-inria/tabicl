@@ -148,8 +148,8 @@ from tabicl import TabICLForecaster
 
 forecaster = TabICLForecaster(
     max_context_length=4096,  # max historical timesteps to use as context
-    temporal_features=DEFAULT_FEATURES,  # timestep index, calendar patterns, and seasonality
-    output_selection="mean",  # point prediction method: "mean" or "median"
+    temporal_features=None,  # timestep index, calendar patterns, and seasonality
+    point_estimate="mean",  # point prediction method: "mean" or "median"
     tabicl_config=None,  # passed to TabICLRegressor; None uses default settings
 )
 ```
@@ -184,10 +184,7 @@ fig, axes = plot_forecast(context_df=context_df, pred_df=pred_df, test_df=test_d
 
 <img src="./figures/tabiclv2_time_series.png" width="60%" alt="Runtimes for different hardware and sample sizes" style="display: block; margin: auto;">
 
-
-`TabICLForecaster` is heavily inspired by [TabPFN-TS](https://arxiv.org/abs/2501.02945v3),
-and most of the code is directly copied from [tabpfn-time-series](https://github.com/PriorLabs/tabpfn-time-series).
-We may later improve it to enhance the ability of TabICL for time series forecasting.
+`TabICLForecaster` is heavily inspired by [TabPFN-TS](https://arxiv.org/abs/2501.02945v3). We may later improve it to enhance the ability of TabICL for time series forecasting.
 
 ## Pre-training
 
@@ -239,18 +236,6 @@ TabICLv2 is pre-trained on datasets between 2 and 100 columns.
 We see good generalization to more columns and don't know where the limit is.
 
 <img src="./figures/tabiclv2_perf_vs_n_features.png" width="70%" alt="Average rank vs. number of features" style="display: block; margin: auto;">
-
-
-<!--
-## Memory-Efficient Inference
-
-TabICL includes memory management to handle large datasets:
-
-- **Memory Profiling**: Built-in memory estimators for different components of the model
-- **Batch Size Estimation**: Dynamically determines optimal batch sizes based on available GPU memory
-- **CPU and disk Offloading**: Automatically offloads intermediate results to CPU and/or disk when beneficial
-- **OOM Recovery**: Recovers gracefully from out-of-memory errors by reducing batch size
--->
 
 ## Preprocessing
 

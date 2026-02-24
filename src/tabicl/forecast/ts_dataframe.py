@@ -1,6 +1,4 @@
-# Copied from https://github.com/PriorLabs/tabpfn-time-series
 # Modified from https://github.com/autogluon/autogluon/blob/main/autogluon/timeseries/ts_dataframe.py
-
 from __future__ import annotations
 
 import copy
@@ -145,10 +143,6 @@ class TimeSeriesDataFrame(pd.DataFrame):
                 data = self._construct_tsdf_from_data_frame(
                     data, id_column=id_column, timestamp_column=timestamp_column
                 )
-        # elif isinstance(data, (str, Path)):
-        #     data = self._construct_tsdf_from_data_frame(
-        #         load_pd.load(str(data)), id_column=id_column, timestamp_column=timestamp_column
-        #     )
         elif isinstance(data, Iterable):
             data = self._construct_tsdf_from_iterable_dataset(data, num_cpus=num_cpus)
         else:
