@@ -10,7 +10,7 @@ authors = [
     { name = "Gaël Varoquaux" } ,
 ]
 license = { file = "LICENSE" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 keywords = ["tabular data", "foundation model", "TabICL", "in-context learning"]
 classifiers = [
     "Intended Audience :: Science/Research",
@@ -19,7 +19,6 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python",
     'Programming Language :: Python :: 3',
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
