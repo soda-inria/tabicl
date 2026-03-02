@@ -369,7 +369,7 @@ class DiskTensor:
 
     def __setitem__(self, indices, value: Tensor) -> None:
         """Write to the tensor (automatically persists to disk)."""
-        if value.device.type != "cpu":
+        if not value.is_cpu:
             value = value.cpu()
         self._tensor[indices] = value
 
@@ -1128,8 +1128,8 @@ class InferenceManager:
         if not auto_batch:
             return self._run_forward(forward_fn, self._prepare_inputs(inputs))
 
-        # CPU execution: batching not supported currently
-        if self.exe_device.type == "cpu":
+        # CPU/MPS execution: batching not supported (requires CUDA memory APIs)
+        if self.exe_device.type in ("cpu", "mps"):
             return forward_fn(**inputs)
 
         # Extract shape/dtype info

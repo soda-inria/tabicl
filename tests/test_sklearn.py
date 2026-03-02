@@ -25,8 +25,9 @@ class TestClassifierKVCache:
         clf.fit(X_train, y_train)
         pred_no_cache = clf.predict_proba(X_test)
 
-        clf.fit(X_train, y_train, kv_cache=kv_cache)
-        pred_cached = clf.predict_proba(X_test)
+        clf_cached = TabICLClassifier(n_estimators=2, kv_cache=kv_cache)
+        clf_cached.fit(X_train, y_train)
+        pred_cached = clf_cached.predict_proba(X_test)
 
         np.testing.assert_allclose(pred_no_cache, pred_cached, rtol=1e-4, atol=1e-4)
 
@@ -42,8 +43,9 @@ class TestRegressorKVCache:
         reg.fit(X_train, y_train)
         pred_no_cache = reg.predict(X_test)
 
-        reg.fit(X_train, y_train, kv_cache=kv_cache)
-        pred_cached = reg.predict(X_test)
+        reg_cached = TabICLRegressor(n_estimators=2, kv_cache=kv_cache)
+        reg_cached.fit(X_train, y_train)
+        pred_cached = reg_cached.predict(X_test)
 
         # Relaxed tolerance: kv cache changes float32 computation order
         np.testing.assert_allclose(pred_no_cache, pred_cached, rtol=1e-4, atol=1e-4)

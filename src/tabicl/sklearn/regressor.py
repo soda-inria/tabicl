@@ -61,6 +61,23 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         Adjust this parameter based on available memory. Lower values use less memory but may
         be slower.
 
+    kv_cache : bool or str, default=False
+        Controls caching of training data computations to speed up subsequent
+        ``predict`` calls. The cache is built during ``fit()``.
+
+        - False: No caching.
+        - True or "kv": Cache key-value projections from both column embedding
+          and ICL transformer layers. Fast inference but memory-heavy for large
+          training sets.
+        - "repr": Cache column embedding KV projections and row interaction outputs
+          (representations). Uses ~24x less memory than "kv" for the ICL part,
+          at the cost of re-running the ICL transformer at predict time.
+
+        The cache retains whatever dtype the model produced during ``fit()``
+        (float16 when AMP is active, float32 otherwise). If the cache is later
+        loaded on CPU or on CUDA without AMP, the tensors are automatically
+        upcast to float32 to avoid dtype-mismatch errors.
+
     model_path : Optional[str or Path], default=None
         Path to the pre-trained model checkpoint file.
         - If provided and the file exists, it's loaded directly.
@@ -81,8 +98,10 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         Checkpoints are downloaded from https://huggingface.co/jingang/TabICL.
 
     device : Optional[str or torch.device], default=None
-        Device to use for inference. If None, defaults to CUDA if available, else CPU.
-        Can be specified as a string ('cuda', 'cpu') or a torch.device object.
+        Device to use for inference. If None, automatically selects CUDA if
+        available, otherwise CPU. Can be specified as a string (``'cuda'``,
+        ``'cpu'``, ``'mps'``) or a ``torch.device`` object. MPS (Apple Silicon
+        GPU) is supported but must be explicitly requested.
 
     use_amp : bool or "auto", default="auto"
         Controls automatic mixed precision (AMP) for inference.
@@ -204,14 +223,14 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         The inference configuration.
 
     cache_mode_ : str or None
-        The caching mode used when ``fit()`` was called with ``kv_cache``.
-        One of ``"kv"``, ``"repr"``, or ``None`` (when no caching is used).
+        The resolved caching mode, set during ``fit()`` based on the ``kv_cache``
+        init parameter. One of ``"kv"``, ``"repr"``, or ``None`` (no caching).
 
     model_kv_cache_ : OrderedDict[str, TabICLCache] or None
         Pre-computed KV caches for training data, keyed by normalization method.
-        Created when ``fit()`` is called with ``kv_cache=True``. When set, ``predict()``
-        reuses the cached key-value projections instead of re-processing training data,
-        enabling faster inference on multiple test sets.
+        Created during ``fit()`` when ``kv_cache`` is enabled. When set,
+        ``predict()`` reuses the cached key-value projections instead of
+        re-processing training data, enabling faster inference on multiple test sets.
     """
 
     def __init__(
@@ -221,6 +240,7 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         feat_shuffle_method: str = "latin",
         outlier_threshold: float = 4.0,
         batch_size: Optional[int] = 8,
+        kv_cache: bool | str = False,
         model_path: Optional[str | Path] = None,
         allow_auto_download: bool = True,
         checkpoint_version: str = "tabicl-regressor-v2-20260212.ckpt",
@@ -239,6 +259,7 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         self.feat_shuffle_method = feat_shuffle_method
         self.outlier_threshold = outlier_threshold
         self.batch_size = batch_size
+        self.kv_cache = kv_cache
         self.model_path = model_path
         self.allow_auto_download = allow_auto_download
         self.checkpoint_version = checkpoint_version
@@ -324,7 +345,7 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         self.model_.load_state_dict(checkpoint["state_dict"])
         self.model_.eval()
 
-    def fit(self, X: np.ndarray, y: np.ndarray, kv_cache: bool | str = False) -> TabICLRegressor:
+    def fit(self, X: np.ndarray, y: np.ndarray) -> TabICLRegressor:
         """Fit the regressor to training data.
 
         Prepares the model for prediction by:
@@ -334,6 +355,7 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         3. Fitting the ensemble generator to create transformed dataset views
         4. Loading the pre-trained TabICL model
         5. Optionally pre-computing KV caches for training data to speed up inference
+           (controlled by the ``kv_cache`` init parameter)
 
         The model itself is not trained on the data; it uses in-context learning
         at inference time. This method only prepares the data transformations.
@@ -345,17 +367,6 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
 
         y : array-like of shape (n_samples,)
             Training target values.
-
-        kv_cache : bool or str, default=False
-            Controls caching of training data computations to speed up subsequent
-            ``predict`` calls.
-            - False: No caching.
-            - True or "kv": Cache key-value projections from both column embedding
-              and ICL transformer layers. Fast inference but memory-heavy for large
-              training sets.
-            - "repr": Cache column embedding KV projections and row interaction outputs
-              (representations). Uses ~24x less memory than "kv" for the ICL part,
-              at the cost of re-running the ICL transformer at predict time.
 
         Returns
         -------
@@ -414,13 +425,13 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         self.ensemble_generator_.fit(X, y_scaled)
 
         self.model_kv_cache_ = None
-        if kv_cache:
-            if kv_cache is True or kv_cache == "kv":
+        if self.kv_cache:
+            if self.kv_cache is True or self.kv_cache == "kv":
                 self.cache_mode_ = "kv"
-            elif kv_cache == "repr":
+            elif self.kv_cache == "repr":
                 self.cache_mode_ = "repr"
             else:
-                raise ValueError(f"Invalid kv_cache value '{kv_cache}'. Expected False, True, 'kv', or 'repr'.")
+                raise ValueError(f"Invalid kv_cache value '{self.kv_cache}'. Expected False, True, 'kv', or 'repr'.")
             self._build_kv_cache()
 
         return self

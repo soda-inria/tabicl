@@ -52,11 +52,17 @@ class KVCacheEntry:
             self.key[indices] = other.key
             self.value[indices] = other.value
 
-    def to(self, device) -> KVCacheEntry:
-        """Move this entry to the given device. Returns a new KVCacheEntry."""
+    def to(self, device, dtype=None) -> KVCacheEntry:
+        """Move this entry to the given device and optionally cast dtype.
+
+        Returns a new KVCacheEntry.
+        """
         if not self.is_valid():
             return KVCacheEntry()
-        return KVCacheEntry(key=self.key.to(device), value=self.value.to(device))
+        return KVCacheEntry(
+            key=self.key.to(device=device, dtype=dtype),
+            value=self.value.to(device=device, dtype=dtype),
+        )
 
     @staticmethod
     def concat(entries: List[KVCacheEntry], dim: int = 0) -> KVCacheEntry:
@@ -117,16 +123,16 @@ class KVCache:
         """Write batch-sliced entries into this pre-allocated cache."""
         for idx, other_entry in other.kv.items():
             if idx in self.kv:
-                assert self.kv[idx].is_valid(), f"Cannot write to cache index {idx} because it is not valid."
-                device = self.kv[idx].key.device
-                self.kv[idx][indices] = other_entry.to(device)
+                target = self.kv[idx]
+                assert target.is_valid(), f"Cannot write to cache index {idx} because it is not valid."
+                self.kv[idx][indices] = other_entry.to(target.key.device, dtype=target.key.dtype)
 
-    def to(self, device) -> KVCache:
-        """Move all entries to the given device.
+    def to(self, device, dtype=None) -> KVCache:
+        """Move all entries to the given device and optionally cast dtype.
 
         Returns a new cache of the same subclass type.
         """
-        moved_kv = {idx: entry.to(device) for idx, entry in self.kv.items()}
+        moved_kv = {idx: entry.to(device, dtype=dtype) for idx, entry in self.kv.items()}
         return self.__class__(kv=moved_kv)
 
     @staticmethod
@@ -155,7 +161,7 @@ class KVCache:
             merged_kv[idx] = KVCacheEntry.concat(entries, dim=dim)
         return KVCache(kv=merged_kv)
 
-    def preallocate(self, reference: KVCache, batch_shape: tuple, device="cpu"):
+    def preallocate(self, reference: KVCache, batch_shape: tuple, device="cpu", dtype=None):
         """Pre-allocate entries in this cache based on shapes from a reference.
 
         K/V tensors always have shape ``(*batch, num_heads, seq_len, head_dim)``.
@@ -173,14 +179,19 @@ class KVCache:
 
         device : str or torch.device
             Device on which to allocate the tensors.
+
+        dtype : torch.dtype or None
+            Data type for the allocated tensors. If None, uses the reference
+            entry's dtype.
         """
         for idx, ref_entry in reference.kv.items():
             if ref_entry.is_valid():
+                target_dtype = dtype if dtype is not None else ref_entry.key.dtype
                 key_shape = batch_shape + ref_entry.key.shape[-3:]
                 value_shape = batch_shape + ref_entry.value.shape[-3:]
                 self.kv[idx] = KVCacheEntry(
-                    key=torch.zeros(key_shape, dtype=ref_entry.key.dtype, device=device),
-                    value=torch.zeros(value_shape, dtype=ref_entry.value.dtype, device=device),
+                    key=torch.zeros(key_shape, dtype=target_dtype, device=device),
+                    value=torch.zeros(value_shape, dtype=target_dtype, device=device),
                 )
 
 
@@ -293,13 +304,16 @@ class TabICLCache:
             num_classes=self.num_classes,
         )
 
-    def to(self, device) -> TabICLCache:
-        """Move all cached tensors to the given device.
+    def to(self, device, dtype=None) -> TabICLCache:
+        """Move all cached tensors to the given device and optionally cast dtype.
 
         Parameters
         ----------
         device : str or torch.device
             Target device (e.g. ``'cpu'``, ``'cuda:0'``).
+
+        dtype : torch.dtype or None
+            Target dtype. If None, preserves the existing dtype.
 
         Returns
         -------
@@ -307,9 +321,9 @@ class TabICLCache:
             New cache with all tensors on the target device.
         """
         return TabICLCache(
-            col_cache=self.col_cache.to(device) if self.col_cache else KVCache(),
-            row_repr=self.row_repr.to(device) if self.row_repr is not None else None,
-            icl_cache=self.icl_cache.to(device) if self.icl_cache else KVCache(),
+            col_cache=self.col_cache.to(device, dtype=dtype) if self.col_cache else KVCache(),
+            row_repr=self.row_repr.to(device=device, dtype=dtype) if self.row_repr is not None else None,
+            icl_cache=self.icl_cache.to(device, dtype=dtype) if self.icl_cache else KVCache(),
             train_shape=self.train_shape,
             num_classes=self.num_classes,
         )

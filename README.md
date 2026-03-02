@@ -59,11 +59,11 @@ reg.fit(X_train, y_train)
 reg.predict(X_test)
 ```
 
-To speed up repeated inference on the same training data, enable KV caching during `fit`. Note that this consumes additional memory to store the cached projections, so consider the trade-off
-for your use case:
+To speed up repeated inference on the same training data, enable KV caching. The cache is built during `fit` and reused across `predict` calls. Note that this consumes additional memory to store the cached projections, so consider the trade-off for your use case:
 
 ```python
-clf.fit(X_train, y_train, kv_cache=True)  # caches key-value projections for training data
+clf = TabICLClassifier(kv_cache=True)
+clf.fit(X_train, y_train)  # caches key-value projections for training data
 clf.predict(X_test)  # fast: only processes test data by reusing the cached context
 ```
 
@@ -99,10 +99,11 @@ clf = TabICLClassifier(
     average_logits=True,  # average logits (True) or probabilities (False)
     support_many_classes=True,  # handle >10 classes automatically
     batch_size=8,  # ensemble members processed together, lower to save memory
+    kv_cache=False,  # cache training data KV projections for faster repeated inference
     model_path=None,  # path to checkpoint, None downloads from Hugging Face
     allow_auto_download=True,  # auto-download checkpoint if not found locally
     checkpoint_version="tabicl-classifier-v2-20260212.ckpt",  # pretrained checkpoint version
-    device=None,  # inference device, None auto-selects CUDA or CPU
+    device=None,  # inference device, None auto-selects CUDA or CPU; specify "mps" for Apple Silicon
     use_amp="auto",  # automatic mixed precision for faster inference
     use_fa3="auto",  # Flash Attention 3 for Hopper GPUs (e.g. H100)
     offload_mode="auto",  # automatically decide when to use cpu/disk offloading

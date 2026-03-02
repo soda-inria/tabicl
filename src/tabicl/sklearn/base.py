@@ -158,6 +158,43 @@ class TabICLBaseEstimator(BaseEstimator):
         else:
             self.inference_config_ = self.inference_config
 
+    def _move_cache_to_device(self) -> None:
+        """Move KV cache to the current device, auto-upcasting if needed.
+
+        When the cache contains reduced-precision tensors (float16/bfloat16)
+        and the target environment cannot use them directly (CPU, MPS, or
+        CUDA without AMP), the tensors are upcast to float32 and a warning
+        is emitted.
+        """
+        if not (hasattr(self, "model_kv_cache_") and self.model_kv_cache_ is not None):
+            return
+
+        use_amp, _ = self._resolve_amp_fa3()
+        # CPU and MPS do not support float16 attention; CUDA needs AMP on
+        needs_upcast = self.device_.type in ("cpu", "mps") or not use_amp
+        upcast_dtype = torch.float32 if needs_upcast else None
+
+        # Warn once if we are actually upcasting reduced-precision tensors
+        if upcast_dtype is not None:
+            first_cache = next(iter(self.model_kv_cache_.values()))
+            cache_dtype = next(iter(first_cache.col_cache.kv.values())).key.dtype
+            if cache_dtype != torch.float32:
+                if self.device_.type in ("cpu", "mps"):
+                    reason = f"{self.device_.type.upper()} does not support float16/bfloat16 attention"
+                else:
+                    reason = "AMP is not enabled"
+                warnings.warn(
+                    f"KV cache contains {cache_dtype} tensors (typically from AMP). "
+                    f"Automatically upcasting to float32 because {reason}.",
+                    UserWarning,
+                    stacklevel=3,
+                )
+
+        device_cache = OrderedDict()
+        for method, cache in self.model_kv_cache_.items():
+            device_cache[method] = cache.to(self.device_, dtype=upcast_dtype)
+        self.model_kv_cache_ = device_cache
+
     def __getstate__(self):
         """Customize pickle serialization.
 
@@ -277,12 +314,8 @@ class TabICLBaseEstimator(BaseEstimator):
         # Reconstruct inference config
         self._build_inference_config()
 
-        # Move KV cache to device
-        if hasattr(self, "model_kv_cache_") and self.model_kv_cache_ is not None:
-            device_cache = OrderedDict()
-            for method, cache in self.model_kv_cache_.items():
-                device_cache[method] = cache.to(self.device_)
-            self.model_kv_cache_ = device_cache
+        # Move KV cache to device, auto-upcasting if needed
+        self._move_cache_to_device()
 
     def save(
         self,
@@ -332,7 +365,7 @@ class TabICLBaseEstimator(BaseEstimator):
         if not save_training_data and not (save_kv_cache and has_kv_cache):
             raise ValueError(
                 "Cannot exclude training data when KV cache is not available or not being saved. "
-                "Either set save_training_data=True, or fit with kv_cache=True and set save_kv_cache=True."
+                "Either set save_training_data=True, or set kv_cache=True during init and save_kv_cache=True."
             )
 
         # Set temporary flags for __getstate__
@@ -376,11 +409,7 @@ class TabICLBaseEstimator(BaseEstimator):
             obj._resolve_device()
             obj.model_.to(obj.device_)
             obj._build_inference_config()
-            if hasattr(obj, "model_kv_cache_") and obj.model_kv_cache_ is not None:
-                device_cache = OrderedDict()
-                for method, cache in obj.model_kv_cache_.items():
-                    device_cache[method] = cache.to(obj.device_)
-                obj.model_kv_cache_ = device_cache
+            obj._move_cache_to_device()
 
         return obj
 

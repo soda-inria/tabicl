@@ -84,6 +84,23 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         Adjust this parameter based on available memory. Lower values use less memory but may
         be slower.
 
+    kv_cache : bool or str, default=False
+        Controls caching of training data computations to speed up subsequent
+        ``predict_proba``/``predict`` calls. The cache is built during ``fit()``.
+
+        - False: No caching.
+        - True or "kv": Cache key-value projections from both column embedding
+          and ICL transformer layers. Fast inference but memory-heavy for large
+          training sets.
+        - "repr": Cache column embedding KV projections and row interaction outputs
+          (representations). Uses ~24x less memory than "kv" for the ICL part,
+          at the cost of re-running the ICL transformer at predict time.
+
+        The cache retains whatever dtype the model produced during ``fit()``
+        (float16 when AMP is active, float32 otherwise). If the cache is later
+        loaded on CPU or on CUDA without AMP, the tensors are automatically
+        upcast to float32 to avoid dtype-mismatch errors.
+
     model_path : Optional[str | Path] = None
         Path to the pre-trained model checkpoint file.
         - If provided and the file exists, it's loaded directly.
@@ -108,8 +125,10 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         - `'tabicl-classifier-v1-20250208.ckpt'`: The version used in our TabICLv1 paper.
 
     device : Optional[str or torch.device], default=None
-        Device to use for inference. If None, defaults to CUDA if available, else CPU.
-        Can be specified as a string ('cuda', 'cpu') or a torch.device object.
+        Device to use for inference. If None, automatically selects CUDA if
+        available, otherwise CPU. Can be specified as a string (``'cuda'``,
+        ``'cpu'``, ``'mps'``) or a ``torch.device`` object. MPS (Apple Silicon
+        GPU) is supported but must be explicitly requested.
 
     use_amp : bool or "auto", default="auto"
         Controls automatic mixed precision (AMP) for inference.
@@ -237,14 +256,14 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         The inference configuration.
 
     cache_mode_ : str or None
-        The caching mode used when ``fit()`` was called with ``kv_cache``.
-        One of ``"kv"``, ``"repr"``, or ``None`` (when no caching is used).
+        The resolved caching mode, set during ``fit()`` based on the ``kv_cache``
+        init parameter. One of ``"kv"``, ``"repr"``, or ``None`` (no caching).
 
     model_kv_cache_ : OrderedDict[str, TabICLCache] or None
         Pre-computed KV caches for training data, keyed by normalization method.
-        Created when ``fit()`` is called with ``kv_cache=True``. When set, ``predict_proba()``
-        reuses the cached key-value projections instead of re-processing training data,
-        enabling faster inference on multiple test sets.
+        Created during ``fit()`` when ``kv_cache`` is enabled. When set,
+        ``predict_proba()`` reuses the cached key-value projections instead of
+        re-processing training data, enabling faster inference on multiple test sets.
     """
 
     def __init__(
@@ -258,6 +277,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         average_logits: bool = True,
         support_many_classes: bool = True,
         batch_size: Optional[int] = 8,
+        kv_cache: bool | str = False,
         model_path: Optional[str | Path] = None,
         allow_auto_download: bool = True,
         checkpoint_version: str = "tabicl-classifier-v2-20260212.ckpt",
@@ -280,6 +300,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         self.average_logits = average_logits
         self.support_many_classes = support_many_classes
         self.batch_size = batch_size
+        self.kv_cache = kv_cache
         self.model_path = model_path
         self.allow_auto_download = allow_auto_download
         self.checkpoint_version = checkpoint_version
@@ -386,7 +407,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         self.model_.load_state_dict(checkpoint["state_dict"])
         self.model_.eval()
 
-    def fit(self, X: np.ndarray, y: np.ndarray, kv_cache: bool | str = False) -> TabICLClassifier:
+    def fit(self, X: np.ndarray, y: np.ndarray) -> TabICLClassifier:
         """Fit the classifier to training data.
 
         Prepares the model for prediction by:
@@ -395,6 +416,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         3. Fitting the ensemble generator to create transformed dataset views
         4. Loading the pre-trained TabICL model
         5. Optionally pre-computing KV caches for training data to speed up inference
+           (controlled by the ``kv_cache`` init parameter)
 
         The model itself is not trained on the data; it uses in-context learning
         at inference time.
@@ -406,17 +428,6 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
         y : array-like of shape (n_samples,)
             Training target labels.
-
-        kv_cache : bool or str, default=False
-            Controls caching of training data computations to speed up subsequent
-            ``predict_proba``/``predict`` calls.
-            - False: No caching.
-            - True or "kv": Cache key-value projections from both column embedding
-              and ICL transformer layers. Fast inference but memory-heavy for large
-              training sets.
-            - "repr": Cache column embedding KV projections and row interaction outputs
-              (representations). Uses ~24x less memory than "kv" for the ICL part,
-              at the cost of re-running the ICL transformer at predict time.
 
         Returns
         -------
@@ -454,7 +465,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         self.n_classes_ = len(self.y_encoder_.classes_)
 
         if self.n_classes_ > self.model_.max_classes:
-            if kv_cache:
+            if self.kv_cache:
                 raise ValueError(
                     f"KV caching is not supported when the number of classes ({self.n_classes_}) exceeds the max number "
                     f"of classes ({self.model_.max_classes}) natively supported by the model."
@@ -491,13 +502,13 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         self.ensemble_generator_.fit(X, y)
 
         self.model_kv_cache_ = None
-        if kv_cache:
-            if kv_cache is True or kv_cache == "kv":
+        if self.kv_cache:
+            if self.kv_cache is True or self.kv_cache == "kv":
                 self.cache_mode_ = "kv"
-            elif kv_cache == "repr":
+            elif self.kv_cache == "repr":
                 self.cache_mode_ = "repr"
             else:
-                raise ValueError(f"Invalid kv_cache value '{kv_cache}'. Expected False, True, 'kv', or 'repr'.")
+                raise ValueError(f"Invalid kv_cache value '{self.kv_cache}'. Expected False, True, 'kv', or 'repr'.")
             self._build_kv_cache()
 
         return self
