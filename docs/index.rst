@@ -226,10 +226,10 @@ Pre-training
 
 Pre-training code (including synthetic data generation) is currently
 available for the v1 model. The scripts folder provides the commands for
-`stage 1 <https://github.com/soda-inria/tabicl/blob/main/scripts/train_stage1.sh>`__, `stage
-2 <https://github.com/soda-inria/tabicl/blob/main/scripts/train_stage2.sh>`__, and `stage
-3 <https://github.com/soda-inria/tabicl/blob/main/scripts/train_stage3.sh>`__ of curriculum learning. Pre-training
-code for v2 will be released upon publication.
+`stage 1 <https://github.com/soda-inria/tabicl/blob/main/scripts/train_stage1.sh>`__,
+`stage 2 <https://github.com/soda-inria/tabicl/blob/main/scripts/train_stage2.sh>`__,
+and `stage 3 <https://github.com/soda-inria/tabicl/blob/main/scripts/train_stage3.sh>`__
+of curriculum learning. Pre-training code for v2 will be released upon publication.
 
 Nanotabicl: a minimal architecture implementation
 -------------------------------------------------
