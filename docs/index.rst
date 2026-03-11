@@ -30,6 +30,10 @@ supports faster repeated inference on the same training data.
 to even larger datasets (e.g., 500K samples) through CPU and disk
 offloading, though its accuracy may degrade at some point.
 
+.. image:: ./figures/pareto_front_improvability_tabarena.png
+   :width: 70%
+   :alt: Model comparison on TabArena
+
 Installation
 ------------
 
@@ -140,40 +144,12 @@ classification-specific ones: ``class_shuffle_method``,
 Available models
 ----------------
 
-+--------+---------------------------------+---------------------------+
-| Model  | Classification checkpoint       | Regression checkpoint     |
-+========+=================================+===========================+
-| **TabI | ``tabic                         | ``tabicl-reg              |
-| CLv2** | l-classifier-v2-20260212.ckpt`` | ressor-v2-20260212.ckpt`` |
-| (`ar   | (default)                       | (default)                 |
-| Xiv <h |                                 |                           |
-| ttps:/ |                                 |                           |
-| /arxiv |                                 |                           |
-| .org/a |                                 |                           |
-| bs/260 |                                 |                           |
-| 2.1113 |                                 |                           |
-| 9>`__) |                                 |                           |
-+--------+---------------------------------+---------------------------+
-| **     | ``tabicl-                       | —                         |
-| TabICL | classifier-v1.1-20250506.ckpt`` |                           |
-| v1.1** |                                 |                           |
-| (May   |                                 |                           |
-| 2025,  |                                 |                           |
-| no     |                                 |                           |
-| paper) |                                 |                           |
-+--------+---------------------------------+---------------------------+
-| **TabI | ``tabic                         | —                         |
-| CLv1** | l-classifier-v1-20250208.ckpt`` |                           |
-| (`ICML |                                 |                           |
-| 2      |                                 |                           |
-| 025 <h |                                 |                           |
-| ttps:/ |                                 |                           |
-| /arxiv |                                 |                           |
-| .org/a |                                 |                           |
-| bs/250 |                                 |                           |
-| 2.0556 |                                 |                           |
-| 4>`__) |                                 |                           |
-+--------+---------------------------------+---------------------------+
++--------------+---------------------------------+---------------------------+
+| Model        | Classification checkpoint       | Regression checkpoint     |
++==============+=================================+===========================+
+| **TabICLv2** (`arXiv <https://arxiv.org/abs/2602.11139>`__) | ``tabicl-classifier-v2-20260212.ckpt`` | ``tabicl-regressor-v2-20260212.ckpt`` |
+|  **TabICL v1.1** (May 2025, no paper) |  `tabicl-classifier-v1.1-20250506.ckpt`| — |
+| **TabICLv1** (`ICML 2025 <https://arxiv.org/abs/2502.05564>`__) | `tabicl-classifier-v1-20250208.ckpt` | — |
 
 - **TabICLv2**: Our state-of-the-art model, supporting both
   classification and regression. Strongly improved accuracy over v1
@@ -236,6 +212,11 @@ The following example shows how it works for univariate forecasting:
    pred_df = forecaster.predict_df(context_df, prediction_length=prediction_length)
    fig, axes = plot_forecast(context_df=context_df, pred_df=pred_df, test_df=test_df)
 
+
+.. image:: ./figures/tabiclv2_time_series.png
+   :width: 60%
+   :alt: Runtimes for different hardware and sample sizes
+
 ``TabICLForecaster`` is heavily inspired by
 `TabPFN-TS <https://arxiv.org/abs/2501.02945v3>`__. We may later improve
 it to enhance the ability of TabICL for time series forecasting.
@@ -245,10 +226,10 @@ Pre-training
 
 Pre-training code (including synthetic data generation) is currently
 available for the v1 model. The scripts folder provides the commands for
-`stage 1 <./scripts/train_stage1.sh>`__, `stage
-2 <./scripts/train_stage2.sh>`__, and `stage
-3 <./scripts/train_stage3.sh>`__ of curriculum learning. Pre-training
-code for v2 will be released upon publication.
+`stage 1 <https://github.com/soda-inria/tabicl/blob/main/scripts/train_stage1.sh>`__,
+`stage 2 <https://github.com/soda-inria/tabicl/blob/main/scripts/train_stage2.sh>`__,
+and `stage 3 <https://github.com/soda-inria/tabicl/blob/main/scripts/train_stage3.sh>`__
+of curriculum learning. Pre-training code for v2 will be released upon publication.
 
 Nanotabicl: a minimal architecture implementation
 -------------------------------------------------
@@ -260,8 +241,8 @@ experimental purposes.
 TODO
 ----
 
-- ☐ Documentation
-- ☐ Multi-GPU parallel inference
+- Documentation
+- Multi-GPU parallel inference
 
 FAQ
 ---
@@ -280,15 +261,27 @@ pre-training on millions of synthetic datasets.
 samples in a few minutes without RAM overflow thanks to CPU and disk
 offloading.
 
+.. image:: ./figures/runtime_tabpfnv25_tabiclv2.png
+   :width: 70%
+   :alt: Runtimes for different hardware and sample sizes
+
 **What dataset sizes work well?** TabICLv2 is pre-trained on datasets
 between 300 and 48K training samples. However, it can generalize to
 larger datasets to some extent, and we see good results even on some
 datasets with 600K samples. We have not tested if TabICL generalizes to
 datasets smaller than 300 samples.
 
+.. image:: ./figures/tabiclv2_perf_vs_n_samples.png
+   :width: 70%
+   :alt: Average rank vs. number of samples
+
 **What about the number of columns?** TabICLv2 is pre-trained on
 datasets between 2 and 100 columns. We see good generalization to more
 columns and don’t know where the limit is.
+
+.. image:: ./figures/tabiclv2_perf_vs_n_features.png
+   :width: 70%
+   :alt: Average rank vs. number of features
 
 Preprocessing
 -------------
@@ -352,6 +345,13 @@ to transform your raw data before passing it to TabICLClassifier:
 
    pipeline.fit(X_train, y_train)  # X should be a DataFrame
    predictions = pipeline.predict(X_test)
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   tutorials/index
+   api
 
 Citation
 --------

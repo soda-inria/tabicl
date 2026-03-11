@@ -16,12 +16,29 @@ release = '2.0.3'
 
 extensions = [
     "sphinx_gallery.gen_gallery",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
 ]
 
 sphinx_gallery_conf = {
     "examples_dirs": ["../tutorials"],
     "gallery_dirs": ["tutorials"],
     "filename_pattern": r"\.py$",
+}
+
+# autodoc settings
+autodoc_default_options = {
+    "inherited-members": False,
+}
+
+# intersphinx mapping
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "sklearn": ("https://scikit-learn.org/stable/", None),
+    "torch": ("https://pytorch.org/docs/stable/", None),
 }
 
 templates_path = ['_templates']
