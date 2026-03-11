@@ -15,11 +15,18 @@ release = '2.0.3'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
+    "sphinx_gallery.gen_gallery",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
 ]
+
+sphinx_gallery_conf = {
+    "examples_dirs": ["../tutorials"],
+    "gallery_dirs": ["tutorials"],
+    "filename_pattern": r"\.py$",
+}
 
 # autodoc settings
 autodoc_default_options = {
