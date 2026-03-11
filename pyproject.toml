@@ -37,6 +37,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+doc = [
+  "sphinx",
+  "sphinx-copybutton",
+  "pydata-sphinx-theme",
+]
 forecast = [                                                                                                                                                                                                        
     "pandas>=2.1.2",
     "gluonts>=0.16.0",  # calendar features
