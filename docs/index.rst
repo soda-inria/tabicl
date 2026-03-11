@@ -396,3 +396,9 @@ Star history
    :target: https://pypistats.org/packages/tabicl
 .. |Star History Chart| image:: https://api.star-history.com/svg?repos=soda-inria/tabicl&type=date&legend=top-left
    :target: https://www.star-history.com/#soda-inria/tabicl&type=date&legend=top-left
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   tutorials/index

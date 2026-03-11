@@ -40,6 +40,8 @@ dependencies = [
 doc = [
   "sphinx",
   "sphinx-copybutton",
+  "sphinx-gallery",
+  "matplotlib",
   "pydata-sphinx-theme",
 ]
 forecast = [                                                                                                                                                                                                        
