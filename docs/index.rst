@@ -350,7 +350,6 @@ to transform your raw data before passing it to TabICLClassifier:
    :maxdepth: 2
    :hidden:
 
-   tutorials/index
    api
 
 Citation
