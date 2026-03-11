@@ -96,9 +96,18 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
         self : TransformToNumerical
             Returns self.
         """
+
+        cat_tfm = OrdinalEncoder(
+            dtype=np.int64, handle_unknown="use_encoded_value", unknown_value=-1, encoded_missing_value=-1
+        )
+        num_tfm = SimpleImputer()
+
         if not hasattr(X, "columns"):  # proxy way to check whether X is a dataframe without importing pandas
             # no dataframe
-            self.tfm_ = FunctionTransformer()
+            # check if dtype is bool, object, byte sting, or unicode string
+            is_categorical = np.asarray(X).dtype.kind in {"b", "O", "S", "U"}
+            self.tfm_ = cat_tfm if is_categorical else num_tfm
+            self.tfm_.fit(X)
             return self
 
         cat_cols = make_column_selector(dtype_include=["string", "object", "category", "boolean"])(X)
@@ -108,16 +117,7 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
         numeric_pos = [X.columns.get_loc(col) for col in numeric_cols]
 
         self.tfm_ = ColumnTransformer(
-            transformers=[
-                (
-                    "categorical",
-                    OrdinalEncoder(
-                        dtype=np.int64, handle_unknown="use_encoded_value", unknown_value=-1, encoded_missing_value=-1
-                    ),
-                    cat_pos,
-                ),
-                ("continuous", SimpleImputer(), numeric_pos),
-            ]
+            transformers=[("categorical", cat_tfm, cat_pos), ("continuous", num_tfm, numeric_pos)]
         )
         self.tfm_.fit(X)
 

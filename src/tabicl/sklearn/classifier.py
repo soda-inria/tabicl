@@ -775,3 +775,8 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         y = np.argmax(proba, axis=1)
 
         return self.y_encoder_.inverse_transform(y)
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        return tags
