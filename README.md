@@ -45,6 +45,12 @@ pip install tabicl[pretrain]   # pre-training
 pip install tabicl[all]        # everything
 ```
 
+On Intel Macs, installing PyTorch via `pip` may fail. In that case, install it first with:
+```bash
+conda install pytorch -c pytorch
+```
+Then install `tabicl` as above.
+
 ## Basic usage
 
 ```python
