@@ -36,8 +36,6 @@ jobs:
           version: "0.5.4"
       - name: Install hatch
         run: uv pip install --system hatch
-      - name: Install swig
-        run: uv pip install --system swig
       - name: Run tests
         run: hatch test
       - name: Upload coverage reports to Codecov
