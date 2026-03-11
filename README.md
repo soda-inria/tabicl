@@ -241,14 +241,14 @@ We see good generalization to more columns and don't know where the limit is.
 ## Preprocessing
 
 ### Simple built-in preprocessing
-If the input `X` to TabICL is a pandas DataFrame, TabICL will automatically:
-- Detect and ordinal encode categorical columns (including string, object, category, and boolean types)
+For `X`, TabICL accepts pandas dataframes or numpy arrays.
+It applies the following preprocessing:
+- Detect and ordinal encode categorical columns 
+  (including string, object, category, and boolean types). For numpy arrays,
+  all columns have the same datatype (the one of the array). 
+  Columns with integers are detected as numerical.
 - Create a separate category for missing values in categorical features
 - Perform mean imputation for missing numerical values (encoded as NaN)
-
-If the input `X` is a numpy array, TabICL assumes that ordinal encoding and missing value imputation have already been performed.
-
-For both input types, TabICL applies additional preprocessing:
 - Outlier detection and removal
 - Feature scaling and normalization
 - Feature shuffling for ensemble diversity
