@@ -353,6 +353,13 @@ to transform your raw data before passing it to TabICLClassifier:
    pipeline.fit(X_train, y_train)  # X should be a DataFrame
    predictions = pipeline.predict(X_test)
 
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   tutorials/index
+   api
+
 Citation
 --------
 

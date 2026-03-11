@@ -54,7 +54,7 @@ pretrain = [
     "wandb",  # logging in pre-training
 ]
 all = [
-    "tabicl[forecast,pretrain]",
+    "tabicl[doc,forecast,pretrain]",
 ]
 
 [build-system]
