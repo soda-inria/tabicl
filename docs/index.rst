@@ -1,4 +1,30 @@
 
+.. raw:: html
+
+    <div class="container-fluid sk-landing-bg">
+    <div class="container sk-landing-container">
+        <div class="row">
+        <div class="col-md-4 d-flex align-items-center">
+            <h1 class="sk-landing-header text-white text-monospace">TabICLv2</h1>
+        </div>
+        <div class="col-md-8">
+            <ul class="sk-landing-header-body">
+            <li>Fully open</li>
+            <li>Excellent scikit-learn compatiblity</li>
+            <li>Easy-to-use and powerful</li>
+            </ul>
+        </div>
+        </div>
+    </div>
+    </div>
+
+
+    <div class="container-fluid sk-landing-container">
+    <div class="row row-padding-main-container">
+        <h1 class="hero-title">Open Tabular Foundation Model</h1>
+    </div>
+    </div>
+
 Tabular foundation models are powerful learners for tabular
 classification and regression.
 
