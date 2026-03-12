@@ -1,5 +1,5 @@
 """
-TabICL probabilistic classification
+Probabilistic classification
 ===================================
 
 This example shows TabICL predicted class probabilities on a simple 2D
@@ -73,7 +73,8 @@ plt.colorbar(scatter, ax=ax, label='Probability of class 1')
 plt.show()
 
 
-# %% Evaluate model performance
+# %%
+# Evaluate model performance
 # --------------------------------
 # TabICL provides calibrated probabilities.
 
