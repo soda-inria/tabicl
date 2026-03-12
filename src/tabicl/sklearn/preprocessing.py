@@ -1098,7 +1098,7 @@ class EnsembleGenerator(TransformerMixin, BaseEstimator):
 
         return ensemble_configs, X_shuffle_dict, y_pattern_dict
 
-    def transform(self, X=None, mode="both"):
+    def transform(self, X=None, mode="both", feature_mask=None):
         """Create ensemble data variants for in-context learning.
 
         Parameters
@@ -1120,6 +1120,14 @@ class EnsembleGenerator(TransformerMixin, BaseEstimator):
               Returns ``OrderedDict`` mapping normalization methods to
               ``(X_test_ensemble[n_variants, n_test, n_features],)``.
 
+        feature_mask : ndarray of shape (n_original_features,) or None, default=None
+            Boolean mask where ``True`` indicates masked (all-NaN) columns in
+            the *original* feature space (before ``UniqueFeatureFilter``).  When
+            provided, masked columns are dropped from both preprocessed training
+            and test data, and feature shuffles are remapped to the reduced
+            ``[0, K)`` space.  A transient ``masked_feature_shuffles_``
+            attribute is stored for the caller to retrieve the remapped shuffles.
+
         Returns
         -------
         OrderedDict
@@ -1129,14 +1137,39 @@ class EnsembleGenerator(TransformerMixin, BaseEstimator):
         check_is_fitted(self, ["ensemble_configs_"])
         assert mode in ("both", "train", "test"), f"Invalid mode: {mode}"
 
+        # Remap feature shuffles if a feature mask is provided to drop masked columns
+        if feature_mask is not None:
+            # Map mask from original feature space to filtered space
+            filtered_mask = feature_mask[self.unique_filter_.features_to_keep_]
+            kept_cols = ~filtered_mask
+            # Build old-index -> new-index mapping for shuffle remapping
+            idx_map = {}
+            new_idx = 0
+            for old_idx in range(len(filtered_mask)):
+                if kept_cols[old_idx]:
+                    idx_map[old_idx] = new_idx
+                    new_idx += 1
+
+            # Pre-compute remapped feature shuffles per norm method
+            self.masked_feature_shuffles_ = OrderedDict()
+            for norm_method, shuffle_configs in self.ensemble_configs_.items():
+                remapped = []
+                for feat_shuffle, _ in shuffle_configs:
+                    remapped.append([idx_map[i] for i in feat_shuffle if i in idx_map])
+                self.masked_feature_shuffles_[norm_method] = remapped
+
         if mode == "train":
             y = self.y_
             data = OrderedDict()
             for norm_method, shuffle_configs in self.ensemble_configs_.items():
                 X_preprocessed = self.preprocessors_[norm_method].X_transformed_
+                if feature_mask is not None:
+                    X_preprocessed = X_preprocessed[:, kept_cols]
                 X_ensemble = []
                 y_ensemble = []
-                for feat_shuffle, y_pattern in shuffle_configs:
+                for i, (feat_shuffle, y_pattern) in enumerate(shuffle_configs):
+                    if feature_mask is not None:
+                        feat_shuffle = self.masked_feature_shuffles_[norm_method][i]
                     X_ensemble.append(X_preprocessed[:, feat_shuffle])
                     if self.classification:
                         y_ensemble.append(np.array(y_pattern)[y.astype(int)])
@@ -1149,12 +1182,21 @@ class EnsembleGenerator(TransformerMixin, BaseEstimator):
         assert X is not None, "X is required when mode is 'test' or 'both'"
         X = self.unique_filter_.transform(X)
 
+        # Fill masked columns with 0.0 so sklearn transformers don't choke on NaN
+        if feature_mask is not None:
+            X = np.array(X, dtype=np.float64)
+            X[:, filtered_mask] = 0.0
+
         if mode == "test":
             data = OrderedDict()
             for norm_method, shuffle_configs in self.ensemble_configs_.items():
                 X_test_preprocessed = self.preprocessors_[norm_method].transform(X)
+                if feature_mask is not None:
+                    X_test_preprocessed = X_test_preprocessed[:, kept_cols]
                 X_ensemble = []
-                for feat_shuffle, _ in shuffle_configs:
+                for i, (feat_shuffle, _) in enumerate(shuffle_configs):
+                    if feature_mask is not None:
+                        feat_shuffle = self.masked_feature_shuffles_[norm_method][i]
                     X_ensemble.append(X_test_preprocessed[:, feat_shuffle])
                 data[norm_method] = (np.stack(X_ensemble, axis=0),)
             return data
@@ -1164,13 +1206,17 @@ class EnsembleGenerator(TransformerMixin, BaseEstimator):
         data = OrderedDict()
         for norm_method, shuffle_configs in self.ensemble_configs_.items():
             preprocessor = self.preprocessors_[norm_method]
-            X_variant = np.concatenate(
-                [preprocessor.X_transformed_, preprocessor.transform(X)],
-                axis=0,
-            )
+            X_train_pp = preprocessor.X_transformed_
+            X_test_pp = preprocessor.transform(X)
+            if feature_mask is not None:
+                X_train_pp = X_train_pp[:, kept_cols]
+                X_test_pp = X_test_pp[:, kept_cols]
+            X_variant = np.concatenate([X_train_pp, X_test_pp], axis=0)
             X_ensemble = []
             y_ensemble = []
-            for feat_shuffle, y_pattern in shuffle_configs:
+            for i, (feat_shuffle, y_pattern) in enumerate(shuffle_configs):
+                if feature_mask is not None:
+                    feat_shuffle = self.masked_feature_shuffles_[norm_method][i]
                 X_ensemble.append(X_variant[:, feat_shuffle])
 
                 if self.classification:

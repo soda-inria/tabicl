@@ -626,7 +626,10 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
-            Test samples for prediction.
+            Test samples for prediction.  Columns that are entirely NaN are
+            treated as masked features and excluded from inference.  This is
+            useful for computing SHAP values, where masked features are
+            represented as all-NaN columns.
 
         output_type : str or list of str, default="mean"
             Determines the type of output to return.
@@ -690,11 +693,28 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
 
         # Preserve DataFrame structure to retain column names and types for correct feature transformation
         X = validate_data(self, X, reset=False, dtype=None, skip_check_array=True)
+
+        # Detect all-NaN columns (used by SHAP's feature masking approach)
+        feature_mask = np.all(np.isnan(np.asarray(X, dtype=np.float64)), axis=0)
+        if not np.any(feature_mask):
+            feature_mask = None
+
+        # Fill masked columns so that transformers don't choke on NaN
+        if feature_mask is not None:
+            if hasattr(X, "columns"):  # Proxy way to check whether X is a dataframe
+                X.iloc[:, feature_mask] = 0.0
+            else:
+                X[:, feature_mask] = 0.0
+
         X = self.X_encoder_.transform(X)
 
         output_type = [output_type] if isinstance(output_type, str) else list(output_type)
 
-        if hasattr(self, "model_kv_cache_") and self.model_kv_cache_ is not None:
+        # Skip KV cache when features are masked
+        has_kv_cache = hasattr(self, "model_kv_cache_") and self.model_kv_cache_ is not None
+        use_cache = has_kv_cache and feature_mask is None
+
+        if use_cache:
             # Cache exists: forward only test data and use the pre-computed cache for training data
             test_data = self.ensemble_generator_.transform(X, mode="test")
             results = {key: [] for key in output_type}
@@ -707,8 +727,8 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
                 else:
                     results[output_type[0]].append(batch_out)
         else:
-            # No cache: forward both training and test data
-            data = self.ensemble_generator_.transform(X, mode="both")
+            # No cache or masked features: forward both training and test data
+            data = self.ensemble_generator_.transform(X, mode="both", feature_mask=feature_mask)
             results = {key: [] for key in output_type}
             for Xs, ys in data.values():
                 batch_out = self._batch_forward(Xs, ys, output_type=output_type, alphas=alphas)

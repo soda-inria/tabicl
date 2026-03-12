@@ -664,7 +664,10 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
-            Test samples for prediction.
+            Test samples for prediction.  Columns that are entirely NaN are
+            treated as masked features and excluded from inference.  This is
+            useful for computing SHAP values, where masked features are
+            represented as all-NaN columns.
 
         Returns
         -------
@@ -708,9 +711,26 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
         # Preserve DataFrame structure to retain column names and types for correct feature transformation
         X = validate_data(self, X, reset=False, dtype=None, skip_check_array=True)
+
+        # Detect all-NaN columns (used by SHAP's feature masking approach)
+        feature_mask = np.all(np.isnan(np.asarray(X, dtype=np.float64)), axis=0)
+        if not np.any(feature_mask):
+            feature_mask = None
+
+        # Fill masked columns so that transformers don't choke on NaN
+        if feature_mask is not None:
+            if hasattr(X, "columns"):  # Proxy way to check whether X is a dataframe
+                X.iloc[:, feature_mask] = 0.0
+            else:
+                X[:, feature_mask] = 0.0
+
         X = self.X_encoder_.transform(X)
 
-        if hasattr(self, "model_kv_cache_") and self.model_kv_cache_ is not None:
+        # Skip KV cache when features are masked
+        has_kv_cache = hasattr(self, "model_kv_cache_") and self.model_kv_cache_ is not None
+        use_cache = has_kv_cache and feature_mask is None
+
+        if use_cache:
             # Cache exists: forward only test data and use the pre-computed cache for training data
             test_data = self.ensemble_generator_.transform(X, mode="test")
             outputs = []
@@ -719,11 +739,15 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
                 outputs.append(self._batch_forward_with_cache(Xs_test, kv_cache))
             outputs = np.concatenate(outputs, axis=0)
         else:
-            # No cache: forward both training and test data
-            data = self.ensemble_generator_.transform(X, mode="both")
+            # No cache or masked features: forward both training and test data
+            data = self.ensemble_generator_.transform(X, mode="both", feature_mask=feature_mask)
             outputs = []
             for norm_method, (Xs, ys) in data.items():
-                feature_shuffles = self.ensemble_generator_.feature_shuffles_[norm_method]
+                if feature_mask is None:
+                    feature_shuffles = self.ensemble_generator_.feature_shuffles_[norm_method]
+                else:
+                    feature_shuffles = self.ensemble_generator_.masked_feature_shuffles_[norm_method]
+
                 outputs.append(self._batch_forward(Xs, ys, feature_shuffles))
             outputs = np.concatenate(outputs, axis=0)
 
@@ -764,7 +788,10 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
-            Test samples for prediction.
+            Test samples for prediction.  Columns that are entirely NaN are
+            treated as masked features and excluded from inference.  This is
+            useful for computing SHAP values, where masked features are
+            represented as all-NaN columns.
 
         Returns
         -------
