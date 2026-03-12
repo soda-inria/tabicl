@@ -114,4 +114,7 @@ exclude_lines = [
 # gluonts pins an old numpy version which is not available for Python 3.14. The
 # following override is a temporary workaround to avoid having uv build numpy
 # from source on Python 3.14 and later.
-override-dependencies = ["numpy>=2.4; python_version >= '3.14'"]
+override-dependencies = [
+    "numpy>=2.4; python_version >= '3.14'",
+    "numpy; python_version < '3.14'",
+]
