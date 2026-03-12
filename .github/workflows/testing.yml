@@ -59,6 +59,8 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           version: "0.5.4"
+      - name: Install hatch
+        run: uv pip install --system hatch
       - name: Install package and dev dependencies
         run: |
           uv pip install --system -e ".[all]"

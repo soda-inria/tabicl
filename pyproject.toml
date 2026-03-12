@@ -44,9 +44,6 @@ doc = [
   "matplotlib",
   "pydata-sphinx-theme",
 ]
-dev = [
-    "hatch",
-]
 forecast = [                                                                                                                                                                                                        
     "pandas>=2.1.2",
     "gluonts>=0.16.0",  # calendar features
@@ -59,7 +56,7 @@ pretrain = [
     "wandb",  # logging in pre-training
 ]
 all = [
-    "tabicl[dev,doc,forecast,pretrain]",
+    "tabicl[doc,forecast,pretrain]",
 ]
 
 [build-system]
