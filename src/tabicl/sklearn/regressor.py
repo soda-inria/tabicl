@@ -80,6 +80,7 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
 
     model_path : Optional[str or Path], default=None
         Path to the pre-trained model checkpoint file.
+
         - If provided and the file exists, it's loaded directly.
         - If provided but the file doesn't exist and `allow_auto_download` is true, the version
           specified by `checkpoint_version` is downloaded from Hugging Face Hub (repo: 'jingang/TabICL')
@@ -194,7 +195,7 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
     n_samples_in_ : int
         Number of samples in the training data.
 
-    feature_names_in_ : ndarray of shape (n_features_in_,) or None
+    feature_names_in_ : ndarray of shape ``(n_features_in_,)`` or None
         Feature names seen during ``fit``. Only set when the input ``X`` has
         feature names (e.g., a pandas DataFrame with string column names).
 
@@ -630,6 +631,7 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
 
         output_type : str or list of str, default="mean"
             Determines the type of output to return.
+
             - If ``"mean"``, returns the mean over the predicted distribution.
             - If ``"median"``, returns the median over the predicted distribution.
             - If ``"quantiles"``, returns the quantiles of the predicted distribution.
