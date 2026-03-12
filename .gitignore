@@ -131,3 +131,7 @@ dmypy.json
 # Developer environments
 .idea
 .vscode
+
+# sphinx-gallery generated files
+docs/sg_execution_times.rst
+docs/tutorials/

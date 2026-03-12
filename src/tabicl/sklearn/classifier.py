@@ -21,7 +21,8 @@ from .base import TabICLBaseEstimator
 from .preprocessing import TransformToNumerical, EnsembleGenerator
 from .sklearn_utils import validate_data, _num_samples
 
-from tabicl import TabICL, TabICLCache, InferenceConfig
+from tabicl import TabICLCache, InferenceConfig
+from tabicl.model.tabicl import TabICL
 
 
 class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
@@ -39,16 +40,19 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
     norm_methods : str or list[str] or None, default=None
         Normalization methods to apply:
+
         - 'none': No normalization
         - 'power': Yeo-Johnson power transform
         - 'quantile': Transform features to an approximately normal distribution.
         - 'quantile_rtdl': Quantile transform that adds noise to training data before fitting.
         - 'robust': Scale using median and quantiles
+
         Can be a single string or a list of methods to use across ensemble members.
         When set to None, it will use ["none", "power"].
 
     feat_shuffle_method : str, default='latin'
         Feature permutation strategy:
+
         - 'none': No shuffling and preserve original feature order
         - 'shift': Circular shifting of feature columns
         - 'random': Random permutation of features
@@ -56,6 +60,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
     class_shuffle_method : str, default='shift'
         Class label permutation strategy:
+
         - 'none': No shuffling and preserve original class labels
         - 'shift': Circular shifting of class labels
         - 'random': Random permutation of class labels
@@ -103,6 +108,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
     model_path : Optional[str | Path] = None
         Path to the pre-trained model checkpoint file.
+
         - If provided and the file exists, it's loaded directly.
         - If provided but the file doesn't exist and `allow_auto_download` is true, the version
           specified by `checkpoint_version` is downloaded from Hugging Face Hub (repo: 'jingang/TabICL')
@@ -227,7 +233,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
     n_samples_in_ : int
         Number of samples in the training data.
 
-    feature_names_in_ : ndarray of shape (n_features_in_,) or None
+    feature_names_in_ : ndarray of shape ``(n_features_in_,)`` or None
         Feature names seen during ``fit``. Only set when the input ``X`` has
         feature names (e.g., a pandas DataFrame with string column names).
 
@@ -411,6 +417,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         """Fit the classifier to training data.
 
         Prepares the model for prediction by:
+
         1. Encoding class labels using LabelEncoder
         2. Converting input features to numerical values
         3. Fitting the ensemble generator to create transformed dataset views

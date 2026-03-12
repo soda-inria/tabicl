@@ -40,7 +40,10 @@ dependencies = [
 doc = [
   "sphinx",
   "sphinx-copybutton",
+  "sphinx-gallery",
+  "matplotlib",
   "pydata-sphinx-theme",
+  "sphinxext-opengraph",
 ]
 forecast = [                                                                                                                                                                                                        
     "pandas>=2.1.2",
@@ -59,7 +62,7 @@ pretrain = [
     "wandb",  # logging in pre-training
 ]
 all = [
-    "tabicl[forecast,shap,pretrain]",
+    "tabicl[doc,forecast,shap,pretrain]",
 ]
 
 [build-system]
@@ -110,4 +113,13 @@ exclude_lines = [
     "no cov",
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
+]
+
+[tool.uv]
+# gluonts pins an old numpy version which is not available for Python 3.14. The
+# following override is a temporary workaround to avoid having uv build numpy
+# from source on Python 3.14 and later.
+override-dependencies = [
+    "numpy>=2.4; python_version >= '3.14'",
+    "numpy; python_version < '3.14'",
 ]
