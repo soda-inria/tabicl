@@ -1,6 +1,6 @@
 """
-TabICL regression quantiles
-===========================
+Quantile regression with TabICL
+===============================
 
 This example shows the TabICL predicted quantiles on a simple 1D regression
 problem with heteroscedastic noise.
