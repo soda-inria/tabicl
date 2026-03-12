@@ -634,7 +634,7 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
             - If ``"median"``, returns the median over the predicted distribution.
             - If ``"quantiles"``, returns the quantiles of the predicted distribution.
               The parameter ``alphas`` determines which quantiles are returned.
-            - If ``"predicted_quantiles"``, returns the original quantiles from TabICL model.
+            - If ``"raw_quantiles"``, returns the original quantiles from TabICL model.
             - If a list of str, returns multiple types of outputs as specified in the list.
 
         alphas : list of float or None, default=None
