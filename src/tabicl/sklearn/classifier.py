@@ -21,7 +21,8 @@ from .base import TabICLBaseEstimator
 from .preprocessing import TransformToNumerical, EnsembleGenerator
 from .sklearn_utils import validate_data, _num_samples
 
-from tabicl import TabICL, TabICLCache, InferenceConfig
+from tabicl import TabICLCache, InferenceConfig
+from tabicl.model.tabicl import TabICL
 
 
 class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
@@ -39,16 +40,19 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
     norm_methods : str or list[str] or None, default=None
         Normalization methods to apply:
+
         - 'none': No normalization
         - 'power': Yeo-Johnson power transform
         - 'quantile': Transform features to an approximately normal distribution.
         - 'quantile_rtdl': Quantile transform that adds noise to training data before fitting.
         - 'robust': Scale using median and quantiles
+
         Can be a single string or a list of methods to use across ensemble members.
         When set to None, it will use ["none", "power"].
 
     feat_shuffle_method : str, default='latin'
         Feature permutation strategy:
+
         - 'none': No shuffling and preserve original feature order
         - 'shift': Circular shifting of feature columns
         - 'random': Random permutation of features
@@ -56,6 +60,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
     class_shuffle_method : str, default='shift'
         Class label permutation strategy:
+
         - 'none': No shuffling and preserve original class labels
         - 'shift': Circular shifting of class labels
         - 'random': Random permutation of class labels
@@ -103,6 +108,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
     model_path : Optional[str | Path] = None
         Path to the pre-trained model checkpoint file.
+
         - If provided and the file exists, it's loaded directly.
         - If provided but the file doesn't exist and `allow_auto_download` is true, the version
           specified by `checkpoint_version` is downloaded from Hugging Face Hub (repo: 'jingang/TabICL')
@@ -227,7 +233,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
     n_samples_in_ : int
         Number of samples in the training data.
 
-    feature_names_in_ : ndarray of shape (n_features_in_,) or None
+    feature_names_in_ : ndarray of shape ``(n_features_in_,)`` or None
         Feature names seen during ``fit``. Only set when the input ``X`` has
         feature names (e.g., a pandas DataFrame with string column names).
 
@@ -411,6 +417,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         """Fit the classifier to training data.
 
         Prepares the model for prediction by:
+
         1. Encoding class labels using LabelEncoder
         2. Converting input features to numerical values
         3. Fitting the ensemble generator to create transformed dataset views
@@ -664,7 +671,10 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
-            Test samples for prediction.
+            Test samples for prediction.  Columns that are entirely NaN are
+            treated as masked features and excluded from inference.  This is
+            useful for computing SHAP values, where masked features are
+            represented as all-NaN columns.
 
         Returns
         -------
@@ -708,9 +718,26 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
         # Preserve DataFrame structure to retain column names and types for correct feature transformation
         X = validate_data(self, X, reset=False, dtype=None, skip_check_array=True)
+
+        # Detect all-NaN columns (used by SHAP's feature masking approach)
+        feature_mask = np.all(np.isnan(np.asarray(X, dtype=np.float64)), axis=0)
+        if not np.any(feature_mask):
+            feature_mask = None
+
+        # Fill masked columns so that transformers don't choke on NaN
+        if feature_mask is not None:
+            if hasattr(X, "columns"):  # Proxy way to check whether X is a dataframe
+                X.iloc[:, feature_mask] = 0.0
+            else:
+                X[:, feature_mask] = 0.0
+
         X = self.X_encoder_.transform(X)
 
-        if hasattr(self, "model_kv_cache_") and self.model_kv_cache_ is not None:
+        # Skip KV cache when features are masked
+        has_kv_cache = hasattr(self, "model_kv_cache_") and self.model_kv_cache_ is not None
+        use_cache = has_kv_cache and feature_mask is None
+
+        if use_cache:
             # Cache exists: forward only test data and use the pre-computed cache for training data
             test_data = self.ensemble_generator_.transform(X, mode="test")
             outputs = []
@@ -719,11 +746,15 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
                 outputs.append(self._batch_forward_with_cache(Xs_test, kv_cache))
             outputs = np.concatenate(outputs, axis=0)
         else:
-            # No cache: forward both training and test data
-            data = self.ensemble_generator_.transform(X, mode="both")
+            # No cache or masked features: forward both training and test data
+            data = self.ensemble_generator_.transform(X, mode="both", feature_mask=feature_mask)
             outputs = []
             for norm_method, (Xs, ys) in data.items():
-                feature_shuffles = self.ensemble_generator_.feature_shuffles_[norm_method]
+                if feature_mask is None:
+                    feature_shuffles = self.ensemble_generator_.feature_shuffles_[norm_method]
+                else:
+                    feature_shuffles = self.ensemble_generator_.masked_feature_shuffles_[norm_method]
+
                 outputs.append(self._batch_forward(Xs, ys, feature_shuffles))
             outputs = np.concatenate(outputs, axis=0)
 
@@ -764,7 +795,10 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
-            Test samples for prediction.
+            Test samples for prediction.  Columns that are entirely NaN are
+            treated as masked features and excluded from inference.  This is
+            useful for computing SHAP values, where masked features are
+            represented as all-NaN columns.
 
         Returns
         -------

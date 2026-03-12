@@ -17,3 +17,6 @@ API
 
 .. autoclass:: tabicl.TabICLCache
    :members:
+
+.. autoclass:: tabicl.model.TabICL
+   :members:

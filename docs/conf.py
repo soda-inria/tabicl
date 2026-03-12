@@ -9,7 +9,7 @@
 project = 'TabICL'
 copyright = '2026, TabICL authors'
 author = 'TabICL authors'
-release = '2.0.3'
+release = ''
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -21,6 +21,15 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
 ]
+
+# opengraph, to generate social-media thumbnails
+try:
+    import sphinxext.opengraph  # noqa
+
+    extensions.append("sphinxext.opengraph")
+except ImportError:
+    print("ERROR: sphinxext.opengraph import failed")
+
 
 sphinx_gallery_conf = {
     "examples_dirs": ["../tutorials"],
@@ -45,9 +54,11 @@ templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 
-
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'pydata_sphinx_theme'
+html_title = "TabICL" # A simpler title in the landing
+
 html_static_path = ['_static']
+html_css_files = ["css/custom.css"]
