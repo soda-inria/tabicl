@@ -9,7 +9,7 @@
 project = 'TabICL'
 copyright = '2026, TabICL authors'
 author = 'TabICL authors'
-release = '2.0.3'
+release = ''
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
