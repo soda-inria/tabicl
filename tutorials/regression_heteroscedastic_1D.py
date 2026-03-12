@@ -1,6 +1,6 @@
 """
-TabICL quantiles with heteroscedastic noise
-============================================
+TabICL regression quantiles
+===========================
 
 This example shows the TabICL predicted quantiles on a simple 1D regression
 problem with heteroscedastic noise.
