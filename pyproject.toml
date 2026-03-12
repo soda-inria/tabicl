@@ -51,13 +51,18 @@ forecast = [
     "statsmodels>=0.14.5",  # seasonal detection
     "matplotlib>=3.10.3",  # plotting
 ]
+shap = [
+    "shap>=0.42",
+    "shapiq>=1.0",
+    "matplotlib>=3.10.3",
+]
 pretrain = [
     "transformers",  # only used in optim for schedules
     "xgboost",  # used in the TabICLv1 prior
     "wandb",  # logging in pre-training
 ]
 all = [
-    "tabicl[doc,forecast,pretrain]",
+    "tabicl[doc,forecast,shap,pretrain]",
 ]
 
 [build-system]
