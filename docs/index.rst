@@ -18,12 +18,12 @@
     </div>
     </div>
 
-
     <div class="container-fluid sk-landing-container">
     <div class="row row-padding-main-container">
         <h1 class="hero-title">Open Tabular Foundation Model</h1>
     </div>
     </div>
+
 
 Tabular foundation models are powerful learners for tabular
 classification and regression.
