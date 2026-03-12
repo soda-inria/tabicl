@@ -22,6 +22,15 @@ extensions = [
     "sphinx.ext.intersphinx",
 ]
 
+# opengraph, to generate social-media thumbnails
+try:
+    import sphinxext.opengraph  # noqa
+
+    extensions.append("sphinxext.opengraph")
+except ImportError:
+    print("ERROR: sphinxext.opengraph import failed")
+
+
 sphinx_gallery_conf = {
     "examples_dirs": ["../tutorials"],
     "gallery_dirs": ["tutorials"],
@@ -50,4 +59,6 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'pydata_sphinx_theme'
+html_title = "TabICL" # A simpler title in the landing
+
 html_static_path = ['_static']
