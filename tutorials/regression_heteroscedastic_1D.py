@@ -19,7 +19,7 @@ from tabicl import TabICLRegressor
 # Generate heteroscedastic data
 # -----------------------------
 #
-# [Heteroscedasticity](https://en.wikipedia.org/wiki/Homoscedasticity_and_heteroscedasticity) means that the variance
+# `Heteroscedasticity <https://en.wikipedia.org/wiki/Homoscedasticity_and_heteroscedasticity>`_ means that the variance
 # of the target random variable `y` is not constant over the feature
 # space: there are regions of  `X` for which `y` is much harder to
 # predict than for other.
@@ -64,49 +64,18 @@ quantiles = tabicl.predict(X_test, output_type="quantiles", alphas=alphas)
 # is much larger for `X` values between -0.5 and 1.5 than elsewhere
 # and naturally adapts to the noise level of `y` given `X`.
 
-def plot_data_generating_process(
-    x,
-    y,
-    plot_data=True,
-    max_scatter_points=1_000,
-    plot_010_quantile=True,
-    plot_090_quantile=True,
-    color="k",
-    ax=None,
-):
-    x_grid = np.linspace(x.min(), x.max(), 100)
-    if ax is None:
-        _, ax = plt.subplots(constrained_layout=True)
-    if plot_data:
-        ax.scatter(
-            x=x[:max_scatter_points],
-            y=y[:max_scatter_points],
-            alpha=0.15,
-            color="gray"
-        )
-    if plot_090_quantile:
-        ax.plot(
-            x_grid,
-            true_y_mean(x_grid) + norm.ppf(0.90) * true_y_std(x_grid),
-            linestyle="--",
-            linewidth=1,
-            color=color,
-        )
-    if plot_010_quantile:
-        ax.plot(
-            x_grid,
-            true_y_mean(x_grid) - norm.ppf(0.90) * true_y_std(x_grid),
-            linestyle="--",
-            linewidth=1,
-            label=r"10-90% quantiles",
-            color=color,
-        )
-    ax.legend(frameon=False)
 
+def plot_data_and_quantiles(X_test, y_test, quantiles):
 
-def plot_tabicl_quantiles(X_test, quantiles, ax=None):
-    if ax is None:
-        _, ax = plt.subplots(constrained_layout=True)
+    _, ax = plt.subplots(figsize=(5, 4), constrained_layout=True)
+
+    # Plot test data points
+    ax.scatter(
+        x=X_test,
+        y=y_test,
+        alpha=0.15,
+        color="gray"
+    )
 
     # sort test points for a clean line plot (optional)
     order = np.argsort(X_test[:, 0])
@@ -122,20 +91,11 @@ def plot_tabicl_quantiles(X_test, quantiles, ax=None):
                     color="green", label="10–90% interval")
 
     ax.legend(frameon=False)
+    ax.set(xlabel="Input feature x", ylabel="Target variable y")
+    ax.spines[['top', 'right']].set_visible(False)
+    ax.set_title("TabICL predicted quantiles")
 
 
-# Plot TabICL predicted quantiles
-plt.rcParams["font.size"] = 13
-fig, ax = plt.subplots()
+plot_data_and_quantiles(X_test, y_test, quantiles)
 
-ax.set(xlabel="Input feature x", ylabel="Target variable y")
-ax.spines[['top', 'right']].set_visible(False)
-
-plot_data_generating_process(
-    X_test, y_test, ax=ax,
-    plot_010_quantile=False,
-    plot_090_quantile=False
-)
-
-plot_tabicl_quantiles(X_test, quantiles, ax=ax)
-ax.set_title("TabICL predicted quantiles")
+# %%
