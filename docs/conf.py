@@ -59,4 +59,6 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'pydata_sphinx_theme'
+html_title = "TabICL" # A simpler title in the landing
+
 html_static_path = ['_static']
