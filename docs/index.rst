@@ -1,3 +1,4 @@
+.. title:: TaICL: An Open Tabular Foundation Model
 
 .. raw:: html
 
