@@ -1,0 +1,359 @@
+div.docutils.container.index-features {
+  width: 450px;
+}
+
+div.docutils.container.index-box {
+  background-color: var(--pst-color-white-highlight);
+  border-radius: 10px;
+  color: black;
+  padding: 5px;
+  margin-left: 15px;
+  float: right;
+  width: 400px;
+}
+
+/* Need to be able to have absolute positioning for the div inside */
+.bd-main .bd-content .bd-article-container .bd-article {
+  position: relative;
+}
+
+@media (min-width: 792px) {
+  div.docutils.container.index-features {
+    position: absolute;
+    top: 10px;
+    right: 0px;
+  }
+}
+
+@media (min-width: 1092px) {
+  div.docutils.container.index-box {
+    margin-left: 30px;
+    margin-right: -15px;
+  }
+}
+
+@media (max-width: 892px) {
+  div.docutils.container.index-box {
+    max-width: 500px;
+    width: unset;
+    float: unset;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.card-body {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.card-body p {
+  text-align: left;
+}
+
+.sd-card  {
+  border: 0px;
+  margin-block-end: 1.0rem;
+}
+
+div.card-body div.output_result {
+  overflow-x: auto;
+}
+
+div.card-body details {
+border-radius: 4px;
+}
+
+div.card-body summary i {
+  color: var(--pst-color-on-surface);
+  margin-left: 4em;
+}
+
+div.card-body summary {
+  margin: 0.5em;
+  padding-left: 0.5em;
+}
+
+div.card-body summary:hover {
+background-color: var(--pst-color-border-muted);
+}
+
+div.card-body details[open] summary {
+margin-bottom: -0.5em;
+}
+
+div.card-body details[open] summary i {
+  display: none;
+}
+
+/* Download/laucher links and top hint (sphinx-gallery) */
+
+.sphx-glr-download-link-note,
+.binder-badge,
+.lite-badge,
+.sphx-glr-download-jupyter,
+.sphx-glr-download-python,
+.sphx-glr-download-zip {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .bd-page-width {
+    max-width: 95rem;
+  }
+}
+
+/* sphinx-gallery */
+
+/* add padding to images */
+.bd-article img {
+  height: unset !important;
+  margin-top: 2%;
+  margin-bottom: 2%;
+}
+
+/** Landing page features *************************************************************/
+
+.logo-container {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* logo at the top left (not just the landing page) */
+.logo {
+  max-width: 100px;
+  height: auto;
+}
+
+/* logo for the landing page */
+.logo-landing {
+  max-width: 200px;
+  height: auto;
+}
+
+.hero-title {
+  color: #DA7007; /* Darker text color for the title */
+  font-family: var(--pst-font-family-heading);
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  margin-top: 0px;
+  text-align: center;
+}
+
+.hero-description {
+  font-family: var(--pst-font-family-base);
+  text-align: center;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.row-padding-main-container {
+  padding-top: 1.5rem !important;
+  padding-bottom: 2.5rem !important;
+}
+
+.row-padding-between-features {
+  padding-bottom: 2rem !important;
+  padding-top: 2rem !important;
+  border-top: #aaa solid 3px;
+  border-image: linear-gradient(to right, var(--pst-color-background) 0%, #4085a7 50%, var(--pst-color-background) 100%) 1;
+}
+
+.feature-title {
+  color: #DA7007; /* Darker text color for the title */
+  font-family: var(--pst-font-family-heading);
+  font-size: 2rem;
+  margin-bottom: 1.25rem; /* Spacing below title */
+  margin-top: 0px;
+}
+
+.feature-text {
+  font-family: var(--pst-font-family-base);
+  font-size: 1.05rem; /* Regular font size for text */
+  margin-bottom: 0; /* Remove default bottom margin */
+}
+
+.code-margin {
+  margin-top: 0.75em !important;
+  margin-bottom: 0.75em !important;
+}
+
+.prediction-error-image {
+  margin-bottom: 2rem;
+  margin-left: auto;
+  margin-right: auto;
+  width: 80%;
+  aspect-ratio: 1.2;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+html[data-theme="light"] .prediction-error-image {
+  background-image: url('../images/plot_prediction_error_light.png');
+}
+
+html[data-theme="dark"] .prediction-error-image {
+  background-image: url('../images/plot_prediction_error_dark.png');
+}
+
+.project-summary-image {
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  aspect-ratio: 1.2;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+html[data-theme="light"] .project-summary-image {
+  background-image: url('../images/project_summary_light.png');
+}
+
+html[data-theme="dark"] .project-summary-image {
+  background-image: url('../images/project_summary_dark.png');
+}
+
+.row-padding-main-container {
+  padding-top: 1.5rem !important;
+  padding-bottom: 2.5rem !important;
+}
+
+/* Change the colors to the orange and blue of skore */
+html[data-theme="dark"] {
+  --pst-color-primary: #f89a36;
+  --pst-color-secondary: #3499cd;
+  --pst-color-inline-code-links: var(--pst-color-primary);
+}
+
+/*
+Choose darker colors for light to ensure at least AA contrast https://www.w3.org/TR/WCAG20/#visual-audio-contrast-contrast
+Tool to test: https://docusaurus.io/docs/styling-layout
+*/
+html[data-theme="light"] {
+  --pst-color-primary: #ad5d06;
+  --pst-color-secondary: #297ba6;
+  --pst-color-inline-code-links: var(--pst-color-primary);
+}
+
+/** Styling **************************************************************/
+
+/* Make the footer a bit less visible */
+.bd-footer {
+  border-top: 1px solid var(--pst-color-on-surface);
+  opacity: .7;
+}
+
+.bd-footer p {
+  color: var(--pst-color-text-muted);
+}
+
+.bd-footer a {
+  color: var(--pst-color-info-highlight);
+}
+
+/** Adapt bootstrap colors ************************/
+:root {
+  /* Change colors on bootstrap elements to use the theme's colors */
+  --bs-nav-pills-link-active-bg: var(--pst-color-primary);
+  --bs-nav-link-color:  var(--pst-color-primary);
+  --bs-nav-link-hover-color: var(--pst-color-link-hover);
+}
+
+.nav-pills .nav-link.active, .nav-pills .show>.nav-link {
+  background-color:var(--pst-color-primary);
+}
+
+.nav-link {
+  color:var(--pst-color-primary);
+}
+
+.nav-link:focus, .nav-link:hover {
+color: var(--pst-color-link-hover);
+}
+
+/** Landing header *******************************/
+
+header > .bd-page-width {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+div.sk-landing-container {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  max-width: 1200px;
+}
+
+div.sk-landing-container .text-white {
+  text-shadow: 0px 0px 8px rgb(42, 98, 128);
+}
+
+div.sk-landing-container a,
+div.sk-landing-container a:hover,
+div.sk-landing-container a:visited,
+div.sk-landing-container a:visited:hover,
+div.sk-landing-container a > code,
+div.sk-landing-container a:hover > code,
+div.sk-landing-container a:visited > code,
+div.sk-landing-container a:visited:hover > code {
+  color: #DA7007;
+}
+
+div.sk-landing-container code {
+  font-weight: normal !important;
+}
+
+ul.sk-landing-header-body {
+  margin-top: auto;
+  margin-bottom: auto;
+  font-family: var(--pst-font-family-base);
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: black;
+}
+
+div.sk-landing-bg {
+  background-image: linear-gradient(160deg, rgba(0,48,70,.75) 0%, rgba(0,118,179,.75) 17%, rgba(255,239,193,.75) 59%, rgba(255,149,40,.75) 100%);
+}
+
+.sk-landing-header {
+  font-size: 3.2rem;
+}
+
+@media (max-width: 768px) {
+  .sk-landing-header {
+      margin-top: 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+  }
+
+  .sk-landing-container .col-md-4 {
+      display: flex;
+      justify-content: center;
+  }
+}
+
+/** Scikit-learn buttons ***************************/
+
+a.sk-btn-orange {
+  font-size: 1.1rem;
+  font-weight: 500;
+  background-color: #DA7007; /* Original sk-orange-tint-1 */
+  color: #ffffff !important; /* Changed to white for better contrast */
+  border: 2px solid #DA7007; /* Border to match background color, previous: f99f44 */
+  padding: 10px 20px; /* Added padding for better button size */
+  border-radius: 5px; /* Rounded corners for a modern look */
+  text-decoration: none; /* Remove underline */
+  transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+}
+
+a.sk-btn-orange:hover {
+  background-color: #fbe1ca; /* Fill with white on hover */
+  color: #DA7007 !important; /* Text color changes to match the original background color */
+  border: 2px solid #DA7007; /* Border remains the same on hover */
+}
+

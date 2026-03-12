@@ -53,10 +53,6 @@ intersphinx_mapping = {
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-# Additional templates that should be rendered to pages, maps page names to
-# template names.
-html_additional_pages = {"index": "index.html"}
-
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -65,3 +61,4 @@ html_theme = 'pydata_sphinx_theme'
 html_title = "TabICL" # A simpler title in the landing
 
 html_static_path = ['_static']
+html_css_files = ["css/custom.css"]

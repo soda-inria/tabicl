@@ -1,11 +1,3 @@
-{% extends "layout.html" %}
-{% set title = 'TabICL: an open Tabular Foundation Model' %}
-
-{%- block extrahead %}
-    {{ super() }}
-    {# Add here landing-page specific stuff that goes in the header (eg css) #}
-{%- endblock extrahead %}
-
 {% block docs_navbar %}
     {{ super() }}
 
@@ -15,7 +7,7 @@ still full-width (unlike the article) #}
   <div class="container sk-landing-container">
     <div class="row">
       <div class="col-md-4 d-flex align-items-center">
-          <h1 class="sk-landing-header text-white text-monospace">skore</h1>
+          <h1 class="sk-landing-header text-white text-monospace">TabICL</h1>
       </div>
       <div class="col-md-8">
         <ul class="sk-landing-header-body">
@@ -25,6 +17,13 @@ still full-width (unlike the article) #}
         </ul>
       </div>
     </div>
+  </div>
+</div>
+
+
+<div class="container-fluid sk-landing-container">
+  <div class="row row-padding-main-container">
+    <h1 class="hero-title">Open Tabular Foundation Model</h1>
   </div>
 </div>
 {% endblock docs_navbar %}
