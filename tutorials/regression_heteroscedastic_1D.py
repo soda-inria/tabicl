@@ -19,10 +19,17 @@ from tabicl import TabICLRegressor
 # Generate heteroscedastic data
 # -----------------------------
 #
-# `Heteroscedasticity <https://en.wikipedia.org/wiki/Homoscedasticity_and_heteroscedasticity>`_ means that the variance
-# of the target random variable `y` is not constant over the feature
-# space: there are regions of  `X` for which `y` is much harder to
+# We first generate a simple one-dimensional regression task to illustrate the
+# natural ability of TabICL to model predictive uncertainty in the presence of
+# heteroscedastic noise.
+#
+# `Heteroscedasticity <https://en.wikipedia.org/wiki/Homoscedasticity_and_heteroscedasticity>`_
+# means that the variance of the target random variable `y` is not constant over
+# the feature space: there are regions of  `x` for which `y` is much harder to
 # predict than for other.
+#
+# The following data generating process is heteroscedastic because `true_y_std`
+# is not constant: it is defined as a function of `x`.
 rng = np.random.default_rng(0)
 n_samples = int(3e3)
 x = rng.uniform(low=-3, high=3, size=n_samples)
