@@ -46,8 +46,18 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 # %%
 #
-# Fit TabICL
-# ----------
+# Fit TabICL and estimate quantiles
+# ---------------------------------
+#
+# The TabICL model is fitted with `n_estimators=1` to disable ensembling to speed-up
+# the execution (at the cost of slightly worse predictions).
+#
+# The model then estimates quantiles of the distribution of Y|X for each test data
+# point. If the model is good, we expect 80% of the observed values of y to lie
+# between the predicted lower (0.1) and upper (0.9) quantile values.
+#
+# The 0.5 quantile prediction estimates the median of Y|X: we expect 50% of the
+# observation to lie above and the remaining 50% to lie below. 
 tabicl = TabICLRegressor(n_estimators=1)
 tabicl.fit(X_train, y_train)
 
