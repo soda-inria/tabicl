@@ -213,12 +213,6 @@ We provide a minimal implementation of the TabICLv2 architecture
 `here <https://github.com/soda-inria/nanotabicl>`__, for educational and
 experimental purposes.
 
-TODO
-----
-
-- Documentation
-- Multi-GPU parallel inference
-
 FAQ
 ---
 
