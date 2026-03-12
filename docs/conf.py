@@ -60,5 +60,19 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 html_theme = 'pydata_sphinx_theme'
 html_title = "TabICL" # A simpler title in the landing
 
+# The name of an image file (within the static path) to use as favicon of the
+# docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
+# pixels large.
+html_favicon = "TabICL.ico"
+
 html_static_path = ['_static']
 html_css_files = ["css/custom.css"]
+
+# -- Theme Options -----------------------------------------------------------
+
+html_theme_options = {
+    "logo": {
+        "image_light": "TabICL_logo.svg",
+        "image_dark": "TabICL_logo_dark.svg",
+    },
+}
