@@ -15,7 +15,14 @@ from sklearn.model_selection import train_test_split
 from scipy.stats import norm
 from tabicl import TabICLRegressor
 
-# %%  Generate heteroscedastic data
+# %%
+# Generate heteroscedastic data
+# -----------------------------
+#
+# [Heteroscedasticity](https://en.wikipedia.org/wiki/Homoscedasticity_and_heteroscedasticity) means that the variance
+# of the target random variable `y` is not constant over the feature
+# space: there are regions of  `X` for which `y` is much harder to
+# predict than for other.
 rng = np.random.default_rng(0)
 n_samples = int(3e3)
 x = rng.uniform(low=-3, high=3, size=n_samples)
@@ -37,7 +44,10 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 
-# %% Fit TabICL
+# %%
+#
+# Fit TabICL
+# ----------
 tabicl = TabICLRegressor(n_estimators=1)
 tabicl.fit(X_train, y_train)
 
@@ -45,7 +55,14 @@ alphas = [0.10, 0.5, 0.90]
 quantiles = tabicl.predict(X_test, output_type="quantiles", alphas=alphas)
 
 
-# %% Plot the data generating process and TabICL quantiles
+# %%
+# Plot the quantiles predicted by TabICL
+# --------------------------------------
+#
+# The shaded area represents the predictive uncertainty of the model on this
+# dataset. We can observe that the width of the prediction interval
+# is much larger for `X` values between -0.5 and 1.5 than elsewhere
+# and naturally adapts to the noise level of `y` given `X`.
 
 def plot_data_generating_process(
     x,
