@@ -232,7 +232,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
     n_samples_in_ : int
         Number of samples in the training data.
 
-    feature_names_in_ : ndarray of shape (n_features_in_,) or None
+    feature_names_in_ : ndarray of shape ``(n_features_in_,)`` or None
         Feature names seen during ``fit``. Only set when the input ``X`` has
         feature names (e.g., a pandas DataFrame with string column names).
 
