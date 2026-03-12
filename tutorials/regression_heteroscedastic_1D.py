@@ -69,10 +69,16 @@ quantiles = tabicl.predict(X_test, output_type="quantiles", alphas=alphas)
 # Plot the quantiles predicted by TabICL
 # --------------------------------------
 #
-# The shaded area represents the predictive uncertainty of the model on this
-# dataset. We can observe that the width of the prediction interval
-# is much larger for `X` values between -0.5 and 1.5 than elsewhere
-# and naturally adapts to the noise level of `y` given `X`.
+# The predictions of the lower and upper quantiles are sorted by increasing
+# value of `x` to define the boarder of a shaded area that represents the
+# predictive uncertainty of the model on this dataset. We can observe that the
+# (vertical) width of the prediction interval is much larger for `x` values
+# between -0.5 and 1.5 than elsewhere and naturally adapts to the noise level of
+# `y` given `x`.
+#
+# For `x` values below -1. or above 2., the TabICL model is very confident (narrow
+# prediction intervals): indeed we can observe that `y` is nearly a deterministic
+# (noise free) function of `x` in those regions.
 
 
 def plot_data_and_quantiles(X_test, y_test, quantiles):
