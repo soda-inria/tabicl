@@ -22,6 +22,15 @@ extensions = [
     "sphinx.ext.intersphinx",
 ]
 
+# opengraph, to generate social-media thumbnails
+try:
+    import sphinxext.opengraph  # noqa
+
+    extensions.append("sphinxext.opengraph")
+except ImportError:
+    print("ERROR: sphinxext.opengraph import failed")
+
+
 sphinx_gallery_conf = {
     "examples_dirs": ["../tutorials"],
     "gallery_dirs": ["tutorials"],
