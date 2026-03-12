@@ -24,7 +24,7 @@ class TabICL(nn.Module):
 
     This class is the underlying raw PyTorch module for TabICL. It is not
     intended to be used directly. Instead, use the classes from the top-level
-    `tabicl` package such as:class:`tabicl.TabICLClassifier` or
+    `tabicl` package such as :class:`tabicl.TabICLClassifier` or
     :class:`tabicl.TabICLRegressor` that wrap this class to include the
     necessary preprocessing of input features and postprocessing of
     predictions.
