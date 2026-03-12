@@ -288,6 +288,36 @@ pipeline.fit(X_train, y_train)  # X should be a DataFrame
 predictions = pipeline.predict(X_test)
 ```
 
+## Explainability
+
+Install the optional dependencies:
+```bash
+pip install tabicl[shap]
+```
+
+### SHAP values
+
+```python
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from tabicl import TabICLClassifier
+from tabicl.shap import get_shap_values, plot_shap
+
+X, y = load_breast_cancer(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.8, random_state=42)
+
+clf = TabICLClassifier()
+clf.fit(X_train, y_train)
+
+shap_values = get_shap_values(
+    estimator=clf,
+    X_test=X_test[:10],
+    attribute_names=load_breast_cancer().feature_names,
+)
+
+plot_shap(shap_values)
+```
+
 ## Citation
 If you use TabICL for research purposes, 
 please cite our papers for **[TabICL](https://arxiv.org/abs/2502.05564)** and **[TabICLv2](https://arxiv.org/abs/2602.11139)**:
