@@ -23,7 +23,7 @@ from tabicl import TabICLClassifier
 # output of a classifier.
 
 rng = np.random.default_rng(0)
-X, y = make_moons(n_samples=500, noise=0.35, random_state=0)
+X, y = make_moons(n_samples=400, noise=0.35, random_state=0)
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=1 / 2, random_state=0
@@ -73,3 +73,23 @@ plt.colorbar(scatter, ax=ax, label='Probability of class 1')
 plt.show()
 
 
+# %% Evaluate model performance
+# --------------------------------
+# TabICL provides calibrated probabilities.
+
+y_pred = tabicl.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Test accuracy: {accuracy:.3f}")
+
+# calibration curve for the positive class (class '1')
+prob_true, prob_pred = calibration_curve(y_test, y_proba[:, 1], strategy='quantile', n_bins=7)
+
+# plot calibration curve
+fig, ax = plt.subplots(figsize=(5, 4), constrained_layout=True)
+ax.plot(prob_pred, prob_true, marker='o', linewidth=1, label='TabICL')
+ax.plot([0, 1], [0, 1], linestyle='--', label='Perfectly calibrated')
+ax.set_xlabel('Mean predicted probability')
+ax.set_ylabel('Fraction of positives')
+ax.set_title('Calibration curve')
+ax.legend()
+plt.show()
