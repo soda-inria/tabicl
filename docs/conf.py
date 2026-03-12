@@ -53,6 +53,9 @@ intersphinx_mapping = {
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+# Additional templates that should be rendered to pages, maps page names to
+# template names.
+html_additional_pages = {"index": "index.html"}
 
 
 # -- Options for HTML output -------------------------------------------------
