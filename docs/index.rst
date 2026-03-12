@@ -1,5 +1,3 @@
-|test| |PyPI version| |Downloads|
-
 TabICLv2: An open tabular foundation model
 ===========================================
 
@@ -8,6 +6,8 @@ classification and regression.
 
 TabICL is an **easy to use**, **open**, and **scikit-learn compatible**
 tabular foundation model.
+
+|test| |PyPI version| |Downloads|
 
 Installation
 ------------
