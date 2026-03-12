@@ -1,2 +1,2 @@
-from tabicl import TabICL
+from .tabicl import TabICL
 
