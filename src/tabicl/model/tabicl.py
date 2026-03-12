@@ -22,6 +22,13 @@ class TabICL(nn.Module):
     2. Row-wise interaction captures interactions between features within each row
     3. Dataset-wise in-context learning to learn patterns from labeled examples and make predictions
 
+    This class is the underlying raw PyTorch module for TabICL. It is not
+    intended to be used directly. Instead, use the classes from the top-level
+    `tabicl` package such as:class:`tabicl.TabICLClassifier` or
+    :class:`tabicl.TabICLRegressor` that wrap this class to include the
+    necessary preprocessing of input features and postprocessing of
+    predictions.
+
     Parameters
     ----------
     max_classes : int, default=10
