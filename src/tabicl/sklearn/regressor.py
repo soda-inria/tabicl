@@ -743,3 +743,8 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
             return final_results[output_type[0]]
 
         return final_results
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        return tags

@@ -23,6 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     "torch>=2.2",  # to enjoy Flash Attention v2
@@ -36,6 +37,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+doc = [
+  "sphinx",
+  "sphinx-copybutton",
+  "sphinx-gallery",
+  "matplotlib",
+  "pydata-sphinx-theme",
+]
 forecast = [                                                                                                                                                                                                        
     "pandas>=2.1.2",
     "gluonts>=0.16.0",  # calendar features
@@ -48,7 +56,7 @@ pretrain = [
     "wandb",  # logging in pre-training
 ]
 all = [
-    "tabicl[forecast,pretrain]",
+    "tabicl[doc,forecast,pretrain]",
 ]
 
 [build-system]

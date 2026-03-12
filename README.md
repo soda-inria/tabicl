@@ -30,7 +30,7 @@ with 300 to 100,000 training samples and up to 2,000 features.
 It can scale to even larger datasets (e.g., 500K samples) through CPU and disk offloading, 
 though its accuracy may degrade at some point.
 
-<img src="./figures/pareto_front_improvability_tabarena.png" width="70%" alt="Model comparison on TabArena" style="display: block; margin: auto;">
+<img src="./docs/figures/pareto_front_improvability_tabarena.png" width="70%" alt="Model comparison on TabArena" style="display: block; margin: auto;">
 
 ## Installation
 
@@ -44,6 +44,12 @@ pip install tabicl[forecast]   # time series forecasting
 pip install tabicl[pretrain]   # pre-training
 pip install tabicl[all]        # everything
 ```
+
+On Intel Macs, installing PyTorch via `pip` may fail. In that case, install it first with:
+```bash
+conda install pytorch -c pytorch
+```
+Then install `tabicl` as above.
 
 ## Basic usage
 
@@ -183,7 +189,7 @@ pred_df = forecaster.predict_df(context_df, prediction_length=prediction_length)
 fig, axes = plot_forecast(context_df=context_df, pred_df=pred_df, test_df=test_df)
 ```
 
-<img src="./figures/tabiclv2_time_series.png" width="60%" alt="Runtimes for different hardware and sample sizes" style="display: block; margin: auto;">
+<img src="./docs/figures/tabiclv2_time_series.png" width="60%" alt="Runtimes for different hardware and sample sizes" style="display: block; margin: auto;">
 
 `TabICLForecaster` is heavily inspired by [TabPFN-TS](https://arxiv.org/abs/2501.02945v3). We may later improve it to enhance the ability of TabICL for time series forecasting.
 
@@ -222,7 +228,7 @@ On modern GPUs, TabICL can handle a million samples
 in a few minutes without RAM overflow
 thanks to CPU and disk offloading.
 
-<img src="./figures/runtime_tabpfnv25_tabiclv2.png" width="70%" alt="Runtimes for different hardware and sample sizes" style="display: block; margin: auto;">
+<img src="./docs/figures/runtime_tabpfnv25_tabiclv2.png" width="70%" alt="Runtimes for different hardware and sample sizes" style="display: block; margin: auto;">
 
 **What dataset sizes work well?** 
 TabICLv2 is pre-trained on datasets between 300 and 48K training samples.
@@ -230,25 +236,25 @@ However, it can generalize to larger datasets to some extent,
 and we see good results even on some datasets with 600K samples. 
 We have not tested if TabICL generalizes to datasets smaller than 300 samples.
 
-<img src="./figures/tabiclv2_perf_vs_n_samples.png" width="70%" alt="Average rank vs. number of samples" style="display: block; margin: auto;">
+<img src="./docs/figures/tabiclv2_perf_vs_n_samples.png" width="70%" alt="Average rank vs. number of samples" style="display: block; margin: auto;">
 
 **What about the number of columns?**
 TabICLv2 is pre-trained on datasets between 2 and 100 columns. 
 We see good generalization to more columns and don't know where the limit is.
 
-<img src="./figures/tabiclv2_perf_vs_n_features.png" width="70%" alt="Average rank vs. number of features" style="display: block; margin: auto;">
+<img src="./docs/figures/tabiclv2_perf_vs_n_features.png" width="70%" alt="Average rank vs. number of features" style="display: block; margin: auto;">
 
 ## Preprocessing
 
 ### Simple built-in preprocessing
-If the input `X` to TabICL is a pandas DataFrame, TabICL will automatically:
-- Detect and ordinal encode categorical columns (including string, object, category, and boolean types)
+For `X`, TabICL accepts pandas dataframes or numpy arrays.
+It applies the following preprocessing:
+- Detect and ordinal encode categorical columns 
+  (including string, object, category, and boolean types). For numpy arrays,
+  all columns have the same datatype (the one of the array). 
+  Columns with integers are detected as numerical.
 - Create a separate category for missing values in categorical features
 - Perform mean imputation for missing numerical values (encoded as NaN)
-
-If the input `X` is a numpy array, TabICL assumes that ordinal encoding and missing value imputation have already been performed.
-
-For both input types, TabICL applies additional preprocessing:
 - Outlier detection and removal
 - Feature scaling and normalization
 - Feature shuffling for ensemble diversity
