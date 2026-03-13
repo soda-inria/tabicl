@@ -639,7 +639,7 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
             - If ``"median"``, returns the median over the predicted distribution.
             - If ``"quantiles"``, returns the quantiles of the predicted distribution.
               The parameter ``alphas`` determines which quantiles are returned.
-            - If ``"raw_quantiles"``, returns the original quantiles from TabICL model.
+            - If ``"raw_quantiles"``, returns the raw quantiles (direct outputs of TabICL).
             - If a list of str, returns multiple types of outputs as specified in the list.
 
         alphas : list of float or None, default=None
@@ -654,7 +654,7 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         np.ndarray of shape (n_samples,) or dict[str, np.ndarray]
             An array of shape ``(n_samples,)`` if ``output_type`` is ``"mean"`` or
             ``"median"``, or an array of shape ``(n_samples, n_quantiles)`` if
-            ``output_type`` is ``"quantiles"``.
+            ``output_type`` is ``"quantiles"`` or ``"raw_quantiles"``.
 
             If ``output_type`` is a list of str, returns a dictionary with keys as
             specified in the list and values as the corresponding predictions.
