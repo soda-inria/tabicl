@@ -561,9 +561,8 @@ class TabICL(nn.Module):
 
             - "mean", "variance", "median": (B, test_size)
             - "quantiles": (B, test_size, len(alphas))
-            - "raw_quantiles": (B, test_size, num_quantiles),
-              where num_quantiles is the number of quantile
-              levels configured in the architecture before pre-training it.
+            - "raw_quantiles": (B, test_size, num_quantiles), where `num_quantiles` denotes 
+                the number of quantile levels configured in the model architecture.
         """
         assert self.max_classes == 0, "predict_stats is only applicable for regression tasks"
 
@@ -852,6 +851,8 @@ class TabICL(nn.Module):
 
             - "mean", "variance", "median": (B, test_size)
             - "quantiles": (B, test_size, len(alphas))
+            - "raw_quantiles": (B, test_size, num_quantiles), where `num_quantiles` denotes 
+                the number of quantile levels configured in the model architecture.
         """
         assert self.max_classes == 0, "predict_stats_with_cache is only applicable for regression tasks"
 
