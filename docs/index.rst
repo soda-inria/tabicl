@@ -26,8 +26,13 @@
     </div>
 
 
-Tabular foundation models are powerful learners for tabular
-classification and regression.
+
+TabICL is a tabular foundation model.
+It uses in-context learning (ICL) to learn from new data in a single
+forward pass through a Transformer model: ``predict(X_test)`` calls ``y_pred = model(X_train, y_train, X_test)``.
+It has acquired strong learning capabilities through
+pre-training on millions of synthetic datasets.
+
 
 |test| |PyPI version| |Downloads|
 
@@ -101,13 +106,6 @@ of curriculum learning. Pre-training code for v2 will be released upon publicati
 
 FAQ
 ---
-
-**What is TabICL?** TabICL is a tabular foundation model (like TabPFN).
-It uses in-context learning (ICL) to learn from new data in a single
-forward pass through a Transformer model:
-``y_pred = model(X_train, y_train, X_test)`` (this is called inside
-``predict()``). It has acquired strong learning capabilities through
-pre-training on millions of synthetic datasets.
 
 **How fast is TabICL?** On datasets with :math:`n` training rows and
 :math:`m` columns, the runtime complexity of TabICL (v1 and v2) is
