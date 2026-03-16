@@ -2,8 +2,8 @@
 Probabilistic classification
 ===================================
 
-This example shows TabICL predicted class probabilities on a simple 2D
-classification problem.
+This tutorial demonstrates how to use TabICL for classification and
+how to interpret its probabilistic outputs.
 """
 # %% Imports
 import numpy as np
@@ -18,18 +18,24 @@ from tabicl import TabICLClassifier
 # %%
 # Generate 2D classification data
 # --------------------------------
-# We generate a simple two‑moon 2D dataset with fairly large noise so that the
-# classes are not separable. In two dimensions it is easy to visualise the
-# output of a classifier.
+# We generate a simple two‑moon 2D dataset with fairly large noise. A 2D
+# dataset is useful for visualisation purposes and the noise makes the
+# classification porblem non-separable, which is a common situation in
+# real-world applications.
 
-rng = np.random.default_rng(0)
 X, y = make_moons(n_samples=1000, noise=0.35, random_state=0)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=0
+)
 
 # %%
 # Fit TabICL
 # -----------
+#
+# The ``fit`` method just downloads TabICL weights if they have not been
+# downloaded already, while the ``predict_proba`` does the forward pass of the
+# model and returns the predicted probabilities for each class.
 
 tabicl = TabICLClassifier()
 tabicl.fit(X_train, y_train)
@@ -41,13 +47,9 @@ y_proba = tabicl.predict_proba(X_test)
 # Plot predicted probabilities
 # ----------------------------
 #
-# Since the problem is 2D, we can qualitatively assess the quality of the model's
-# probabilistic predictions by plotting the decision boundary induced by the
-# predicted probabilities.
-#
-# Test data points are coloured by their true label. The black contour line
-# shows the decision boundary at a probability threshold of 0.5. The colour
-# shading indicates the estimated probability for class 1.
+# Since the problem is 2D, we can qualitatively assess the quality of the
+# model's probabilistic predictions by plotting the decision boundary induced
+# by the predicted probabilities.
 
 fig, ax = plt.subplots(figsize=(5, 4), constrained_layout=True)
 
@@ -84,14 +86,18 @@ plt.show()
 
 # %%
 #
+# Test data points are coloured by their true label. The black contour line
+# shows the decision boundary at a probability threshold of 0.5. The colour
+# shading indicates the estimated probability for class 1.
+#
 # It is interesting to observe that the model is less confident (probability
 # closer to 0.5) in the noisy regions of the dataset close to the decision
 # boundary.
 #
 # We also observe even less confident predictions when we follow the decision
 # boundary further away from the training data of this particular task. This is
-# a nice property of the TabICL foundation model and is a likely a consequence
-# of pretraining the TabICL architecture on a diverse set of tabular datasets.
+# a desirable property: it is able to express more uncertainty in regions of
+# the feature space that are far from the training data.
 
 # %%
 #
@@ -137,6 +143,6 @@ _ = CalibrationDisplay.from_estimator(tabicl, X_test, y_test, strategy="quantile
 
 # %%
 #
-# Given enough training and test data, we expect TabICL to produce reasonably
-# well calibrated probabilitistic predictions by default. This is what we
+# We expect TabICL to produce reasonably
+# well calibrated probabilistic predictions by default. This is what we
 # observe here: the calibration curve is close to the diagonal line.
