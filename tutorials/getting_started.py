@@ -70,3 +70,22 @@ predictions = clf.predict(X_test)
 probabilities = clf.predict_proba(X_test)
 print(f"Predictions shape: {predictions.shape}")
 print(f"Probabilities shape: {probabilities.shape}")
+
+# %%
+# Saving the model
+# ----------------
+#
+# Save and load a fitted classifier or regressor:
+
+clf.save(
+   "classifier.pkl",
+   save_model_weights=False,  # if False, reload from checkpoint on load
+   save_training_data=True,   # if True, include training data; if False, discard it (requires KV cache)
+   save_kv_cache=True,        # if True and KV cache exists, save it
+)
+clf = TabICLClassifier.load("classifier.pkl")
+
+# %%
+# When KV cache exists and is saved, you can set
+# ``save_training_data=False`` to exclude cached training data, which may
+# be useful for data privacy.

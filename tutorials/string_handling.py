@@ -11,16 +11,16 @@ to make better predictions.
 # -------------------------------------
 #
 # Real-world datasets often contain complex heterogeneous data that benefits from more sophisticated preprocessing.
-# For these scenarios, we recommend [skrub](https://skrub-data.org/stable/index.html),
+# For these scenarios, we recommend `skrub <https://skrub-data.org/stable/index.html>`_,
 # a powerful library designed specifically for advanced tabular data preparation.
 #
 # Why use skrub?
 # - Handles diverse data types (numerical, categorical, text, datetime, etc.)
 # - Provides robust preprocessing for dirty data
 # - Offers sophisticated feature engineering capabilities
-# - Supports multi-table integration and joins
+# - Supports multi-table integration and joins.
 #
-# To install skrub, use `pip install -U skrub`
+# To install skrub, use ``pip install -U skrub``.
 #
 # TabICL can handle numerical and categorical columns natively, but will treat string columns as categorical.
 # Here, we show how using skrub can provide TabICL with better string encoding. We use the "open payments" dataset.
@@ -66,7 +66,7 @@ print(f"ROC AUC without skrub: {scores.mean():.3f} (+/- {scores.std():.3f}), tim
 # -------------------------------------
 #
 # With skrub, we can embed high-cardinality string columns using semantics-aware methods into numerical features.
-# The [TableVectorizer](https://skrub-data.org/stable/reference/generated/skrub.TableVectorizer.html)
+# The `TableVectorizer <https://skrub-data.org/stable/reference/generated/skrub.TableVectorizer.html>`_
 # applies different conversions to columns of a dataframe.
 # Here, for efficiency reasons, we use the StringEncoder with lower-dimensional embeddings
 # for all string columns with at least 10 distinct values.
