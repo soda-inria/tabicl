@@ -1,78 +1,81 @@
 """
-Getting Started with TabICL
+Handling strings and dates with TabICL + skrub
 ============================
 
-This example demonstrates the basic usage of TabICL for classification and
-regression tasks using the scikit-learn compatible API.
+This example demonstrates how skrub can be used to preprocess datasets with strings or dates for TabICL
+to make better predictions.
 """
 
 # %%
-# Classification with TabICLClassifier
+# Preparing the dataset
 # -------------------------------------
 #
-# TabICL provides a scikit-learn compatible classifier that works out of the
-# box. Let's use it on a synthetic classification dataset.
+# skrub provides datasets with strings and/or dates. We use the "open payments" dataset.
 
 from sklearn.model_selection import cross_val_score
-import skrub.datasets
 from sklearn.pipeline import make_pipeline
-from skrub import TableVectorizer, DatetimeEncoder, StringEncoder, TextEncoder
+import skrub.datasets
+from skrub import TableVectorizer, DatetimeEncoder, StringEncoder
 import pandas as pd
 import time
 import numpy as np
+from tabicl import TabICLClassifier
 
-from tabicl import TabICLRegressor, TabICLClassifier
-
-
-# data = skrub.datasets.fetch_bike_sharing()  # only dates, but good improvement
-# # data = skrub.datasets.fetch_videogame_sales()  # todo: not shuffled
-# # data = skrub.datasets.fetch_employee_salaries()  # RMSE 12.2K vs 14.9K, but very slow (many strings)
-# X, y = data.X.iloc[:500], data.y[:500]  # subsample for fast experiments
-#
-# pd.set_option('display.max_columns', None)
-# print(X.head())
-#
-# reg = TabICLRegressor(n_estimators=1, device="cpu")
-# start_time = time.time()
-# scores = cross_val_score(reg, X, y, cv=4, scoring="neg_root_mean_squared_error")
-# print(f"RMSE without skrub: {-scores.mean():.3f} (+/- {scores.std():.3f}), time: {time.time()-start_time:.1f} s")
-#
-# pipeline = make_pipeline(
-#     TableVectorizer(
-#         low_cardinality="passthrough",
-#         datetime=DatetimeEncoder(add_weekday=True, add_day_of_year=True, periodic_encoding='circular')
-#     ),
-#     TabICLRegressor(n_estimators=1, device="cpu")
-# )
-# start_time = time.time()
-# scores = cross_val_score(pipeline, X, y, cv=4, scoring="neg_root_mean_squared_error")
-# print(f"RMSE with skrub: {-scores.mean():.3f} (+/- {scores.std():.3f}), time: {time.time()-start_time:.1f} s")
-
-
-# data = skrub.datasets.fetch_open_payments()
-data = skrub.datasets.fetch_toxicity()
+data = skrub.datasets.fetch_open_payments()
 X, y = data.X, data.y
 np.random.seed(0)
 perm = np.random.permutation(y.shape[0])
 X, y = X.iloc[perm[:600]], y[perm[:600]]  # subsample for fast experiments
 
 pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
 print(X.head())
+print()
 
-reg = TabICLClassifier(n_estimators=1, device="cpu")
+# %%
+# TabICL without skrub
+# -------------------------------------
+#
+# When string columns are used with TabICL directly, TabICL will interpret them as categorical columns.
+# This means that TabICL doesn't know which strings are similar, it only knows which strings are identical.
+# It can still learn from them if they repeat in the dataset,
+# but may struggle when the number of different strings is high.
+# Note that the runtime here might include the time for downloading the checkpoint.
+
+reg = TabICLClassifier(n_estimators=1, device="cpu")  # 1 estimator for speed
 start_time = time.time()
 scores = cross_val_score(reg, X, y, cv=2, scoring="roc_auc_ovr")
 print(f"ROC AUC without skrub: {scores.mean():.3f} (+/- {scores.std():.3f}), time: {time.time()-start_time:.1f} s")
 
+# %%
+# TabICL without skrub
+# -------------------------------------
+#
+# With skrub, we can embed high-cardinality string columns using semantics-aware methods into numerical features.
+# Here, for efficiency reasons, we use the StringEncoder with lower-dimensional embeddings
+# for all string columns with at least 10 distinct values.
+# For lower-cardinality string columns, we use "passthrough", so they are directly forwarded to TabICL,
+# which then treats them as categoricals.
+# (Without "passthrough", they would be one-hot encoded by default,
+# which is not the recommended way to handle categoricals for TabICL.)
+# We also provide advanced settings for the DatetimeEncoder,
+# even though our example dataset here does not contain dates.
+#
+
 pipeline = make_pipeline(
     TableVectorizer(
-        low_cardinality="passthrough",
+        low_cardinality="passthrough",  # let TabICL handle low-cardinality categories
         cardinality_threshold=10,
-        high_cardinality=StringEncoder(n_components=10),
+        high_cardinality=StringEncoder(n_components=10),  # fewer components for speed
         datetime=DatetimeEncoder(add_weekday=True, add_day_of_year=True, periodic_encoding='circular'),
     ),
-    TabICLClassifier(n_estimators=1, device="cpu")
+    TabICLClassifier(n_estimators=1, device="cpu")  # 1 estimator for speed
 )
 start_time = time.time()
-scores = cross_val_score(pipeline, X, y, cv=4, scoring="roc_auc_ovr")
+scores = cross_val_score(pipeline, X, y, cv=2, scoring="roc_auc_ovr")
 print(f"ROC AUC with skrub: {scores.mean():.3f} (+/- {scores.std():.3f}), time: {time.time()-start_time:.1f} s")
+
+# %%
+#
+# Overall, skrub preprocessing helps TabICL to achieve a larger ROC AUC on this dataset.
+# It increases the runtime because strings get encoded into multiple columns.

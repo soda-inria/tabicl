@@ -63,8 +63,11 @@ pretrain = [
     "xgboost",  # used in the TabICLv1 prior
     "wandb",  # logging in pre-training
 ]
+test = [
+    "pandas",
+]
 all = [
-    "tabicl[doc,forecast,shap,pretrain]",
+    "tabicl[doc,forecast,shap,pretrain,test]",
 ]
 
 [build-system]
@@ -87,10 +90,7 @@ features = []
 [tool.hatch.envs.hatch-test]
 default-args = ["tests"]
 installer = "uv"
-features = []
-
-[tool.pytest.ini_options]
-pythonpath = "src"  # to allow importing tabicl instead of src.tabicl
+features = ["test"]
 
 [tool.hatch.envs.types]
 extra-dependencies = [
