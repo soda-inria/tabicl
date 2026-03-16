@@ -105,6 +105,26 @@ div.card-body details[open] summary i {
 
 /* sphinx-gallery */
 
+/* Use wider cards for tutorial thumbnails. */
+.sphx-glr-thumbnails {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sphx-glr-thumbcontainer .figure {
+  width: 220px;
+}
+
+.sphx-glr-thumbcontainer img {
+  max-width: 220px;
+  max-height: 112px;
+}
+
+/* Remove tooltip text/overlay on gallery thumbnail hover. */
+.sphx-glr-thumbcontainer[tooltip]:hover::before,
+.sphx-glr-thumbcontainer[tooltip]:hover::after {
+  display: none;
+}
+
 /* add padding to images */
 .bd-article img {
   height: unset !important;
@@ -252,6 +272,17 @@ html[data-theme="light"] {
 
 .bd-footer a {
   color: var(--pst-color-info-highlight);
+}
+
+/* Hide bottom previous/next page navigation. */
+.prev-next-footer,
+.prev-next-area {
+  display: none !important;
+}
+
+/* Hide right sidebar "This Page" / "Show Source" block. */
+.sidebar-secondary-item [aria-label="source link"] {
+  display: none !important;
 }
 
 /** Adapt bootstrap colors ************************/
