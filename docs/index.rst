@@ -117,6 +117,7 @@ offloading.
 .. image:: ./figures/runtime_tabpfnv25_tabiclv2.png
    :width: 70%
    :alt: Runtimes for different hardware and sample sizes
+   :align: center
 
 **What dataset sizes work well?** TabICLv2 is pre-trained on datasets
 between 300 and 48K training samples. However, it can generalize to
@@ -125,16 +126,18 @@ datasets with 600K samples. We have not tested if TabICL generalizes to
 datasets smaller than 300 samples.
 
 .. image:: ./figures/tabiclv2_perf_vs_n_samples.png
-   :width: 70%
+   :width: 50%
    :alt: Average rank vs. number of samples
+   :align: center
 
 **What about the number of columns?** TabICLv2 is pre-trained on
 datasets between 2 and 100 columns. We see good generalization to more
 columns and don’t know where the limit is.
 
 .. image:: ./figures/tabiclv2_perf_vs_n_features.png
-   :width: 70%
+   :width: 50%
    :alt: Average rank vs. number of features
+   :align: center
 
 Results from state-of-the-art research
 ----------------------------------------
@@ -167,8 +170,9 @@ to even larger datasets (e.g., 500K samples) through CPU and disk
 offloading, though its accuracy may degrade at some point.
 
 .. image:: ./figures/pareto_front_improvability_tabarena.png
-   :width: 70%
+   :width: 50%
    :alt: Model comparison on TabArena
+   :align: center
 
 
 Citation
