@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import make_moons
-from sklearn.metrics import accuracy_score, d2_brier_score
+from sklearn.metrics import roc_auc_score
 from sklearn.calibration import CalibrationDisplay
 from tabicl import TabICLClassifier
 
@@ -104,42 +104,26 @@ plt.show()
 # Evaluate model performance
 # --------------------------
 #
-# We can evaluate the quality of the model discrete class predictions by
-# computing the accuracy on the test set. A data point is predicted as
-# belonging to the positive class if the predicted probability of the positive
-# class is greater than a threshold of 0.5.
+# For probabilistic binary classifiers, ROC AUC summarizes the ranking quality
+# of predicted probabilities independently of a fixed classification threshold.
 #
-# Since the classification task is noisy, it is expected that that the accuracy
-# will not be perfect:
-y_pred = tabicl.predict(X_test)
-accuracy = accuracy_score(y_test, y_pred)
-print(f"Test accuracy: {accuracy:.3f}")
+# A ROC AUC of 1.0 is perfect and 0.5 corresponds to random guessing. Since the
+# classification task is noisy, we expect a value between those two extremes.
 
-# %%
-#
-# Accuracy is intuitive to understand but it is not a complete measure of model
-# performance. In particular whenever the operational cost of a false positive
-# prediction is very different from the cost of a false negative, it is better
-# to quantify the model performance using an application-specific metric and
-# tune the threshold based on that metric.
-#
-# If we do not yet know the cost of a false positive and a false negative, we
-# can still assess the quality of the model's probabilistic predictions (before
-# thresholding) by computing the fraction of the Brier score explained by the
-# model. Higher values of the D2 Brier Score are better and 1.0 means the model
-# makes perfect predictions. Again, since the classification task is noisy, it
-# is expected that that the D2 Brier Score will be lower than 1.
-
-y_proba = tabicl.predict_proba(X_test)
-d2_bs = d2_brier_score(y_test, y_proba)
-print(f"Test D2 Brier Score: {d2_bs:.3f}")
+roc_auc = roc_auc_score(y_test, y_proba[:, 1])
+print(f"Test ROC AUC: {roc_auc:.3f}")
 
 # %%
 #
 # In complement, we can also look at the calibration of the model's
 # probabilistic predictions by plotting the calibration curve:
 
-_ = CalibrationDisplay.from_estimator(tabicl, X_test, y_test, strategy="quantile", n_bins=7)
+fig, ax = plt.subplots(figsize=(3.8, 3.2), constrained_layout=True)
+_ = CalibrationDisplay.from_predictions(
+    y_test, y_proba[:, 1], strategy="quantile", n_bins=7, ax=ax,
+)
+ax.set_title("Calibration curve")
+plt.show()
 
 # %%
 #
