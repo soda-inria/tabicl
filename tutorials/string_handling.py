@@ -1,5 +1,5 @@
 """
-Handling strings and dates with TabICL + skrub
+Handling strings and dates with skrub
 ============================
 
 This example demonstrates how skrub can be used to preprocess datasets with strings or dates for TabICL
@@ -10,7 +10,20 @@ to make better predictions.
 # Preparing the dataset
 # -------------------------------------
 #
-# skrub provides datasets with strings and/or dates. We use the "open payments" dataset.
+# Real-world datasets often contain complex heterogeneous data that benefits from more sophisticated preprocessing.
+# For these scenarios, we recommend [skrub](https://skrub-data.org/stable/index.html),
+# a powerful library designed specifically for advanced tabular data preparation.
+#
+# Why use skrub?
+# - Handles diverse data types (numerical, categorical, text, datetime, etc.)
+# - Provides robust preprocessing for dirty data
+# - Offers sophisticated feature engineering capabilities
+# - Supports multi-table integration and joins
+#
+# To install skrub, use `pip install -U skrub`
+#
+# TabICL can handle numerical and categorical columns natively, but will treat string columns as categorical.
+# Here, we show how using skrub can provide TabICL with better string encoding. We use the "open payments" dataset.
 
 from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import make_pipeline
@@ -29,6 +42,7 @@ X, y = X.iloc[perm[:600]], y[perm[:600]]  # subsample for fast experiments
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', None)
+print(f'First 5 rows of the dataset:')
 print(X.head())
 print()
 
@@ -48,10 +62,12 @@ scores = cross_val_score(reg, X, y, cv=2, scoring="roc_auc_ovr")
 print(f"ROC AUC without skrub: {scores.mean():.3f} (+/- {scores.std():.3f}), time: {time.time()-start_time:.1f} s")
 
 # %%
-# TabICL without skrub
+# TabICL with skrub
 # -------------------------------------
 #
 # With skrub, we can embed high-cardinality string columns using semantics-aware methods into numerical features.
+# The [TableVectorizer](https://skrub-data.org/stable/reference/generated/skrub.TableVectorizer.html)
+# applies different conversions to columns of a dataframe.
 # Here, for efficiency reasons, we use the StringEncoder with lower-dimensional embeddings
 # for all string columns with at least 10 distinct values.
 # For lower-cardinality string columns, we use "passthrough", so they are directly forwarded to TabICL,
@@ -60,7 +76,6 @@ print(f"ROC AUC without skrub: {scores.mean():.3f} (+/- {scores.std():.3f}), tim
 # which is not the recommended way to handle categoricals for TabICL.)
 # We also provide advanced settings for the DatetimeEncoder,
 # even though our example dataset here does not contain dates.
-#
 
 pipeline = make_pipeline(
     TableVectorizer(
