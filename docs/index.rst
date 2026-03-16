@@ -66,9 +66,8 @@ Tutorials and functionality
   To handle string and date columns, see the :doc:`tutorial on using skrub <tutorials/string_handling>`.
 - **Time-series forecasting**: See our
   :doc:`tutorial on time-series forecasting with TabICL <tutorials/time_series_forecasting>`.
-- **Nanotabicl**: `Our separate repository <https://github.com/soda-inria/nanotabicl>`__
-  provides a minimal implementation
-  of the TabICLv2 architecture for educational and experimental purposes.
+- **Minimal architecture implementation**: `NanoTabICL <https://github.com/soda-inria/nanotabicl>`__
+  provides a minimal implementation of the TabICLv2 architecture for educational and experimental purposes.
 
 Available models
 ----------------
@@ -217,6 +216,12 @@ Star history
    :target: https://pypistats.org/packages/tabicl
 .. |Star History Chart| image:: https://api.star-history.com/svg?repos=soda-inria/tabicl&type=date&legend=top-left
    :target: https://www.star-history.com/#soda-inria/tabicl&type=date&legend=top-left
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   api
 
 .. toctree::
    :maxdepth: 2
