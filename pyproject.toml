@@ -44,6 +44,8 @@ doc = [
   "matplotlib",
   "pydata-sphinx-theme",
   "sphinxext-opengraph",
+  "skrub",
+  "pandas",
 ]
 forecast = [                                                                                                                                                                                                        
     "pandas>=2.1.2",

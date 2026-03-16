@@ -720,8 +720,16 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         X = validate_data(self, X, reset=False, dtype=None, skip_check_array=True)
 
         # Detect all-NaN columns (used by SHAP's feature masking approach)
-        feature_mask = np.all(np.isnan(np.asarray(X, dtype=np.float64)), axis=0)
-        if not np.any(feature_mask):
+        if hasattr(X, "columns"):  # check for dataframe without importing pandas
+            feature_mask = X.isna().all(axis=0).to_numpy()
+        else:
+            arr = np.asarray(X)
+            if np.issubdtype(arr.dtype, np.number):
+                feature_mask = np.isnan(arr).all(axis=0)
+            else:
+                feature_mask = None
+
+        if feature_mask is not None and not np.any(feature_mask):
             feature_mask = None
 
         # Fill masked columns so that transformers don't choke on NaN
