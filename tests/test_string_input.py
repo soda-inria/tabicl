@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn.base import is_classifier, is_regressor
 
 from tabicl import TabICLClassifier, TabICLRegressor
 
@@ -14,7 +15,7 @@ def test_handles_string_inputs_without_crashing(Estimator, container):
 
     num1 = rng.randn(n)
     num2 = rng.randn(n)
-    obj_str = rng.choice(["a", "b", "c"], size=n)
+    obj_str = pd.Series(rng.choice(["a", "b", "c"], size=n), dtype=object)
     str_dtype = pd.Series(rng.choice(["x", "y", "z"], size=n), dtype="string")
 
     if container == "dataframe":
@@ -44,10 +45,12 @@ def test_handles_string_inputs_without_crashing(Estimator, container):
 
     est = Estimator()
 
-    if getattr(est, "_estimator_type", None) == "classifier":
+    if is_classifier(est):
         y = rng.randint(0, 2, size=n)
-    else:
+    elif is_regressor(est):
         y = rng.randn(n)
+    else:
+        raise ValueError(f'Estimator is neither classifier nor regressor')
 
     est.fit(X, y)
     preds = est.predict(X)
