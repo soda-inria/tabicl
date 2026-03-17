@@ -116,7 +116,22 @@ div.card-body details[open] summary i {
 
 .sphx-glr-thumbcontainer img {
   max-width: 220px;
-  max-height: 112px;
+}
+
+/* On narrow screens, make thumbnails responsive. */
+@media (max-width: 480px) {
+  .sphx-glr-thumbnails {
+    grid-template-columns: 1fr;
+  }
+  
+  .sphx-glr-thumbcontainer .figure {
+    width: 100%;
+  }
+  
+  .sphx-glr-thumbcontainer img {
+    max-width: 100%;
+    height: auto;
+  }
 }
 
 /* Remove tooltip text/overlay on gallery thumbnail hover. */
