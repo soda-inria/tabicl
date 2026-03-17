@@ -3,6 +3,16 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import warnings
+
+# Suppress known gluonts warning on Python >= 3.14 during docs builds.
+warnings.filterwarnings(
+    "ignore",
+    message="Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.",
+    category=UserWarning,
+    module="gluonts\\.pydantic",
+)
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
@@ -41,6 +51,7 @@ sphinx_gallery_conf = {
 autodoc_default_options = {
     "inherited-members": False,
 }
+autodoc_typehints = "none"
 
 # intersphinx mapping
 intersphinx_mapping = {
@@ -60,5 +71,19 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 html_theme = 'pydata_sphinx_theme'
 html_title = "TabICL" # A simpler title in the landing
 
+# The name of an image file (within the static path) to use as favicon of the
+# docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
+# pixels large.
+html_favicon = "TabICL.ico"
+
 html_static_path = ['_static']
 html_css_files = ["css/custom.css"]
+
+# -- Theme Options -----------------------------------------------------------
+
+html_theme_options = {
+    "logo": {
+        "image_light": "TabICL_logo.svg",
+        "image_dark": "TabICL_logo_dark.svg",
+    },
+}

@@ -606,6 +606,10 @@ class QuantileDistribution(Distribution):
         self.q_l = self.quantiles[..., 0]  # Shape: (*batch_shape,)
         self.q_r = self.quantiles[..., -1]  # Shape: (*batch_shape,)
 
+        # 1D boundaries for searchsorted (same value for all batch elements)
+        self.alpha_lo_1d = self.alpha_levels[:-1]  # (S,)
+        self.alpha_hi_1d = self.alpha_levels[1:]  # (S,)
+
     def _setup_tails(self):
         """Setup tail parameters inferred from boundary quantiles."""
         cfg = self.cfg
@@ -788,43 +792,26 @@ class QuantileDistribution(Distribution):
         Tensor
             Shape: ``(*batch_shape, n)``.
         """
-        n_extra = alpha.dim() - len(self._batch_shape)
-        seg_dim = len(self._batch_shape)
+        seg_idx = (
+            torch.searchsorted(
+                self.alpha_lo_1d.contiguous(),
+                alpha.contiguous(),
+                right=True,
+            )
+            - 1
+        )
+        seg_idx = seg_idx.clamp(0, self.num_segments - 1)  # (*batch_shape, n)
 
-        # Expand segment data for broadcasting
-        # From (*batch_shape, num_segments) to (*batch_shape, num_segments, 1, ..., 1)
-        alpha_lo = self.alpha_lo
-        alpha_hi = self.alpha_hi
-        q_lo = self.q_lo
-        q_hi = self.q_hi
+        q_lo_g = self.q_lo.gather(-1, seg_idx)
+        q_hi_g = self.q_hi.gather(-1, seg_idx)
+        alpha_lo_g = self.alpha_lo.gather(-1, seg_idx)
+        alpha_hi_g = self.alpha_hi.gather(-1, seg_idx)
 
-        for _ in range(n_extra):
-            alpha_lo = alpha_lo.unsqueeze(-1)
-            alpha_hi = alpha_hi.unsqueeze(-1)
-            q_lo = q_lo.unsqueeze(-1)
-            q_hi = q_hi.unsqueeze(-1)
+        t = (alpha - alpha_lo_g) / (alpha_hi_g - alpha_lo_g).clamp(min=self.tol)
+        result = q_lo_g + t.clamp(0.0, 1.0) * (q_hi_g - q_lo_g)
 
-        # Expand alpha for segment dimension: (*batch_shape, 1, n)
-        alpha_exp = alpha.unsqueeze(seg_dim)
-
-        # Find which segment each alpha belongs to
-        in_segment = (alpha_exp >= alpha_lo) & (alpha_exp < alpha_hi)
-
-        # Linear interpolation: Q = q_lo + t * (q_hi - q_lo) where t = (α - α_lo) / Δα
-        t = (alpha_exp - alpha_lo) / torch.clamp(alpha_hi - alpha_lo, min=self.tol)
-        t = torch.clamp(t, 0.0, 1.0)
-        q_all_seg = q_lo + t * (q_hi - q_lo)
-
-        # Select correct segment via masked sum
-        mask = in_segment.float()
-        mask_sum = mask.sum(dim=seg_dim, keepdim=True).clamp(min=1.0)
-        result = (q_all_seg * mask).sum(dim=seg_dim) / mask_sum.squeeze(seg_dim)
-
-        # Handle α >= α_R
         q_r_exp = self._expand_to_alpha(self.q_r, alpha)
-        result = torch.where(alpha >= self.alpha_r, q_r_exp, result)
-
-        return result
+        return torch.where(alpha >= self.alpha_r, q_r_exp, result)
 
     def cdf(self, z: Tensor) -> Tensor:
         """Compute cumulative distribution function :math:`F(z) = P(Z \\le z)`.
@@ -928,37 +915,39 @@ class QuantileDistribution(Distribution):
 
     def _cdf_spline(self, z: Tensor) -> Tensor:
         """CDF in spline region via inverse linear interpolation."""
-        n_extra = z.dim() - len(self._batch_shape)
-        seg_dim = len(self._batch_shape)
+        # Handle z: (*batch_shape,) or (*batch_shape, n)
+        added_dim = z.dim() == len(self._batch_shape)
+        if added_dim:
+            z = z.unsqueeze(-1)  # (*batch_shape, 1)
 
-        # Expand segment data
-        alpha_lo = self.alpha_lo
-        alpha_hi = self.alpha_hi
-        q_lo = self.q_lo
-        q_hi = self.q_hi
+        # N-D batched: q_lo (*batch_shape, S), z (*batch_shape, n) → same batch dims required
+        seg_idx = (
+            torch.searchsorted(
+                self.q_lo.contiguous(),
+                z.contiguous(),
+                right=True,
+            )
+            - 1
+        )
+        seg_idx = seg_idx.clamp(0, self.num_segments - 1)
 
-        for _ in range(n_extra):
-            alpha_lo = alpha_lo.unsqueeze(-1)
-            alpha_hi = alpha_hi.unsqueeze(-1)
-            q_lo = q_lo.unsqueeze(-1)
-            q_hi = q_hi.unsqueeze(-1)
+        q_lo_g = self.q_lo.gather(-1, seg_idx)
+        q_hi_g = self.q_hi.gather(-1, seg_idx)
+        alpha_lo_g = self.alpha_lo.gather(-1, seg_idx)
+        alpha_hi_g = self.alpha_hi.gather(-1, seg_idx)
 
-        z_exp = z.unsqueeze(seg_dim)
-
-        in_segment = (z_exp >= q_lo) & (z_exp < q_hi)
-
-        # Inverse interpolation: α = α_lo + t * Δα where t = (z - q_lo) / Δq
-        t = (z_exp - q_lo) / torch.clamp(q_hi - q_lo, min=self.tol)
-        t = torch.clamp(t, 0.0, 1.0)
-        alpha_all = alpha_lo + t * (alpha_hi - alpha_lo)
-
-        mask = in_segment.float()
-        mask_sum = mask.sum(dim=seg_dim, keepdim=True).clamp(min=1.0)
-        result = (alpha_all * mask).sum(dim=seg_dim) / mask_sum.squeeze(seg_dim)
+        t = (z - q_lo_g) / (q_hi_g - q_lo_g).clamp(min=self.tol)
+        result = alpha_lo_g + t.clamp(0.0, 1.0) * (alpha_hi_g - alpha_lo_g)
 
         q_r_exp = self._expand_to_z(self.q_r, z)
-        result = torch.where(z >= q_r_exp, torch.tensor(self.alpha_r, device=z.device, dtype=z.dtype), result)
+        result = torch.where(
+            z >= q_r_exp,
+            torch.tensor(self.alpha_r, device=z.device, dtype=z.dtype),
+            result,
+        )
 
+        if added_dim:
+            result = result.squeeze(-1)
         return result
 
     def _icdf_derivative(self, alpha: Tensor) -> Tensor:
@@ -1041,28 +1030,28 @@ class QuantileDistribution(Distribution):
 
     def _deriv_spline(self, alpha: Tensor) -> Tensor:
         """Spline derivative: piecewise constant slopes."""
-        n_extra = alpha.dim() - len(self._batch_shape)
-        seg_dim = len(self._batch_shape)
+        added_dim = alpha.dim() == len(self._batch_shape)
+        if added_dim:
+            alpha = alpha.unsqueeze(-1)  # (*batch_shape, 1)
 
-        slopes = self.slopes
-        alpha_lo = self.alpha_lo
-        alpha_hi = self.alpha_hi
+        seg_idx = (
+            torch.searchsorted(
+                self.alpha_lo_1d.contiguous(),
+                alpha.contiguous(),
+                right=True,
+            )
+            - 1
+        )
+        seg_idx = seg_idx.clamp(0, self.num_segments - 1)
 
-        for _ in range(n_extra):
-            slopes = slopes.unsqueeze(-1)
-            alpha_lo = alpha_lo.unsqueeze(-1)
-            alpha_hi = alpha_hi.unsqueeze(-1)
+        result = self.slopes.gather(-1, seg_idx)
 
-        alpha_exp = alpha.unsqueeze(seg_dim)
-        in_segment = (alpha_exp >= alpha_lo) & (alpha_exp < alpha_hi)
-
-        mask = in_segment.float()
-        mask_sum = mask.sum(dim=seg_dim, keepdim=True).clamp(min=1.0)
-        result = (slopes * mask).sum(dim=seg_dim) / mask_sum.squeeze(seg_dim)
-
-        no_segment = mask.sum(dim=seg_dim) < 0.5
+        # Reproduce original: return 1.0 when alpha is below all segments
+        no_segment = alpha < self.alpha_levels[0]
         result = torch.where(no_segment, torch.ones_like(result), result)
 
+        if added_dim:
+            result = result.squeeze(-1)
         return result
 
     def log_prob(self, z: Tensor) -> Tensor:

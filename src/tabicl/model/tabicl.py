@@ -561,6 +561,8 @@ class TabICL(nn.Module):
 
             - "mean", "variance", "median": (B, test_size)
             - "quantiles": (B, test_size, len(alphas))
+            - "raw_quantiles": (B, test_size, num_quantiles), where `num_quantiles` denotes 
+                the number of quantile levels configured in the model architecture.
         """
         assert self.max_classes == 0, "predict_stats is only applicable for regression tasks"
 
@@ -588,6 +590,8 @@ class TabICL(nn.Module):
             results["quantiles"] = dist.icdf(
                 alpha=torch.tensor(alphas, device=raw_quantiles.device, dtype=raw_quantiles.dtype)
             )
+        if "raw_quantiles" in output_type:
+            results["raw_quantiles"] = raw_quantiles
 
         if len(output_type) == 1:
             return results[output_type[0]]
@@ -847,6 +851,8 @@ class TabICL(nn.Module):
 
             - "mean", "variance", "median": (B, test_size)
             - "quantiles": (B, test_size, len(alphas))
+            - "raw_quantiles": (B, test_size, num_quantiles), where `num_quantiles` denotes 
+                the number of quantile levels configured in the model architecture.
         """
         assert self.max_classes == 0, "predict_stats_with_cache is only applicable for regression tasks"
 
@@ -884,6 +890,8 @@ class TabICL(nn.Module):
             results["quantiles"] = dist.icdf(
                 alpha=torch.tensor(alphas, device=raw_quantiles.device, dtype=raw_quantiles.dtype)
             )
+        if "raw_quantiles" in output_type:
+            results["raw_quantiles"] = raw_quantiles
 
         if len(output_type) == 1:
             return results[output_type[0]]

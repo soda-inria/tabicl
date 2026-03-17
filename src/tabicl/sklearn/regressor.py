@@ -23,6 +23,7 @@ from .sklearn_utils import validate_data, _num_samples
 from tabicl import TabICLCache, InferenceConfig
 from tabicl.model.tabicl import TabICL
 
+
 class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
     """Tabular In-Context Learning (TabICL) Regressor with scikit-learn interface.
 
@@ -639,6 +640,7 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
             - If ``"median"``, returns the median over the predicted distribution.
             - If ``"quantiles"``, returns the quantiles of the predicted distribution.
               The parameter ``alphas`` determines which quantiles are returned.
+            - If ``"raw_quantiles"``, returns the raw quantiles (direct outputs of TabICL).
             - If a list of str, returns multiple types of outputs as specified in the list.
 
         alphas : list of float or None, default=None
@@ -653,7 +655,7 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         np.ndarray of shape (n_samples,) or dict[str, np.ndarray]
             An array of shape ``(n_samples,)`` if ``output_type`` is ``"mean"`` or
             ``"median"``, or an array of shape ``(n_samples, n_quantiles)`` if
-            ``output_type`` is ``"quantiles"``.
+            ``output_type`` is ``"quantiles"`` or ``"raw_quantiles"``.
 
             If ``output_type`` is a list of str, returns a dictionary with keys as
             specified in the list and values as the corresponding predictions.
@@ -697,8 +699,17 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         X = validate_data(self, X, reset=False, dtype=None, skip_check_array=True)
 
         # Detect all-NaN columns (used by SHAP's feature masking approach)
-        feature_mask = np.all(np.isnan(np.asarray(X, dtype=np.float64)), axis=0)
-        if not np.any(feature_mask):
+        if hasattr(X, "columns"):  # check for dataframe without importing pandas
+            feature_mask = X.isna().all(axis=0).to_numpy()
+        else:
+            arr = np.asarray(X)
+            if np.issubdtype(arr.dtype, np.number):
+                feature_mask = np.isnan(arr).all(axis=0)
+            else:
+                # object dtype: v != v is True only for NaN in IEEE 754, safe for strings too
+                feature_mask = np.array([all(v != v for v in arr[:, i]) for i in range(arr.shape[1])])
+
+        if feature_mask is not None and not np.any(feature_mask):
             feature_mask = None
 
         # Fill masked columns so that transformers don't choke on NaN

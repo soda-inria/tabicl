@@ -138,7 +138,6 @@ clf = TabICLClassifier(
 - **TabICLv1.1**: TabICLv1 post-trained on an early version of the v2 prior. Classification only.
 - **TabICLv1**: Original model. Classification only.
   TabICLv1 and v1.1 originally used `n_estimators=32`; we reduced the default to 8 afterwards.
-
 ## Time series forecasting
 
 TabICL can be used for zero-shot time series forecasting via `TabICLForecaster`.
