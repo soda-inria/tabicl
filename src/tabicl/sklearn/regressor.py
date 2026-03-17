@@ -705,7 +705,8 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
             if np.issubdtype(arr.dtype, np.number):
                 feature_mask = np.isnan(arr).all(axis=0)
             else:
-                feature_mask = None
+                # object dtype: v != v is True only for NaN in IEEE 754, safe for strings too
+                feature_mask = np.array([all(v != v for v in arr[:, i]) for i in range(arr.shape[1])])
 
         if feature_mask is not None and not np.any(feature_mask):
             feature_mask = None
