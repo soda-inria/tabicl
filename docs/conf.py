@@ -51,6 +51,7 @@ sphinx_gallery_conf = {
 autodoc_default_options = {
     "inherited-members": False,
 }
+autodoc_typehints = "none"
 
 # intersphinx mapping
 intersphinx_mapping = {
