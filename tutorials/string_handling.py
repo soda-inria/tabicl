@@ -36,15 +36,13 @@ from tabicl import TabICLClassifier
 
 data = skrub.datasets.fetch_open_payments()
 X, y = data.X, data.y
-np.random.seed(0)
-perm = np.random.permutation(y.shape[0])
-X, y = X.iloc[perm[:600]], y[perm[:600]]  # subsample for fast experiments
+rng = np.random.RandomState(0)
+subset_indices = rng.permutation(y.shape[0])[:600]
+X, y = X.iloc[subset_indices], y[subset_indices]  # subsample for fast experiments
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', None)
-print(f'First 5 rows of the dataset:')
-print(X.head())
-print()
+X
 
 # %%
 # TabICL without skrub
