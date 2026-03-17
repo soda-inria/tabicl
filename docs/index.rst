@@ -65,7 +65,7 @@ Tutorials and functionality
 
 - **Basic usage**: :doc:`tutorial <tutorials/getting_started>`.
 - **Model parameters**: See :class:`tabicl.TabICLClassifier` and :class:`tabicl.TabICLRegressor`.
-- **Probabilistic classification**: :doc:`tutorial <tutorials/getting_started>`.
+- **Probabilistic classification**: :doc:`tutorial <tutorials/classification_2D_proba>`.
 - **Quantile regression**: :doc:`tutorial <tutorials/regression_heteroscedastic_1D>`.
 - **Preprocessing**: TabICL will automatically use simple preprocessing to handle missing values and categorical features.
   To handle string and date columns, see the :doc:`tutorial on using skrub <tutorials/string_handling>`.
