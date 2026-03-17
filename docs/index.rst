@@ -61,7 +61,7 @@ install it first with:
 Then install ``tabicl`` as above.
 
 Tutorials and functionality
-----------------------
+---------------------------
 
 - **Basic usage**: :doc:`tutorial <tutorials/getting_started>`.
 - **Model parameters**: See :class:`tabicl.TabICLClassifier` and :class:`tabicl.TabICLRegressor`.
@@ -77,12 +77,23 @@ Tutorials and functionality
 Available models
 ----------------
 
-+--------------+---------------------------------+---------------------------+
-| Model        | Classification checkpoint       | Regression checkpoint     |
-+==============+=================================+===========================+
-| **TabICLv2** (`arXiv <https://arxiv.org/abs/2602.11139>`__) | ``tabicl-classifier-v2-20260212.ckpt`` | ``tabicl-regressor-v2-20260212.ckpt`` |
-|  **TabICL v1.1** (May 2025, no paper) |  `tabicl-classifier-v1.1-20250506.ckpt`| — |
-| **TabICLv1** (`ICML 2025 <https://arxiv.org/abs/2502.05564>`__) | `tabicl-classifier-v1-20250208.ckpt` | — |
+
+.. list-table::
+   :header-rows: 1
+
+   * - Model
+     - Classification checkpoint
+     - Regression checkpoint
+   * - **TabICLv2** (`arXiv <https://arxiv.org/abs/2602.11139>`__)
+     - ``tabicl-classifier-v2-20260212.ckpt``
+     - ``tabicl-regressor-v2-20260212.ckpt``
+   * - **TabICL v1.1** (May 2025, no paper)
+     - ``tabicl-classifier-v1.1-20250506.ckpt``
+     - —
+   * - **TabICLv1** (`ICML 2025 <https://arxiv.org/abs/2502.05564>`__)
+     - ``tabicl-classifier-v1-20250208.ckpt``
+     - —
+
 
 - **TabICLv2**: Our state-of-the-art model, supporting both
   classification and regression. Strongly improved accuracy over v1
