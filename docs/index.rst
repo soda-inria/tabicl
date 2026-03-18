@@ -202,48 +202,50 @@ FAQ
 ---
 
 **How does TabICL work?**
-TabICL is a tabular foundation model. It uses in-context
-learning (ICL) to learn from new data in a single forward pass through
-a Transformer model. In practice, you provide training data in ``fit``
-and get predictions in ``predict``. Internally, nothing happens when calling
-``fit``: the training data is just stored for later, and model weights are
-loaded if necessary. Everything happens in ``predict``, which under the hood
-performs a forward pass using ``X_train``, ``y_train``, and
-``X_test``, i.e., ``y_pred = model(X_train, y_train, X_test)``. TabICL's
-learning capabilities come from pre-training on millions of synthetic datasets.
 
+TabICL is a transformer-based tabular foundation model that relies on in-context learning
+to learn the underlying mapping between features and target from a given training set, and
+then predict on the test set, all in a single forward pass. In practice, you provide training
+data in ``fit`` and get predictions in ``predict_proba`` or ``predict``. During ``fit``, we preprocess
+the training data, create multiple transformed dataset views (e.g., by shuffling features),
+load the pre-trained TabICL model, and optionally pre-compute KV caches for the training data
+to speed up inference (controlled by the ``kv_cache`` init parameter). During ``predict_proba`` or 
+``predict``, we process the test data, forward each dataset view through the TabICL model via 
+in-context learning, and average predictions across all ensemble members. TabICL's learning 
+capabilities come from pre-training on millions of synthetic datasets.
 
 **What is the architecture of TabICL?**
-TabICL is based on a standard Transformer architecture, with some modifications
-to better handle tabular data. It includes column-wise attention,
-row-wise attention, and a final Transformer performing attention over the
-samples. Detailed architecture diagrams and descriptions can be found in our
-`TabICLv1 <https://arxiv.org/abs/2502.05564>`__ and
-`TabICLv2 <https://arxiv.org/abs/2602.11139>`__ papers. If code is more your
-thing, `NanoTabICL <https://github.com/soda-inria/nanotabicl>`__ provides a
-minimal implementation of the TabICLv2 architecture for educational and
-experimental purposes.
+
+TabICL is based on the Transformer architecture, with several improvements to better handle
+tabular data. It processes input through three stages: a column-wise Transformer that embeds
+each feature, a row-wise Transformer that aggregates features into row representations, and
+a dataset-wise Transformer that performs in-context learning over training and test samples
+to produce predictions. Detailed architecture diagrams and descriptions can be found in our
+`TabICLv1 <https://arxiv.org/abs/2502.05564>`__ and `TabICLv2 <https://arxiv.org/abs/2602.11139>`__
+papers. If code is more your thing, `NanoTabICL <https://github.com/soda-inria/nanotabicl>`__
+provides a minimal implementation of the TabICLv2 architecture for educational and experimental purposes.
 
 **Do I need GPUs to use TabICL?**
-TabICL works on both CPU and GPU, and can run on a laptop for many
-practical datasets. A GPU is recommended when datasets get larger or
-when you need faster predictions. On modern GPUs, TabICL can be much
-faster than CPU and can scale to very large datasets (a million samples) in a
-few minutes. On an H100 GPU, TabICLv2 handles a dataset with
-50,000 samples and 100 features in under 10 seconds. Through KV caching, TabICL
-supports faster repeated inference on the same training data.
+
+TabICL works on both CPU and GPU, and performs well on a GPU-free laptop for medium-sized
+datasets within a reasonable time. However, a GPU is recommended when datasets get larger
+or when you need faster predictions. Thanks to architectural
+efficiency and engineering efforts, TabICL can scale to very large datasets of up
+to a million samples, though you need to enable CPU/disk offloading to ease GPU memory
+requirements. On an H100 GPU, TabICLv2 handles a dataset with 50K samples and 100 features
+within 10 seconds.
 
 **What dataset sizes work well?**
-TabICLv2 is pre-trained on datasets between 300 and 48K training
-samples. However, it can generalize to larger datasets: we have seen good
-performance on some datasets with 600K samples. We have not tested whether
-TabICL generalizes to datasets smaller than 300 samples.
+
+TabICLv2 is pre-trained on datasets with 300 to 60K training samples.
+However, it can generalize beyond this range and we have observed good
+performance on datasets with 600K samples. Generalization to datasets
+smaller than 300 samples has not yet been tested.
 
 **What about the number of columns?**
-TabICLv2 is pre-trained on datasets between 2 and 100 columns. In
-practice, it seems to generalize well to more columns, but the exact limit is
-currently unknown.
 
+TabICLv2 is pre-trained on datasets with 2 to 100 columns. In practice,
+it generalizes well beyond this range, though the exact upper limit remains unknown.
 
 Citation
 --------
