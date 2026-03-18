@@ -11,7 +11,7 @@
         <div class="col-md-8">
             <ul class="sk-landing-header-body">
             <li>Fully open</li>
-            <li>Excellent scikit-learn compatiblity</li>
+            <li>Scikit-learn compatible · pip-installable</li>
             <li>Easy-to-use and powerful</li>
             </ul>
         </div>
@@ -56,7 +56,7 @@ Calling `fit` just stores the data, learning happens during `predict`.
   tabular performance without expansive model training and selection.
 - AI researchers interested in tabular learning, who want to build on top of a
   strong open foundation model.
-- urious minds who want to explore the capabilities of tabular foundation models!
+- Curious minds who want to explore the capabilities of tabular foundation models!
 
 The `TabICL repository <https://github.com/soda-inria/tabicl>`__ contains the
 official implementation of `TabICLv2 <https://arxiv.org/abs/2602.11139>`__
