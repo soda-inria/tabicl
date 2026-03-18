@@ -38,30 +38,14 @@
 |test| |PyPI version| |Downloads|
 
 If you usually rely on models like XGBoost or LightGBM, TabICL offers a
-different approach: **no dataset-specific training, no hyperparameter search,
-strong performance out of the box**. You simply provide your data, and TabICL
-makes predictions using a pre-trained model.
+simpler alternative: **no training, no hyperparameter tuning, strong
+performance out of the box.** Just provide your data, and get predictions from
+a pre-trained model.
 
-**TabICL** is an open tabular foundation model, providing strong performance
-for regression and classification tasks out-of-the-box. It can also be extended
-to many other tabular tasks, including time-series forecasting
-(see :doc:`tutorials <tutorials/index>`).  You can use it
-with the familiar scikit-learn ``fit`` / ``predict`` API. Under the hood,
-predictions are produced by a pre-trained Transformer in a single forward pass.
-Calling `fit` just stores the data, learning happens during `predict`.
-
-**Who is TabICL for?**
-
-- Applied researchers, data scientits and ML teams who need high
-  tabular performance without expansive model training and selection.
-- AI researchers interested in tabular learning, who want to build on top of a
-  strong open foundation model.
-- Curious minds who want to explore the capabilities of tabular foundation models!
-
-The `TabICL repository <https://github.com/soda-inria/tabicl>`__ contains the
-official implementation of `TabICLv2 <https://arxiv.org/abs/2602.11139>`__
-(current default) and the original
-`TabICL <https://arxiv.org/abs/2502.05564>`__ (ICML 2025).
+TabICL is an open tabular foundation model for regression and classification,
+and can also be extended to other tasks such as time-series forecasting. It is
+compatible with the scikit-learn ``fit`` / ``predict`` API.
+Calling fit just stores the data, learning happens during predict.
 
 
 What TabICL can do
@@ -75,11 +59,11 @@ on the `TabArena <https://tabarena.ai>`__ and
 hyperparameter-tuned gradient boosted trees, as well as concurrent tabular
 foundation models.
 
-**Easy to use:** TabICL is easy to install with `pip`. It is also fully
-scikit-learn compliant, by notably giving access to the classical `fit` and
-`predict` methods of the scikit-learn API. It is also **open source**
-(including pre-training for v1, and soon for v2), with a
-permissive license.
+.. **Easy to use:** TabICL is easy to install with `pip`. It is also fully
+.. scikit-learn compliant, by notably giving access to the classical `fit` and
+.. `predict` methods of the scikit-learn API. It is also **open source**
+.. (including pre-training for v1, and soon for v2), with a
+.. permissive license.
 
 **Scalability:** TabICL shows excellent performance on benchmarks with
 300 to 100,000 training samples and up to 2,000 features. It can scale
@@ -201,12 +185,20 @@ Available models
 FAQ
 ---
 
+.. **Who is TabICL for?**
+
+.. - Applied researchers, data scientits and ML teams who need high
+..   tabular performance without expansive model training and selection.
+.. - AI researchers interested in tabular learning, who want to build on top of a
+..   strong open foundation model.
+.. - Curious minds who want to explore the capabilities of tabular foundation models!
+
 **How does TabICL work?**
 
 TabICL is a transformer-based tabular foundation model that relies on in-context learning
 to learn the underlying mapping between features and target from a given training set, and
 then predict on the test set, all in a single forward pass. In practice, you provide training
-data in ``fit`` and get predictions in ``predict_proba`` or ``predict``. During ``fit``, we preprocess
+data in ``fit`` and get predictions with ``predict_proba`` or ``predict``. During ``fit``, we preprocess
 the training data, create multiple transformed dataset views (e.g., by shuffling features),
 load the pre-trained TabICL model, and optionally pre-compute KV caches for the training data
 to speed up inference (controlled by the ``kv_cache`` init parameter). During ``predict_proba`` or 
@@ -246,6 +238,14 @@ smaller than 300 samples has not yet been tested.
 
 TabICLv2 is pre-trained on datasets with 2 to 100 columns. In practice,
 it generalizes well beyond this range, though the exact upper limit remains unknown.
+
+**Where can I find the source code?**
+
+The `TabICL repository <https://github.com/soda-inria/tabicl>`__ contains the
+official implementation of `TabICLv2 <https://arxiv.org/abs/2602.11139>`__
+(current default) and the original
+`TabICL <https://arxiv.org/abs/2502.05564>`__ (ICML 2025).
+
 
 Citation
 --------
