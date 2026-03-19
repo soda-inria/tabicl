@@ -13,6 +13,12 @@ def __getattr__(name):
             return TabICLForecaster
         except ImportError:
             raise ImportError(
-                "TabICLForecaster requires extra dependencies. " "Install with: pip install tabicl[forecast]"
+                "TabICLForecaster requires extra dependencies. Install with: pip install tabicl[forecast]"
             ) from None
+
+    if name == "TabICLUnsupervised":
+        from .unsupervised import TabICLUnsupervised
+
+        return TabICLUnsupervised
+
     raise AttributeError(f"module 'tabicl' has no attribute {name}")
