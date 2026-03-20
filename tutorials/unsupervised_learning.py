@@ -22,10 +22,6 @@ from tabicl import TabICLUnsupervised
 #    :class:`tabicl.TabICLRegressor`, :class:`tabicl.TabICLUnsupervised` is an
 #    experimental implementation, which has not been evaluated on large
 #    benchmarks. Use with caution.
-#
-#    In practice, all tasks in this tutorial scale linearly with the number of
-#    features and require d forward passes (one per feature), which can make
-#    inference slower for wide datasets.
 
 
 # %%
