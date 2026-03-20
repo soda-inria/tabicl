@@ -1,10 +1,8 @@
 """
-Unsupervised learning with TabICL
-==================================
+Unsupervised learning
+=====================
 
-This tutorial demonstrates how to use TabICL for unsupervised tasks: density
-estimation, outlier detection, missing-value imputation, and synthetic data
-generation.
+This tutorial demonstrates how to use TabICL for unsupervised tasks.
 """
 
 # %% Imports
@@ -13,21 +11,35 @@ import matplotlib.pyplot as plt
 from sklearn.datasets import make_moons
 from tabicl import TabICLUnsupervised
 
+# %%
+# ``TabICLUnsupervised`` supports density estimation and outlier detection
+# through ``score_samples``, missing-value imputation through ``impute``,
+# and synthetic data generation through ``generate``.
+#
+# .. note::
+#
+#    Compared with :class:`tabicl.TabICLClassifier` and
+#    :class:`tabicl.TabICLRegressor`, :class:`tabicl.TabICLUnsupervised` is an
+#    experimental implementation, which has not been evaluated on large
+#    benchmarks. Use with caution.
+#
+#    In practice, all tasks in this tutorial scale linearly with the number of
+#    features and require d forward passes (one per feature), which can make
+#    inference slower for wide datasets.
+
 
 # %%
-# Generate 2D data and fit the model
-# -----------------------------------
+# Fit the model
+# --------------
 #
-# We use the classic two-moon dataset — the same family used in the
-# classification tutorial — but with only 200 samples so inference stays fast.
-#
-# ``TabICLUnsupervised`` decomposes the joint density via the chain rule of
-# probability. Under the hood, each conditional ``P(X_k | X_{<k})`` is
-# predicted by a TabICL classifier (categorical features) or regressor
-# (numerical features). Calling ``fit()`` stores the training data and loads
-# the shared model weights once.
+# We use the classic two-moon dataset with only 200 samples so inference
+# stays fast.
 
 X, y = make_moons(n_samples=200, noise=0.15, random_state=42)
+
+# %%
+# Similarly to ``TabICLClassifier`` or ``TabICLRegressor``, calling ``fit()``
+# only stores the training data and loads the shared model weights once.
 
 model = TabICLUnsupervised(
     n_estimators=4,
@@ -47,21 +59,34 @@ ylim = (X[:, 1].min() - pad, X[:, 1].max() + pad)
 # Outlier detection with ``score_samples()``
 # -------------------------------------------
 #
+# Density estimate, outlier detection and data generation rely on an estimation
+# of the joint probability density :math:`P(X_1, \ldots, X_d)`. TabICL
+# approximates this using the chain rule:
+#
+# .. math::
+#
+#    P(X_1, \ldots, X_d) = \prod_k P(X_k \mid X_{<k})
+#
+# where each conditional is predicted by a TabICL classifier for categorical
+# features and a TabICL regressor for numerical features.
+#
 # ``score_samples()`` estimates the joint density by averaging chain-rule
-# log-probabilities over several random feature orderings. Higher scores
+# log-probabilities over several random feature orderings. The parameter
+# ``n_permutations`` controls how many orderings are averaged. Higher scores
 # indicate more typical data points; lower scores flag outliers.
 #
-# We first evaluate the density on a 2D grid to visualise where the model
-# places probability mass.
+# We start by visualising the learned density, which underlies all downstream
+# tasks.
 
+# Create evaluation grid
 h = 0.2
-x_min, x_max = xlim
-y_min, y_max = ylim
-xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+xx, yy = np.meshgrid(np.arange(*xlim, h), np.arange(*ylim, h))
 X_grid = np.c_[xx.ravel(), yy.ravel()]
 
+# Compute scores on the grid
 scores_grid = model.score_samples(X_grid, n_permutations=4)
 
+# Draw learned density plot
 fig, ax = plt.subplots(figsize=(5, 4), constrained_layout=True)
 cf = ax.contourf(
     xx,
@@ -77,18 +102,26 @@ plt.colorbar(cf, ax=ax, label="Density score")
 ax.legend(frameon=False)
 plt.show()
 
+#%%
+# The model correctly assigns higher scores to the dense crescent-shaped
+# regions, and lower scores to the sparse areas in between and around the
+# moons.
+
 
 # %%
 #
 # Now let's inject a handful of outliers and compare their scores to those of
 # the normal training points.
 
+# Create outliers
 outliers = np.array([[-1.2, 1.2], [2.2, -0.8], [0.5, 1.8], [-1.5, -0.8], [2.5, 1.0]])
 X_all = np.vstack([X, outliers])
 is_outlier = np.array([False] * len(X) + [True] * len(outliers))
 
+# Compute scores using TabICLUnsupervised
 scores_all = model.score_samples(X_all, n_permutations=4)
 
+# Plot scores and outliers
 print(f"Normal score range:  [{scores_all[~is_outlier].min():.4f}, " f"{scores_all[~is_outlier].max():.4f}]")
 print(f"Outlier score range: [{scores_all[is_outlier].min():.4f}, " f"{scores_all[is_outlier].max():.4f}]")
 
@@ -116,19 +149,26 @@ plt.colorbar(sc, ax=ax, label="log(1 + score)")
 ax.legend(frameon=False)
 plt.show()
 
+# %%
+# Outliers receive much lower scores, confirming that the model has
+# successfully learned the underlying density and can flag anomalies.
+
 
 # %%
 # Synthetic data generation with ``generate()``
-# -----------------------------------------------
+# ---------------------------------------------
+# The learned density can also be used to generate synthetic data. This is
+# done autoregressively by sampling each feature from its conditional
+# distribution given the previously sampled features, using the learned
+# conditionals :math:`P(X_k | X_{<k})`.
 #
-# ``generate()`` autoregressively samples new data from the learned density:
-# each feature is drawn from ``P(X_k | X_{<k})`` using the fitted conditionals.
 # The ``temperature`` parameter controls diversity — values near 0 give
-# near-deterministic (mode) samples, while 1.0 gives full distribution
-# sampling.
+# near-deterministic (mode) samples, while 1.0 reflect the full distribution.
 
+# Generate synthetic data with TabICLUnsupervised
 X_synth = model.generate(n_samples=200, temperature=1.0)
 
+# Plot the generated data
 fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), constrained_layout=True)
 
 axes[0].scatter(X[:, 0], X[:, 1], s=10, alpha=0.6)
@@ -147,8 +187,8 @@ plt.show()
 # %%
 #
 # A quick temperature sweep shows the effect: low temperatures concentrate
-# samples around high-density modes, while ``temperature = 1.0`` reproduces the full
-# spread.
+# samples around high-density modes, while ``temperature = 1.0`` reproduces the
+# full spread.
 
 temperatures = [0.01, 0.5, 1.0]
 fig, axes = plt.subplots(1, 3, figsize=(10, 3), constrained_layout=True)
@@ -167,13 +207,19 @@ plt.show()
 # Missing-value imputation with ``impute()``
 # --------------------------------------------
 #
-# ``impute()`` fills NaN values by conditioning on all observed features. A low
-# temperature (near 0) gives deterministic imputation close to the conditional
-# median; temperature 1.0 would draw stochastic samples.
+# Finally, the learned conditionals can be used to fill in missing values.
 #
-# We randomly mask one feature per row for ~50 % of the rows, so the model
-# always has a conditioning signal.
+# ``impute()`` performs a MICE-like procedure (similar to Scikit-Learn's
+# ``IterativeImputer``), iteratively imputing missing values for each feature
+# by sampling conditioned on the current values of all other features.
+#
+# A low temperature (near 0) gives deterministic imputation close to the
+# conditional median, while a temperature of 1.0 samples according to the full
+# conditional distribution, reflecting uncertainty in the imputation.
 
+# %%
+
+# Randomly mask one feature per row for ~50 % of the rows.
 rng = np.random.default_rng(0)
 
 # For each selected row, mask exactly one of the two features.
@@ -191,8 +237,14 @@ is_partial = mask.any(axis=1)
 print(f"Rows: {len(X)} total, {is_partial.sum()} with missing values, " f"{is_observed.sum()} fully observed")
 print(f"Cells: {mask.sum()} / {mask.size} missing ({100 * mask.mean():.0f} %)")
 
+# %%
+
+# Impute the missing values with TabICLUnsupervised.
 X_imputed = model.impute(X_masked, temperature=0.5)
 
+# %%
+
+# Plot the original data, the masked data, and the imputed data
 fig, axes = plt.subplots(1, 3, figsize=(12, 3.5), constrained_layout=True)
 
 axes[0].scatter(X[:, 0], X[:, 1], s=20, alpha=0.7)
@@ -214,7 +266,7 @@ axes[1].scatter(
     label="partial NaN",
 )
 axes[1].legend(frameon=False, fontsize=8)
-axes[1].set_title("Missing pattern")
+axes[1].set_title("Missingness pattern")
 
 axes[2].scatter(
     X_imputed[is_observed, 0],
