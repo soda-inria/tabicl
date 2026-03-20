@@ -12,6 +12,9 @@ API
 .. autoclass:: tabicl.TabICLForecaster
    :members:
 
+.. autoclass:: tabicl.TabICLUnsupervised
+   :members:
+
 .. autoclass:: tabicl.InferenceConfig
    :members:
 

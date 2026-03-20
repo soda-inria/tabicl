@@ -23,6 +23,7 @@ from .sklearn_utils import validate_data, _num_samples
 from tabicl import TabICLCache, InferenceConfig
 from tabicl.model.tabicl import TabICL
 
+
 class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
     """Tabular In-Context Learning (TabICL) Regressor with scikit-learn interface.
 
