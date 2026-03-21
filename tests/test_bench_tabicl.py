@@ -255,6 +255,25 @@ def test_resolve_data_root_uses_current_directory_subfolder(tmp_path, monkeypatc
     assert resolved == data_dir.resolve()
 
 
+def test_checkpoint_error_parsing_and_alias_resolution_for_older_tabicl():
+    message = (
+        "Invalid checkpoint version 'tabicl-classifier-v2-20260212.ckpt'. "
+        "Available ones are: 'tabicl-classifier.ckpt', 'tabicl-classifier-v1-0208.ckpt', "
+        "'tabicl-classifier-v1.1-0506.ckpt'."
+    )
+
+    available = bench_tabicl._parse_available_checkpoint_versions(message)
+    assert available == [
+        "tabicl-classifier.ckpt",
+        "tabicl-classifier-v1-0208.ckpt",
+        "tabicl-classifier-v1.1-0506.ckpt",
+    ]
+    assert (
+        bench_tabicl._resolve_checkpoint_version("tabicl-classifier-v2-20260212.ckpt", available)
+        == "tabicl-classifier.ckpt"
+    )
+
+
 def test_build_classifier_drops_unsupported_kwargs_for_older_tabicl(tmp_path):
     kwargs = build_classifier_kwargs(
         tmp_path,

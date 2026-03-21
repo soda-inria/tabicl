@@ -431,13 +431,45 @@ def summarize_task_types(dirs: list[Path]) -> dict[str, int]:
 
 
 def _parse_available_checkpoint_versions(error_message: str) -> list[str]:
-    return re.findall(r"'([^']+\.ckpt)'", error_message or "")
+    message = error_message or ""
+    available_marker = "Available ones are:"
+    if available_marker in message:
+        message = message.split(available_marker, 1)[1]
+    return re.findall(r"'([^']+\.ckpt)'", message)
 
 
 def _resolve_checkpoint_version(requested: str, available: list[str]) -> str:
+    if not available:
+        return requested
     if requested in available:
         return requested
-    return available[0] if available else requested
+
+    alias_candidates = {
+        "tabicl-classifier-v2-20260212.ckpt": [
+            "tabicl-classifier.ckpt",
+            "tabicl-classifier-v1.1-0506.ckpt",
+            "tabicl-classifier-v1.1-20250506.ckpt",
+            "tabicl-classifier-v1-0208.ckpt",
+            "tabicl-classifier-v1-20250208.ckpt",
+        ],
+        "tabicl-classifier-v1.1-20250506.ckpt": [
+            "tabicl-classifier-v1.1-0506.ckpt",
+            "tabicl-classifier.ckpt",
+        ],
+        "tabicl-classifier-v1-20250208.ckpt": [
+            "tabicl-classifier-v1-0208.ckpt",
+            "tabicl-classifier.ckpt",
+        ],
+    }
+
+    for candidate in alias_candidates.get(requested, []):
+        if candidate in available:
+            return candidate
+
+    if "tabicl-classifier.ckpt" in available:
+        return "tabicl-classifier.ckpt"
+
+    return available[0]
 
 
 def _format_optional_float(value: float | None, *, precision: int = 6) -> str:
