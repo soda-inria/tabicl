@@ -117,7 +117,8 @@ def test_help_runs_without_optional_nvml():
 def test_classifier_kwargs_from_args_align_with_readme_defaults(tmp_path):
     parser = bench_tabicl.build_arg_parser()
 
-    default_args = parser.parse_args(["--data-root", str(tmp_path)])
+    default_args = parser.parse_args([])
+    assert default_args.data_root == bench_tabicl.DEFAULT_DATA_ROOT
     default_kwargs = bench_tabicl.classifier_kwargs_from_args(default_args)
     assert default_kwargs["model_path"] is None
     assert default_kwargs["checkpoint_version"] == bench_tabicl.DEFAULT_CHECKPOINT_VERSION
@@ -194,6 +195,16 @@ def test_classifier_kwargs_from_args_align_with_readme_defaults(tmp_path):
         "n_jobs": -1,
         "verbose": True,
     }
+
+
+def test_resolve_data_root_uses_current_directory_subfolder(tmp_path, monkeypatch):
+    data_dir = tmp_path / "data181"
+    data_dir.mkdir()
+
+    monkeypatch.chdir(tmp_path)
+
+    resolved = bench_tabicl.resolve_data_root_path("data181")
+    assert resolved == data_dir.resolve()
 
 
 def test_evaluate_datasets_writes_outputs_and_skips_nonstandard_layouts(tmp_path, monkeypatch):

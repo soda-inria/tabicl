@@ -3,7 +3,8 @@
 Benchmark TabICLClassifier on TALENT classification datasets.
 
 Usage examples:
-    python bench_tabicl.py --data-root /path/to/TALENT/data
+    python bench_tabicl.py
+    python bench_tabicl.py --data-root data181
     python bench_tabicl.py --data-root /path/to/TALENT/data --device cuda --device-id 1
 
 Notes:
@@ -29,6 +30,7 @@ import pandas as pd
 
 
 DEFAULT_CHECKPOINT_VERSION = "tabicl-classifier-v2-20260212.ckpt"
+DEFAULT_DATA_ROOT = "data181"
 CLASSIFICATION_TASKS = {"binclass", "multiclass", "unknown"}
 
 
@@ -455,6 +457,14 @@ def _should_try_gpu_monitor(device: str | None) -> bool:
     return device is None or str(device).startswith("cuda")
 
 
+def resolve_data_root_path(data_root: str | Path) -> Path:
+    """Resolve a dataset directory from an absolute path or current-directory folder name."""
+    candidate = Path(data_root).expanduser()
+    if candidate.is_absolute():
+        return candidate
+    return (Path.cwd() / candidate).resolve()
+
+
 def parse_optional_int(value: str) -> int | None:
     if value.lower() == "none":
         return None
@@ -494,7 +504,14 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="Checkpoint version used when --model-path is None or missing",
     )
     parser.add_argument("--allow-auto-download", action=bool_action, default=True)
-    parser.add_argument("--data-root", required=True, help="Root path to TALENT data folder")
+    parser.add_argument(
+        "--data-root",
+        default=DEFAULT_DATA_ROOT,
+        help=(
+            "Dataset directory. Accepts an absolute path or any folder name under the current working directory. "
+            f"Default: {DEFAULT_DATA_ROOT}"
+        ),
+    )
     parser.add_argument("--outdir", default="tabiclv2_talent_benchmark", help="Directory to save results")
     parser.add_argument("--max-datasets", type=int, default=None, help="Limit number of datasets to evaluate")
     parser.add_argument("--merge-val", action=bool_action, default=True, help="Merge validation split into training")
@@ -638,11 +655,14 @@ def evaluate_datasets(
     from sklearn.utils.multiclass import type_of_target
     from tabicl.sklearn.classifier import TabICLClassifier
 
-    data_root = Path(data_root)
+    data_root = resolve_data_root_path(data_root)
     outdir = Path(outdir)
 
     if not data_root.exists():
-        raise FileNotFoundError(f"Data root does not exist: {data_root}")
+        available_dirs = sorted(path.name for path in Path.cwd().iterdir() if path.is_dir())
+        preview = ", ".join(available_dirs[:10])
+        extra = f" Current directory folders: {preview}" if preview else ""
+        raise FileNotFoundError(f"Data root does not exist: {data_root}.{extra}")
     if not data_root.is_dir():
         raise NotADirectoryError(f"Data root is not a directory: {data_root}")
 
