@@ -135,3 +135,30 @@ dmypy.json
 # sphinx-gallery generated files
 docs/sg_execution_times.rst
 docs/tutorials/
+
+# ------------------------------
+# Dataset / benchmark outputs
+# ------------------------------
+data/
+data*/
+datasets/
+dataset/
+tabzilla/
+
+# ------------------------------
+# Model checkpoints / weights
+# ------------------------------
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+*.h5
+
+# ------------------------------
+# Common large tabular artifacts
+# ------------------------------
+*.npy
+*.npz
+*.parquet
