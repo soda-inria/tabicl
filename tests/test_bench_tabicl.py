@@ -39,6 +39,54 @@ class FakeTabICLClassifier:
         cls.predict_shapes.clear()
 
 
+class OldFakeTabICLClassifier:
+    last_kwargs: dict | None = None
+
+    def __init__(
+        self,
+        n_estimators=8,
+        norm_methods=None,
+        feat_shuffle_method="latin",
+        outlier_threshold=4.0,
+        softmax_temperature=0.9,
+        average_logits=True,
+        batch_size=8,
+        kv_cache=False,
+        model_path=None,
+        allow_auto_download=True,
+        checkpoint_version=None,
+        device=None,
+        use_amp="auto",
+        use_fa3="auto",
+        offload_mode="auto",
+        disk_offload_dir=None,
+        random_state=42,
+        n_jobs=None,
+        verbose=False,
+    ):
+        type(self).last_kwargs = {
+            "n_estimators": n_estimators,
+            "norm_methods": norm_methods,
+            "feat_shuffle_method": feat_shuffle_method,
+            "outlier_threshold": outlier_threshold,
+            "softmax_temperature": softmax_temperature,
+            "average_logits": average_logits,
+            "batch_size": batch_size,
+            "kv_cache": kv_cache,
+            "model_path": model_path,
+            "allow_auto_download": allow_auto_download,
+            "checkpoint_version": checkpoint_version,
+            "device": device,
+            "use_amp": use_amp,
+            "use_fa3": use_fa3,
+            "offload_mode": offload_mode,
+            "disk_offload_dir": disk_offload_dir,
+            "random_state": random_state,
+            "n_jobs": n_jobs,
+            "verbose": verbose,
+        }
+
+
 def install_fake_classifier(monkeypatch) -> None:
     FakeTabICLClassifier.reset()
 
@@ -205,6 +253,26 @@ def test_resolve_data_root_uses_current_directory_subfolder(tmp_path, monkeypatc
 
     resolved = bench_tabicl.resolve_data_root_path("data181")
     assert resolved == data_dir.resolve()
+
+
+def test_build_classifier_drops_unsupported_kwargs_for_older_tabicl(tmp_path):
+    kwargs = build_classifier_kwargs(
+        tmp_path,
+        extra_args=[
+            "--class-shuffle-method",
+            "latin",
+            "--support-many-classes",
+            "--device",
+            "cpu",
+        ],
+    )
+
+    bench_tabicl._build_classifier(OldFakeTabICLClassifier, kwargs)
+
+    assert OldFakeTabICLClassifier.last_kwargs is not None
+    assert "class_shuffle_method" not in OldFakeTabICLClassifier.last_kwargs
+    assert "support_many_classes" not in OldFakeTabICLClassifier.last_kwargs
+    assert OldFakeTabICLClassifier.last_kwargs["device"] == "cpu"
 
 
 def test_evaluate_datasets_writes_outputs_and_skips_nonstandard_layouts(tmp_path, monkeypatch):

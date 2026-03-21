@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 import importlib
+import inspect
 import json
 import logging
 from pathlib import Path
@@ -567,8 +568,39 @@ def classifier_kwargs_from_args(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+def _filter_supported_classifier_kwargs(classifier_cls, classifier_kwargs: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    """Drop kwargs unsupported by the installed TabICLClassifier version."""
+    try:
+        signature = inspect.signature(classifier_cls)
+    except (TypeError, ValueError):
+        return dict(classifier_kwargs), []
+
+    parameters = signature.parameters
+    if any(param.kind == inspect.Parameter.VAR_KEYWORD for param in parameters.values()):
+        return dict(classifier_kwargs), []
+
+    supported_names = {name for name in parameters if name != "self"}
+    filtered_kwargs = {name: value for name, value in classifier_kwargs.items() if name in supported_names}
+    dropped_kwargs = sorted(name for name in classifier_kwargs if name not in supported_names)
+    return filtered_kwargs, dropped_kwargs
+
+
 def _build_classifier(classifier_cls, classifier_kwargs: dict[str, Any]):
-    return classifier_cls(**classifier_kwargs)
+    filtered_kwargs, dropped_kwargs = _filter_supported_classifier_kwargs(classifier_cls, classifier_kwargs)
+
+    if dropped_kwargs:
+        warned = getattr(_build_classifier, "_warned_dropped_kwargs", set())
+        warning_key = (classifier_cls.__name__, tuple(dropped_kwargs))
+        if warning_key not in warned:
+            logging.warning(
+                "当前安装的 %s 不支持以下参数，将自动忽略以兼容旧版本: %s",
+                classifier_cls.__name__,
+                ", ".join(dropped_kwargs),
+            )
+            warned.add(warning_key)
+            setattr(_build_classifier, "_warned_dropped_kwargs", warned)
+
+    return classifier_cls(**filtered_kwargs)
 
 
 def _write_results(
