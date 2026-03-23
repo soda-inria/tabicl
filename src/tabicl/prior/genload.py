@@ -37,7 +37,7 @@ import numpy as np
 from torch.utils.data import IterableDataset
 
 from tabicl.prior.dataset import PriorDataset
-from tabicl.prior.prior_config import DEFAULT_FIXED_HP, DEFAULT_SAMPLED_HP
+from tabicl.prior._prior_config import DEFAULT_FIXED_HP, DEFAULT_SAMPLED_HP
 
 warnings.filterwarnings(
     "ignore", message=".*The PyTorch API of nested tensors is in prototype stage.*", category=UserWarning

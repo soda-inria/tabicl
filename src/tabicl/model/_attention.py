@@ -6,7 +6,7 @@ import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
 
-from .rope import RotaryEmbedding
+from ._rope import RotaryEmbedding
 from .kv_cache import KVCacheEntry
 
 try:

@@ -4,6 +4,15 @@ from .model.inference_config import InferenceConfig
 from .sklearn.classifier import TabICLClassifier
 from .sklearn.regressor import TabICLRegressor
 
+__all__ = [
+    "TabICLClassifier",
+    "TabICLRegressor",
+    "TabICLForecaster",
+    "TabICLUnsupervised",
+    "InferenceConfig",
+    "TabICLCache",
+]
+
 
 def __getattr__(name):
     if name == "TabICLForecaster":

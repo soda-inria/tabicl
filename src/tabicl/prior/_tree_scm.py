@@ -9,7 +9,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
 from xgboost import XGBRegressor
 
-from .utils import GaussianNoise, XSampler
+from ._utils import GaussianNoise, XSampler
 
 
 class TreeLayer(nn.Module):

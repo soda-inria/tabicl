@@ -145,7 +145,7 @@ def get_shapiq_explainer(
     data = np.asarray(data)
 
     if imputer == "nan":
-        from tabicl.sklearn.base import TabICLBaseEstimator
+        from tabicl.sklearn._base import TabICLBaseEstimator
 
         if not isinstance(estimator, TabICLBaseEstimator):
             raise TypeError(

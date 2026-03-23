@@ -19,7 +19,7 @@ import torch
 from torch import Tensor
 
 from .kv_cache import KVCache
-from .attention import flash_attn3_toggle
+from ._attention import flash_attn3_toggle
 
 
 class MemoryEstimator:

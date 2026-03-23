@@ -22,7 +22,7 @@ from sklearn.preprocessing import (
 )
 from sklearn.utils.validation import check_is_fitted
 
-from .sklearn_utils import validate_data
+from ._sklearn_utils import validate_data
 
 
 class RecursionLimitManager:

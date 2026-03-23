@@ -17,9 +17,9 @@ from sklearn.preprocessing import LabelEncoder
 from huggingface_hub import hf_hub_download
 from huggingface_hub.utils import LocalEntryNotFoundError
 
-from .base import TabICLBaseEstimator
-from .preprocessing import TransformToNumerical, EnsembleGenerator
-from .sklearn_utils import validate_data, _num_samples
+from ._base import TabICLBaseEstimator
+from ._preprocessing import TransformToNumerical, EnsembleGenerator
+from ._sklearn_utils import validate_data, _num_samples
 
 from tabicl import TabICLCache, InferenceConfig
 from tabicl.model.tabicl import TabICL

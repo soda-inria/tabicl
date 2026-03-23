@@ -31,12 +31,12 @@ from torch import Tensor
 from torch.nested import nested_tensor
 from torch.utils.data import IterableDataset
 
-from .mlp_scm import MLPSCM
-from .tree_scm import TreeSCM
+from ._mlp_scm import MLPSCM
+from ._tree_scm import TreeSCM
 
-from .hp_sampling import HpSamplerList
-from .reg2cls import Reg2Cls
-from .prior_config import DEFAULT_FIXED_HP, DEFAULT_SAMPLED_HP
+from ._hp_sampling import HpSamplerList
+from ._reg2cls import Reg2Cls
+from ._prior_config import DEFAULT_FIXED_HP, DEFAULT_SAMPLED_HP
 
 
 warnings.filterwarnings(

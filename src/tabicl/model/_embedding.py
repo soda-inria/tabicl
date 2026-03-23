@@ -8,10 +8,10 @@ import torch
 from torch import nn, Tensor
 import torch.nn.functional as F
 
-from .layers import SkippableLinear, OneHotAndLinear
-from .encoders import SetTransformer
+from ._layers import SkippableLinear, OneHotAndLinear
+from ._encoders import SetTransformer
 from .kv_cache import KVCache
-from .inference import InferenceManager
+from ._inference import InferenceManager
 from .inference_config import MgrConfig, InferenceConfig
 
 
