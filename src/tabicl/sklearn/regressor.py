@@ -233,6 +233,15 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         Created during ``fit()`` when ``kv_cache`` is enabled. When set,
         ``predict()`` reuses the cached key-value projections instead of
         re-processing training data, enabling faster inference on multiple test sets.
+
+    n_targets_ : int
+        Number of targets. 1 for single-target, >1 for multi-target.
+
+    y_scalers_ : list[StandardScaler]
+        Per-target scalers. Only set when ``n_targets_ > 1``.
+
+    y_train_scaled_ : ndarray of shape (n_samples, n_targets)
+        Scaled training targets. Only set when ``n_targets_ > 1``.
     """
 
     def __init__(
@@ -367,8 +376,9 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         X : array-like of shape (n_samples, n_features)
             Training input data.
 
-        y : array-like of shape (n_samples,)
-            Training target values.
+        y : array-like of shape (n_samples,) or (n_samples, n_targets)
+            Training target values. For multi-target regression, pass a 2D
+            array where each column is a separate regression target.
 
         Returns
         -------
@@ -396,6 +406,22 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
             )
             y = y.ravel()
 
+        # Handle multi-target y
+        if y.ndim == 2 and y.shape[1] > 1:
+            self.n_targets_ = y.shape[1]
+            self.y_scalers_ = [StandardScaler() for _ in range(y.shape[1])]
+            self.y_train_scaled_ = np.column_stack(
+                [s.fit_transform(y[:, i : i + 1]).ravel() for i, s in enumerate(self.y_scalers_)]
+            )
+            y_scaled = self.y_train_scaled_[:, 0]  # representative for EnsembleGenerator (X-only)
+            # Clean up single-target attributes from a previous fit
+            self.__dict__.pop("y_scaler_", None)
+        else:
+            self.n_targets_ = 1
+            # Clean up multi-target attributes from a previous fit
+            for attr in ("y_scalers_", "y_train_scaled_"):
+                self.__dict__.pop(attr, None)
+
         # Device setup
         self._resolve_device()
 
@@ -408,8 +434,9 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         self.model_.to(self.device_)
 
         # Scale target values
-        self.y_scaler_ = StandardScaler()
-        y_scaled = self.y_scaler_.fit_transform(y.reshape(-1, 1)).flatten()
+        if self.n_targets_ == 1:
+            self.y_scaler_ = StandardScaler()
+            y_scaled = self.y_scaler_.fit_transform(y.reshape(-1, 1)).flatten()
 
         # Transform input features
         self.X_encoder_ = TransformToNumerical(verbose=self.verbose)
@@ -427,7 +454,13 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         self.ensemble_generator_.fit(X, y_scaled)
 
         self.model_kv_cache_ = None
-        if self.kv_cache:
+        self.cache_mode_ = None
+        if self.kv_cache and self.n_targets_ > 1:
+            warnings.warn(
+                "KV caching is not supported for multi-target prediction and will be ignored.",
+                stacklevel=2,
+            )
+        if self.kv_cache and self.n_targets_ == 1:
             if self.kv_cache is True or self.kv_cache == "kv":
                 self.cache_mode_ = "kv"
             elif self.kv_cache == "repr":
@@ -652,10 +685,16 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
 
         Returns
         -------
-        np.ndarray of shape (n_samples,) or dict[str, np.ndarray]
-            An array of shape ``(n_samples,)`` if ``output_type`` is ``"mean"`` or
-            ``"median"``, or an array of shape ``(n_samples, n_quantiles)`` if
-            ``output_type`` is ``"quantiles"`` or ``"raw_quantiles"``.
+        np.ndarray or dict[str, np.ndarray]
+            For single-target regression:
+
+            - ``"mean"`` or ``"median"``: array of shape ``(n_samples,)``
+            - ``"quantiles"`` or ``"raw_quantiles"``: array of shape ``(n_samples, n_quantiles)``
+
+            For multi-target regression:
+
+            - ``"mean"`` or ``"median"``: array of shape ``(n_samples, n_targets)``
+            - ``"quantiles"`` or ``"raw_quantiles"``: array of shape ``(n_samples, n_quantiles, n_targets)``
 
             If ``output_type`` is a list of str, returns a dictionary with keys as
             specified in the list and values as the corresponding predictions.
@@ -723,6 +762,13 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
 
         output_type = [output_type] if isinstance(output_type, str) else list(output_type)
 
+        # Multi-target prediction
+        if self.n_targets_ > 1:
+            result = self._predict_multi_target(X, output_type, feature_mask, alphas)
+            if self.n_jobs is not None:
+                torch.set_num_threads(old_n_threads)
+            return result
+
         # Skip KV cache when features are masked
         has_kv_cache = hasattr(self, "model_kv_cache_") and self.model_kv_cache_ is not None
         use_cache = has_kv_cache and feature_mask is None
@@ -775,6 +821,46 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
             return final_results[output_type[0]]
 
         return final_results
+
+    def _predict_multi_target(self, X, output_type, feature_mask, alphas=None):
+        """Predict multiple targets by looping over targets internally.
+
+        Reuses ensemble-transformed X data across targets for efficiency.
+        """
+        data = self.ensemble_generator_.transform(X, mode="both", feature_mask=feature_mask)
+        all_preds = {key: [] for key in output_type}
+
+        for t in range(self.n_targets_):
+            results = {key: [] for key in output_type}
+            for Xs, _ in data.values():
+                ys = np.tile(self.y_train_scaled_[:, t], (Xs.shape[0], 1))
+                batch_out = self._batch_forward(Xs, ys, output_type=output_type, alphas=alphas)
+                if isinstance(batch_out, dict):
+                    for key in output_type:
+                        results[key].append(batch_out[key])
+                else:
+                    results[output_type[0]].append(batch_out)
+
+            for key in output_type:
+                arr = np.concatenate(results[key], axis=0)
+                n_estimators = arr.shape[0]
+                n_samples = arr.shape[1]
+                if arr.ndim == 2:
+                    arr = self.y_scalers_[t].inverse_transform(arr.reshape(-1, 1)).reshape(n_estimators, n_samples)
+                    all_preds[key].append(np.mean(arr, axis=0))
+                else:
+                    n_quantiles = arr.shape[2]
+                    arr = self.y_scalers_[t].inverse_transform(arr.reshape(-1, 1)).reshape(
+                        n_estimators, n_samples, n_quantiles
+                    )
+                    all_preds[key].append(np.mean(arr, axis=0))
+
+        for key in all_preds:
+            all_preds[key] = np.stack(all_preds[key], axis=-1)
+
+        if len(output_type) == 1:
+            return all_preds[output_type[0]]
+        return all_preds
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
