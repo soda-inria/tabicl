@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from ._ssmax import create_ssmax_layer
 from ._rope import RotaryEmbedding
 from ._attention import multi_head_attention_forward
-from .kv_cache import KVCacheEntry, KVCache
+from ._kv_cache import KVCacheEntry, KVCache
 
 
 class ClassNode:

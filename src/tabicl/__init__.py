@@ -1,8 +1,5 @@
-from .model.kv_cache import TabICLCache
-from .model.inference_config import InferenceConfig
-
-from .sklearn.classifier import TabICLClassifier
-from .sklearn.regressor import TabICLRegressor
+from .model import InferenceConfig
+from .sklearn import TabICLClassifier, TabICLRegressor
 
 __all__ = [
     "TabICLClassifier",
@@ -10,14 +7,13 @@ __all__ = [
     "TabICLForecaster",
     "TabICLUnsupervised",
     "InferenceConfig",
-    "TabICLCache",
 ]
 
 
 def __getattr__(name):
     if name == "TabICLForecaster":
         try:
-            from .forecast.forecaster import TabICLForecaster
+            from .forecast import TabICLForecaster
 
             return TabICLForecaster
         except ImportError:

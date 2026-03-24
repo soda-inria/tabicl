@@ -10,9 +10,9 @@ import torch.nn.functional as F
 
 from ._layers import SkippableLinear, OneHotAndLinear
 from ._encoders import SetTransformer
-from .kv_cache import KVCache
+from ._kv_cache import KVCache
 from ._inference import InferenceManager
-from .inference_config import MgrConfig, InferenceConfig
+from ._inference_config import MgrConfig, InferenceConfig
 
 
 class ColEmbedding(nn.Module):

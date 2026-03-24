@@ -18,7 +18,7 @@ from tqdm.auto import tqdm
 import torch
 from torch import Tensor
 
-from .kv_cache import KVCache
+from ._kv_cache import KVCache
 from ._attention import flash_attn3_toggle
 
 

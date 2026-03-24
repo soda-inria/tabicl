@@ -8,9 +8,9 @@ from torch import nn, Tensor
 
 from ._layers import ClassNode, OneHotAndLinear
 from ._encoders import Encoder
-from .kv_cache import KVCache
+from ._kv_cache import KVCache
 from ._inference import InferenceManager
-from .inference_config import MgrConfig, InferenceConfig
+from ._inference_config import MgrConfig, InferenceConfig
 
 
 class ICLearning(nn.Module):

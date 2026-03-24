@@ -7,7 +7,7 @@ from torch import Tensor, nn
 from torch.nn import functional as F
 
 from ._rope import RotaryEmbedding
-from .kv_cache import KVCacheEntry
+from ._kv_cache import KVCacheEntry
 
 try:
     from flash_attn_interface import flash_attn_varlen_func as flash_attn3

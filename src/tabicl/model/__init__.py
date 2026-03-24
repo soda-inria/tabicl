@@ -1,5 +1,5 @@
-from .tabicl import TabICL
-from .kv_cache import TabICLCache
-from .inference_config import InferenceConfig
+from ._tabicl import TabICL
+from ._kv_cache import TabICLCache
+from ._inference_config import InferenceConfig
 
-__all__ = ["TabICL", "InferenceConfig", "TabICLCache"]
+__all__ = ["TabICL", "InferenceConfig"]

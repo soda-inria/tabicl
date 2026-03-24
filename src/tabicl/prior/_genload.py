@@ -36,7 +36,7 @@ import torch
 import numpy as np
 from torch.utils.data import IterableDataset
 
-from tabicl.prior.dataset import PriorDataset
+from tabicl.prior._dataset import PriorDataset
 from tabicl.prior._prior_config import DEFAULT_FIXED_HP, DEFAULT_SAMPLED_HP
 
 warnings.filterwarnings(

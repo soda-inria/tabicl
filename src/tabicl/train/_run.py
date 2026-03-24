@@ -22,8 +22,8 @@ from tqdm import tqdm
 import wandb
 
 from tabicl import TabICL
-from tabicl.prior.dataset import PriorDataset
-from tabicl.prior.genload import LoadPriorDataset
+from tabicl.prior._dataset import PriorDataset
+from tabicl.prior._genload import LoadPriorDataset
 from tabicl.train._optim import get_scheduler
 from tabicl.train._train_config import build_parser
 

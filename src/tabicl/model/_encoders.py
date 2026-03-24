@@ -8,7 +8,7 @@ from torch.utils.checkpoint import checkpoint
 
 from ._rope import RotaryEmbedding
 from ._layers import MultiheadAttentionBlock, InducedSelfAttentionBlock
-from .kv_cache import KVCacheEntry, KVCache
+from ._kv_cache import KVCacheEntry, KVCache
 
 
 class Encoder(nn.Module):
