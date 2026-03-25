@@ -90,21 +90,3 @@ clf = TabICLClassifier.load("classifier.pkl")
 # ``save_training_data=False`` to exclude cached training data, which may
 # be useful for data privacy.
 
-
-# %%
-# Shap-like interpretability
-# ---------------------------
-#
-# Use TabICL's fast approximations of shap-like values and plot them
-#
-# This part of the example requires to install the shap extra:
-# pip install 'tabicl[shap]
-
-from tabicl.shap import get_shap_values, plot_shap
-
-# Compute the shap values
-sv = get_shap_values(clf, X_test)
-
-# %%
-# Plot the shap values
-plot_shap(sv)
