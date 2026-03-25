@@ -49,7 +49,6 @@ from tabicl import TabICLRegressor
 clf = TabICLRegressor(n_estimators=4, device="cpu")
 clf.fit(X_train, y_train)
 
-
 # %%
 # Shap-like interpretability
 # ---------------------------
@@ -65,8 +64,12 @@ from tabicl.shap import get_shap_values, plot_shap
 sv = get_shap_values(clf, X_test[:10])
 
 # %%
-# Plot the shap values
-plot_shap(sv)
+# Bar plot of mean absolute SHAP values, showing aggregate feature importances
+plot_shap(sv, kind="bar")
+
+# %%
+# Beeswarm plot showing per-sample SHAP values for each feature
+plot_shap(sv, kind="beeswarm")
 
 # %%
 # Note that these are approximate SHAP values, and not exact ones.
