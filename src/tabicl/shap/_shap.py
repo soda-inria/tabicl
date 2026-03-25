@@ -93,31 +93,40 @@ def get_shap_explainer(
 # ── visualisation helpers ───────────────────────────────────────────────
 
 
-def plot_shap(shap_values: Any) -> None:
-    """Bar plot + beeswarm + top-feature interaction scatter.
+def plot_shap(shap_values: Any, kind: str | tuple[str, ...] = "bar") -> None:
+    """Plot SHAP explanations.
 
     Parameters
     ----------
     shap_values : shap.Explanation
         Typically returned by :func:`get_shap_values`.
+
+    kind : str or tuple of str, default="bar"
+        Which plots to show. Any combination of ``"bar"``, ``"beeswarm"``,
+        and ``"scatter"``.
     """
+    if isinstance(kind, str):
+        kind = (kind,)
+
     # For multi-output (e.g. multi-class), take the first output slice.
     if len(shap_values.shape) == 3:
         shap_values = shap_values[:, :, 0]
 
-    shap.plots.bar(shap_values=shap_values, show=False)
-    plt.title("Aggregate feature importances across the test examples")
-    plt.tight_layout()
-    plt.show()
+    if "bar" in kind:
+        shap.plots.bar(shap_values=shap_values, show=False)
+        plt.title("Aggregate feature importances across the test examples")
+        plt.tight_layout()
+        plt.show()
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", message=".*NumPy global RNG.*", category=FutureWarning)
-        shap.summary_plot(shap_values=shap_values, show=False)
-    plt.title("Per-sample feature importances")
-    plt.tight_layout()
-    plt.show()
+    if "beeswarm" in kind:
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message=".*NumPy global RNG.*", category=FutureWarning)
+            shap.summary_plot(shap_values=shap_values, show=False)
+        plt.title("Per-sample feature importances")
+        plt.tight_layout()
+        plt.show()
 
-    if len(shap_values) > 1:
+    if "scatter" in kind and len(shap_values) > 1:
         top = shap_values.abs.mean(0).values.argsort()[-1]
         plot_shap_feature(shap_values, top)
 
