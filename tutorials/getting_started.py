@@ -96,6 +96,9 @@ clf = TabICLClassifier.load("classifier.pkl")
 # ---------------------------
 #
 # Use TabICL's fast approximations of shap-like values and plot them
+#
+# This part of the example requires to install the shap extra:
+# pip install 'tabicl[shap]
 
 from tabicl.shap import get_shap_values, plot_shap
 

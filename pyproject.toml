@@ -46,6 +46,8 @@ doc = [
   "sphinxext-opengraph",
   "skrub",
   "pandas",
+  "shap>=0.42",
+  "shapiq>=1.0",
 ]
 forecast = [                                                                                                                                                                                                        
     "pandas>=2.1.2",
