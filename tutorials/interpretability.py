@@ -21,11 +21,13 @@ X = survey.data[survey.feature_names]
 # %%
 # A quick glance at the data with skrub's TableReport
 import skrub
+
 skrub.TableReport(X)
 
 # %%
 # We need to convert the categorical features to numeric ones. We can do this with pandas' get_dummies
 import pandas as pd
+
 X = pd.get_dummies(X, drop_first=True)
 
 # %%
@@ -35,6 +37,7 @@ y = survey.target.values.ravel()
 # %%
 # Split out a test set
 from sklearn.model_selection import train_test_split
+
 X_train, X_test, y_train, y_test = train_test_split(X, y)
 
 # %%
@@ -59,7 +62,7 @@ clf.fit(X_train, y_train)
 from tabicl.shap import get_shap_values, plot_shap
 
 # Compute the shap values
-sv = get_shap_values(clf, X_test)
+sv = get_shap_values(clf, X_test[:10])
 
 # %%
 # Plot the shap values
