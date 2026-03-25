@@ -102,5 +102,9 @@ clf = TabICLClassifier.load("classifier.pkl")
 
 from tabicl.shap import get_shap_values, plot_shap
 
+# Compute the shap values
 sv = get_shap_values(clf, X_test)
+
+# %%
+# Plot the shap values
 plot_shap(sv)

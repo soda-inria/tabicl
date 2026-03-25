@@ -61,6 +61,8 @@ shap = [
     "shap>=0.42",
     "shapiq>=1.0",
     "matplotlib>=3.10.3",
+    "numpy<=2.3",  # shap brings in numba, which currently wants older
+    "numba",  # Add it here to facilitate the life of the installer
 ]
 pretrain = [
     "transformers",  # only used in optim for schedules
