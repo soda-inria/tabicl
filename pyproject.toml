@@ -41,7 +41,7 @@ doc = [
   "sphinx",
   "sphinx-copybutton",
   "sphinx-gallery",
-  "matplotlib",
+  "matplotlib>=3.10.3",
   "pydata-sphinx-theme",
   "sphinxext-opengraph",
   "skrub",
