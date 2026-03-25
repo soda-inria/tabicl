@@ -48,7 +48,8 @@ doc = [
   "pandas",
   "shap>=0.42",
   "shapiq>=1.0",
-  "numpy<=2.3",  # shape brings in numba, which currently wants older numpy
+  "numpy<=2.3",  # shap brings in numba, which currently wants older
+  "numba",  # Add it here to facilitate the life of the installer
 ]
 forecast = [                                                                                                                                                                                                        
     "pandas>=2.1.2",
