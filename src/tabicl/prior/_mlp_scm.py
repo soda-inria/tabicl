@@ -7,7 +7,7 @@ from typing import Dict, Any
 import torch
 from torch import nn
 
-from .utils import GaussianNoise, XSampler
+from ._utils import GaussianNoise, XSampler
 
 
 class MLPSCM(nn.Module):

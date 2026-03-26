@@ -6,11 +6,11 @@ import math
 import torch
 from torch import nn, Tensor
 
-from .layers import ClassNode, OneHotAndLinear
-from .encoders import Encoder
-from .kv_cache import KVCache
-from .inference import InferenceManager
-from .inference_config import MgrConfig, InferenceConfig
+from ._layers import ClassNode, OneHotAndLinear
+from ._encoders import Encoder
+from ._kv_cache import KVCache
+from ._inference import InferenceManager
+from ._inference_config import MgrConfig, InferenceConfig
 
 
 class ICLearning(nn.Module):

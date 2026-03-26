@@ -7,8 +7,8 @@ import pandas as pd
 import torch
 
 from tabicl import TabICLRegressor
-from tabicl.forecast.ts_dataframe import TimeSeriesDataFrame
-from tabicl.forecast.dispatch import SeriesDispatcher
+from tabicl.forecast._ts_dataframe import TimeSeriesDataFrame
+from tabicl.forecast._dispatch import SeriesDispatcher
 
 
 logger = logging.getLogger(__name__)

@@ -6,9 +6,9 @@ from functools import partial
 from torch import nn, Tensor
 from torch.utils.checkpoint import checkpoint
 
-from .rope import RotaryEmbedding
-from .layers import MultiheadAttentionBlock, InducedSelfAttentionBlock
-from .kv_cache import KVCacheEntry, KVCache
+from ._rope import RotaryEmbedding
+from ._layers import MultiheadAttentionBlock, InducedSelfAttentionBlock
+from ._kv_cache import KVCacheEntry, KVCache
 
 
 class Encoder(nn.Module):

@@ -18,8 +18,5 @@ API
 .. autoclass:: tabicl.InferenceConfig
    :members:
 
-.. autoclass:: tabicl.TabICLCache
-   :members:
-
 .. autoclass:: tabicl.model.TabICL
    :members:

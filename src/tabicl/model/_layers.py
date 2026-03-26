@@ -5,10 +5,10 @@ import torch
 from torch import nn, Tensor
 import torch.nn.functional as F
 
-from .ssmax import create_ssmax_layer
-from .rope import RotaryEmbedding
-from .attention import multi_head_attention_forward
-from .kv_cache import KVCacheEntry, KVCache
+from ._ssmax import create_ssmax_layer
+from ._rope import RotaryEmbedding
+from ._attention import multi_head_attention_forward
+from ._kv_cache import KVCacheEntry, KVCache
 
 
 class ClassNode:
