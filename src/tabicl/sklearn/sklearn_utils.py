@@ -370,6 +370,9 @@ def validate_data(
         raise ValueError("Validation should be done on X, y or both.")
 
     default_check_params = {"estimator": _estimator}
+    # Allow NaN by default — the preprocessing pipeline handles imputation
+    # via SimpleImputer before data reaches the model.
+    check_params.setdefault("force_all_finite", "allow-nan")
     check_params = {**default_check_params, **check_params}
 
     if skip_check_array:
