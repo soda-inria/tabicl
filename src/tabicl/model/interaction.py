@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, Tuple, Union
 from functools import partial
 from collections import OrderedDict
 
@@ -106,7 +106,12 @@ class RowInteraction(nn.Module):
         self.out_ln = nn.LayerNorm(embed_dim, bias=not bias_free_ln) if norm_first else nn.Identity()
         self.inference_mgr = InferenceManager(enc_name="tf_row", out_dim=embed_dim * self.num_cls, out_no_seq=True)
 
-    def _aggregate_embeddings(self, embeddings: Tensor, key_mask: Optional[Tensor] = None) -> Tensor:
+    def _aggregate_embeddings(
+        self,
+        embeddings: Tensor,
+        key_mask: Optional[Tensor] = None,
+        return_features: bool = False,
+    ) -> Union[Tensor, Tuple[Tensor, Tensor]]:
         """Process a batch of rows through a transformer encoder.
 
         This method:
@@ -129,10 +134,23 @@ class RowInteraction(nn.Module):
             Boolean mask of shape (B, T, H+C) where True indicates positions
             to ignore during attention (empty feature slots).
 
+        return_features : bool, default=False
+            If True, also return the per-feature outputs from the last block.
+            In this path the last block runs over the full sequence (not only
+            CLS queries), so per-column token outputs are available. The CLS
+            outputs from this path are mathematically identical to the default
+            path but may differ bit-wise (different matmul shapes). Use the
+            default path when bit-exactness is required.
+
         Returns
         -------
-        Tensor
-            Flattened class token outputs of shape (B*T, C*E).
+        Tensor or tuple of Tensors
+            If ``return_features`` is False: flattened class token outputs of
+            shape (B, T, C*E).
+
+            If ``return_features`` is True: tuple ``(cls_flat, feature_outputs)``
+            where ``cls_flat`` has shape (B, T, C*E) and ``feature_outputs``
+            has shape (B, T, H, E).
         """
         rope = self.tf_row.rope
 
@@ -146,8 +164,28 @@ class RowInteraction(nn.Module):
             for block in self.tf_row.blocks[:-1]:
                 embeddings = block(embeddings, key_padding_mask=key_mask, rope=rope)
 
-        # Last block: q = CLS tokens, k/v = full sequence
         last_block = self.tf_row.blocks[-1]
+
+        if return_features:
+            # Full-sequence last block: q = k = v = embeddings. Keeps per-feature
+            # outputs available alongside CLS outputs.
+            if self.recompute:
+                full_out = checkpoint(
+                    lambda emb: last_block(q=emb, k=emb, v=emb, key_padding_mask=key_mask, rope=rope),
+                    embeddings,
+                    use_reentrant=False,
+                )
+            else:
+                full_out = last_block(
+                    q=embeddings, k=embeddings, v=embeddings, key_padding_mask=key_mask, rope=rope
+                )
+            del embeddings
+            full_out = self.out_ln(full_out)                       # (B, T, H+C, E)
+            cls_outputs = full_out[..., : self.num_cls, :]         # (B, T, C, E)
+            feature_outputs = full_out[..., self.num_cls :, :]     # (B, T, H, E)
+            return cls_outputs.flatten(-2), feature_outputs
+
+        # Default path: q = CLS tokens only, k/v = full sequence.
         if self.recompute:
             cls_outputs = checkpoint(
                 lambda emb: last_block(
@@ -165,7 +203,12 @@ class RowInteraction(nn.Module):
 
         return cls_outputs.flatten(-2)  # (B, T, C*E)
 
-    def _train_forward(self, embeddings: Tensor, d: Optional[Tensor] = None) -> Tensor:
+    def _train_forward(
+        self,
+        embeddings: Tensor,
+        d: Optional[Tensor] = None,
+        return_features: bool = False,
+    ) -> Union[Tensor, Tuple[Tensor, Tensor]]:
         """Transform feature embeddings into row representations for training.
 
         Parameters
@@ -181,10 +224,15 @@ class RowInteraction(nn.Module):
         d : Optional[Tensor], default=None
             The number of features per dataset. Used only in training mode.
 
+        return_features : bool, default=False
+            If True, also return per-feature last-block outputs of shape
+            (B, T, H, E) alongside the row representations.
+
         Returns
         -------
-        Tensor
-            Row representations of shape (B, T, C*E) where C is the number of class tokens.
+        Tensor or tuple of Tensors
+            Row representations of shape (B, T, C*E); optionally a second
+            tensor ``feature_outputs`` of shape (B, T, H, E).
         """
 
         B, T, HC, E = embeddings.shape
@@ -201,11 +249,14 @@ class RowInteraction(nn.Module):
             indices = torch.arange(HC, device=device).view(1, 1, HC).expand(B, T, HC)
             key_mask = indices >= d.view(B, 1, 1)  # (B, T, HC)
 
-        representations = self._aggregate_embeddings(embeddings, key_mask)  # (B, T, C*E)
+        return self._aggregate_embeddings(embeddings, key_mask, return_features=return_features)
 
-        return representations  # (B, T, C*E)
-
-    def _inference_forward(self, embeddings: Tensor, mgr_config: MgrConfig = None) -> Tensor:
+    def _inference_forward(
+        self,
+        embeddings: Tensor,
+        mgr_config: MgrConfig = None,
+        return_features: bool = False,
+    ) -> Union[Tensor, Tuple[Tensor, Tensor]]:
         """Transform feature embeddings into row representations for inference.
 
         Parameters
@@ -221,10 +272,17 @@ class RowInteraction(nn.Module):
         mgr_config : MgrConfig, default=None
             Configuration for InferenceManager.
 
+        return_features : bool, default=False
+            If True, return per-feature last-block outputs alongside row
+            representations. This path bypasses the InferenceManager's
+            chunking — the whole (B, T, H+C, E) tensor is processed in one
+            call. Memory cost scales linearly with ``T * H``.
+
         Returns
         -------
-        Tensor
-            Row representations of shape (B, T, C*E) where C is the number of class tokens.
+        Tensor or tuple of Tensors
+            Row representations of shape (B, T, C*E); optionally a second
+            tensor ``feature_outputs`` of shape (B, T, H, E).
         """
         # Configure inference parameters
         if mgr_config is None:
@@ -234,13 +292,25 @@ class RowInteraction(nn.Module):
         B, T = embeddings.shape[:2]
         cls_tokens = self.cls_tokens.expand(B, T, self.num_cls, self.embed_dim)
         embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+
+        if return_features:
+            # Bypass InferenceManager chunking: run the full aggregation in
+            # one shot so the per-feature output tensor is contiguous.
+            return self._aggregate_embeddings(embeddings, key_mask=None, return_features=True)
+
         representations = self.inference_mgr(
             self._aggregate_embeddings, inputs=OrderedDict([("embeddings", embeddings)])
         )
 
         return representations  # (B, T, C*E)
 
-    def forward(self, embeddings: Tensor, d: Optional[Tensor] = None, mgr_config: MgrConfig = None) -> Tensor:
+    def forward(
+        self,
+        embeddings: Tensor,
+        d: Optional[Tensor] = None,
+        mgr_config: MgrConfig = None,
+        return_features: bool = False,
+    ) -> Union[Tensor, Tuple[Tensor, Tensor]]:
         """Transform feature embeddings into row representations.
 
         Parameters
@@ -259,15 +329,18 @@ class RowInteraction(nn.Module):
         mgr_config : MgrConfig, default=None
             Configuration for InferenceManager. Used only in inference mode.
 
+        return_features : bool, default=False
+            If True, return ``(representations, feature_outputs)`` where
+            ``feature_outputs`` has shape (B, T, H, E). See
+            :meth:`_aggregate_embeddings` for details.
+
         Returns
         -------
-        Tensor
-            Row representations of shape (B, T, C*E) where C is the number of class tokens.
+        Tensor or tuple of Tensors
+            Row representations of shape (B, T, C*E); optionally a second
+            tensor ``feature_outputs`` of shape (B, T, H, E).
         """
 
         if self.training:
-            representations = self._train_forward(embeddings, d)
-        else:
-            representations = self._inference_forward(embeddings, mgr_config)
-
-        return representations  # (B, T, C*E)
+            return self._train_forward(embeddings, d, return_features=return_features)
+        return self._inference_forward(embeddings, mgr_config, return_features=return_features)

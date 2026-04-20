@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, List, Union, Literal
+from typing import Optional, List, Tuple, Union, Literal
 
 import torch
 from torch import nn, Tensor
@@ -289,8 +289,13 @@ class TabICL(nn.Module):
         self._cache = None
 
     def _train_forward(
-        self, X: Tensor, y_train: Tensor, d: Optional[Tensor] = None, embed_with_test: bool = False
-    ) -> Tensor:
+        self,
+        X: Tensor,
+        y_train: Tensor,
+        d: Optional[Tensor] = None,
+        embed_with_test: bool = False,
+        return_column_embeddings: bool = False,
+    ) -> Union[Tensor, Tuple[Tensor, Tensor]]:
         """Column-wise embedding -> row-wise interaction -> dataset-wise in-context learning for training.
 
         Parameters
@@ -313,13 +318,16 @@ class TabICL(nn.Module):
         embed_with_test : bool, default=False
             If True, allow training samples to attend to test samples during embedding.
 
+        return_column_embeddings : bool, default=False
+            If True, also return per-feature embeddings of shape (B, H, E),
+            mean-pooled over training rows.
+
         Returns
         -------
-        Tensor
-            Predictions of shape (B, test_size, out_dim):
-
-            - For regression (max_classes=0): out_dim = num_quantiles
-            - For classification (max_classes>0): out_dim = max_classes
+        Tensor or tuple of Tensors
+            Predictions of shape (B, test_size, out_dim). When
+            ``return_column_embeddings`` is True, also returns a tensor of
+            shape (B, H, E) alongside.
         """
 
         B, T, H = X.shape
@@ -331,17 +339,22 @@ class TabICL(nn.Module):
             d = None
 
         # Column-wise embedding -> Row-wise interaction
-        representations = self.row_interactor(
-            self.col_embedder(
-                X,
-                y_train=y_train,
-                d=d,
-                embed_with_test=embed_with_test,
-            ),
+        col_emb = self.col_embedder(
+            X,
+            y_train=y_train,
             d=d,
+            embed_with_test=embed_with_test,
         )
 
-        # Dataset-wise in-context learning
+        if return_column_embeddings:
+            representations, feature_outputs = self.row_interactor(col_emb, d=d, return_features=True)
+            # Mean-pool over training rows only, to avoid test-label leakage
+            # through the column-wise target-aware embedding path.
+            column_embeddings = feature_outputs[:, :train_size].mean(dim=1)  # (B, H, E)
+            logits = self.icl_predictor(representations, y_train=y_train)
+            return logits, column_embeddings
+
+        representations = self.row_interactor(col_emb, d=d)
         return self.icl_predictor(representations, y_train=y_train)
 
     def _inference_forward(
@@ -353,7 +366,8 @@ class TabICL(nn.Module):
         return_logits: bool = True,
         softmax_temperature: float = 0.9,
         inference_config: Optional[InferenceConfig] = None,
-    ) -> Tensor:
+        return_column_embeddings: bool = False,
+    ) -> Union[Tensor, Tuple[Tensor, Tensor]]:
         """Column-wise embedding -> row-wise interaction -> dataset-wise in-context learning.
 
         Parameters
@@ -404,17 +418,25 @@ class TabICL(nn.Module):
         if inference_config is None:
             inference_config = InferenceConfig()
 
-        # Column-wise embedding -> Row-wise interaction
-        representations = self.row_interactor(
-            self.col_embedder(
-                X,
-                y_train=y_train,
-                embed_with_test=embed_with_test,
-                feature_shuffles=feature_shuffles,
-                mgr_config=inference_config.COL_CONFIG,
-            ),
-            mgr_config=inference_config.ROW_CONFIG,
+        # Column-wise embedding
+        col_emb = self.col_embedder(
+            X,
+            y_train=y_train,
+            embed_with_test=embed_with_test,
+            feature_shuffles=feature_shuffles,
+            mgr_config=inference_config.COL_CONFIG,
         )
+
+        # Row-wise interaction (optionally exposing per-feature embeddings)
+        if return_column_embeddings:
+            representations, feature_outputs = self.row_interactor(
+                col_emb,
+                mgr_config=inference_config.ROW_CONFIG,
+                return_features=True,
+            )
+            column_embeddings = feature_outputs[:, :train_size].mean(dim=1)  # (B, H, E)
+        else:
+            representations = self.row_interactor(col_emb, mgr_config=inference_config.ROW_CONFIG)
 
         # Dataset-wise in-context learning
         out = self.icl_predictor(
@@ -425,6 +447,8 @@ class TabICL(nn.Module):
             mgr_config=inference_config.ICL_CONFIG,
         )
 
+        if return_column_embeddings:
+            return out, column_embeddings
         return out
 
     def forward(
@@ -437,7 +461,8 @@ class TabICL(nn.Module):
         return_logits: bool = True,
         softmax_temperature: float = 0.9,
         inference_config: Optional[InferenceConfig] = None,
-    ) -> Tensor:
+        return_column_embeddings: bool = False,
+    ) -> Union[Tensor, Tuple[Tensor, Tensor]]:
         """Column-wise embedding -> row-wise interaction -> dataset-wise in-context learning.
 
         Parameters
@@ -474,26 +499,30 @@ class TabICL(nn.Module):
         inference_config : Optional[InferenceConfig], default=None
             Inference configuration. Used only in inference mode.
 
+        return_column_embeddings : bool, default=False
+            If True, also return per-column embeddings of shape
+            (B, n_features, embed_dim), mean-pooled over training rows from
+            the last ``RowInteraction`` block. Enables downstream per-feature
+            attribution heads without re-running the trunk. When False
+            (default), behavior and output are unchanged.
+
         Returns
         -------
-        Tensor
-            For training mode:
-                Predictions of shape (B, test_size, out_dim):
-
-                - For regression (max_classes=0): out_dim = num_quantiles
-                - For classification (max_classes>0): out_dim = max_classes
-
-            For inference mode:
-                For regression (max_classes=0):
-                    Predictions of shape (B, test_size, num_quantiles)
-
-                For classification (max_classes>0):
-                    If return_logits=True: Logits of shape (B, test_size, num_classes)
-                    If return_logits=False: Probabilities of shape (B, test_size, num_classes)
+        Tensor or tuple of Tensors
+            Predictions of shape (B, test_size, out_dim). When
+            ``return_column_embeddings`` is True, returns
+            ``(predictions, column_embeddings)`` where ``column_embeddings``
+            has shape (B, n_features, embed_dim).
         """
 
         if self.training:
-            out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+            out = self._train_forward(
+                X,
+                y_train,
+                d=d,
+                embed_with_test=embed_with_test,
+                return_column_embeddings=return_column_embeddings,
+            )
         else:
             out = self._inference_forward(
                 X,
@@ -503,6 +532,7 @@ class TabICL(nn.Module):
                 return_logits=return_logits,
                 softmax_temperature=softmax_temperature,
                 inference_config=inference_config,
+                return_column_embeddings=return_column_embeddings,
             )
 
         return out
