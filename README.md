@@ -41,6 +41,7 @@ pip install tabicl
 Optional dependencies can be installed as needed:
 ```bash
 pip install tabicl[forecast]   # time series forecasting
+pip install tabicl[shap]       # SHAP-based explainability
 pip install tabicl[pretrain]   # pre-training
 pip install tabicl[all]        # everything
 ```
@@ -154,7 +155,7 @@ from tabicl import TabICLForecaster
 
 forecaster = TabICLForecaster(
     max_context_length=4096,  # max historical timesteps to use as context
-    temporal_features=None,  # timestep index, calendar patterns, and seasonality
+    temporal_features=None,  # None = ["index", "datetime", "periodic"]; also accepts a list mixing string names and TimeTransform instances
     point_estimate="mean",  # point prediction method: "mean" or "median"
     tabicl_config=None,  # passed to TabICLRegressor; None uses default settings
 )
@@ -191,6 +192,35 @@ fig, axes = plot_forecast(context_df=context_df, pred_df=pred_df, test_df=test_d
 <img src="./docs/figures/tabiclv2_time_series.png" width="60%" alt="Runtimes for different hardware and sample sizes" style="display: block; margin: auto;">
 
 `TabICLForecaster` is heavily inspired by [TabPFN-TS](https://arxiv.org/abs/2501.02945v3). We may later improve it to enhance the ability of TabICL for time series forecasting.
+
+## Explainability
+
+TabICL integrates with [SHAP](https://github.com/shap/shap) via `tabicl.shap`. It uses a single all-NaN row as the SHAP background, exploiting TabICL's native NaN handling so that masked features are genuinely removed from the model's perspective instead of being replaced by a reference value.
+
+### SHAP values
+
+```python
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from tabicl import TabICLClassifier
+from tabicl.shap import get_shap_values, plot_shap
+
+X, y = load_breast_cancer(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.8, random_state=42)
+
+clf = TabICLClassifier()
+clf.fit(X_train, y_train)
+
+shap_values = get_shap_values(
+    estimator=clf,                                       # fitted TabICLClassifier or TabICLRegressor
+    X_test=X_test[:10],                                  # samples to explain
+    attribute_names=load_breast_cancer().feature_names,  # feature names
+)
+
+plot_shap(shap_values)
+```
+
+`get_shap_values` also accepts any extra keyword arguments and forwards them to the underlying `shap.Explainer`.
 
 ## Pre-training
 
@@ -285,36 +315,6 @@ pipeline = make_pipeline(
 
 pipeline.fit(X_train, y_train)  # X should be a DataFrame
 predictions = pipeline.predict(X_test)
-```
-
-## Explainability
-
-Install the optional dependencies:
-```bash
-pip install tabicl[shap]
-```
-
-### SHAP values
-
-```python
-from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import train_test_split
-from tabicl import TabICLClassifier
-from tabicl.shap import get_shap_values, plot_shap
-
-X, y = load_breast_cancer(return_X_y=True)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.8, random_state=42)
-
-clf = TabICLClassifier()
-clf.fit(X_train, y_train)
-
-shap_values = get_shap_values(
-    estimator=clf,
-    X_test=X_test[:10],
-    attribute_names=load_breast_cancer().feature_names,
-)
-
-plot_shap(shap_values)
 ```
 
 ## Citation
