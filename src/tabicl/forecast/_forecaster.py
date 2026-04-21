@@ -9,7 +9,7 @@ import pandas as pd
 
 from tabicl.forecast._ts_dataframe import TimeSeriesDataFrame
 from tabicl.forecast._preprocessing import build_horizon
-from tabicl.forecast.transforms.base import TimeTransform
+from tabicl.forecast.transforms._base import TimeTransform
 from tabicl.forecast.transforms import (
     AutoPeriodicEncoder,
     DatetimeEncoder,

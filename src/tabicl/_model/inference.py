@@ -18,8 +18,8 @@ from tqdm.auto import tqdm
 import torch
 from torch import Tensor
 
-from ._kv_cache import KVCache
-from ._attention import flash_attn3_toggle
+from .kv_cache import KVCache
+from .attention import flash_attn3_toggle
 
 
 class MemoryEstimator:

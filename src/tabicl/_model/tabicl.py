@@ -4,12 +4,12 @@ from typing import Optional, List, Union, Literal
 import torch
 from torch import nn, Tensor
 
-from ._embedding import ColEmbedding
-from ._interaction import RowInteraction
-from ._learning import ICLearning
-from ._quantile_dist import QuantileToDistribution
-from ._kv_cache import TabICLCache
-from ._inference_config import InferenceConfig
+from .embedding import ColEmbedding
+from .interaction import RowInteraction
+from .learning import ICLearning
+from .quantile_dist import QuantileToDistribution
+from .kv_cache import TabICLCache
+from .inference_config import InferenceConfig
 
 
 class TabICL(nn.Module):

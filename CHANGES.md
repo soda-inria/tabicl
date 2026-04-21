@@ -3,6 +3,8 @@ In development
 
 - Add preprocessing for NumPy array inputs, consistent with existing behavior for Pandas arrays: ordinal encoding for categorical features, mean imputation for numerical features, and encoding missing values as a separate category for categorical columns. ([PR#51](https://github.com/soda-inria/tabicl/pull/51))
 
+- Public vs. private API boundary clarified (scikit-learn conventions) ([PR#84](https://github.com/soda-inria/tabicl/pull/84))
+
 2.0.3
 =====
 

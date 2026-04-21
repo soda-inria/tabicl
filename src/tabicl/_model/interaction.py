@@ -8,9 +8,9 @@ import torch
 from torch import nn, Tensor
 from torch.utils.checkpoint import checkpoint
 
-from ._encoders import Encoder
-from ._inference import InferenceManager
-from ._inference_config import MgrConfig, InferenceConfig
+from .encoders import Encoder
+from .inference import InferenceManager
+from .inference_config import MgrConfig, InferenceConfig
 
 
 class RowInteraction(nn.Module):

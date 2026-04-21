@@ -21,7 +21,7 @@ from torch.distributed import init_process_group, destroy_process_group
 from tqdm import tqdm
 import wandb
 
-from tabicl import TabICL
+from tabicl._model.tabicl import TabICL
 from tabicl.prior._dataset import PriorDataset
 from tabicl.prior._genload import LoadPriorDataset
 from tabicl.train._optim import get_scheduler

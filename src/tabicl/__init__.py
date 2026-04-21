@@ -1,5 +1,5 @@
-from .model import InferenceConfig
-from .sklearn import TabICLClassifier, TabICLRegressor
+from ._model import InferenceConfig
+from ._sklearn import TabICLClassifier, TabICLRegressor
 
 __all__ = [
     "TabICLClassifier",
@@ -22,7 +22,7 @@ def __getattr__(name):
             ) from None
 
     if name == "TabICLUnsupervised":
-        from .unsupervised import TabICLUnsupervised
+        from ._unsupervised import TabICLUnsupervised
 
         return TabICLUnsupervised
 

@@ -16,7 +16,7 @@ from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
 from tabicl import InferenceConfig
-from tabicl.model._tabicl import TabICL
+from tabicl._model.tabicl import TabICL
 
 
 def _check_version_compatibility(metadata: dict) -> None:
