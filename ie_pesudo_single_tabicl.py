@@ -31,6 +31,8 @@ CLASSIFICATION_TASKS = {"binclass", "multiclass"}
 CATEGORICAL_MISSING_TOKEN = "__tabicl_missing__"
 DEFAULT_PSEUDO_MAX_ERROR_RATE = 0.01
 DEFAULT_PSEUDO_ROUNDS = 2
+DEFAULT_CLASS_AWARE_PSEUDO_TOLERANCE = True
+CLASS_AWARE_PSEUDO_ERROR_RATE_CAP = 0.08
 
 np = None
 pd = None
@@ -62,6 +64,7 @@ class ResultRow:
     pseudo_wrong: int
     pseudo_precision: Optional[float]
     pseudo_error_rate: Optional[float]
+    effective_pseudo_max_error_rate: Optional[float]
     pseudo_rounds: int
     entropy_file: str
     fit_seconds: float
@@ -236,6 +239,7 @@ def make_empty_result_row(
         pseudo_wrong=0,
         pseudo_precision=None,
         pseudo_error_rate=None,
+        effective_pseudo_max_error_rate=None,
         pseudo_rounds=0,
         entropy_file="",
         fit_seconds=0.0,
@@ -342,6 +346,33 @@ def serialize_threshold_by_class(threshold_by_class: dict[str, Optional[float]])
     return json.dumps(threshold_by_class, ensure_ascii=False, sort_keys=True)
 
 
+def resolve_effective_pseudo_error_rate(
+    base_rate: float,
+    n_classes: int,
+    class_aware_enabled: bool,
+) -> float:
+    bounded_base_rate = min(max(float(base_rate), 0.0), 1.0)
+    if not class_aware_enabled:
+        return bounded_base_rate
+
+    bounded_class_count = max(int(n_classes), 0)
+    if bounded_class_count <= 2:
+        multiplier = 1.0
+    elif bounded_class_count <= 5:
+        multiplier = 2.0
+    elif bounded_class_count <= 10:
+        multiplier = 3.0
+    else:
+        multiplier = 4.0
+
+    return float(
+        min(
+            bounded_base_rate * multiplier,
+            CLASS_AWARE_PSEUDO_ERROR_RATE_CAP,
+        )
+    )
+
+
 def choose_entropy_thresholds_by_class(
     entropy,
     predicted_labels,
@@ -422,6 +453,7 @@ def run_entropy_two_pass_pseudo(
     y_test,
     *,
     pseudo_max_error_rate: float,
+    effective_pseudo_max_error_rate: float | None = None,
     pseudo_rounds: int,
     entropy_save_dir: Path | None = None,
     dataset_key: str | None = None,
@@ -429,6 +461,11 @@ def run_entropy_two_pass_pseudo(
     ensure_runtime_deps()
 
     rounds = max(1, int(pseudo_rounds))
+    effective_error_rate = (
+        float(effective_pseudo_max_error_rate)
+        if effective_pseudo_max_error_rate is not None
+        else float(np.clip(pseudo_max_error_rate, 0.0, 1.0))
+    )
     # Avoid eagerly duplicating large train blocks; we only materialize a new
     # object once pseudo-labeled rows are appended.
     cur_X_train = X_train
@@ -476,7 +513,7 @@ def run_entropy_two_pass_pseudo(
             entropy=entropy,
             predicted_labels=y_pred,
             correct_mask=correct,
-            max_error_rate=pseudo_max_error_rate,
+            max_error_rate=effective_error_rate,
         )
         selected_new_mask = selected_mask_all & (~added_mask)
         selected_cnt = int(selected_new_mask.sum())
@@ -506,6 +543,7 @@ def run_entropy_two_pass_pseudo(
                 selected_count_new=np.asarray(selected_cnt, dtype=np.int64),
                 selected_precision=np.asarray(selected_precision_all, dtype=np.float32),
                 selected_error_rate=np.asarray(last_error_rate, dtype=np.float32),
+                effective_pseudo_max_error_rate=np.asarray(effective_error_rate, dtype=np.float32),
             )
             entropy_files.append(str(entropy_save_path))
 
@@ -536,6 +574,7 @@ def run_entropy_two_pass_pseudo(
         "selected_wrong": total_wrong,
         "selected_precision": float(total_correct / total_selected) if total_selected > 0 else 0.0,
         "selected_error_rate": float(total_wrong / total_selected) if total_selected > 0 else 0.0,
+        "effective_pseudo_max_error_rate": effective_error_rate,
         "train_ratio_final": final_train_ratio,
         "pass1_acc": pass1_acc,
         "rounds": rounds,
@@ -1017,6 +1056,7 @@ def evaluate_one_dataset(
     dataset_dir: Path,
     *,
     pseudo_max_error_rate: float,
+    class_aware_pseudo_tolerance: bool,
     pseudo_rounds: int,
     entropy_save_dir: Path | None = None,
 ) -> ResultRow:
@@ -1064,6 +1104,12 @@ def evaluate_one_dataset(
         test_count = int(len(y_test))
 
         classes = pd.unique(pd.Series(np.concatenate([np.asarray(y_train), np.asarray(y_test)], axis=0)))
+        n_classes = int(len(classes))
+        effective_pseudo_max_error_rate = resolve_effective_pseudo_error_rate(
+            pseudo_max_error_rate,
+            n_classes=n_classes,
+            class_aware_enabled=class_aware_pseudo_tolerance,
+        )
         total_count_before = train_count + test_count
         train_ratio_before = (
             float(train_count / total_count_before)
@@ -1079,6 +1125,7 @@ def evaluate_one_dataset(
             X_test,
             y_test,
             pseudo_max_error_rate=pseudo_max_error_rate,
+            effective_pseudo_max_error_rate=effective_pseudo_max_error_rate,
             pseudo_rounds=pseudo_rounds,
             entropy_save_dir=entropy_save_dir,
             dataset_key=dataset_key,
@@ -1102,7 +1149,7 @@ def evaluate_one_dataset(
             n_val=val_count,
             n_test=test_count,
             n_features=int(X_train.shape[1]),
-            n_classes=int(len(classes)),
+            n_classes=n_classes,
             accuracy=accuracy,
             acc_round1=acc_round1,
             acc_round2=acc_round2,
@@ -1117,6 +1164,7 @@ def evaluate_one_dataset(
             pseudo_wrong=int(pseudo_meta["selected_wrong"]),
             pseudo_precision=float(pseudo_meta["selected_precision"]),
             pseudo_error_rate=float(pseudo_meta["selected_error_rate"]),
+            effective_pseudo_max_error_rate=float(pseudo_meta["effective_pseudo_max_error_rate"]),
             pseudo_rounds=int(pseudo_meta["rounds"]),
             entropy_file=entropy_file,
             fit_seconds=float(fit_seconds),
@@ -1142,6 +1190,7 @@ def worker_main(
     worker_out_csv: str,
     model_kwargs: Dict,
     pseudo_max_error_rate: float,
+    class_aware_pseudo_tolerance: bool,
     pseudo_rounds: int,
     entropy_save_dir: str,
     verbose: bool,
@@ -1181,6 +1230,7 @@ def worker_main(
                 classifier,
                 Path(dataset_dir),
                 pseudo_max_error_rate=pseudo_max_error_rate,
+                class_aware_pseudo_tolerance=class_aware_pseudo_tolerance,
                 pseudo_rounds=pseudo_rounds,
                 entropy_save_dir=Path(entropy_save_dir) if entropy_save_dir else None,
             )
@@ -1238,6 +1288,7 @@ def worker_main(
                     "pseudo_wrong": 0,
                     "pseudo_precision": None,
                     "pseudo_error_rate": None,
+                    "effective_pseudo_max_error_rate": None,
                     "pseudo_rounds": 0,
                     "entropy_file": "",
                     "fit_seconds": 0.0,
@@ -1259,6 +1310,7 @@ def model_pool_worker_main(
     result_queue,
     base_model_kwargs: Dict,
     pseudo_max_error_rate: float,
+    class_aware_pseudo_tolerance: bool,
     pseudo_rounds: int,
     verbose: bool,
 ) -> None:
@@ -1312,6 +1364,7 @@ def model_pool_worker_main(
                         classifier,
                         dataset_dir,
                         pseudo_max_error_rate=pseudo_max_error_rate,
+                        class_aware_pseudo_tolerance=class_aware_pseudo_tolerance,
                         pseudo_rounds=pseudo_rounds,
                         entropy_save_dir=entropy_save_dir,
                     )
@@ -1592,6 +1645,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--offload-mode", choices=["auto", "gpu", "cpu", "disk"], default="auto")
     parser.add_argument("--random-state", type=int, default=42)
     parser.add_argument("--pseudo-max-error-rate", type=float, default=DEFAULT_PSEUDO_MAX_ERROR_RATE)
+    parser.add_argument(
+        "--class-aware-pseudo-tolerance",
+        action=argparse.BooleanOptionalAction,
+        default=DEFAULT_CLASS_AWARE_PSEUDO_TOLERANCE,
+    )
     parser.add_argument("--pseudo-rounds", type=int, default=DEFAULT_PSEUDO_ROUNDS)
     parser.add_argument(
         "--save-entropy-artifacts",
@@ -1660,6 +1718,7 @@ def run_single_model_mode(
                 str(worker_csv),
                 dict(model_kwargs),
                 float(np.clip(args.pseudo_max_error_rate, 0.0, 1.0)),
+                bool(args.class_aware_pseudo_tolerance),
                 max(1, int(args.pseudo_rounds)),
                 str(entropy_save_dir) if entropy_save_dir is not None else "",
                 args.verbose,
@@ -1759,6 +1818,7 @@ def run_multi_model_mode(
                     result_queue,
                     dict(base_model_kwargs),
                     float(np.clip(args.pseudo_max_error_rate, 0.0, 1.0)),
+                    bool(args.class_aware_pseudo_tolerance),
                     max(1, int(args.pseudo_rounds)),
                     args.verbose,
                 ),
