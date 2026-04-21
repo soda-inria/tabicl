@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import gluonts.time_feature
 
-from tabicl.forecast.transforms.base import TimeTransform
+from tabicl.forecast.transforms._base import TimeTransform
 
 
 class IndexEncoder(TimeTransform):

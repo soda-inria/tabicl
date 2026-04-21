@@ -1,4 +1,4 @@
-from .activations import get_activations
+from ._activations import get_activations
 
 
 DEFAULT_FIXED_HP = {

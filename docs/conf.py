@@ -52,6 +52,10 @@ autodoc_default_options = {
     "inherited-members": False,
 }
 autodoc_typehints = "none"
+# Keep default arguments as their source-code names (e.g. `DEFAULT_FIXED_HP`)
+# instead of evaluating them into the full dict/list repr, which bloats
+# signatures like `PriorDataset(..., scm_fixed_hp={<huge dict>}, ...)`.
+autodoc_preserve_defaults = True
 
 # intersphinx mapping
 intersphinx_mapping = {

@@ -10,8 +10,8 @@ from scipy import fft
 from scipy.signal import find_peaks
 from statsmodels.tsa.stattools import acf
 
-from tabicl.forecast.transforms.base import TimeTransform
-from tabicl.forecast.transforms.calendar import FourierEncoder
+from tabicl.forecast.transforms._base import TimeTransform
+from tabicl.forecast.transforms._calendar import FourierEncoder
 
 
 logger = logging.getLogger(__name__)

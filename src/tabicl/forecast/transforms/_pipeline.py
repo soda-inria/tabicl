@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pandas as pd
 
-from tabicl.forecast.ts_dataframe import TimeSeriesDataFrame
-from tabicl.forecast.transforms.base import TimeTransform
+from tabicl.forecast._ts_dataframe import TimeSeriesDataFrame
+from tabicl.forecast.transforms._base import TimeTransform
 
 
 class TimeTransformChain:

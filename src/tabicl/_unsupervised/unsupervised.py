@@ -6,8 +6,8 @@ import torch
 from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
-from tabicl.sklearn.preprocessing import Shuffler
-from tabicl.model.quantile_dist import QuantileDistribution
+from tabicl._sklearn.preprocessing import Shuffler
+from tabicl._model.quantile_dist import QuantileDistribution
 from tabicl import TabICLClassifier, TabICLRegressor
 
 

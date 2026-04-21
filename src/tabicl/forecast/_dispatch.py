@@ -10,8 +10,8 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 from typing import Callable
 
-from tabicl.forecast.ts_dataframe import TimeSeriesDataFrame
-from tabicl.forecast.preprocessing import separate_target
+from tabicl.forecast._ts_dataframe import TimeSeriesDataFrame
+from tabicl.forecast._preprocessing import separate_target
 
 
 class SeriesDispatcher:
