@@ -23,7 +23,7 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-DEFAULT_DATA_ROOT = Path("data181")
+DEFAULT_DATA_ROOT = Path("data178")
 DEFAULT_MODEL_PATH = "tabicl-classifier-v1.1-20250506.ckpt"
 DEFAULT_CHECKPOINT_VERSION = "tabicl-classifier-v1.1-20250506.ckpt"
 CLASSIFICATION_TASKS = {"binclass", "multiclass"}
@@ -986,10 +986,18 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--models-dir", default=None)
     parser.add_argument("--checkpoint-version", default=DEFAULT_CHECKPOINT_VERSION)
-    parser.add_argument("--out-dir", default="result/tabiclv1_1_classification_8gpu")
-    parser.add_argument("--workers", type=int, default=8)
-    parser.add_argument("--gpus", default="0,1,2,3,4,5,6,7")
-    parser.add_argument("--n-estimators", type=int, default=32)
+    parser.add_argument("--out-dir", default="baseline/iclv1.1_ensmble1")
+    parser.add_argument("--workers", type=int, default=3)
+    parser.add_argument("--gpus", default="0,1,2")
+    parser.add_argument(
+        "--n-estimators",
+        "--ensemble",
+        "--ensmble",
+        dest="n_estimators",
+        type=int,
+        default=1,
+        help="Number of TabICL ensemble estimators. --ensemble/--ensmble are aliases for this value.",
+    )
     parser.add_argument("--batch-size", type=parse_optional_int, default=8)
     parser.add_argument("--kv-cache", type=parse_kv_cache, default=False)
     parser.add_argument("--use-amp", type=parse_auto_bool, default="auto")

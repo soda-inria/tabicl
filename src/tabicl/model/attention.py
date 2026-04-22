@@ -36,6 +36,52 @@ def flash_attn3_toggle(enabled: bool):
         _use_flash_attn3 = old
 
 
+def _is_sdpa_backend_error(exc: RuntimeError) -> bool:
+    message = str(exc).lower()
+    backend_markers = (
+        "invalid configuration argument",
+        "no available kernel",
+        "no kernel",
+        "not supported",
+    )
+    oom_markers = ("out of memory", "cuda oom")
+    return any(marker in message for marker in backend_markers) and not any(
+        marker in message for marker in oom_markers
+    )
+
+
+@contextmanager
+def _math_sdpa_backend():
+    attention_api = getattr(torch.nn, "attention", None)
+    if (
+        attention_api is not None
+        and hasattr(attention_api, "sdpa_kernel")
+        and hasattr(attention_api, "SDPBackend")
+    ):
+        with attention_api.sdpa_kernel(attention_api.SDPBackend.MATH):
+            yield
+        return
+
+    sdp_kernel = getattr(torch.backends.cuda, "sdp_kernel", None)
+    if sdp_kernel is None:
+        yield
+        return
+
+    kwargs = {
+        "enable_flash": False,
+        "enable_math": True,
+        "enable_mem_efficient": False,
+        "enable_cudnn": False,
+    }
+    try:
+        context = sdp_kernel(**kwargs)
+    except TypeError:
+        kwargs.pop("enable_cudnn")
+        context = sdp_kernel(**kwargs)
+    with context:
+        yield
+
+
 def sdpa_with_flattened_batch(
     q: Tensor,
     k: Tensor,
@@ -95,27 +141,35 @@ def sdpa_with_flattened_batch(
         src_len = k.size(-2)
         q = ssmax_layer(q, src_len)
 
-    # FlashAttn3 doesn't support dropout and custom attention mask
-    if HAS_FLASH_ATTN3 and _use_flash_attn3 and q.is_cuda and attn_mask is None and dropout_p == 0.0:
-        # FlashAttention only supports fp16, bf16, and fp8_e4m3
-        # Convert to bf16 if needed, then convert back to original dtype
-        orig_dtype = q.dtype
-        if orig_dtype not in (torch.float16, torch.bfloat16):
-            fa_dtype = torch.float16
-        else:
-            fa_dtype = orig_dtype
+    try:
+        # FlashAttn3 doesn't support dropout and custom attention mask
+        if HAS_FLASH_ATTN3 and _use_flash_attn3 and q.is_cuda and attn_mask is None and dropout_p == 0.0:
+            # FlashAttention only supports fp16, bf16, and fp8_e4m3
+            # Convert to bf16 if needed, then convert back to original dtype
+            orig_dtype = q.dtype
+            if orig_dtype not in (torch.float16, torch.bfloat16):
+                fa_dtype = torch.float16
+            else:
+                fa_dtype = orig_dtype
 
-        flat_bs, nheads, seqlen_q, headdim = q.shape
-        seqlen_k = k.shape[-2]
-        q_fa = q.transpose(1, 2).reshape(flat_bs * seqlen_q, nheads, headdim).contiguous().to(fa_dtype)
-        k_fa = k.transpose(1, 2).reshape(flat_bs * seqlen_k, nheads, headdim).contiguous().to(fa_dtype)
-        v_fa = v.transpose(1, 2).reshape(flat_bs * seqlen_k, nheads, headdim).contiguous().to(fa_dtype)
-        cu_seqlens_q = torch.arange(0, (flat_bs + 1) * seqlen_q, seqlen_q, dtype=torch.int32, device=q.device)
-        cu_seqlens_k = torch.arange(0, (flat_bs + 1) * seqlen_k, seqlen_k, dtype=torch.int32, device=q.device)
-        out = flash_attn3(q_fa, k_fa, v_fa, cu_seqlens_q, cu_seqlens_k, seqlen_q, seqlen_k)
-        out = out.view(flat_bs, seqlen_q, nheads, headdim).transpose(1, 2).to(orig_dtype)
-    else:
-        out = F.scaled_dot_product_attention(q, k, v, attn_mask, dropout_p)
+            flat_bs, nheads, seqlen_q, headdim = q.shape
+            seqlen_k = k.shape[-2]
+            q_fa = q.transpose(1, 2).reshape(flat_bs * seqlen_q, nheads, headdim).contiguous().to(fa_dtype)
+            k_fa = k.transpose(1, 2).reshape(flat_bs * seqlen_k, nheads, headdim).contiguous().to(fa_dtype)
+            v_fa = v.transpose(1, 2).reshape(flat_bs * seqlen_k, nheads, headdim).contiguous().to(fa_dtype)
+            cu_seqlens_q = torch.arange(0, (flat_bs + 1) * seqlen_q, seqlen_q, dtype=torch.int32, device=q.device)
+            cu_seqlens_k = torch.arange(0, (flat_bs + 1) * seqlen_k, seqlen_k, dtype=torch.int32, device=q.device)
+            out = flash_attn3(q_fa, k_fa, v_fa, cu_seqlens_q, cu_seqlens_k, seqlen_q, seqlen_k)
+            out = out.view(flat_bs, seqlen_q, nheads, headdim).transpose(1, 2).to(orig_dtype)
+        else:
+            out = F.scaled_dot_product_attention(q, k, v, attn_mask, dropout_p)
+    except torch.cuda.OutOfMemoryError:
+        raise
+    except RuntimeError as exc:
+        if not (q.is_cuda and _is_sdpa_backend_error(exc)):
+            raise
+        with _math_sdpa_backend():
+            out = F.scaled_dot_product_attention(q, k, v, attn_mask, dropout_p)
 
     return out.view(q_shape)
 

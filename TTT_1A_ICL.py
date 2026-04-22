@@ -151,6 +151,7 @@ def format_dataset_result_log(
             f"fit={row.fit_seconds:.3f}s "
             f"predict={row.predict_seconds:.3f}s "
             f"ttt_applied={row.ttt_applied} "
+            f"ttt_update={row.ttt_update_seconds:.3f}s "
             f"ttt_loss={format_optional_float(row.ttt_loss)} "
             f"ttt_steps={row.ttt_steps}"
         )
@@ -268,6 +269,15 @@ def load_dataset_info(dataset_dir: Path) -> dict | None:
         return json.loads(info_path.read_text(encoding="utf-8"))
     except Exception:
         return None
+
+
+def should_skip_ttt_for_dataset(dataset_dir: Path, info: dict | None) -> bool:
+    dataset_names = {dataset_dir.name.strip().lower()}
+    if info:
+        info_name = str(info.get("name", "")).strip().lower()
+        if info_name:
+            dataset_names.add(info_name)
+    return "volkert" in dataset_names
 
 
 def find_dataset_dirs(data_root: Path) -> List[Path]:
@@ -740,17 +750,15 @@ def run_ttt_holdout_update(classifier, X_b, y_b, X_c, y_c, config: TTTConfig) ->
 
     optimizer = torch.optim.AdamW(trainable_params, lr=config.lr, weight_decay=config.weight_decay)
 
+    X_b_encoded = classifier.X_encoder_.transform(X_b)
     X_c_encoded = classifier.X_encoder_.transform(X_c)
+    y_b_encoded = classifier.y_encoder_.transform(y_b)
     y_c_encoded = classifier.y_encoder_.transform(y_c)
-    ensemble_data = classifier.ensemble_generator_.transform(X_c_encoded, mode="both")
+    X_ttt = np.concatenate([X_b_encoded, X_c_encoded], axis=0)
 
     device = classifier.device_
     device_type = getattr(device, "type", str(device).split(":")[0])
     use_autocast = torch_dtype != torch.float32 and device_type in {"cuda", "cpu"}
-    forward_model = classifier.model_
-    if config.data_parallel and device_type == "cuda" and torch.cuda.device_count() > 1:
-        forward_model = torch.nn.DataParallel(classifier.model_)
-        forward_model.train()
 
     from contextlib import nullcontext
 
@@ -761,55 +769,34 @@ def run_ttt_holdout_update(classifier, X_b, y_b, X_c, y_c, config: TTTConfig) ->
 
     last_loss = None
     try:
-        total_tables = sum(int(Xs.shape[0]) for Xs, _ in ensemble_data.values())
-        if total_tables == 0:
+        if X_c_encoded.shape[0] == 0:
             return TTTUpdateResult(
                 applied=False,
                 loss=None,
                 steps=0,
                 update_seconds=time.time() - update_start,
-                reason="No ensemble tables available for TTT",
+                reason="No hold-out samples available for TTT",
             )
+
+        X_batch = torch.from_numpy(X_ttt).float().unsqueeze(0).to(device)
+        y_train_batch = torch.from_numpy(y_b_encoded).float().unsqueeze(0).to(device)
+        y_target_batch = torch.from_numpy(y_c_encoded).long().to(device)
+        d_batch = torch.tensor([X_ttt.shape[1]], device=device)
 
         for _ in range(config.steps):
             optimizer.zero_grad(set_to_none=True)
-            micro_losses = []
 
-            for norm_method, (Xs, ys) in ensemble_data.items():
-                class_shuffles = classifier.ensemble_generator_.class_shuffles_[norm_method]
-                y_targets = np.stack(
-                    [np.asarray(shuffle, dtype=np.int64)[y_c_encoded.astype(int)] for shuffle in class_shuffles],
-                    axis=0,
-                )
+            with forward_context():
+                logits = classifier.model_(X_batch, y_train_batch, d_batch)
+                loss = F.cross_entropy(logits.flatten(end_dim=-2), y_target_batch.flatten())
 
-                batch_size = config.micro_batch_size
-                n_tables = Xs.shape[0]
-                for start in range(0, n_tables, batch_size):
-                    end = min(start + batch_size, n_tables)
-                    X_batch = torch.from_numpy(Xs[start:end]).float().to(device)
-                    y_train_batch = torch.from_numpy(ys[start:end]).float().to(device)
-                    y_target_batch = torch.from_numpy(y_targets[start:end]).long().to(device)
-
-                    with forward_context():
-                        logits = forward_model(
-                            X_batch,
-                            y_train_batch,
-                            return_logits=True,
-                            softmax_temperature=classifier.softmax_temperature,
-                            inference_config=classifier.inference_config_,
-                        )
-                        loss = F.cross_entropy(logits.flatten(end_dim=-2), y_target_batch.flatten())
-
-                    scaled_loss = loss * float(end - start) / float(total_tables)
-                    scaled_loss.backward()
-                    micro_losses.append(float(loss.detach().cpu()))
+            loss.backward()
 
             if config.grad_clip > 0:
                 torch.nn.utils.clip_grad_norm_(trainable_params, config.grad_clip)
             optimizer.step()
-            last_loss = float(np.mean(micro_losses)) if micro_losses else None
+            last_loss = float(loss.detach().cpu())
     finally:
-        del forward_model
         if hasattr(classifier.model_, "clear_cache"):
             classifier.model_.clear_cache()
         classifier.model_kv_cache_ = None
@@ -1010,38 +997,42 @@ def evaluate_one_dataset(classifier, dataset_dir: Path, ttt_config: TTTConfig | 
 
         t0 = time.time()
         if ttt_config.enabled:
-            split = split_ttt_holdout(y_train, ttt_config)
-            ttt_split_strategy = split.strategy
-            ttt_split_reason = split.reason
-            n_train_b = int(len(split.b_indices))
-            n_holdout_c = int(len(split.c_indices))
-
-            if n_train_b > 0 and n_holdout_c > 0:
-                X_b = take_rows(X_train, split.b_indices)
-                y_b = np.asarray(y_train)[split.b_indices]
-                X_c = take_rows(X_train, split.c_indices)
-                y_c = np.asarray(y_train)[split.c_indices]
-                ttt_result = run_ttt_holdout_update(classifier, X_b, y_b, X_c, y_c, ttt_config)
-            else:
-                ttt_result = TTTUpdateResult(
-                    applied=False,
-                    loss=None,
-                    steps=0,
-                    update_seconds=0.0,
-                    reason="B/C split produced an empty side; skipped TTT",
-                )
-
-            ttt_loss = ttt_result.loss
-            ttt_steps = ttt_result.steps
-            ttt_applied = ttt_result.applied
-            ttt_update_seconds = float(ttt_result.update_seconds)
-            if ttt_result.reason:
-                ttt_split_reason = f"{ttt_split_reason} | {ttt_result.reason}"
-
-            if ttt_applied:
-                _fit_preserving_model_weights(classifier, X_train, y_train)
-            else:
+            if should_skip_ttt_for_dataset(dataset_dir, info):
+                ttt_split_reason = "TTT skipped for dataset=volkert to avoid OOM"
                 classifier.fit(X_train, y_train)
+            else:
+                split = split_ttt_holdout(y_train, ttt_config)
+                ttt_split_strategy = split.strategy
+                ttt_split_reason = split.reason
+                n_train_b = int(len(split.b_indices))
+                n_holdout_c = int(len(split.c_indices))
+
+                if n_train_b > 0 and n_holdout_c > 0:
+                    X_b = take_rows(X_train, split.b_indices)
+                    y_b = np.asarray(y_train)[split.b_indices]
+                    X_c = take_rows(X_train, split.c_indices)
+                    y_c = np.asarray(y_train)[split.c_indices]
+                    ttt_result = run_ttt_holdout_update(classifier, X_b, y_b, X_c, y_c, ttt_config)
+                else:
+                    ttt_result = TTTUpdateResult(
+                        applied=False,
+                        loss=None,
+                        steps=0,
+                        update_seconds=0.0,
+                        reason="B/C split produced an empty side; skipped TTT",
+                    )
+
+                ttt_loss = ttt_result.loss
+                ttt_steps = ttt_result.steps
+                ttt_applied = ttt_result.applied
+                ttt_update_seconds = float(ttt_result.update_seconds)
+                if ttt_result.reason:
+                    ttt_split_reason = f"{ttt_split_reason} | {ttt_result.reason}"
+
+                if ttt_applied:
+                    _fit_preserving_model_weights(classifier, X_train, y_train)
+                else:
+                    classifier.fit(X_train, y_train)
         else:
             classifier.fit(X_train, y_train)
         fit_seconds = time.time() - t0
@@ -1431,7 +1422,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--models-dir", default=None)
     parser.add_argument("--checkpoint-version", default=DEFAULT_CHECKPOINT_VERSION)
-    parser.add_argument("--out-dir", default="1a_result/tabiclv1_1_ttt2")
+    parser.add_argument("--out-dir", default="1a_result/tabiclv1_1_ttt3_all")
     parser.add_argument("--workers", type=int, default=None)
     parser.add_argument("--gpus", default=None)
     parser.add_argument("--gpu-groups", default=None)
@@ -1455,7 +1446,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--ttt-steps", type=int, default=1)
     parser.add_argument("--ttt-freeze-col", type=parse_bool, default=True)
     parser.add_argument("--ttt-freeze-row", type=parse_bool, default=True)
-    parser.add_argument("--ttt-data-parallel", action="store_true")
+    parser.add_argument("--ttt-data-parallel",default=True, action="store_true")
     parser.add_argument("--verbose", action="store_true")
     return parser
 
@@ -1786,7 +1777,7 @@ def main() -> None:
     if not dataset_dirs:
         raise FileNotFoundError(f"No dataset directories found under {data_root}")
 
-    gpu_ids = resolve_gpu_ids(args)
+    gpu_ids, gpu_groups = resolve_gpu_assignments(args)
 
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     os.environ.setdefault("MKL_NUM_THREADS", "1")
