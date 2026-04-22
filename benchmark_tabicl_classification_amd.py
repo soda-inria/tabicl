@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import gc
-import hashlib
 import json
 import multiprocessing as mp
 import os
@@ -24,13 +23,11 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-DEFAULT_DATA_ROOT = Path("data178")
+DEFAULT_DATA_ROOT = Path("data181")
 DEFAULT_MODEL_PATH = "tabicl-classifier-v1.1-20250506.ckpt"
 DEFAULT_CHECKPOINT_VERSION = "tabicl-classifier-v1.1-20250506.ckpt"
 CLASSIFICATION_TASKS = {"binclass", "multiclass"}
 CATEGORICAL_MISSING_TOKEN = "__tabicl_missing__"
-DEFAULT_PSEUDO_MAX_ERROR_RATE = 0.0001
-DEFAULT_PSEUDO_ROUNDS = 3
 
 np = None
 pd = None
@@ -42,29 +39,11 @@ class ResultRow:
     dataset_dir: str
     task_type: Optional[str]
     n_train: int
-    n_train_initial: int
-    n_train_final: int
     n_val: int
     n_test: int
     n_features: int
     n_classes: int
     accuracy: Optional[float]
-    acc_rounds_json: str
-    acc_round1: Optional[float]
-    acc_round2: Optional[float]
-    acc_delta: Optional[float]
-    acc_improved: Optional[bool]
-    train_ratio_before: Optional[float]
-    train_ratio_after: Optional[float]
-    pass1_acc: Optional[float]
-    entropy_threshold: Optional[str]
-    pseudo_selected: int
-    pseudo_correct: int
-    pseudo_wrong: int
-    pseudo_precision: Optional[float]
-    pseudo_error_rate: Optional[float]
-    pseudo_rounds: int
-    entropy_file: str
     fit_seconds: float
     predict_seconds: float
     status: str
@@ -81,23 +60,9 @@ class ModelSummaryRow:
     failed_count: int
     skipped_count: int
     avg_accuracy_ok: Optional[float]
-    avg_acc_rounds_json: Optional[str]
-    avg_acc_round1_ok: Optional[float]
-    avg_acc_round2_ok: Optional[float]
-    avg_acc_delta_ok: Optional[float]
     avg_fit_seconds_ok: Optional[float]
     avg_predict_seconds_ok: Optional[float]
     avg_dataset_seconds_ok: Optional[float]
-    avg_pass1_acc_ok: Optional[float]
-    avg_train_ratio_before_ok: Optional[float]
-    avg_train_ratio_after_ok: Optional[float]
-    avg_pseudo_selected_ok: Optional[float]
-    total_pseudo_selected_ok: int
-    improved_dataset_count: int
-    degraded_dataset_count: int
-    unchanged_dataset_count: int
-    avg_pseudo_precision_ok: Optional[float]
-    avg_pseudo_error_rate_ok: Optional[float]
     total_dataset_seconds_ok: float
     model_wall_seconds: float
     status: str
@@ -144,489 +109,6 @@ def parse_kv_cache(value: str) -> bool | str:
     if lowered in {"kv", "repr"}:
         return lowered
     raise argparse.ArgumentTypeError("kv_cache must be one of: false, true, kv, repr")
-
-
-def resolve_data_root_path(data_root: str | os.PathLike[str]) -> Path:
-    raw_path = Path(data_root).expanduser()
-    if raw_path.is_absolute():
-        return raw_path.resolve()
-
-    candidate_paths = [
-        raw_path,
-        Path.cwd() / raw_path,
-        REPO_ROOT / raw_path,
-    ]
-    for candidate in candidate_paths:
-        if candidate.exists():
-            return candidate.resolve()
-    return (REPO_ROOT / raw_path).resolve()
-
-
-def apply_worker_environment_updates(gpu_id: int) -> str:
-    gpu_id_str = str(gpu_id)
-    # Set visibility vars for both CUDA and ROCm stacks so each worker sees one GPU.
-    os.environ["CUDA_VISIBLE_DEVICES"] = gpu_id_str
-    os.environ["ROCR_VISIBLE_DEVICES"] = gpu_id_str
-    os.environ["HIP_VISIBLE_DEVICES"] = gpu_id_str
-    os.environ.setdefault("OMP_NUM_THREADS", "1")
-    os.environ.setdefault("MKL_NUM_THREADS", "1")
-    return "cuda:0"
-
-
-def parse_gpu_id_list(value: str) -> List[int]:
-    return [int(x.strip()) for x in value.split(",") if x.strip()]
-
-
-def detect_default_gpu_ids() -> List[int]:
-    for env_name in ("CUDA_VISIBLE_DEVICES", "ROCR_VISIBLE_DEVICES", "HIP_VISIBLE_DEVICES"):
-        raw_value = os.environ.get(env_name, "").strip()
-        if not raw_value:
-            continue
-        try:
-            gpu_ids = parse_gpu_id_list(raw_value)
-        except ValueError:
-            gpu_ids = []
-        if gpu_ids:
-            return gpu_ids
-
-    try:
-        import torch
-
-        device_count = int(torch.cuda.device_count())
-    except Exception:
-        device_count = 0
-
-    if device_count <= 0:
-        raise RuntimeError("No visible GPU detected; please pass --gpus explicitly")
-    return list(range(device_count))
-
-
-def dataset_entropy_key(dataset_dir: Path) -> str:
-    dataset_hash = hashlib.md5(str(dataset_dir.resolve()).encode("utf-8")).hexdigest()[:12]
-    return f"{dataset_dir.name}__{dataset_hash}"
-
-
-def make_empty_result_row(
-    dataset_dir: Path,
-    *,
-    task_type: Optional[str],
-    status: str,
-    error: Optional[str],
-) -> ResultRow:
-    return ResultRow(
-        dataset_name=dataset_dir.name,
-        dataset_dir=dataset_dir.as_posix(),
-        task_type=task_type,
-        n_train=0,
-        n_train_initial=0,
-        n_train_final=0,
-        n_val=0,
-        n_test=0,
-        n_features=0,
-        n_classes=0,
-        accuracy=None,
-        acc_rounds_json="[]",
-        acc_round1=None,
-        acc_round2=None,
-        acc_delta=None,
-        acc_improved=None,
-        train_ratio_before=None,
-        train_ratio_after=None,
-        pass1_acc=None,
-        entropy_threshold=None,
-        pseudo_selected=0,
-        pseudo_correct=0,
-        pseudo_wrong=0,
-        pseudo_precision=None,
-        pseudo_error_rate=None,
-        pseudo_rounds=0,
-        entropy_file="",
-        fit_seconds=0.0,
-        predict_seconds=0.0,
-        status=status,
-        error=error,
-    )
-
-
-def format_dataset_result_log(
-    worker_label: str,
-    row: ResultRow,
-    *,
-    model_name: str | None = None,
-) -> str:
-    prefix = f"[{worker_label}]"
-    if model_name:
-        prefix = f"{prefix} [{model_name}]"
-
-    if row.status == "ok":
-        accuracy = float(row.accuracy) if row.accuracy is not None else float("nan")
-        pass1_acc = float(row.pass1_acc) if row.pass1_acc is not None else float("nan")
-        return (
-            f"{prefix} [ok] {row.dataset_name} accuracy={accuracy:.6f} "
-            f"pass1_acc={pass1_acc:.6f} pseudo_selected={row.pseudo_selected}"
-        )
-    if row.status == "skip":
-        return f"{prefix} [skip] {row.dataset_name} reason={row.error}"
-    return f"{prefix} [fail] {row.dataset_name} error={row.error}"
-
-
-def entropy_from_proba(proba, eps: float = 1e-12) -> np.ndarray:
-    ensure_runtime_deps()
-
-    probs = np.asarray(proba, dtype=np.float64)
-    probs = np.clip(probs, eps, 1.0)
-    probs = probs / probs.sum(axis=1, keepdims=True)
-    return (-(probs * np.log(probs)).sum(axis=1)).astype(np.float32)
-
-
-def choose_entropy_threshold(
-    entropy,
-    correct_mask,
-    max_error_rate: float,
-) -> tuple[float, np.ndarray, int, int, float]:
-    ensure_runtime_deps()
-
-    entropy_arr = np.asarray(entropy, dtype=np.float64).reshape(-1)
-    correct_arr = np.asarray(correct_mask, dtype=bool).reshape(-1)
-    if entropy_arr.size == 0:
-        return float("-inf"), np.zeros(0, dtype=bool), 0, 0, 0.0
-
-    bounded_error_rate = float(np.clip(max_error_rate, 0.0, 1.0))
-    uniq_entropy, inverse = np.unique(entropy_arr, return_inverse=True)
-    bucket_selected = np.bincount(inverse, minlength=uniq_entropy.size).astype(np.int64)
-    bucket_correct = np.bincount(
-        inverse,
-        weights=correct_arr.astype(np.int64),
-        minlength=uniq_entropy.size,
-    ).astype(np.int64)
-
-    cum_selected = np.cumsum(bucket_selected)
-    cum_correct = np.cumsum(bucket_correct)
-    cum_wrong = cum_selected - cum_correct
-    cum_error_rate = cum_wrong / np.maximum(cum_selected, 1)
-    feasible = np.where(cum_error_rate <= (bounded_error_rate + 1e-12))[0]
-    if feasible.size == 0:
-        return float("-inf"), np.zeros_like(correct_arr), 0, 0, 0.0
-
-    best_idx = int(feasible[0])
-    best_correct = int(cum_correct[best_idx])
-    best_selected = int(cum_selected[best_idx])
-    for idx in feasible[1:]:
-        correct_count = int(cum_correct[idx])
-        selected_count = int(cum_selected[idx])
-        if correct_count > best_correct or (
-            correct_count == best_correct and selected_count > best_selected
-        ):
-            best_idx = int(idx)
-            best_correct = correct_count
-            best_selected = selected_count
-
-    threshold = float(uniq_entropy[best_idx])
-    selected_mask = entropy_arr <= threshold
-    selected_count = int(selected_mask.sum())
-    selected_correct = int(correct_arr[selected_mask].sum()) if selected_count > 0 else 0
-    selected_precision = (
-        float(selected_correct / selected_count)
-        if selected_count > 0
-        else 0.0
-    )
-    return threshold, selected_mask, selected_count, selected_correct, selected_precision
-
-
-def stringify_class_label(label: Any) -> str:
-    ensure_runtime_deps()
-
-    if isinstance(label, np.generic):
-        label = label.item()
-    return str(label)
-
-
-def serialize_threshold_by_class(threshold_by_class: dict[str, Optional[float]]) -> str:
-    return json.dumps(threshold_by_class, ensure_ascii=False, sort_keys=True)
-
-
-def serialize_round_accs(round_accs: List[float]) -> str:
-    return json.dumps([float(item) for item in round_accs], ensure_ascii=False)
-
-
-def parse_round_accs_json(value: Any) -> List[float]:
-    ensure_runtime_deps()
-
-    if value is None:
-        return []
-    if isinstance(value, float) and np.isnan(value):
-        return []
-    if isinstance(value, (list, tuple, np.ndarray)):
-        raw_items = value
-    else:
-        text = str(value).strip()
-        if not text:
-            return []
-        try:
-            raw_items = json.loads(text)
-        except Exception:
-            return []
-
-    round_accs: List[float] = []
-    for item in raw_items:
-        try:
-            numeric = float(item)
-        except Exception:
-            continue
-        if numeric == numeric:
-            round_accs.append(numeric)
-    return round_accs
-
-
-def compute_avg_round_accs_from_ok_df(ok_df) -> List[float]:
-    ensure_runtime_deps()
-
-    if ok_df is None or len(ok_df) == 0:
-        return []
-
-    fallback_columns = [
-        column
-        for column in ("acc_round1", "acc_round2")
-        if column in ok_df.columns
-    ]
-    per_row_round_accs: List[List[float]] = []
-    for _, row in ok_df.iterrows():
-        row_accs = (
-            parse_round_accs_json(row["acc_rounds_json"])
-            if "acc_rounds_json" in ok_df.columns
-            else []
-        )
-        if not row_accs:
-            for column in fallback_columns:
-                try:
-                    numeric = float(row[column])
-                except Exception:
-                    continue
-                if numeric == numeric:
-                    row_accs.append(numeric)
-        per_row_round_accs.append(row_accs)
-
-    max_rounds = max((len(items) for items in per_row_round_accs), default=0)
-    avg_round_accs: List[float] = []
-    for round_idx in range(max_rounds):
-        values = [
-            items[round_idx]
-            for items in per_row_round_accs
-            if round_idx < len(items)
-        ]
-        if values:
-            avg_round_accs.append(float(np.mean(values)))
-    return avg_round_accs
-
-
-def choose_entropy_thresholds_by_class(
-    entropy,
-    predicted_labels,
-    correct_mask,
-    max_error_rate: float,
-) -> tuple[dict[str, Optional[float]], np.ndarray, int, int, float]:
-    ensure_runtime_deps()
-
-    entropy_arr = np.asarray(entropy, dtype=np.float64).reshape(-1)
-    predicted_arr = np.asarray(predicted_labels)
-    correct_arr = np.asarray(correct_mask, dtype=bool).reshape(-1)
-    if entropy_arr.size == 0:
-        return {}, np.zeros(0, dtype=bool), 0, 0, 0.0
-
-    selected_mask_all = np.zeros(entropy_arr.shape[0], dtype=bool)
-    threshold_by_class: dict[str, Optional[float]] = {}
-    selected_total = 0
-    correct_total = 0
-
-    for class_label in pd.unique(pd.Series(predicted_arr)):
-        class_mask = np.asarray(predicted_arr == class_label, dtype=bool)
-        class_key = stringify_class_label(class_label)
-        class_entropy = entropy_arr[class_mask]
-        class_correct = correct_arr[class_mask]
-        (
-            threshold,
-            class_selected_mask,
-            class_selected_count,
-            class_selected_correct,
-            _class_selected_precision,
-        ) = choose_entropy_threshold(
-            entropy=class_entropy,
-            correct_mask=class_correct,
-            max_error_rate=max_error_rate,
-        )
-
-        threshold_by_class[class_key] = (
-            float(threshold) if np.isfinite(threshold) else None
-        )
-        if class_selected_count > 0:
-            class_indices = np.flatnonzero(class_mask)
-            selected_mask_all[class_indices[class_selected_mask]] = True
-            selected_total += int(class_selected_count)
-            correct_total += int(class_selected_correct)
-
-    selected_precision = (
-        float(correct_total / selected_total)
-        if selected_total > 0
-        else 0.0
-    )
-    return threshold_by_class, selected_mask_all, selected_total, correct_total, selected_precision
-
-
-def append_feature_rows(X_existing, X_new):
-    ensure_runtime_deps()
-
-    if isinstance(X_existing, pd.DataFrame):
-        return pd.concat([X_existing, X_new], axis=0, ignore_index=True)
-    return np.concatenate([np.asarray(X_existing), np.asarray(X_new)], axis=0)
-
-
-def predict_labels_from_proba(classifier, proba: np.ndarray, X_test):
-    ensure_runtime_deps()
-
-    classes = getattr(classifier, "classes_", None)
-    if classes is not None:
-        class_values = np.asarray(classes)
-        pred_idx = np.asarray(np.argmax(proba, axis=1), dtype=np.int64)
-        return class_values[pred_idx]
-    return np.asarray(classifier.predict(X_test))
-
-
-def run_entropy_two_pass_pseudo(
-    classifier,
-    X_train,
-    y_train,
-    X_test,
-    y_test,
-    *,
-    pseudo_max_error_rate: float,
-    pseudo_rounds: int,
-    entropy_save_dir: Path | None = None,
-    dataset_key: str | None = None,
-) -> tuple[np.ndarray, float, float, dict[str, Any]]:
-    ensure_runtime_deps()
-
-    rounds = max(1, int(pseudo_rounds))
-    # Avoid eagerly duplicating large train blocks; we only materialize a new
-    # object once pseudo-labeled rows are appended.
-    cur_X_train = X_train
-    cur_y_train = np.asarray(y_train)
-    X_test_values = X_test
-    y_test_values = np.asarray(y_test)
-    added_mask = np.zeros(int(len(y_test_values)), dtype=bool)
-
-    total_fit_time = 0.0
-    total_pred_time = 0.0
-    y_pred_last = None
-    pass1_acc = float("nan")
-    round_accs: List[float] = []
-    entropy_files: list[str] = []
-    total_selected = 0
-    total_correct = 0
-    total_wrong = 0
-    last_threshold_by_class: dict[str, Optional[float]] = {}
-    last_threshold_json = ""
-    last_precision = float("nan")
-    last_error_rate = float("nan")
-
-    for round_idx in range(1, rounds + 1):
-        fit_started = time.perf_counter()
-        classifier.fit(cur_X_train, cur_y_train)
-        total_fit_time += time.perf_counter() - fit_started
-
-        pred_started = time.perf_counter()
-        proba = np.asarray(classifier.predict_proba(X_test_values))
-        y_pred = np.asarray(predict_labels_from_proba(classifier, proba, X_test_values))
-        total_pred_time += time.perf_counter() - pred_started
-        y_pred_last = y_pred
-
-        entropy = entropy_from_proba(proba)
-        correct = np.asarray(y_pred == y_test_values)
-        round_acc = float(correct.mean()) if correct.size > 0 else float("nan")
-        round_accs.append(round_acc)
-        if round_idx == 1:
-            pass1_acc = round_acc
-
-        (
-            threshold_by_class,
-            selected_mask_all,
-            selected_cnt_all,
-            _selected_correct_all,
-            selected_precision_all,
-        ) = choose_entropy_thresholds_by_class(
-            entropy=entropy,
-            predicted_labels=y_pred,
-            correct_mask=correct,
-            max_error_rate=pseudo_max_error_rate,
-        )
-        selected_new_mask = selected_mask_all & (~added_mask)
-        selected_cnt = int(selected_new_mask.sum())
-        selected_correct = int(correct[selected_new_mask].sum()) if selected_cnt > 0 else 0
-        selected_wrong = int(selected_cnt - selected_correct)
-        selected_precision = float(selected_correct / selected_cnt) if selected_cnt > 0 else 0.0
-
-        last_threshold_by_class = dict(threshold_by_class)
-        last_threshold_json = serialize_threshold_by_class(last_threshold_by_class)
-        last_precision = selected_precision_all
-        last_error_rate = float(1.0 - selected_precision_all) if selected_cnt_all > 0 else 0.0
-
-        if entropy_save_dir is not None and dataset_key is not None:
-            entropy_save_dir.mkdir(parents=True, exist_ok=True)
-            entropy_save_path = entropy_save_dir / f"{dataset_key}__round{round_idx}_entropy.npz"
-            np.savez_compressed(
-                entropy_save_path,
-                round_idx=np.asarray(round_idx, dtype=np.int32),
-                entropy=entropy.astype(np.float32),
-                y_pred=np.asarray(y_pred),
-                y_test=np.asarray(y_test_values),
-                selected_mask=selected_mask_all.astype(np.uint8),
-                selected_new_mask=selected_new_mask.astype(np.uint8),
-                selected_correct=np.asarray(correct[selected_mask_all]).astype(np.uint8),
-                threshold_by_class_json=np.asarray(last_threshold_json),
-                selected_count=np.asarray(selected_cnt_all, dtype=np.int64),
-                selected_count_new=np.asarray(selected_cnt, dtype=np.int64),
-                selected_precision=np.asarray(selected_precision_all, dtype=np.float32),
-                selected_error_rate=np.asarray(last_error_rate, dtype=np.float32),
-            )
-            entropy_files.append(str(entropy_save_path))
-
-        if selected_cnt > 0:
-            if isinstance(X_test_values, pd.DataFrame):
-                selected_X = X_test_values.loc[selected_new_mask].copy()
-            else:
-                selected_X = np.asarray(X_test_values)[selected_new_mask]
-            cur_X_train = append_feature_rows(cur_X_train, selected_X)
-            cur_y_train = np.concatenate([cur_y_train, y_pred[selected_new_mask]], axis=0)
-            added_mask[selected_new_mask] = True
-            total_selected += selected_cnt
-            total_correct += selected_correct
-            total_wrong += selected_wrong
-
-    if y_pred_last is None:
-        raise RuntimeError("Pseudo-label inference produced no predictions")
-
-    final_train_count = int(len(cur_y_train))
-    test_count = int(len(y_test_values))
-    total_count = final_train_count + test_count
-    final_train_ratio = float(final_train_count / total_count) if total_count > 0 else float("nan")
-    meta = {
-        "threshold_by_class": dict(last_threshold_by_class),
-        "threshold_by_class_json": last_threshold_json,
-        "selected_cnt": total_selected,
-        "selected_correct": total_correct,
-        "selected_wrong": total_wrong,
-        "selected_precision": float(total_correct / total_selected) if total_selected > 0 else 0.0,
-        "selected_error_rate": float(total_wrong / total_selected) if total_selected > 0 else 0.0,
-        "train_ratio_final": final_train_ratio,
-        "pass1_acc": pass1_acc,
-        "round_accs": list(round_accs),
-        "round_accs_json": serialize_round_accs(round_accs),
-        "rounds": rounds,
-        "last_round_precision": last_precision,
-        "last_round_error_rate": last_error_rate,
-        "entropy_files": entropy_files,
-        "n_train_final": final_train_count,
-    }
-    return y_pred_last, total_fit_time, total_pred_time, meta
 
 
 def load_dataset_info(dataset_dir: Path) -> dict | None:
@@ -880,10 +362,6 @@ def preload_model_once(classifier: Any, worker_label: str, verbose: bool) -> Non
 
 
 def release_classifier_resources(classifier: Any) -> None:
-    release_classifier_dataset_state(classifier, keep_model=False)
-
-
-def release_classifier_dataset_state(classifier: Any, *, keep_model: bool) -> None:
     if classifier is None:
         return
 
@@ -896,11 +374,7 @@ def release_classifier_dataset_state(classifier: Any, *, keep_model: bool) -> No
     except Exception:
         pass
 
-    attr_names = ["model_kv_cache_", "ensemble_generator_", "X_encoder_", "y_encoder_"]
-    if not keep_model:
-        attr_names.append("model_")
-
-    for attr_name in attr_names:
+    for attr_name in ("model_kv_cache_", "ensemble_generator_", "X_encoder_", "y_encoder_", "model_"):
         if hasattr(classifier, attr_name):
             try:
                 setattr(classifier, attr_name, None)
@@ -967,21 +441,6 @@ def build_model_summary_row(
         if len(ok_df)
         else None
     )
-    avg_acc_round1_ok = float(ok_df["acc_round1"].mean()) if len(ok_df) else None
-    avg_acc_round2_ok = float(ok_df["acc_round2"].mean()) if len(ok_df) else None
-    avg_acc_rounds = compute_avg_round_accs_from_ok_df(ok_df)
-    avg_acc_rounds_json = serialize_round_accs(avg_acc_rounds)
-    avg_acc_delta_ok = float(ok_df["acc_delta"].mean()) if len(ok_df) else None
-    avg_pass1_acc_ok = float(ok_df["pass1_acc"].mean()) if len(ok_df) else None
-    avg_train_ratio_before_ok = float(ok_df["train_ratio_before"].mean()) if len(ok_df) else None
-    avg_train_ratio_after_ok = float(ok_df["train_ratio_after"].mean()) if len(ok_df) else None
-    avg_pseudo_selected_ok = float(ok_df["pseudo_selected"].mean()) if len(ok_df) else None
-    total_pseudo_selected_ok = int(ok_df["pseudo_selected"].sum()) if len(ok_df) else 0
-    improved_dataset_count = int((ok_df["acc_delta"] > 0).sum()) if len(ok_df) else 0
-    degraded_dataset_count = int((ok_df["acc_delta"] < 0).sum()) if len(ok_df) else 0
-    unchanged_dataset_count = int((ok_df["acc_delta"] == 0).sum()) if len(ok_df) else 0
-    avg_pseudo_precision_ok = float(ok_df["pseudo_precision"].mean()) if len(ok_df) else None
-    avg_pseudo_error_rate_ok = compute_avg_pseudo_error_rate_ok(result_df)
     failed_datasets = ",".join(failed_df["dataset_name"].astype(str).tolist()) if len(failed_df) else ""
 
     if error is not None:
@@ -994,23 +453,9 @@ def build_model_summary_row(
             failed_count=len(dataset_dirs),
             skipped_count=0,
             avg_accuracy_ok=None,
-            avg_acc_rounds_json=None,
-            avg_acc_round1_ok=None,
-            avg_acc_round2_ok=None,
-            avg_acc_delta_ok=None,
             avg_fit_seconds_ok=None,
             avg_predict_seconds_ok=None,
             avg_dataset_seconds_ok=None,
-            avg_pass1_acc_ok=None,
-            avg_train_ratio_before_ok=None,
-            avg_train_ratio_after_ok=None,
-            avg_pseudo_selected_ok=None,
-            total_pseudo_selected_ok=0,
-            improved_dataset_count=0,
-            degraded_dataset_count=0,
-            unchanged_dataset_count=0,
-            avg_pseudo_precision_ok=None,
-            avg_pseudo_error_rate_ok=None,
             total_dataset_seconds_ok=0.0,
             model_wall_seconds=float(model_wall_seconds),
             status="fail",
@@ -1027,23 +472,9 @@ def build_model_summary_row(
         failed_count=int(len(failed_df)),
         skipped_count=int(len(skipped_df)),
         avg_accuracy_ok=(float(ok_df["accuracy"].mean()) if len(ok_df) else None),
-        avg_acc_rounds_json=avg_acc_rounds_json,
-        avg_acc_round1_ok=avg_acc_round1_ok,
-        avg_acc_round2_ok=avg_acc_round2_ok,
-        avg_acc_delta_ok=avg_acc_delta_ok,
         avg_fit_seconds_ok=avg_fit_seconds_ok,
         avg_predict_seconds_ok=avg_predict_seconds_ok,
         avg_dataset_seconds_ok=avg_dataset_seconds_ok,
-        avg_pass1_acc_ok=avg_pass1_acc_ok,
-        avg_train_ratio_before_ok=avg_train_ratio_before_ok,
-        avg_train_ratio_after_ok=avg_train_ratio_after_ok,
-        avg_pseudo_selected_ok=avg_pseudo_selected_ok,
-        total_pseudo_selected_ok=total_pseudo_selected_ok,
-        improved_dataset_count=improved_dataset_count,
-        degraded_dataset_count=degraded_dataset_count,
-        unchanged_dataset_count=unchanged_dataset_count,
-        avg_pseudo_precision_ok=avg_pseudo_precision_ok,
-        avg_pseudo_error_rate_ok=avg_pseudo_error_rate_ok,
         total_dataset_seconds_ok=total_dataset_seconds_ok,
         model_wall_seconds=float(model_wall_seconds),
         status="ok" if len(ok_df) else "fail",
@@ -1098,14 +529,7 @@ class BackgroundPrefetcher:
                 print(f"[prefetch] warning: failed to warm {model_path}: {exc}", flush=True)
 
 
-def evaluate_one_dataset(
-    classifier,
-    dataset_dir: Path,
-    *,
-    pseudo_max_error_rate: float,
-    pseudo_rounds: int,
-    entropy_save_dir: Path | None = None,
-) -> ResultRow:
+def evaluate_one_dataset(classifier, dataset_dir: Path) -> ResultRow:
     ensure_runtime_deps()
 
     task_type: Optional[str] = None
@@ -1113,9 +537,18 @@ def evaluate_one_dataset(
         info = load_dataset_info(dataset_dir)
         task_type = str(info.get("task_type", "")).lower() if info else None
         if task_type not in CLASSIFICATION_TASKS:
-            return make_empty_result_row(
-                dataset_dir,
+            return ResultRow(
+                dataset_name=dataset_dir.name,
+                dataset_dir=dataset_dir.as_posix(),
                 task_type=task_type,
+                n_train=0,
+                n_val=0,
+                n_test=0,
+                n_features=0,
+                n_classes=0,
+                accuracy=None,
+                fit_seconds=0.0,
+                predict_seconds=0.0,
                 status="skip",
                 error=f"Skipped due to task_type={task_type!r}",
             )
@@ -1128,6 +561,8 @@ def evaluate_one_dataset(
             train_split[2],
             context=f"{dataset_dir.name}-train",
         )
+        train_count = int(len(y_train))
+
         val_count = 0
         if val_split is not None:
             X_val, y_val = load_split(
@@ -1139,7 +574,6 @@ def evaluate_one_dataset(
             val_count = int(len(y_val))
             X_train = pd.concat([X_train, X_val], axis=0, ignore_index=True)
             y_train = np.concatenate([np.asarray(y_train), np.asarray(y_val)], axis=0)
-        train_count = int(len(y_train))
 
         X_test, y_test = load_split(
             test_split[0],
@@ -1147,75 +581,47 @@ def evaluate_one_dataset(
             test_split[2],
             context=f"{dataset_dir.name}-test",
         )
-        test_count = int(len(y_test))
 
         classes = pd.unique(pd.Series(np.concatenate([np.asarray(y_train), np.asarray(y_test)], axis=0)))
-        total_count_before = train_count + test_count
-        train_ratio_before = (
-            float(train_count / total_count_before)
-            if total_count_before > 0
-            else float("nan")
-        )
-        dataset_key = dataset_entropy_key(dataset_dir) if entropy_save_dir is not None else None
 
-        y_pred, fit_seconds, predict_seconds, pseudo_meta = run_entropy_two_pass_pseudo(
-            classifier,
-            X_train,
-            y_train,
-            X_test,
-            y_test,
-            pseudo_max_error_rate=pseudo_max_error_rate,
-            pseudo_rounds=pseudo_rounds,
-            entropy_save_dir=entropy_save_dir,
-            dataset_key=dataset_key,
-        )
+        t0 = time.time()
+        classifier.fit(X_train, y_train)
+        fit_seconds = time.time() - t0
 
-        round_accs = [float(item) for item in pseudo_meta.get("round_accs", [])]
+        t1 = time.time()
+        y_pred = classifier.predict(X_test)
+        predict_seconds = time.time() - t1
+
         accuracy = float(np.mean(np.asarray(y_pred) == np.asarray(y_test)))
-        acc_round1 = round_accs[0] if round_accs else float(pseudo_meta["pass1_acc"])
-        acc_round2 = round_accs[-1] if round_accs else accuracy
-        acc_delta = float(acc_round2 - acc_round1)
-        acc_improved = bool(acc_delta > 0.0)
-        entropy_files = pseudo_meta.get("entropy_files", [])
-        entropy_file = "|".join(entropy_files) if entropy_files else ""
 
         return ResultRow(
             dataset_name=dataset_dir.name,
             dataset_dir=dataset_dir.as_posix(),
             task_type=task_type,
-            n_train=int(pseudo_meta["n_train_final"]),
-            n_train_initial=train_count,
-            n_train_final=int(pseudo_meta["n_train_final"]),
+            n_train=int(len(y_train)),
             n_val=val_count,
-            n_test=test_count,
+            n_test=int(len(y_test)),
             n_features=int(X_train.shape[1]),
             n_classes=int(len(classes)),
             accuracy=accuracy,
-            acc_rounds_json=str(pseudo_meta["round_accs_json"]),
-            acc_round1=acc_round1,
-            acc_round2=acc_round2,
-            acc_delta=acc_delta,
-            acc_improved=acc_improved,
-            train_ratio_before=train_ratio_before,
-            train_ratio_after=float(pseudo_meta["train_ratio_final"]),
-            pass1_acc=acc_round1,
-            entropy_threshold=str(pseudo_meta["threshold_by_class_json"]),
-            pseudo_selected=int(pseudo_meta["selected_cnt"]),
-            pseudo_correct=int(pseudo_meta["selected_correct"]),
-            pseudo_wrong=int(pseudo_meta["selected_wrong"]),
-            pseudo_precision=float(pseudo_meta["selected_precision"]),
-            pseudo_error_rate=float(pseudo_meta["selected_error_rate"]),
-            pseudo_rounds=int(pseudo_meta["rounds"]),
-            entropy_file=entropy_file,
             fit_seconds=float(fit_seconds),
             predict_seconds=float(predict_seconds),
             status="ok",
             error=None,
         )
     except Exception as exc:
-        return make_empty_result_row(
-            dataset_dir,
+        return ResultRow(
+            dataset_name=dataset_dir.name,
+            dataset_dir=dataset_dir.as_posix(),
             task_type=task_type,
+            n_train=0,
+            n_val=0,
+            n_test=0,
+            n_features=0,
+            n_classes=0,
+            accuracy=None,
+            fit_seconds=0.0,
+            predict_seconds=0.0,
             status="fail",
             error=f"{type(exc).__name__}: {exc}",
         )
@@ -1229,14 +635,20 @@ def worker_main(
     start_event,
     worker_out_csv: str,
     model_kwargs: Dict,
-    pseudo_max_error_rate: float,
-    pseudo_rounds: int,
-    entropy_save_dir: str,
     verbose: bool,
 ) -> None:
     try:
         ensure_runtime_deps()
-        device_str = apply_worker_environment_updates(gpu_id)
+        gpu_id_str = str(gpu_id)
+        # Restrict visibility for both ROCm and CUDA hosts. On AMD boxes
+        # ROCR_VISIBLE_DEVICES is the effective selector, while on NVIDIA/CUDA
+        # hosts we must also set CUDA_VISIBLE_DEVICES to bind each worker to
+        # its assigned physical GPU before using device="cuda:0" internally.
+        os.environ["ROCR_VISIBLE_DEVICES"] = gpu_id_str
+        os.environ["CUDA_VISIBLE_DEVICES"] = gpu_id_str
+        os.environ.pop("HIP_VISIBLE_DEVICES", None)
+        os.environ.setdefault("OMP_NUM_THREADS", "1")
+        os.environ.setdefault("MKL_NUM_THREADS", "1")
 
         import torch
         from tabicl import TabICLClassifier
@@ -1249,9 +661,8 @@ def worker_main(
             )
 
         worker_kwargs = dict(model_kwargs)
-        worker_kwargs["device"] = device_str
+        worker_kwargs["device"] = "cuda:0"
         classifier = TabICLClassifier(**worker_kwargs)
-        preload_model_once(classifier, f"worker {worker_id} | gpu {gpu_id}", verbose)
 
         ready_queue.put(
             {
@@ -1265,24 +676,25 @@ def worker_main(
 
         rows: List[ResultRow] = []
         for dataset_dir in assigned_dataset_dirs:
-            row = evaluate_one_dataset(
-                classifier,
-                Path(dataset_dir),
-                pseudo_max_error_rate=pseudo_max_error_rate,
-                pseudo_rounds=pseudo_rounds,
-                entropy_save_dir=Path(entropy_save_dir) if entropy_save_dir else None,
-            )
+            row = evaluate_one_dataset(classifier, Path(dataset_dir))
             rows.append(row)
-            print(
-                format_dataset_result_log(
-                    f"worker {worker_id} | gpu {gpu_id}",
-                    row,
-                ),
-                flush=True,
-            )
 
-            release_classifier_dataset_state(classifier, keep_model=True)
-            force_memory_cleanup(device_str)
+            if verbose:
+                if row.status == "ok":
+                    print(
+                        f"[worker {worker_id} | gpu {gpu_id}] "
+                        f"[ok] {row.dataset_name} accuracy={row.accuracy:.6f}"
+                    )
+                elif row.status == "skip":
+                    print(
+                        f"[worker {worker_id} | gpu {gpu_id}] "
+                        f"[skip] {row.dataset_name} reason={row.error}"
+                    )
+                else:
+                    print(
+                        f"[worker {worker_id} | gpu {gpu_id}] "
+                        f"[fail] {row.dataset_name} error={row.error}"
+                    )
 
         pd.DataFrame([asdict(row) for row in rows]).to_csv(worker_out_csv, index=False)
     except Exception:
@@ -1306,29 +718,11 @@ def worker_main(
                     "dataset_dir": "__worker__",
                     "task_type": None,
                     "n_train": 0,
-                    "n_train_initial": 0,
-                    "n_train_final": 0,
                     "n_val": 0,
                     "n_test": 0,
                     "n_features": 0,
                     "n_classes": 0,
                     "accuracy": None,
-                    "acc_rounds_json": "[]",
-                    "acc_round1": None,
-                    "acc_round2": None,
-                    "acc_delta": None,
-                    "acc_improved": None,
-                    "train_ratio_before": None,
-                    "train_ratio_after": None,
-                    "pass1_acc": None,
-                    "entropy_threshold": None,
-                    "pseudo_selected": 0,
-                    "pseudo_correct": 0,
-                    "pseudo_wrong": 0,
-                    "pseudo_precision": None,
-                    "pseudo_error_rate": None,
-                    "pseudo_rounds": 0,
-                    "entropy_file": "",
                     "fit_seconds": 0.0,
                     "predict_seconds": 0.0,
                     "status": "fail",
@@ -1347,8 +741,6 @@ def model_pool_worker_main(
     task_queue,
     result_queue,
     base_model_kwargs: Dict,
-    pseudo_max_error_rate: float,
-    pseudo_rounds: int,
     verbose: bool,
 ) -> None:
     device_str = "cuda:0"
@@ -1356,7 +748,12 @@ def model_pool_worker_main(
 
     try:
         ensure_runtime_deps()
-        device_str = apply_worker_environment_updates(gpu_id)
+        # Keep the per-worker device mapping consistent across ROCm and CUDA.
+        os.environ["ROCR_VISIBLE_DEVICES"] = str(gpu_id)
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
+        os.environ.pop("HIP_VISIBLE_DEVICES", None)
+        os.environ.setdefault("OMP_NUM_THREADS", "1")
+        os.environ.setdefault("MKL_NUM_THREADS", "1")
 
         import torch
         from tabicl import TabICLClassifier
@@ -1384,7 +781,6 @@ def model_pool_worker_main(
                 return
 
             model_path = Path(str(task["model_path"]))
-            entropy_save_dir = Path(task["entropy_save_dir"]) if task.get("entropy_save_dir") else None
             started_at = time.time()
             classifier = None
 
@@ -1397,25 +793,28 @@ def model_pool_worker_main(
 
                 rows: List[ResultRow] = []
                 for dataset_dir in resolved_dataset_dirs:
-                    row = evaluate_one_dataset(
-                        classifier,
-                        dataset_dir,
-                        pseudo_max_error_rate=pseudo_max_error_rate,
-                        pseudo_rounds=pseudo_rounds,
-                        entropy_save_dir=entropy_save_dir,
-                    )
+                    row = evaluate_one_dataset(classifier, dataset_dir)
                     rows.append(row)
-                    print(
-                        format_dataset_result_log(
-                            worker_label,
-                            row,
-                            model_name=model_path.stem,
-                        ),
-                        flush=True,
-                    )
 
-                    release_classifier_dataset_state(classifier, keep_model=True)
-                    force_memory_cleanup(device_str)
+                    if verbose:
+                        if row.status == "ok":
+                            print(
+                                f"[{worker_label}] [{model_path.stem}] "
+                                f"[ok] {row.dataset_name} accuracy={row.accuracy:.6f}",
+                                flush=True,
+                            )
+                        elif row.status == "skip":
+                            print(
+                                f"[{worker_label}] [{model_path.stem}] "
+                                f"[skip] {row.dataset_name} reason={row.error}",
+                                flush=True,
+                            )
+                        else:
+                            print(
+                                f"[{worker_label}] [{model_path.stem}] "
+                                f"[fail] {row.dataset_name} error={row.error}",
+                                flush=True,
+                            )
 
                 summary = build_model_summary_row(
                     model_path=model_path,
@@ -1430,7 +829,6 @@ def model_pool_worker_main(
                         "gpu_id": gpu_id,
                         "status": "model_done",
                         "summary": asdict(summary),
-                        "rows": [asdict(row) for row in rows],
                     }
                 )
             except Exception as exc:
@@ -1448,7 +846,6 @@ def model_pool_worker_main(
                         "gpu_id": gpu_id,
                         "status": "model_done",
                         "summary": asdict(summary),
-                        "rows": [],
                     }
                 )
             finally:
@@ -1480,44 +877,6 @@ def model_pool_worker_main(
             pass
 
 
-def format_optional_metric(value: Any) -> str:
-    if value is None:
-        return "(none)"
-    try:
-        numeric = float(value)
-    except Exception:
-        return str(value)
-    if numeric != numeric:
-        return "nan"
-    return f"{numeric:.6f}"
-
-
-def filter_ok_rows_with_pseudo_selection(result_df: pd.DataFrame) -> pd.DataFrame:
-    ensure_runtime_deps()
-
-    if result_df.empty:
-        return result_df.iloc[0:0].copy()
-
-    pseudo_selected = pd.to_numeric(result_df["pseudo_selected"], errors="coerce")
-    return result_df[
-        (result_df["status"] == "ok")
-        & (pseudo_selected > 0)
-    ].copy()
-
-
-def compute_avg_pseudo_error_rate_ok(result_df: pd.DataFrame) -> Optional[float]:
-    ensure_runtime_deps()
-
-    selected_ok_df = filter_ok_rows_with_pseudo_selection(result_df)
-    if selected_ok_df.empty:
-        return None
-
-    pseudo_error_rate = pd.to_numeric(selected_ok_df["pseudo_error_rate"], errors="coerce")
-    if pseudo_error_rate.isna().all():
-        return None
-    return float(pseudo_error_rate.mean())
-
-
 def write_summary(
     summary_path: Path,
     result_df: pd.DataFrame,
@@ -1529,7 +888,6 @@ def write_summary(
     ok_df = result_df[result_df["status"] == "ok"].copy() if len(result_df) else pd.DataFrame()
     failed_df = result_df[result_df["status"] == "fail"].copy() if len(result_df) else pd.DataFrame()
     skipped_df = result_df[result_df["status"] == "skip"].copy() if len(result_df) else pd.DataFrame()
-    avg_round_accs = compute_avg_round_accs_from_ok_df(ok_df)
 
     lines = [
         f"discovered_datasets: {len(dataset_dirs)}",
@@ -1537,26 +895,13 @@ def write_summary(
         f"ok_count: {len(ok_df)}",
         f"failed_count: {len(failed_df)}",
         f"skipped_count: {len(skipped_df)}",
-        f"avg_accuracy_ok: {format_optional_metric(ok_df['accuracy'].mean() if len(ok_df) else None)}",
+        (
+            f"avg_accuracy_ok: {ok_df['accuracy'].mean():.6f}"
+            if len(ok_df)
+            else "avg_accuracy_ok: (none)"
+        ),
+        f"wall_seconds: {wall_seconds:.3f}",
     ]
-    for round_idx, avg_round_acc in enumerate(avg_round_accs, start=1):
-        lines.append(f"avg_acc_round{round_idx}_ok: {format_optional_metric(avg_round_acc)}")
-    lines.extend(
-        [
-            f"avg_acc_delta_ok: {format_optional_metric(ok_df['acc_delta'].mean() if len(ok_df) else None)}",
-            f"improved_dataset_count: {int((ok_df['acc_delta'] > 0).sum()) if len(ok_df) else 0}",
-            f"degraded_dataset_count: {int((ok_df['acc_delta'] < 0).sum()) if len(ok_df) else 0}",
-            f"unchanged_dataset_count: {int((ok_df['acc_delta'] == 0).sum()) if len(ok_df) else 0}",
-            f"avg_pass1_acc_ok: {format_optional_metric(ok_df['pass1_acc'].mean() if len(ok_df) else None)}",
-            f"avg_train_ratio_before_ok: {format_optional_metric(ok_df['train_ratio_before'].mean() if len(ok_df) else None)}",
-            f"avg_train_ratio_after_ok: {format_optional_metric(ok_df['train_ratio_after'].mean() if len(ok_df) else None)}",
-            f"avg_pseudo_selected_ok: {format_optional_metric(ok_df['pseudo_selected'].mean() if len(ok_df) else None)}",
-            f"total_pseudo_selected_ok: {int(ok_df['pseudo_selected'].sum()) if len(ok_df) else 0}",
-            f"avg_pseudo_precision_ok: {format_optional_metric(ok_df['pseudo_precision'].mean() if len(ok_df) else None)}",
-            f"avg_pseudo_error_rate_ok: {format_optional_metric(compute_avg_pseudo_error_rate_ok(result_df))}",
-            f"wall_seconds: {wall_seconds:.3f}",
-        ]
-    )
 
     if len(failed_df):
         failed_names = ", ".join(failed_df["dataset_name"].astype(str).tolist())
@@ -1573,22 +918,6 @@ def write_summary(
     summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def write_dataset_outputs(
-    out_dir: Path,
-    result_df: pd.DataFrame,
-    dataset_dirs: List[Path],
-    wall_seconds: float,
-) -> tuple[Path, Path]:
-    ensure_runtime_deps()
-
-    out_dir.mkdir(parents=True, exist_ok=True)
-    all_csv = out_dir / "all_classification_results.csv"
-    summary_txt = out_dir / "summary.txt"
-    result_df.to_csv(all_csv, index=False)
-    write_summary(summary_txt, result_df, dataset_dirs, wall_seconds)
-    return all_csv, summary_txt
-
-
 def write_model_pool_outputs(
     out_dir: Path,
     model_summaries: List[dict[str, Any]],
@@ -1603,23 +932,10 @@ def write_model_pool_outputs(
     )
     for column in (
         "avg_accuracy_ok",
-        "avg_acc_round1_ok",
-        "avg_acc_round2_ok",
-        "avg_acc_delta_ok",
         "avg_fit_seconds_ok",
         "avg_predict_seconds_ok",
         "avg_dataset_seconds_ok",
-        "avg_pass1_acc_ok",
-        "avg_train_ratio_before_ok",
-        "avg_train_ratio_after_ok",
-        "avg_pseudo_selected_ok",
-        "avg_pseudo_precision_ok",
-        "avg_pseudo_error_rate_ok",
         "total_dataset_seconds_ok",
-        "total_pseudo_selected_ok",
-        "improved_dataset_count",
-        "degraded_dataset_count",
-        "unchanged_dataset_count",
         "model_wall_seconds",
     ):
         if column in summary_df.columns:
@@ -1630,37 +946,23 @@ def write_model_pool_outputs(
 
     ok_df = summary_df[summary_df["status"] == "ok"].copy() if len(summary_df) else pd.DataFrame()
     failed_df = summary_df[summary_df["status"] == "fail"].copy() if len(summary_df) else pd.DataFrame()
-    avg_round_accs = []
-    if len(ok_df) and "avg_acc_rounds_json" in ok_df.columns:
-        avg_round_accs = compute_avg_round_accs_from_ok_df(
-            ok_df.rename(columns={"avg_acc_rounds_json": "acc_rounds_json"})
-        )
 
     lines = [
         f"total_models: {len(summary_df)}",
         f"successful_models: {len(ok_df)}",
         f"failed_models: {len(failed_df)}",
-        f"average_avg_dataset_seconds_ok: {format_optional_metric(ok_df['avg_dataset_seconds_ok'].mean() if len(ok_df) else None)}",
-        f"average_avg_accuracy_ok: {format_optional_metric(ok_df['avg_accuracy_ok'].mean() if len(ok_df) else None)}",
+        (
+            f"average_avg_dataset_seconds_ok: {ok_df['avg_dataset_seconds_ok'].mean():.6f}"
+            if len(ok_df)
+            else "average_avg_dataset_seconds_ok: (none)"
+        ),
+        (
+            f"average_avg_accuracy_ok: {ok_df['avg_accuracy_ok'].mean():.6f}"
+            if len(ok_df)
+            else "average_avg_accuracy_ok: (none)"
+        ),
+        f"global_wall_seconds: {wall_seconds:.3f}",
     ]
-    for round_idx, avg_round_acc in enumerate(avg_round_accs, start=1):
-        lines.append(f"average_avg_acc_round{round_idx}_ok: {format_optional_metric(avg_round_acc)}")
-    lines.extend(
-        [
-            f"average_avg_acc_delta_ok: {format_optional_metric(ok_df['avg_acc_delta_ok'].mean() if len(ok_df) else None)}",
-            f"total_improved_dataset_count: {int(ok_df['improved_dataset_count'].sum()) if len(ok_df) else 0}",
-            f"total_degraded_dataset_count: {int(ok_df['degraded_dataset_count'].sum()) if len(ok_df) else 0}",
-            f"total_unchanged_dataset_count: {int(ok_df['unchanged_dataset_count'].sum()) if len(ok_df) else 0}",
-            f"average_avg_pass1_acc_ok: {format_optional_metric(ok_df['avg_pass1_acc_ok'].mean() if len(ok_df) else None)}",
-            f"average_avg_train_ratio_before_ok: {format_optional_metric(ok_df['avg_train_ratio_before_ok'].mean() if len(ok_df) else None)}",
-            f"average_avg_train_ratio_after_ok: {format_optional_metric(ok_df['avg_train_ratio_after_ok'].mean() if len(ok_df) else None)}",
-            f"average_avg_pseudo_selected_ok: {format_optional_metric(ok_df['avg_pseudo_selected_ok'].mean() if len(ok_df) else None)}",
-            f"total_pseudo_selected_ok: {int(ok_df['total_pseudo_selected_ok'].sum()) if len(ok_df) else 0}",
-            f"average_avg_pseudo_precision_ok: {format_optional_metric(ok_df['avg_pseudo_precision_ok'].mean() if len(ok_df) else None)}",
-            f"average_avg_pseudo_error_rate_ok: {format_optional_metric(ok_df['avg_pseudo_error_rate_ok'].mean() if len(ok_df) else None)}",
-            f"global_wall_seconds: {wall_seconds:.3f}",
-        ]
-    )
 
     if len(failed_df):
         lines.append(
@@ -1676,7 +978,7 @@ def write_model_pool_outputs(
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Run TabICLv1.1 classification benchmarks on data178 with "
+            "Run TabICLv1.1 classification benchmarks on data181 with "
             "AMD/ROCm multi-GPU workers."
         )
     )
@@ -1684,23 +986,16 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--models-dir", default=None)
     parser.add_argument("--checkpoint-version", default=DEFAULT_CHECKPOINT_VERSION)
-    parser.add_argument("--out-dir", default="1B_result/iclv1.1_0.0001_round3")
-    parser.add_argument("--workers", type=int, default=None)
-    parser.add_argument("--gpus", default=None)
-    parser.add_argument("--n-estimators", type=int, default=8)
-    parser.add_argument("--batch-size", type=parse_optional_int, default=1)
+    parser.add_argument("--out-dir", default="result/tabiclv1_1_classification_8gpu")
+    parser.add_argument("--workers", type=int, default=8)
+    parser.add_argument("--gpus", default="0,1,2,3,4,5,6,7")
+    parser.add_argument("--n-estimators", type=int, default=32)
+    parser.add_argument("--batch-size", type=parse_optional_int, default=8)
     parser.add_argument("--kv-cache", type=parse_kv_cache, default=False)
     parser.add_argument("--use-amp", type=parse_auto_bool, default="auto")
     parser.add_argument("--use-fa3", type=parse_auto_bool, default="auto")
     parser.add_argument("--offload-mode", choices=["auto", "gpu", "cpu", "disk"], default="auto")
     parser.add_argument("--random-state", type=int, default=42)
-    parser.add_argument("--pseudo-max-error-rate", type=float, default=DEFAULT_PSEUDO_MAX_ERROR_RATE)
-    parser.add_argument("--pseudo-rounds", type=int, default=DEFAULT_PSEUDO_ROUNDS)
-    parser.add_argument(
-        "--save-entropy-artifacts",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-    )
     parser.add_argument("--max-datasets", type=int, default=None)
     parser.add_argument("--max-models", type=int, default=None)
     parser.add_argument("--prefetch-models", type=int, default=4)
@@ -1709,9 +1004,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def resolve_gpu_ids(args: argparse.Namespace) -> List[int]:
-    gpu_ids = parse_gpu_id_list(args.gpus) if args.gpus else detect_default_gpu_ids()
-    if args.workers is None:
-        args.workers = len(gpu_ids)
+    gpu_ids = [int(x.strip()) for x in args.gpus.split(",") if x.strip()]
     if len(gpu_ids) != args.workers:
         raise ValueError(f"--gpus must contain exactly {args.workers} ids")
     return gpu_ids
@@ -1739,7 +1032,6 @@ def run_single_model_mode(
 ) -> None:
     model_kwargs = build_common_model_kwargs(args)
     model_kwargs["model_path"] = normalize_model_path(args.model_path or DEFAULT_MODEL_PATH)
-    entropy_save_dir = out_dir / "entropy_pass1" if args.save_entropy_artifacts else None
 
     start_time = time.time()
     ready_queue: mp.Queue = mp.Queue()
@@ -1762,9 +1054,6 @@ def run_single_model_mode(
                 start_event,
                 str(worker_csv),
                 dict(model_kwargs),
-                float(np.clip(args.pseudo_max_error_rate, 0.0, 1.0)),
-                max(1, int(args.pseudo_rounds)),
-                str(entropy_save_dir) if entropy_save_dir is not None else "",
                 args.verbose,
             ),
             daemon=False,
@@ -1819,8 +1108,12 @@ def run_single_model_mode(
         if dfs
         else pd.DataFrame(columns=ResultRow.__annotations__.keys())
     )
+    all_csv = out_dir / "all_classification_results.csv"
+    summary_txt = out_dir / "summary.txt"
+    all_df.to_csv(all_csv, index=False)
+
     wall_seconds = time.time() - start_time
-    all_csv, summary_txt = write_dataset_outputs(out_dir, all_df, dataset_dirs, wall_seconds)
+    write_summary(summary_txt, all_df, dataset_dirs, wall_seconds)
 
     print(f"saved_all_csv: {all_csv}")
     print(f"saved_summary: {summary_txt}")
@@ -1861,8 +1154,6 @@ def run_multi_model_mode(
                     task_queue,
                     result_queue,
                     dict(base_model_kwargs),
-                    float(np.clip(args.pseudo_max_error_rate, 0.0, 1.0)),
-                    max(1, int(args.pseudo_rounds)),
                     args.verbose,
                 ),
                 daemon=False,
@@ -1912,18 +1203,7 @@ def run_multi_model_mode(
         for worker_id in range(worker_count):
             if next_model_idx >= len(model_paths):
                 break
-            model_path = model_paths[next_model_idx]
-            model_out_dir = out_dir / model_path.stem
-            task_queues[worker_id].put(
-                {
-                    "model_path": str(model_path),
-                    "entropy_save_dir": (
-                        str(model_out_dir / "entropy_pass1")
-                        if args.save_entropy_artifacts
-                        else ""
-                    ),
-                }
-            )
+            task_queues[worker_id].put({"model_path": str(model_paths[next_model_idx])})
             next_model_idx += 1
             prefetcher.schedule(model_paths[next_model_idx : next_model_idx + max(0, args.prefetch_models)])
 
@@ -1942,21 +1222,8 @@ def run_multi_model_mode(
 
             worker_id = int(message["worker_id"])
             summary = dict(message["summary"])
-            rows = list(message.get("rows", []))
             collected_summaries.append(summary)
             completed_models += 1
-            model_out_dir = out_dir / summary["model_name"]
-            model_df = (
-                pd.DataFrame(rows)
-                if rows
-                else pd.DataFrame(columns=ResultRow.__annotations__.keys())
-            )
-            write_dataset_outputs(
-                model_out_dir,
-                model_df,
-                dataset_dirs,
-                float(summary["model_wall_seconds"]),
-            )
 
             if args.verbose:
                 print(
@@ -1968,18 +1235,7 @@ def run_multi_model_mode(
                 )
 
             if next_model_idx < len(model_paths):
-                model_path = model_paths[next_model_idx]
-                model_out_dir = out_dir / model_path.stem
-                task_queues[worker_id].put(
-                    {
-                        "model_path": str(model_path),
-                        "entropy_save_dir": (
-                            str(model_out_dir / "entropy_pass1")
-                            if args.save_entropy_artifacts
-                            else ""
-                        ),
-                    }
-                )
+                task_queues[worker_id].put({"model_path": str(model_paths[next_model_idx])})
                 next_model_idx += 1
                 prefetcher.schedule(model_paths[next_model_idx : next_model_idx + max(0, args.prefetch_models)])
             elif worker_id not in closed_workers:
@@ -2020,13 +1276,11 @@ def main() -> None:
     args = parser.parse_args()
 
     ensure_runtime_deps()
-    args.pseudo_max_error_rate = float(np.clip(args.pseudo_max_error_rate, 0.0, 1.0))
-    args.pseudo_rounds = max(1, int(args.pseudo_rounds))
 
     if args.models_dir is not None and args.model_path is not None:
         raise ValueError("--models-dir and --model-path are mutually exclusive")
 
-    data_root = resolve_data_root_path(args.data_root)
+    data_root = Path(args.data_root)
     if not data_root.exists():
         raise FileNotFoundError(f"Data root does not exist: {data_root}")
     if not data_root.is_dir():

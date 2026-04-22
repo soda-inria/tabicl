@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import gc
-import hashlib
 import json
 import multiprocessing as mp
 import os
@@ -15,7 +14,7 @@ import sys
 import threading
 import time
 import traceback
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -29,8 +28,6 @@ DEFAULT_MODEL_PATH = "tabicl-classifier-v1.1-20250506.ckpt"
 DEFAULT_CHECKPOINT_VERSION = "tabicl-classifier-v1.1-20250506.ckpt"
 CLASSIFICATION_TASKS = {"binclass", "multiclass"}
 CATEGORICAL_MISSING_TOKEN = "__tabicl_missing__"
-DEFAULT_PSEUDO_MAX_ERROR_RATE = 0.01
-DEFAULT_PSEUDO_ROUNDS = 2
 
 np = None
 pd = None
@@ -42,32 +39,61 @@ class ResultRow:
     dataset_dir: str
     task_type: Optional[str]
     n_train: int
-    n_train_initial: int
-    n_train_final: int
     n_val: int
     n_test: int
     n_features: int
     n_classes: int
     accuracy: Optional[float]
-    acc_round1: Optional[float]
-    acc_round2: Optional[float]
-    acc_delta: Optional[float]
-    acc_improved: Optional[bool]
-    train_ratio_before: Optional[float]
-    train_ratio_after: Optional[float]
-    pass1_acc: Optional[float]
-    entropy_threshold: Optional[float]
-    pseudo_selected: int
-    pseudo_correct: int
-    pseudo_wrong: int
-    pseudo_precision: Optional[float]
-    pseudo_error_rate: Optional[float]
-    pseudo_rounds: int
-    entropy_file: str
     fit_seconds: float
     predict_seconds: float
     status: str
     error: Optional[str]
+    n_train_a: int = 0
+    n_train_b: int = 0
+    n_holdout_c: int = 0
+    n_test_d: int = 0
+    ttt_loss: Optional[float] = None
+    ttt_steps: int = 0
+    ttt_lr: Optional[float] = None
+    ttt_applied: bool = False
+    ttt_update_seconds: float = 0.0
+    ttt_split_strategy: Optional[str] = None
+    ttt_split_reason: Optional[str] = None
+
+
+@dataclass
+class TTTConfig:
+    enabled: bool = False
+    lr: float = 2e-6
+    scheduler: str = "constant"
+    grad_clip: float = 1.0
+    dtype: str = "float32"
+    micro_batch_size: int = 1
+    weight_decay: float = 0.0
+    steps: int = 1
+    freeze_col: bool = True
+    freeze_row: bool = True
+    train_fraction: float = 0.75
+    random_state: int = 42
+    data_parallel: bool = False
+    gpu_group: Optional[str] = None
+
+
+@dataclass
+class TTTSplit:
+    b_indices: Any
+    c_indices: Any
+    strategy: str
+    reason: str
+
+
+@dataclass
+class TTTUpdateResult:
+    applied: bool
+    loss: Optional[float]
+    steps: int
+    update_seconds: float
+    reason: Optional[str] = None
 
 
 @dataclass
@@ -80,22 +106,9 @@ class ModelSummaryRow:
     failed_count: int
     skipped_count: int
     avg_accuracy_ok: Optional[float]
-    avg_acc_round1_ok: Optional[float]
-    avg_acc_round2_ok: Optional[float]
-    avg_acc_delta_ok: Optional[float]
     avg_fit_seconds_ok: Optional[float]
     avg_predict_seconds_ok: Optional[float]
     avg_dataset_seconds_ok: Optional[float]
-    avg_pass1_acc_ok: Optional[float]
-    avg_train_ratio_before_ok: Optional[float]
-    avg_train_ratio_after_ok: Optional[float]
-    avg_pseudo_selected_ok: Optional[float]
-    total_pseudo_selected_ok: int
-    improved_dataset_count: int
-    degraded_dataset_count: int
-    unchanged_dataset_count: int
-    avg_pseudo_precision_ok: Optional[float]
-    avg_pseudo_error_rate_ok: Optional[float]
     total_dataset_seconds_ok: float
     model_wall_seconds: float
     status: str
@@ -113,6 +126,37 @@ def ensure_runtime_deps() -> None:
 
         np = _np
         pd = _pd
+
+
+def format_optional_float(value: Optional[float], precision: int = 6) -> str:
+    if value is None:
+        return "None"
+    return f"{float(value):.{precision}f}"
+
+
+def format_dataset_result_log(
+    worker_label: str,
+    row: ResultRow,
+    *,
+    model_name: str | None = None,
+) -> str:
+    prefix = f"[{worker_label}]"
+    if model_name:
+        prefix = f"{prefix} [{model_name}]"
+
+    if row.status == "ok":
+        return (
+            f"{prefix} [ok] {row.dataset_name} "
+            f"accuracy={format_optional_float(row.accuracy)} "
+            f"fit={row.fit_seconds:.3f}s "
+            f"predict={row.predict_seconds:.3f}s "
+            f"ttt_applied={row.ttt_applied} "
+            f"ttt_loss={format_optional_float(row.ttt_loss)} "
+            f"ttt_steps={row.ttt_steps}"
+        )
+    if row.status == "skip":
+        return f"{prefix} [skip] {row.dataset_name} reason={row.error}"
+    return f"{prefix} [fail] {row.dataset_name} error={row.error}"
 
 
 def parse_optional_int(value: str) -> int | None:
@@ -133,6 +177,15 @@ def parse_auto_bool(value: str) -> bool | str:
     raise argparse.ArgumentTypeError("must be one of: auto, true, false")
 
 
+def parse_bool(value: str) -> bool:
+    lowered = value.strip().lower()
+    if lowered in {"true", "1", "yes", "on"}:
+        return True
+    if lowered in {"false", "0", "no", "off"}:
+        return False
+    raise argparse.ArgumentTypeError("must be one of: true, false")
+
+
 def parse_kv_cache(value: str) -> bool | str:
     lowered = value.strip().lower()
     if lowered in {"false", "0", "no", "off"}:
@@ -144,24 +197,22 @@ def parse_kv_cache(value: str) -> bool | str:
     raise argparse.ArgumentTypeError("kv_cache must be one of: false, true, kv, repr")
 
 
-def resolve_data_root_path(data_root: str | os.PathLike[str]) -> Path:
-    raw_path = Path(data_root).expanduser()
-    if raw_path.is_absolute():
-        return raw_path.resolve()
-
-    candidate_paths = [
-        raw_path,
-        Path.cwd() / raw_path,
-        REPO_ROOT / raw_path,
-    ]
-    for candidate in candidate_paths:
-        if candidate.exists():
-            return candidate.resolve()
-    return (REPO_ROOT / raw_path).resolve()
+def normalize_gpu_group(value: int | str) -> str:
+    if isinstance(value, int):
+        return str(value)
+    gpu_group = str(value).strip()
+    gpu_ids = parse_gpu_id_list(gpu_group)
+    if not gpu_ids:
+        raise ValueError(f"GPU group must contain at least one GPU id: {value!r}")
+    return ",".join(str(gpu_id) for gpu_id in gpu_ids)
 
 
-def apply_worker_environment_updates(gpu_id: int) -> str:
-    gpu_id_str = str(gpu_id)
+def first_gpu_id_from_group(value: int | str) -> int:
+    return parse_gpu_id_list(normalize_gpu_group(value))[0]
+
+
+def apply_worker_environment_updates(gpu_id: int | str) -> str:
+    gpu_id_str = normalize_gpu_group(gpu_id)
     # Set visibility vars for both CUDA and ROCm stacks so each worker sees one GPU.
     os.environ["CUDA_VISIBLE_DEVICES"] = gpu_id_str
     os.environ["ROCR_VISIBLE_DEVICES"] = gpu_id_str
@@ -173,6 +224,16 @@ def apply_worker_environment_updates(gpu_id: int) -> str:
 
 def parse_gpu_id_list(value: str) -> List[int]:
     return [int(x.strip()) for x in value.split(",") if x.strip()]
+
+
+def parse_gpu_group_list(value: str) -> List[str]:
+    gpu_groups = []
+    for raw_group in value.split(";"):
+        raw_group = raw_group.strip()
+        if not raw_group:
+            continue
+        gpu_groups.append(normalize_gpu_group(raw_group))
+    return gpu_groups
 
 
 def detect_default_gpu_ids() -> List[int]:
@@ -197,285 +258,6 @@ def detect_default_gpu_ids() -> List[int]:
     if device_count <= 0:
         raise RuntimeError("No visible GPU detected; please pass --gpus explicitly")
     return list(range(device_count))
-
-
-def dataset_entropy_key(dataset_dir: Path) -> str:
-    dataset_hash = hashlib.md5(str(dataset_dir.resolve()).encode("utf-8")).hexdigest()[:12]
-    return f"{dataset_dir.name}__{dataset_hash}"
-
-
-def make_empty_result_row(
-    dataset_dir: Path,
-    *,
-    task_type: Optional[str],
-    status: str,
-    error: Optional[str],
-) -> ResultRow:
-    return ResultRow(
-        dataset_name=dataset_dir.name,
-        dataset_dir=dataset_dir.as_posix(),
-        task_type=task_type,
-        n_train=0,
-        n_train_initial=0,
-        n_train_final=0,
-        n_val=0,
-        n_test=0,
-        n_features=0,
-        n_classes=0,
-        accuracy=None,
-        acc_round1=None,
-        acc_round2=None,
-        acc_delta=None,
-        acc_improved=None,
-        train_ratio_before=None,
-        train_ratio_after=None,
-        pass1_acc=None,
-        entropy_threshold=None,
-        pseudo_selected=0,
-        pseudo_correct=0,
-        pseudo_wrong=0,
-        pseudo_precision=None,
-        pseudo_error_rate=None,
-        pseudo_rounds=0,
-        entropy_file="",
-        fit_seconds=0.0,
-        predict_seconds=0.0,
-        status=status,
-        error=error,
-    )
-
-
-def format_dataset_result_log(
-    worker_label: str,
-    row: ResultRow,
-    *,
-    model_name: str | None = None,
-) -> str:
-    prefix = f"[{worker_label}]"
-    if model_name:
-        prefix = f"{prefix} [{model_name}]"
-
-    if row.status == "ok":
-        accuracy = float(row.accuracy) if row.accuracy is not None else float("nan")
-        pass1_acc = float(row.pass1_acc) if row.pass1_acc is not None else float("nan")
-        return (
-            f"{prefix} [ok] {row.dataset_name} accuracy={accuracy:.6f} "
-            f"pass1_acc={pass1_acc:.6f} pseudo_selected={row.pseudo_selected}"
-        )
-    if row.status == "skip":
-        return f"{prefix} [skip] {row.dataset_name} reason={row.error}"
-    return f"{prefix} [fail] {row.dataset_name} error={row.error}"
-
-
-def entropy_from_proba(proba, eps: float = 1e-12) -> np.ndarray:
-    ensure_runtime_deps()
-
-    probs = np.asarray(proba, dtype=np.float64)
-    probs = np.clip(probs, eps, 1.0)
-    probs = probs / probs.sum(axis=1, keepdims=True)
-    return (-(probs * np.log(probs)).sum(axis=1)).astype(np.float32)
-
-
-def choose_entropy_threshold(
-    entropy,
-    correct_mask,
-    max_error_rate: float,
-) -> tuple[float, np.ndarray, int, int, float]:
-    ensure_runtime_deps()
-
-    entropy_arr = np.asarray(entropy, dtype=np.float64).reshape(-1)
-    correct_arr = np.asarray(correct_mask, dtype=bool).reshape(-1)
-    if entropy_arr.size == 0:
-        return float("-inf"), np.zeros(0, dtype=bool), 0, 0, 0.0
-
-    bounded_error_rate = float(np.clip(max_error_rate, 0.0, 1.0))
-    uniq_entropy, inverse = np.unique(entropy_arr, return_inverse=True)
-    bucket_selected = np.bincount(inverse, minlength=uniq_entropy.size).astype(np.int64)
-    bucket_correct = np.bincount(
-        inverse,
-        weights=correct_arr.astype(np.int64),
-        minlength=uniq_entropy.size,
-    ).astype(np.int64)
-
-    cum_selected = np.cumsum(bucket_selected)
-    cum_correct = np.cumsum(bucket_correct)
-    cum_wrong = cum_selected - cum_correct
-    cum_error_rate = cum_wrong / np.maximum(cum_selected, 1)
-    feasible = np.where(cum_error_rate <= (bounded_error_rate + 1e-12))[0]
-    if feasible.size == 0:
-        return float("-inf"), np.zeros_like(correct_arr), 0, 0, 0.0
-
-    best_idx = int(feasible[0])
-    best_correct = int(cum_correct[best_idx])
-    best_selected = int(cum_selected[best_idx])
-    for idx in feasible[1:]:
-        correct_count = int(cum_correct[idx])
-        selected_count = int(cum_selected[idx])
-        if correct_count > best_correct or (
-            correct_count == best_correct and selected_count > best_selected
-        ):
-            best_idx = int(idx)
-            best_correct = correct_count
-            best_selected = selected_count
-
-    threshold = float(uniq_entropy[best_idx])
-    selected_mask = entropy_arr <= threshold
-    selected_count = int(selected_mask.sum())
-    selected_correct = int(correct_arr[selected_mask].sum()) if selected_count > 0 else 0
-    selected_precision = (
-        float(selected_correct / selected_count)
-        if selected_count > 0
-        else 0.0
-    )
-    return threshold, selected_mask, selected_count, selected_correct, selected_precision
-
-
-def append_feature_rows(X_existing, X_new):
-    ensure_runtime_deps()
-
-    if isinstance(X_existing, pd.DataFrame):
-        return pd.concat([X_existing, X_new], axis=0, ignore_index=True)
-    return np.concatenate([np.asarray(X_existing), np.asarray(X_new)], axis=0)
-
-
-def predict_labels_from_proba(classifier, proba: np.ndarray, X_test):
-    ensure_runtime_deps()
-
-    classes = getattr(classifier, "classes_", None)
-    if classes is not None:
-        class_values = np.asarray(classes)
-        pred_idx = np.asarray(np.argmax(proba, axis=1), dtype=np.int64)
-        return class_values[pred_idx]
-    return np.asarray(classifier.predict(X_test))
-
-
-def run_entropy_two_pass_pseudo(
-    classifier,
-    X_train,
-    y_train,
-    X_test,
-    y_test,
-    *,
-    pseudo_max_error_rate: float,
-    pseudo_rounds: int,
-    entropy_save_dir: Path | None = None,
-    dataset_key: str | None = None,
-) -> tuple[np.ndarray, float, float, dict[str, Any]]:
-    ensure_runtime_deps()
-
-    rounds = max(1, int(pseudo_rounds))
-    # Avoid eagerly duplicating large train blocks; we only materialize a new
-    # object once pseudo-labeled rows are appended.
-    cur_X_train = X_train
-    cur_y_train = np.asarray(y_train)
-    X_test_values = X_test
-    y_test_values = np.asarray(y_test)
-    added_mask = np.zeros(int(len(y_test_values)), dtype=bool)
-
-    total_fit_time = 0.0
-    total_pred_time = 0.0
-    y_pred_last = None
-    pass1_acc = float("nan")
-    entropy_files: list[str] = []
-    total_selected = 0
-    total_correct = 0
-    total_wrong = 0
-    last_threshold = float("nan")
-    last_precision = float("nan")
-    last_error_rate = float("nan")
-
-    for round_idx in range(1, rounds + 1):
-        fit_started = time.perf_counter()
-        classifier.fit(cur_X_train, cur_y_train)
-        total_fit_time += time.perf_counter() - fit_started
-
-        pred_started = time.perf_counter()
-        proba = np.asarray(classifier.predict_proba(X_test_values))
-        y_pred = np.asarray(predict_labels_from_proba(classifier, proba, X_test_values))
-        total_pred_time += time.perf_counter() - pred_started
-        y_pred_last = y_pred
-
-        entropy = entropy_from_proba(proba)
-        correct = np.asarray(y_pred == y_test_values)
-        if round_idx == 1:
-            pass1_acc = float(correct.mean()) if correct.size > 0 else float("nan")
-
-        (
-            threshold,
-            selected_mask_all,
-            selected_cnt_all,
-            _selected_correct_all,
-            selected_precision_all,
-        ) = choose_entropy_threshold(
-            entropy=entropy,
-            correct_mask=correct,
-            max_error_rate=pseudo_max_error_rate,
-        )
-        selected_new_mask = selected_mask_all & (~added_mask)
-        selected_cnt = int(selected_new_mask.sum())
-        selected_correct = int(correct[selected_new_mask].sum()) if selected_cnt > 0 else 0
-        selected_wrong = int(selected_cnt - selected_correct)
-        selected_precision = float(selected_correct / selected_cnt) if selected_cnt > 0 else 0.0
-
-        last_threshold = threshold
-        last_precision = selected_precision_all
-        last_error_rate = float(1.0 - selected_precision_all) if selected_cnt_all > 0 else 0.0
-
-        if entropy_save_dir is not None and dataset_key is not None:
-            entropy_save_dir.mkdir(parents=True, exist_ok=True)
-            entropy_save_path = entropy_save_dir / f"{dataset_key}__round{round_idx}_entropy.npz"
-            np.savez_compressed(
-                entropy_save_path,
-                round_idx=np.asarray(round_idx, dtype=np.int32),
-                entropy=entropy.astype(np.float32),
-                y_pred=np.asarray(y_pred),
-                y_test=np.asarray(y_test_values),
-                selected_mask=selected_mask_all.astype(np.uint8),
-                selected_new_mask=selected_new_mask.astype(np.uint8),
-                selected_correct=np.asarray(correct[selected_mask_all]).astype(np.uint8),
-                threshold=np.asarray(threshold, dtype=np.float32),
-                selected_count=np.asarray(selected_cnt_all, dtype=np.int64),
-                selected_count_new=np.asarray(selected_cnt, dtype=np.int64),
-                selected_precision=np.asarray(selected_precision_all, dtype=np.float32),
-                selected_error_rate=np.asarray(last_error_rate, dtype=np.float32),
-            )
-            entropy_files.append(str(entropy_save_path))
-
-        if selected_cnt > 0:
-            if isinstance(X_test_values, pd.DataFrame):
-                selected_X = X_test_values.loc[selected_new_mask].copy()
-            else:
-                selected_X = np.asarray(X_test_values)[selected_new_mask]
-            cur_X_train = append_feature_rows(cur_X_train, selected_X)
-            cur_y_train = np.concatenate([cur_y_train, y_pred[selected_new_mask]], axis=0)
-            added_mask[selected_new_mask] = True
-            total_selected += selected_cnt
-            total_correct += selected_correct
-            total_wrong += selected_wrong
-
-    if y_pred_last is None:
-        raise RuntimeError("Pseudo-label inference produced no predictions")
-
-    final_train_count = int(len(cur_y_train))
-    test_count = int(len(y_test_values))
-    total_count = final_train_count + test_count
-    final_train_ratio = float(final_train_count / total_count) if total_count > 0 else float("nan")
-    meta = {
-        "threshold": last_threshold,
-        "selected_cnt": total_selected,
-        "selected_correct": total_correct,
-        "selected_wrong": total_wrong,
-        "selected_precision": float(total_correct / total_selected) if total_selected > 0 else 0.0,
-        "selected_error_rate": float(total_wrong / total_selected) if total_selected > 0 else 0.0,
-        "train_ratio_final": final_train_ratio,
-        "pass1_acc": pass1_acc,
-        "rounds": rounds,
-        "last_round_precision": last_precision,
-        "last_round_error_rate": last_error_rate,
-        "entropy_files": entropy_files,
-        "n_train_final": final_train_count,
-    }
-    return y_pred_last, total_fit_time, total_pred_time, meta
 
 
 def load_dataset_info(dataset_dir: Path) -> dict | None:
@@ -729,10 +511,6 @@ def preload_model_once(classifier: Any, worker_label: str, verbose: bool) -> Non
 
 
 def release_classifier_resources(classifier: Any) -> None:
-    release_classifier_dataset_state(classifier, keep_model=False)
-
-
-def release_classifier_dataset_state(classifier: Any, *, keep_model: bool) -> None:
     if classifier is None:
         return
 
@@ -745,11 +523,7 @@ def release_classifier_dataset_state(classifier: Any, *, keep_model: bool) -> No
     except Exception:
         pass
 
-    attr_names = ["model_kv_cache_", "ensemble_generator_", "X_encoder_", "y_encoder_"]
-    if not keep_model:
-        attr_names.append("model_")
-
-    for attr_name in attr_names:
+    for attr_name in ("model_kv_cache_", "ensemble_generator_", "X_encoder_", "y_encoder_", "model_"):
         if hasattr(classifier, attr_name):
             try:
                 setattr(classifier, attr_name, None)
@@ -785,6 +559,271 @@ def force_memory_cleanup(device_str: str) -> None:
         pass
 
 
+def build_ttt_config(args: argparse.Namespace) -> TTTConfig:
+    return TTTConfig(
+        enabled=bool(args.ttt_holdout),
+        lr=float(args.ttt_lr),
+        scheduler=str(args.ttt_scheduler),
+        grad_clip=float(args.ttt_grad_clip),
+        dtype=str(args.ttt_dtype),
+        micro_batch_size=int(args.ttt_micro_batch_size),
+        weight_decay=float(args.ttt_weight_decay),
+        steps=int(args.ttt_steps),
+        freeze_col=bool(args.ttt_freeze_col),
+        freeze_row=bool(args.ttt_freeze_row),
+        random_state=int(args.random_state),
+        data_parallel=bool(args.ttt_data_parallel),
+    )
+
+
+def take_rows(X, indices):
+    if hasattr(X, "iloc"):
+        return X.iloc[indices].reset_index(drop=True)
+    return np.asarray(X)[indices]
+
+
+def split_ttt_holdout(y, config: TTTConfig) -> TTTSplit:
+    ensure_runtime_deps()
+
+    from sklearn.model_selection import train_test_split
+
+    indices = np.arange(len(y))
+    if len(indices) < 2:
+        return TTTSplit(
+            b_indices=indices,
+            c_indices=np.asarray([], dtype=int),
+            strategy="none",
+            reason="Need at least two samples for hold-out split.",
+        )
+
+    y_array = np.asarray(y)
+    try:
+        b_idx, c_idx = train_test_split(
+            indices,
+            train_size=config.train_fraction,
+            random_state=config.random_state,
+            shuffle=True,
+            stratify=y_array,
+        )
+        return TTTSplit(
+            b_indices=np.asarray(b_idx, dtype=int),
+            c_indices=np.asarray(c_idx, dtype=int),
+            strategy="stratified",
+            reason="stratified split",
+        )
+    except Exception as exc:
+        b_idx, c_idx = train_test_split(
+            indices,
+            train_size=config.train_fraction,
+            random_state=config.random_state,
+            shuffle=True,
+            stratify=None,
+        )
+        return TTTSplit(
+            b_indices=np.asarray(b_idx, dtype=int),
+            c_indices=np.asarray(c_idx, dtype=int),
+            strategy="random",
+            reason=f"stratified split unavailable: {type(exc).__name__}: {exc}",
+        )
+
+
+def _torch_dtype(dtype_name: str):
+    import torch
+
+    normalized = dtype_name.strip().lower()
+    if normalized == "float32":
+        return torch.float32
+    if normalized == "float16":
+        return torch.float16
+    if normalized == "bfloat16":
+        return torch.bfloat16
+    raise ValueError("--ttt-dtype must be one of: float32, float16, bfloat16")
+
+
+def _set_requires_grad(module, requires_grad: bool) -> None:
+    for param in module.parameters():
+        param.requires_grad = requires_grad
+
+
+def _configure_ttt_trainable_params(classifier, config: TTTConfig):
+    model = classifier.model_
+    model.train()
+
+    for param in model.parameters():
+        param.requires_grad = False
+
+    # Keep frozen blocks in train mode so TabICL uses the training forward path.
+    # Their parameters remain frozen by requires_grad=False.
+    model.col_embedder.train()
+    if not config.freeze_col:
+        _set_requires_grad(model.col_embedder, True)
+
+    model.row_interactor.train()
+    if not config.freeze_row:
+        _set_requires_grad(model.row_interactor, True)
+
+    model.icl_predictor.train()
+    _set_requires_grad(model.icl_predictor, True)
+
+    return [param for param in model.parameters() if param.requires_grad]
+
+
+def _fit_preserving_model_weights(classifier, X, y) -> None:
+    original_load_model = getattr(classifier, "_load_model", None)
+
+    def _skip_model_reload():
+        return None
+
+    try:
+        classifier._load_model = _skip_model_reload
+        classifier.fit(X, y)
+    finally:
+        if original_load_model is not None:
+            classifier._load_model = original_load_model
+
+
+def run_ttt_holdout_update(classifier, X_b, y_b, X_c, y_c, config: TTTConfig) -> TTTUpdateResult:
+    ensure_runtime_deps()
+
+    if config.scheduler != "constant":
+        raise ValueError("--ttt-scheduler currently supports only 'constant'")
+    if config.steps < 1:
+        return TTTUpdateResult(
+            applied=False,
+            loss=None,
+            steps=0,
+            update_seconds=0.0,
+            reason="--ttt-steps must be >= 1",
+        )
+    if config.micro_batch_size < 1:
+        raise ValueError("--ttt-micro-batch-size must be >= 1")
+
+    y_b_values = set(pd.Series(np.asarray(y_b)).astype(object).tolist())
+    y_c_values = set(pd.Series(np.asarray(y_c)).astype(object).tolist())
+    missing_from_context = sorted(str(value) for value in (y_c_values - y_b_values))
+    if missing_from_context:
+        return TTTUpdateResult(
+            applied=False,
+            loss=None,
+            steps=0,
+            update_seconds=0.0,
+            reason="Hold-out labels absent from B context: " + ",".join(missing_from_context),
+        )
+
+    update_start = time.time()
+    classifier.fit(X_b, y_b)
+    if classifier.n_classes_ > classifier.model_.max_classes:
+        return TTTUpdateResult(
+            applied=False,
+            loss=None,
+            steps=0,
+            update_seconds=time.time() - update_start,
+            reason=(
+                f"TTT training skipped because n_classes={classifier.n_classes_} "
+                f"exceeds model max_classes={classifier.model_.max_classes}"
+            ),
+        )
+
+    import torch
+    import torch.nn.functional as F
+
+    torch_dtype = _torch_dtype(config.dtype)
+    trainable_params = _configure_ttt_trainable_params(classifier, config)
+    if not trainable_params:
+        return TTTUpdateResult(
+            applied=False,
+            loss=None,
+            steps=0,
+            update_seconds=time.time() - update_start,
+            reason="No trainable parameters selected for TTT",
+        )
+
+    optimizer = torch.optim.AdamW(trainable_params, lr=config.lr, weight_decay=config.weight_decay)
+
+    X_c_encoded = classifier.X_encoder_.transform(X_c)
+    y_c_encoded = classifier.y_encoder_.transform(y_c)
+    ensemble_data = classifier.ensemble_generator_.transform(X_c_encoded, mode="both")
+
+    device = classifier.device_
+    device_type = getattr(device, "type", str(device).split(":")[0])
+    use_autocast = torch_dtype != torch.float32 and device_type in {"cuda", "cpu"}
+    forward_model = classifier.model_
+    if config.data_parallel and device_type == "cuda" and torch.cuda.device_count() > 1:
+        forward_model = torch.nn.DataParallel(classifier.model_)
+        forward_model.train()
+
+    from contextlib import nullcontext
+
+    def forward_context():
+        if use_autocast:
+            return torch.autocast(device_type=device_type, dtype=torch_dtype)
+        return nullcontext()
+
+    last_loss = None
+    try:
+        total_tables = sum(int(Xs.shape[0]) for Xs, _ in ensemble_data.values())
+        if total_tables == 0:
+            return TTTUpdateResult(
+                applied=False,
+                loss=None,
+                steps=0,
+                update_seconds=time.time() - update_start,
+                reason="No ensemble tables available for TTT",
+            )
+
+        for _ in range(config.steps):
+            optimizer.zero_grad(set_to_none=True)
+            micro_losses = []
+
+            for norm_method, (Xs, ys) in ensemble_data.items():
+                class_shuffles = classifier.ensemble_generator_.class_shuffles_[norm_method]
+                y_targets = np.stack(
+                    [np.asarray(shuffle, dtype=np.int64)[y_c_encoded.astype(int)] for shuffle in class_shuffles],
+                    axis=0,
+                )
+
+                batch_size = config.micro_batch_size
+                n_tables = Xs.shape[0]
+                for start in range(0, n_tables, batch_size):
+                    end = min(start + batch_size, n_tables)
+                    X_batch = torch.from_numpy(Xs[start:end]).float().to(device)
+                    y_train_batch = torch.from_numpy(ys[start:end]).float().to(device)
+                    y_target_batch = torch.from_numpy(y_targets[start:end]).long().to(device)
+
+                    with forward_context():
+                        logits = forward_model(
+                            X_batch,
+                            y_train_batch,
+                            return_logits=True,
+                            softmax_temperature=classifier.softmax_temperature,
+                            inference_config=classifier.inference_config_,
+                        )
+                        loss = F.cross_entropy(logits.flatten(end_dim=-2), y_target_batch.flatten())
+
+                    scaled_loss = loss * float(end - start) / float(total_tables)
+                    scaled_loss.backward()
+                    micro_losses.append(float(loss.detach().cpu()))
+
+            if config.grad_clip > 0:
+                torch.nn.utils.clip_grad_norm_(trainable_params, config.grad_clip)
+            optimizer.step()
+            last_loss = float(np.mean(micro_losses)) if micro_losses else None
+    finally:
+        del forward_model
+        if hasattr(classifier.model_, "clear_cache"):
+            classifier.model_.clear_cache()
+        classifier.model_kv_cache_ = None
+        classifier.model_.eval()
+
+    return TTTUpdateResult(
+        applied=True,
+        loss=last_loss,
+        steps=config.steps,
+        update_seconds=time.time() - update_start,
+        reason=None,
+    )
+
+
 def build_model_summary_row(
     model_path: Path,
     gpu_id: int,
@@ -816,19 +855,6 @@ def build_model_summary_row(
         if len(ok_df)
         else None
     )
-    avg_acc_round1_ok = float(ok_df["acc_round1"].mean()) if len(ok_df) else None
-    avg_acc_round2_ok = float(ok_df["acc_round2"].mean()) if len(ok_df) else None
-    avg_acc_delta_ok = float(ok_df["acc_delta"].mean()) if len(ok_df) else None
-    avg_pass1_acc_ok = float(ok_df["pass1_acc"].mean()) if len(ok_df) else None
-    avg_train_ratio_before_ok = float(ok_df["train_ratio_before"].mean()) if len(ok_df) else None
-    avg_train_ratio_after_ok = float(ok_df["train_ratio_after"].mean()) if len(ok_df) else None
-    avg_pseudo_selected_ok = float(ok_df["pseudo_selected"].mean()) if len(ok_df) else None
-    total_pseudo_selected_ok = int(ok_df["pseudo_selected"].sum()) if len(ok_df) else 0
-    improved_dataset_count = int((ok_df["acc_delta"] > 0).sum()) if len(ok_df) else 0
-    degraded_dataset_count = int((ok_df["acc_delta"] < 0).sum()) if len(ok_df) else 0
-    unchanged_dataset_count = int((ok_df["acc_delta"] == 0).sum()) if len(ok_df) else 0
-    avg_pseudo_precision_ok = float(ok_df["pseudo_precision"].mean()) if len(ok_df) else None
-    avg_pseudo_error_rate_ok = compute_avg_pseudo_error_rate_ok(result_df)
     failed_datasets = ",".join(failed_df["dataset_name"].astype(str).tolist()) if len(failed_df) else ""
 
     if error is not None:
@@ -841,22 +867,9 @@ def build_model_summary_row(
             failed_count=len(dataset_dirs),
             skipped_count=0,
             avg_accuracy_ok=None,
-            avg_acc_round1_ok=None,
-            avg_acc_round2_ok=None,
-            avg_acc_delta_ok=None,
             avg_fit_seconds_ok=None,
             avg_predict_seconds_ok=None,
             avg_dataset_seconds_ok=None,
-            avg_pass1_acc_ok=None,
-            avg_train_ratio_before_ok=None,
-            avg_train_ratio_after_ok=None,
-            avg_pseudo_selected_ok=None,
-            total_pseudo_selected_ok=0,
-            improved_dataset_count=0,
-            degraded_dataset_count=0,
-            unchanged_dataset_count=0,
-            avg_pseudo_precision_ok=None,
-            avg_pseudo_error_rate_ok=None,
             total_dataset_seconds_ok=0.0,
             model_wall_seconds=float(model_wall_seconds),
             status="fail",
@@ -873,22 +886,9 @@ def build_model_summary_row(
         failed_count=int(len(failed_df)),
         skipped_count=int(len(skipped_df)),
         avg_accuracy_ok=(float(ok_df["accuracy"].mean()) if len(ok_df) else None),
-        avg_acc_round1_ok=avg_acc_round1_ok,
-        avg_acc_round2_ok=avg_acc_round2_ok,
-        avg_acc_delta_ok=avg_acc_delta_ok,
         avg_fit_seconds_ok=avg_fit_seconds_ok,
         avg_predict_seconds_ok=avg_predict_seconds_ok,
         avg_dataset_seconds_ok=avg_dataset_seconds_ok,
-        avg_pass1_acc_ok=avg_pass1_acc_ok,
-        avg_train_ratio_before_ok=avg_train_ratio_before_ok,
-        avg_train_ratio_after_ok=avg_train_ratio_after_ok,
-        avg_pseudo_selected_ok=avg_pseudo_selected_ok,
-        total_pseudo_selected_ok=total_pseudo_selected_ok,
-        improved_dataset_count=improved_dataset_count,
-        degraded_dataset_count=degraded_dataset_count,
-        unchanged_dataset_count=unchanged_dataset_count,
-        avg_pseudo_precision_ok=avg_pseudo_precision_ok,
-        avg_pseudo_error_rate_ok=avg_pseudo_error_rate_ok,
         total_dataset_seconds_ok=total_dataset_seconds_ok,
         model_wall_seconds=float(model_wall_seconds),
         status="ok" if len(ok_df) else "fail",
@@ -943,24 +943,28 @@ class BackgroundPrefetcher:
                 print(f"[prefetch] warning: failed to warm {model_path}: {exc}", flush=True)
 
 
-def evaluate_one_dataset(
-    classifier,
-    dataset_dir: Path,
-    *,
-    pseudo_max_error_rate: float,
-    pseudo_rounds: int,
-    entropy_save_dir: Path | None = None,
-) -> ResultRow:
+def evaluate_one_dataset(classifier, dataset_dir: Path, ttt_config: TTTConfig | None = None) -> ResultRow:
     ensure_runtime_deps()
+    if ttt_config is None:
+        ttt_config = TTTConfig()
 
     task_type: Optional[str] = None
     try:
         info = load_dataset_info(dataset_dir)
         task_type = str(info.get("task_type", "")).lower() if info else None
         if task_type not in CLASSIFICATION_TASKS:
-            return make_empty_result_row(
-                dataset_dir,
+            return ResultRow(
+                dataset_name=dataset_dir.name,
+                dataset_dir=dataset_dir.as_posix(),
                 task_type=task_type,
+                n_train=0,
+                n_val=0,
+                n_test=0,
+                n_features=0,
+                n_classes=0,
+                accuracy=None,
+                fit_seconds=0.0,
+                predict_seconds=0.0,
                 status="skip",
                 error=f"Skipped due to task_type={task_type!r}",
             )
@@ -984,7 +988,6 @@ def evaluate_one_dataset(
             val_count = int(len(y_val))
             X_train = pd.concat([X_train, X_val], axis=0, ignore_index=True)
             y_train = np.concatenate([np.asarray(y_train), np.asarray(y_val)], axis=0)
-        train_count = int(len(y_train))
 
         X_test, y_test = load_split(
             test_split[0],
@@ -992,73 +995,102 @@ def evaluate_one_dataset(
             test_split[2],
             context=f"{dataset_dir.name}-test",
         )
-        test_count = int(len(y_test))
 
         classes = pd.unique(pd.Series(np.concatenate([np.asarray(y_train), np.asarray(y_test)], axis=0)))
-        total_count_before = train_count + test_count
-        train_ratio_before = (
-            float(train_count / total_count_before)
-            if total_count_before > 0
-            else float("nan")
-        )
-        dataset_key = dataset_entropy_key(dataset_dir) if entropy_save_dir is not None else None
 
-        y_pred, fit_seconds, predict_seconds, pseudo_meta = run_entropy_two_pass_pseudo(
-            classifier,
-            X_train,
-            y_train,
-            X_test,
-            y_test,
-            pseudo_max_error_rate=pseudo_max_error_rate,
-            pseudo_rounds=pseudo_rounds,
-            entropy_save_dir=entropy_save_dir,
-            dataset_key=dataset_key,
-        )
+        ttt_loss = None
+        ttt_steps = 0
+        ttt_lr = ttt_config.lr if ttt_config.enabled else None
+        ttt_applied = False
+        ttt_update_seconds = 0.0
+        ttt_split_strategy = None
+        ttt_split_reason = None
+        n_train_b = 0
+        n_holdout_c = 0
+
+        t0 = time.time()
+        if ttt_config.enabled:
+            split = split_ttt_holdout(y_train, ttt_config)
+            ttt_split_strategy = split.strategy
+            ttt_split_reason = split.reason
+            n_train_b = int(len(split.b_indices))
+            n_holdout_c = int(len(split.c_indices))
+
+            if n_train_b > 0 and n_holdout_c > 0:
+                X_b = take_rows(X_train, split.b_indices)
+                y_b = np.asarray(y_train)[split.b_indices]
+                X_c = take_rows(X_train, split.c_indices)
+                y_c = np.asarray(y_train)[split.c_indices]
+                ttt_result = run_ttt_holdout_update(classifier, X_b, y_b, X_c, y_c, ttt_config)
+            else:
+                ttt_result = TTTUpdateResult(
+                    applied=False,
+                    loss=None,
+                    steps=0,
+                    update_seconds=0.0,
+                    reason="B/C split produced an empty side; skipped TTT",
+                )
+
+            ttt_loss = ttt_result.loss
+            ttt_steps = ttt_result.steps
+            ttt_applied = ttt_result.applied
+            ttt_update_seconds = float(ttt_result.update_seconds)
+            if ttt_result.reason:
+                ttt_split_reason = f"{ttt_split_reason} | {ttt_result.reason}"
+
+            if ttt_applied:
+                _fit_preserving_model_weights(classifier, X_train, y_train)
+            else:
+                classifier.fit(X_train, y_train)
+        else:
+            classifier.fit(X_train, y_train)
+        fit_seconds = time.time() - t0
+
+        t1 = time.time()
+        y_pred = classifier.predict(X_test)
+        predict_seconds = time.time() - t1
 
         accuracy = float(np.mean(np.asarray(y_pred) == np.asarray(y_test)))
-        acc_round1 = float(pseudo_meta["pass1_acc"])
-        acc_round2 = accuracy
-        acc_delta = float(acc_round2 - acc_round1)
-        acc_improved = bool(acc_delta > 0.0)
-        entropy_files = pseudo_meta.get("entropy_files", [])
-        entropy_file = "|".join(entropy_files) if entropy_files else ""
 
         return ResultRow(
             dataset_name=dataset_dir.name,
             dataset_dir=dataset_dir.as_posix(),
             task_type=task_type,
-            n_train=int(pseudo_meta["n_train_final"]),
-            n_train_initial=train_count,
-            n_train_final=int(pseudo_meta["n_train_final"]),
+            n_train=int(len(y_train)),
             n_val=val_count,
-            n_test=test_count,
+            n_test=int(len(y_test)),
             n_features=int(X_train.shape[1]),
             n_classes=int(len(classes)),
             accuracy=accuracy,
-            acc_round1=acc_round1,
-            acc_round2=acc_round2,
-            acc_delta=acc_delta,
-            acc_improved=acc_improved,
-            train_ratio_before=train_ratio_before,
-            train_ratio_after=float(pseudo_meta["train_ratio_final"]),
-            pass1_acc=acc_round1,
-            entropy_threshold=float(pseudo_meta["threshold"]),
-            pseudo_selected=int(pseudo_meta["selected_cnt"]),
-            pseudo_correct=int(pseudo_meta["selected_correct"]),
-            pseudo_wrong=int(pseudo_meta["selected_wrong"]),
-            pseudo_precision=float(pseudo_meta["selected_precision"]),
-            pseudo_error_rate=float(pseudo_meta["selected_error_rate"]),
-            pseudo_rounds=int(pseudo_meta["rounds"]),
-            entropy_file=entropy_file,
             fit_seconds=float(fit_seconds),
             predict_seconds=float(predict_seconds),
             status="ok",
             error=None,
+            n_train_a=int(len(y_train)),
+            n_train_b=n_train_b,
+            n_holdout_c=n_holdout_c,
+            n_test_d=int(len(y_test)),
+            ttt_loss=ttt_loss,
+            ttt_steps=ttt_steps,
+            ttt_lr=ttt_lr,
+            ttt_applied=ttt_applied,
+            ttt_update_seconds=ttt_update_seconds,
+            ttt_split_strategy=ttt_split_strategy,
+            ttt_split_reason=ttt_split_reason,
         )
     except Exception as exc:
-        return make_empty_result_row(
-            dataset_dir,
+        return ResultRow(
+            dataset_name=dataset_dir.name,
+            dataset_dir=dataset_dir.as_posix(),
             task_type=task_type,
+            n_train=0,
+            n_val=0,
+            n_test=0,
+            n_features=0,
+            n_classes=0,
+            accuracy=None,
+            fit_seconds=0.0,
+            predict_seconds=0.0,
             status="fail",
             error=f"{type(exc).__name__}: {exc}",
         )
@@ -1067,19 +1099,20 @@ def evaluate_one_dataset(
 def worker_main(
     worker_id: int,
     gpu_id: int,
+    gpu_group: str,
     assigned_dataset_dirs: List[str],
     ready_queue,
     start_event,
     worker_out_csv: str,
     model_kwargs: Dict,
-    pseudo_max_error_rate: float,
-    pseudo_rounds: int,
-    entropy_save_dir: str,
+    ttt_config: TTTConfig,
     verbose: bool,
 ) -> None:
     try:
         ensure_runtime_deps()
-        device_str = apply_worker_environment_updates(gpu_id)
+        device_str = apply_worker_environment_updates(gpu_group)
+        worker_label = f"worker {worker_id} | gpu {gpu_group}"
+        worker_ttt_config = replace(ttt_config, gpu_group=gpu_group)
 
         import torch
         from tabicl import TabICLClassifier
@@ -1094,12 +1127,12 @@ def worker_main(
         worker_kwargs = dict(model_kwargs)
         worker_kwargs["device"] = device_str
         classifier = TabICLClassifier(**worker_kwargs)
-        preload_model_once(classifier, f"worker {worker_id} | gpu {gpu_id}", verbose)
 
         ready_queue.put(
             {
                 "worker_id": worker_id,
                 "gpu_id": gpu_id,
+                "gpu_group": gpu_group,
                 "status": "ready",
                 "assigned_count": len(assigned_dataset_dirs),
             }
@@ -1108,24 +1141,15 @@ def worker_main(
 
         rows: List[ResultRow] = []
         for dataset_dir in assigned_dataset_dirs:
-            row = evaluate_one_dataset(
-                classifier,
-                Path(dataset_dir),
-                pseudo_max_error_rate=pseudo_max_error_rate,
-                pseudo_rounds=pseudo_rounds,
-                entropy_save_dir=Path(entropy_save_dir) if entropy_save_dir else None,
-            )
+            row = evaluate_one_dataset(classifier, Path(dataset_dir), worker_ttt_config)
             rows.append(row)
             print(
                 format_dataset_result_log(
-                    f"worker {worker_id} | gpu {gpu_id}",
+                    worker_label,
                     row,
                 ),
                 flush=True,
             )
-
-            release_classifier_dataset_state(classifier, keep_model=True)
-            force_memory_cleanup(device_str)
 
         pd.DataFrame([asdict(row) for row in rows]).to_csv(worker_out_csv, index=False)
     except Exception:
@@ -1144,38 +1168,23 @@ def worker_main(
         ensure_runtime_deps()
         crash_row = pd.DataFrame(
             [
-                {
-                    "dataset_name": f"__WORKER_CRASH__{worker_id}",
-                    "dataset_dir": "__worker__",
-                    "task_type": None,
-                    "n_train": 0,
-                    "n_train_initial": 0,
-                    "n_train_final": 0,
-                    "n_val": 0,
-                    "n_test": 0,
-                    "n_features": 0,
-                    "n_classes": 0,
-                    "accuracy": None,
-                    "acc_round1": None,
-                    "acc_round2": None,
-                    "acc_delta": None,
-                    "acc_improved": None,
-                    "train_ratio_before": None,
-                    "train_ratio_after": None,
-                    "pass1_acc": None,
-                    "entropy_threshold": None,
-                    "pseudo_selected": 0,
-                    "pseudo_correct": 0,
-                    "pseudo_wrong": 0,
-                    "pseudo_precision": None,
-                    "pseudo_error_rate": None,
-                    "pseudo_rounds": 0,
-                    "entropy_file": "",
-                    "fit_seconds": 0.0,
-                    "predict_seconds": 0.0,
-                    "status": "fail",
-                    "error": traceback.format_exc(),
-                }
+                asdict(
+                    ResultRow(
+                        dataset_name=f"__WORKER_CRASH__{worker_id}",
+                        dataset_dir="__worker__",
+                        task_type=None,
+                        n_train=0,
+                        n_val=0,
+                        n_test=0,
+                        n_features=0,
+                        n_classes=0,
+                        accuracy=None,
+                        fit_seconds=0.0,
+                        predict_seconds=0.0,
+                        status="fail",
+                        error=traceback.format_exc(),
+                    )
+                )
             ]
         )
         crash_row.to_csv(worker_out_csv, index=False)
@@ -1184,21 +1193,22 @@ def worker_main(
 def model_pool_worker_main(
     worker_id: int,
     gpu_id: int,
+    gpu_group: str,
     dataset_dirs: List[str],
     ready_queue,
     task_queue,
     result_queue,
     base_model_kwargs: Dict,
-    pseudo_max_error_rate: float,
-    pseudo_rounds: int,
+    ttt_config: TTTConfig,
     verbose: bool,
 ) -> None:
     device_str = "cuda:0"
-    worker_label = f"worker {worker_id} | gpu {gpu_id}"
+    worker_label = f"worker {worker_id} | gpu {gpu_group}"
 
     try:
         ensure_runtime_deps()
-        device_str = apply_worker_environment_updates(gpu_id)
+        device_str = apply_worker_environment_updates(gpu_group)
+        worker_ttt_config = replace(ttt_config, gpu_group=gpu_group)
 
         import torch
         from tabicl import TabICLClassifier
@@ -1214,6 +1224,7 @@ def model_pool_worker_main(
             {
                 "worker_id": worker_id,
                 "gpu_id": gpu_id,
+                "gpu_group": gpu_group,
                 "status": "ready",
                 "assigned_count": len(dataset_dirs),
             }
@@ -1226,7 +1237,6 @@ def model_pool_worker_main(
                 return
 
             model_path = Path(str(task["model_path"]))
-            entropy_save_dir = Path(task["entropy_save_dir"]) if task.get("entropy_save_dir") else None
             started_at = time.time()
             classifier = None
 
@@ -1235,17 +1245,12 @@ def model_pool_worker_main(
                 worker_kwargs["device"] = device_str
                 worker_kwargs["model_path"] = normalize_model_path(str(model_path))
                 classifier = TabICLClassifier(**worker_kwargs)
-                preload_model_once(classifier, worker_label, verbose)
+                if not worker_ttt_config.enabled:
+                    preload_model_once(classifier, worker_label, verbose)
 
                 rows: List[ResultRow] = []
                 for dataset_dir in resolved_dataset_dirs:
-                    row = evaluate_one_dataset(
-                        classifier,
-                        dataset_dir,
-                        pseudo_max_error_rate=pseudo_max_error_rate,
-                        pseudo_rounds=pseudo_rounds,
-                        entropy_save_dir=entropy_save_dir,
-                    )
+                    row = evaluate_one_dataset(classifier, dataset_dir, worker_ttt_config)
                     rows.append(row)
                     print(
                         format_dataset_result_log(
@@ -1255,9 +1260,6 @@ def model_pool_worker_main(
                         ),
                         flush=True,
                     )
-
-                    release_classifier_dataset_state(classifier, keep_model=True)
-                    force_memory_cleanup(device_str)
 
                 summary = build_model_summary_row(
                     model_path=model_path,
@@ -1272,7 +1274,6 @@ def model_pool_worker_main(
                         "gpu_id": gpu_id,
                         "status": "model_done",
                         "summary": asdict(summary),
-                        "rows": [asdict(row) for row in rows],
                     }
                 )
             except Exception as exc:
@@ -1290,7 +1291,6 @@ def model_pool_worker_main(
                         "gpu_id": gpu_id,
                         "status": "model_done",
                         "summary": asdict(summary),
-                        "rows": [],
                     }
                 )
             finally:
@@ -1322,44 +1322,6 @@ def model_pool_worker_main(
             pass
 
 
-def format_optional_metric(value: Any) -> str:
-    if value is None:
-        return "(none)"
-    try:
-        numeric = float(value)
-    except Exception:
-        return str(value)
-    if numeric != numeric:
-        return "nan"
-    return f"{numeric:.6f}"
-
-
-def filter_ok_rows_with_pseudo_selection(result_df: pd.DataFrame) -> pd.DataFrame:
-    ensure_runtime_deps()
-
-    if result_df.empty:
-        return result_df.iloc[0:0].copy()
-
-    pseudo_selected = pd.to_numeric(result_df["pseudo_selected"], errors="coerce")
-    return result_df[
-        (result_df["status"] == "ok")
-        & (pseudo_selected > 0)
-    ].copy()
-
-
-def compute_avg_pseudo_error_rate_ok(result_df: pd.DataFrame) -> Optional[float]:
-    ensure_runtime_deps()
-
-    selected_ok_df = filter_ok_rows_with_pseudo_selection(result_df)
-    if selected_ok_df.empty:
-        return None
-
-    pseudo_error_rate = pd.to_numeric(selected_ok_df["pseudo_error_rate"], errors="coerce")
-    if pseudo_error_rate.isna().all():
-        return None
-    return float(pseudo_error_rate.mean())
-
-
 def write_summary(
     summary_path: Path,
     result_df: pd.DataFrame,
@@ -1378,20 +1340,11 @@ def write_summary(
         f"ok_count: {len(ok_df)}",
         f"failed_count: {len(failed_df)}",
         f"skipped_count: {len(skipped_df)}",
-        f"avg_accuracy_ok: {format_optional_metric(ok_df['accuracy'].mean() if len(ok_df) else None)}",
-        f"avg_acc_round1_ok: {format_optional_metric(ok_df['acc_round1'].mean() if len(ok_df) else None)}",
-        f"avg_acc_round2_ok: {format_optional_metric(ok_df['acc_round2'].mean() if len(ok_df) else None)}",
-        f"avg_acc_delta_ok: {format_optional_metric(ok_df['acc_delta'].mean() if len(ok_df) else None)}",
-        f"improved_dataset_count: {int((ok_df['acc_delta'] > 0).sum()) if len(ok_df) else 0}",
-        f"degraded_dataset_count: {int((ok_df['acc_delta'] < 0).sum()) if len(ok_df) else 0}",
-        f"unchanged_dataset_count: {int((ok_df['acc_delta'] == 0).sum()) if len(ok_df) else 0}",
-        f"avg_pass1_acc_ok: {format_optional_metric(ok_df['pass1_acc'].mean() if len(ok_df) else None)}",
-        f"avg_train_ratio_before_ok: {format_optional_metric(ok_df['train_ratio_before'].mean() if len(ok_df) else None)}",
-        f"avg_train_ratio_after_ok: {format_optional_metric(ok_df['train_ratio_after'].mean() if len(ok_df) else None)}",
-        f"avg_pseudo_selected_ok: {format_optional_metric(ok_df['pseudo_selected'].mean() if len(ok_df) else None)}",
-        f"total_pseudo_selected_ok: {int(ok_df['pseudo_selected'].sum()) if len(ok_df) else 0}",
-        f"avg_pseudo_precision_ok: {format_optional_metric(ok_df['pseudo_precision'].mean() if len(ok_df) else None)}",
-        f"avg_pseudo_error_rate_ok: {format_optional_metric(compute_avg_pseudo_error_rate_ok(result_df))}",
+        (
+            f"avg_accuracy_ok: {ok_df['accuracy'].mean():.6f}"
+            if len(ok_df)
+            else "avg_accuracy_ok: (none)"
+        ),
         f"wall_seconds: {wall_seconds:.3f}",
     ]
 
@@ -1410,22 +1363,6 @@ def write_summary(
     summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def write_dataset_outputs(
-    out_dir: Path,
-    result_df: pd.DataFrame,
-    dataset_dirs: List[Path],
-    wall_seconds: float,
-) -> tuple[Path, Path]:
-    ensure_runtime_deps()
-
-    out_dir.mkdir(parents=True, exist_ok=True)
-    all_csv = out_dir / "all_classification_results.csv"
-    summary_txt = out_dir / "summary.txt"
-    result_df.to_csv(all_csv, index=False)
-    write_summary(summary_txt, result_df, dataset_dirs, wall_seconds)
-    return all_csv, summary_txt
-
-
 def write_model_pool_outputs(
     out_dir: Path,
     model_summaries: List[dict[str, Any]],
@@ -1440,23 +1377,10 @@ def write_model_pool_outputs(
     )
     for column in (
         "avg_accuracy_ok",
-        "avg_acc_round1_ok",
-        "avg_acc_round2_ok",
-        "avg_acc_delta_ok",
         "avg_fit_seconds_ok",
         "avg_predict_seconds_ok",
         "avg_dataset_seconds_ok",
-        "avg_pass1_acc_ok",
-        "avg_train_ratio_before_ok",
-        "avg_train_ratio_after_ok",
-        "avg_pseudo_selected_ok",
-        "avg_pseudo_precision_ok",
-        "avg_pseudo_error_rate_ok",
         "total_dataset_seconds_ok",
-        "total_pseudo_selected_ok",
-        "improved_dataset_count",
-        "degraded_dataset_count",
-        "unchanged_dataset_count",
         "model_wall_seconds",
     ):
         if column in summary_df.columns:
@@ -1472,21 +1396,16 @@ def write_model_pool_outputs(
         f"total_models: {len(summary_df)}",
         f"successful_models: {len(ok_df)}",
         f"failed_models: {len(failed_df)}",
-        f"average_avg_dataset_seconds_ok: {format_optional_metric(ok_df['avg_dataset_seconds_ok'].mean() if len(ok_df) else None)}",
-        f"average_avg_accuracy_ok: {format_optional_metric(ok_df['avg_accuracy_ok'].mean() if len(ok_df) else None)}",
-        f"average_avg_acc_round1_ok: {format_optional_metric(ok_df['avg_acc_round1_ok'].mean() if len(ok_df) else None)}",
-        f"average_avg_acc_round2_ok: {format_optional_metric(ok_df['avg_acc_round2_ok'].mean() if len(ok_df) else None)}",
-        f"average_avg_acc_delta_ok: {format_optional_metric(ok_df['avg_acc_delta_ok'].mean() if len(ok_df) else None)}",
-        f"total_improved_dataset_count: {int(ok_df['improved_dataset_count'].sum()) if len(ok_df) else 0}",
-        f"total_degraded_dataset_count: {int(ok_df['degraded_dataset_count'].sum()) if len(ok_df) else 0}",
-        f"total_unchanged_dataset_count: {int(ok_df['unchanged_dataset_count'].sum()) if len(ok_df) else 0}",
-        f"average_avg_pass1_acc_ok: {format_optional_metric(ok_df['avg_pass1_acc_ok'].mean() if len(ok_df) else None)}",
-        f"average_avg_train_ratio_before_ok: {format_optional_metric(ok_df['avg_train_ratio_before_ok'].mean() if len(ok_df) else None)}",
-        f"average_avg_train_ratio_after_ok: {format_optional_metric(ok_df['avg_train_ratio_after_ok'].mean() if len(ok_df) else None)}",
-        f"average_avg_pseudo_selected_ok: {format_optional_metric(ok_df['avg_pseudo_selected_ok'].mean() if len(ok_df) else None)}",
-        f"total_pseudo_selected_ok: {int(ok_df['total_pseudo_selected_ok'].sum()) if len(ok_df) else 0}",
-        f"average_avg_pseudo_precision_ok: {format_optional_metric(ok_df['avg_pseudo_precision_ok'].mean() if len(ok_df) else None)}",
-        f"average_avg_pseudo_error_rate_ok: {format_optional_metric(ok_df['avg_pseudo_error_rate_ok'].mean() if len(ok_df) else None)}",
+        (
+            f"average_avg_dataset_seconds_ok: {ok_df['avg_dataset_seconds_ok'].mean():.6f}"
+            if len(ok_df)
+            else "average_avg_dataset_seconds_ok: (none)"
+        ),
+        (
+            f"average_avg_accuracy_ok: {ok_df['avg_accuracy_ok'].mean():.6f}"
+            if len(ok_df)
+            else "average_avg_accuracy_ok: (none)"
+        ),
         f"global_wall_seconds: {wall_seconds:.3f}",
     ]
 
@@ -1512,26 +1431,31 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--models-dir", default=None)
     parser.add_argument("--checkpoint-version", default=DEFAULT_CHECKPOINT_VERSION)
-    parser.add_argument("--out-dir", default="result/persudo_test_tabiclv1.1_0.01")
+    parser.add_argument("--out-dir", default="1a_result/tabiclv1_1_ttt2")
     parser.add_argument("--workers", type=int, default=None)
     parser.add_argument("--gpus", default=None)
-    parser.add_argument("--n-estimators", type=int, default=8)
-    parser.add_argument("--batch-size", type=parse_optional_int, default=1)
+    parser.add_argument("--gpu-groups", default=None)
+    parser.add_argument("--n-estimators", type=int, default=32)
+    parser.add_argument("--batch-size", type=parse_optional_int, default=8)
     parser.add_argument("--kv-cache", type=parse_kv_cache, default=False)
     parser.add_argument("--use-amp", type=parse_auto_bool, default="auto")
     parser.add_argument("--use-fa3", type=parse_auto_bool, default="auto")
     parser.add_argument("--offload-mode", choices=["auto", "gpu", "cpu", "disk"], default="auto")
     parser.add_argument("--random-state", type=int, default=42)
-    parser.add_argument("--pseudo-max-error-rate", type=float, default=DEFAULT_PSEUDO_MAX_ERROR_RATE)
-    parser.add_argument("--pseudo-rounds", type=int, default=DEFAULT_PSEUDO_ROUNDS)
-    parser.add_argument(
-        "--save-entropy-artifacts",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-    )
     parser.add_argument("--max-datasets", type=int, default=None)
     parser.add_argument("--max-models", type=int, default=None)
     parser.add_argument("--prefetch-models", type=int, default=4)
+    parser.add_argument("--ttt-holdout", default=True, action="store_true")
+    parser.add_argument("--ttt-lr", type=float, default=2e-6)
+    parser.add_argument("--ttt-scheduler", choices=["constant"], default="constant")
+    parser.add_argument("--ttt-grad-clip", type=float, default=1.0)
+    parser.add_argument("--ttt-dtype", choices=["float32", "float16", "bfloat16"], default="float32")
+    parser.add_argument("--ttt-micro-batch-size", type=int, default=1)
+    parser.add_argument("--ttt-weight-decay", type=float, default=0.0)
+    parser.add_argument("--ttt-steps", type=int, default=1)
+    parser.add_argument("--ttt-freeze-col", type=parse_bool, default=True)
+    parser.add_argument("--ttt-freeze-row", type=parse_bool, default=True)
+    parser.add_argument("--ttt-data-parallel", action="store_true")
     parser.add_argument("--verbose", action="store_true")
     return parser
 
@@ -1543,6 +1467,24 @@ def resolve_gpu_ids(args: argparse.Namespace) -> List[int]:
     if len(gpu_ids) != args.workers:
         raise ValueError(f"--gpus must contain exactly {args.workers} ids")
     return gpu_ids
+
+
+def resolve_gpu_assignments(args: argparse.Namespace) -> tuple[List[int], List[str]]:
+    if args.gpu_groups:
+        if args.gpus:
+            raise ValueError("Use either --gpu-groups or --gpus, not both")
+        gpu_groups = parse_gpu_group_list(args.gpu_groups)
+        if not gpu_groups:
+            raise ValueError("--gpu-groups must contain at least one group")
+        if args.workers is None:
+            args.workers = len(gpu_groups)
+        if len(gpu_groups) != args.workers:
+            raise ValueError(f"--gpu-groups must contain exactly {args.workers} groups")
+        gpu_ids = [first_gpu_id_from_group(gpu_group) for gpu_group in gpu_groups]
+        return gpu_ids, gpu_groups
+
+    gpu_ids = resolve_gpu_ids(args)
+    return gpu_ids, [str(gpu_id) for gpu_id in gpu_ids]
 
 
 def build_common_model_kwargs(args: argparse.Namespace) -> Dict[str, object]:
@@ -1563,11 +1505,12 @@ def run_single_model_mode(
     args: argparse.Namespace,
     dataset_dirs: List[Path],
     gpu_ids: List[int],
+    gpu_groups: List[str],
     out_dir: Path,
 ) -> None:
     model_kwargs = build_common_model_kwargs(args)
     model_kwargs["model_path"] = normalize_model_path(args.model_path or DEFAULT_MODEL_PATH)
-    entropy_save_dir = out_dir / "entropy_pass1" if args.save_entropy_artifacts else None
+    ttt_config = build_ttt_config(args)
 
     start_time = time.time()
     ready_queue: mp.Queue = mp.Queue()
@@ -1585,14 +1528,13 @@ def run_single_model_mode(
             args=(
                 worker_id,
                 gpu_ids[worker_id],
+                gpu_groups[worker_id],
                 assigned_dirs,
                 ready_queue,
                 start_event,
                 str(worker_csv),
                 dict(model_kwargs),
-                float(np.clip(args.pseudo_max_error_rate, 0.0, 1.0)),
-                max(1, int(args.pseudo_rounds)),
-                str(entropy_save_dir) if entropy_save_dir is not None else "",
+                ttt_config,
                 args.verbose,
             ),
             daemon=False,
@@ -1621,7 +1563,7 @@ def run_single_model_mode(
             ready_workers.add(int(message["worker_id"]))
             if args.verbose:
                 print(
-                    f"[worker {message['worker_id']} | gpu {message['gpu_id']}] "
+                    f"[worker {message['worker_id']} | gpu {message.get('gpu_group', message['gpu_id'])}] "
                     f"ready assigned={message.get('assigned_count', '?')}"
                 )
             continue
@@ -1647,19 +1589,27 @@ def run_single_model_mode(
         if dfs
         else pd.DataFrame(columns=ResultRow.__annotations__.keys())
     )
+    all_csv = out_dir / "all_classification_results.csv"
+    summary_txt = out_dir / "summary.txt"
+    all_df.to_csv(all_csv, index=False)
+
     wall_seconds = time.time() - start_time
-    all_csv, summary_txt = write_dataset_outputs(out_dir, all_df, dataset_dirs, wall_seconds)
+    write_summary(summary_txt, all_df, dataset_dirs, wall_seconds)
 
     print(f"saved_all_csv: {all_csv}")
     print(f"saved_summary: {summary_txt}")
     print("model_kwargs:")
     print(json.dumps(model_kwargs, indent=2, ensure_ascii=False))
+    if ttt_config.enabled:
+        print("ttt_config:")
+        print(json.dumps(asdict(ttt_config), indent=2, ensure_ascii=False))
 
 
 def run_multi_model_mode(
     args: argparse.Namespace,
     dataset_dirs: List[Path],
     gpu_ids: List[int],
+    gpu_groups: List[str],
     out_dir: Path,
 ) -> None:
     model_paths = discover_model_paths(Path(args.models_dir), max_models=args.max_models)
@@ -1668,6 +1618,7 @@ def run_multi_model_mode(
 
     worker_count = min(args.workers, len(model_paths))
     base_model_kwargs = build_common_model_kwargs(args)
+    ttt_config = build_ttt_config(args)
     ready_queue: mp.Queue = mp.Queue()
     result_queue: mp.Queue = mp.Queue()
     task_queues: List[mp.Queue] = []
@@ -1684,13 +1635,13 @@ def run_multi_model_mode(
                 args=(
                     worker_id,
                     gpu_ids[worker_id],
+                    gpu_groups[worker_id],
                     [str(path.resolve()) for path in dataset_dirs],
                     ready_queue,
                     task_queue,
                     result_queue,
                     dict(base_model_kwargs),
-                    float(np.clip(args.pseudo_max_error_rate, 0.0, 1.0)),
-                    max(1, int(args.pseudo_rounds)),
+                    ttt_config,
                     args.verbose,
                 ),
                 daemon=False,
@@ -1719,7 +1670,7 @@ def run_multi_model_mode(
                 ready_workers.add(int(message["worker_id"]))
                 if args.verbose:
                     print(
-                        f"[worker {message['worker_id']} | gpu {message['gpu_id']}] "
+                        f"[worker {message['worker_id']} | gpu {message.get('gpu_group', message['gpu_id'])}] "
                         f"model-pool ready datasets={message.get('assigned_count', '?')}",
                         flush=True,
                     )
@@ -1740,18 +1691,7 @@ def run_multi_model_mode(
         for worker_id in range(worker_count):
             if next_model_idx >= len(model_paths):
                 break
-            model_path = model_paths[next_model_idx]
-            model_out_dir = out_dir / model_path.stem
-            task_queues[worker_id].put(
-                {
-                    "model_path": str(model_path),
-                    "entropy_save_dir": (
-                        str(model_out_dir / "entropy_pass1")
-                        if args.save_entropy_artifacts
-                        else ""
-                    ),
-                }
-            )
+            task_queues[worker_id].put({"model_path": str(model_paths[next_model_idx])})
             next_model_idx += 1
             prefetcher.schedule(model_paths[next_model_idx : next_model_idx + max(0, args.prefetch_models)])
 
@@ -1770,21 +1710,8 @@ def run_multi_model_mode(
 
             worker_id = int(message["worker_id"])
             summary = dict(message["summary"])
-            rows = list(message.get("rows", []))
             collected_summaries.append(summary)
             completed_models += 1
-            model_out_dir = out_dir / summary["model_name"]
-            model_df = (
-                pd.DataFrame(rows)
-                if rows
-                else pd.DataFrame(columns=ResultRow.__annotations__.keys())
-            )
-            write_dataset_outputs(
-                model_out_dir,
-                model_df,
-                dataset_dirs,
-                float(summary["model_wall_seconds"]),
-            )
 
             if args.verbose:
                 print(
@@ -1796,18 +1723,7 @@ def run_multi_model_mode(
                 )
 
             if next_model_idx < len(model_paths):
-                model_path = model_paths[next_model_idx]
-                model_out_dir = out_dir / model_path.stem
-                task_queues[worker_id].put(
-                    {
-                        "model_path": str(model_path),
-                        "entropy_save_dir": (
-                            str(model_out_dir / "entropy_pass1")
-                            if args.save_entropy_artifacts
-                            else ""
-                        ),
-                    }
-                )
+                task_queues[worker_id].put({"model_path": str(model_paths[next_model_idx])})
                 next_model_idx += 1
                 prefetcher.schedule(model_paths[next_model_idx : next_model_idx + max(0, args.prefetch_models)])
             elif worker_id not in closed_workers:
@@ -1828,6 +1744,9 @@ def run_multi_model_mode(
         print(f"saved_summary: {out_dir / 'summary.txt'}")
         print("base_model_kwargs:")
         print(json.dumps(base_model_kwargs, indent=2, ensure_ascii=False))
+        if ttt_config.enabled:
+            print("ttt_config:")
+            print(json.dumps(asdict(ttt_config), indent=2, ensure_ascii=False))
     finally:
         for worker_id in range(len(task_queues)):
             if worker_id not in closed_workers:
@@ -1848,13 +1767,11 @@ def main() -> None:
     args = parser.parse_args()
 
     ensure_runtime_deps()
-    args.pseudo_max_error_rate = float(np.clip(args.pseudo_max_error_rate, 0.0, 1.0))
-    args.pseudo_rounds = max(1, int(args.pseudo_rounds))
 
     if args.models_dir is not None and args.model_path is not None:
         raise ValueError("--models-dir and --model-path are mutually exclusive")
 
-    data_root = resolve_data_root_path(args.data_root)
+    data_root = Path(args.data_root)
     if not data_root.exists():
         raise FileNotFoundError(f"Data root does not exist: {data_root}")
     if not data_root.is_dir():
@@ -1880,9 +1797,9 @@ def main() -> None:
         pass
 
     if args.models_dir is not None:
-        run_multi_model_mode(args, dataset_dirs, gpu_ids, out_dir)
+        run_multi_model_mode(args, dataset_dirs, gpu_ids, gpu_groups, out_dir)
     else:
-        run_single_model_mode(args, dataset_dirs, gpu_ids, out_dir)
+        run_single_model_mode(args, dataset_dirs, gpu_ids, gpu_groups, out_dir)
 
 
 if __name__ == "__main__":

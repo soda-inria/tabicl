@@ -51,6 +51,19 @@ class FakePseudoClassifier:
         return self.proba
 
 
+class SequentialPseudoClassifier(FakePseudoClassifier):
+    def __init__(self, probas: list[np.ndarray], classes: np.ndarray | None = None):
+        super().__init__(probas[0], classes=classes)
+        self.probas = [np.asarray(proba, dtype=float) for proba in probas]
+        self.predict_calls = 0
+
+    def predict_proba(self, X):
+        proba = self.probas[min(self.predict_calls, len(self.probas) - 1)]
+        self.predict_calls += 1
+        assert len(X) == len(proba)
+        return proba
+
+
 def make_result_row(**overrides):
     base = {
         "dataset_name": "alpha",
@@ -64,6 +77,7 @@ def make_result_row(**overrides):
         "n_features": 3,
         "n_classes": 2,
         "accuracy": 0.75,
+        "acc_rounds_json": "[0.5, 0.625, 0.75]",
         "acc_round1": 0.5,
         "acc_round2": 0.75,
         "acc_delta": 0.25,
@@ -77,8 +91,7 @@ def make_result_row(**overrides):
         "pseudo_wrong": 0,
         "pseudo_precision": 1.0,
         "pseudo_error_rate": 0.0,
-        "effective_pseudo_max_error_rate": 0.01,
-        "pseudo_rounds": 2,
+        "pseudo_rounds": 3,
         "entropy_file": "/tmp/alpha_round1.npz|/tmp/alpha_round2.npz",
         "fit_seconds": 0.4,
         "predict_seconds": 0.2,
@@ -126,7 +139,8 @@ def test_run_entropy_two_pass_pseudo_appends_predicted_labels_and_writes_entropy
     assert meta["selected_correct"] == 2
     assert meta["selected_wrong"] == 0
     assert meta["rounds"] == 2
-    assert meta["effective_pseudo_max_error_rate"] == 0.05
+    assert meta["round_accs"] == [0.5, 0.5]
+    assert meta["round_accs_json"] == "[0.5, 0.5]"
     expected_thresholds = {
         "0": bench.entropy_from_proba(np.array([[0.95, 0.05]])).item(),
         "1": bench.entropy_from_proba(np.array([[0.02, 0.98]])).item(),
@@ -180,7 +194,7 @@ def test_run_entropy_two_pass_pseudo_sets_null_threshold_for_class_without_feasi
     assert meta["selected_cnt"] == 1
     assert meta["selected_correct"] == 1
     assert meta["selected_wrong"] == 0
-    assert meta["effective_pseudo_max_error_rate"] == 0.0
+    assert meta["round_accs"] == [1 / 3]
     assert meta["threshold_by_class"]["0"] is None
     expected_thresholds = {
         "0": None,
@@ -218,25 +232,24 @@ def test_run_entropy_two_pass_pseudo_falls_back_when_no_sample_selected():
     assert len(clf.fit_labels) == 1
     assert meta["selected_cnt"] == 0
     assert meta["rounds"] == 1
-    assert meta["effective_pseudo_max_error_rate"] == 0.0
+    assert meta["round_accs"] == [0.0]
     assert meta["threshold_by_class"] == {"0": None}
     assert meta["threshold_by_class_json"] == '{"0": null}'
 
 
-def test_run_entropy_two_pass_pseudo_uses_explicit_effective_error_rate_override():
-    clf = FakePseudoClassifier(
-        np.array(
-            [
-                [0.90, 0.10],
-                [0.75, 0.25],
-            ]
-        )
+def test_run_entropy_two_pass_pseudo_records_three_round_accuracies():
+    clf = SequentialPseudoClassifier(
+        [
+            np.array([[0.90, 0.10], [0.80, 0.20], [0.70, 0.30], [0.60, 0.40]]),
+            np.array([[0.90, 0.10], [0.20, 0.80], [0.70, 0.30], [0.60, 0.40]]),
+            np.array([[0.90, 0.10], [0.20, 0.80], [0.30, 0.70], [0.60, 0.40]]),
+        ]
     )
 
     X_train = pd.DataFrame({"x": [0, 1]})
     y_train = np.array([0, 1])
-    X_test = pd.DataFrame({"x": [20, 21]})
-    y_test = np.array([0, 1])
+    X_test = pd.DataFrame({"x": [20, 21, 22, 23]})
+    y_test = np.array([0, 1, 1, 1])
 
     y_pred, _, _, meta = bench.run_entropy_two_pass_pseudo(
         clf,
@@ -245,30 +258,16 @@ def test_run_entropy_two_pass_pseudo_uses_explicit_effective_error_rate_override
         X_test,
         y_test,
         pseudo_max_error_rate=0.0,
-        effective_pseudo_max_error_rate=0.5,
-        pseudo_rounds=1,
+        pseudo_rounds=3,
         entropy_save_dir=None,
         dataset_key=None,
     )
 
-    np.testing.assert_array_equal(y_pred, np.array([0, 0]))
-    assert meta["selected_cnt"] == 2
-    assert meta["selected_correct"] == 1
-    assert meta["selected_wrong"] == 1
-    assert meta["effective_pseudo_max_error_rate"] == 0.5
-
-
-def test_resolve_effective_pseudo_error_rate_uses_class_count_buckets_and_cap():
-    assert bench.resolve_effective_pseudo_error_rate(0.01, n_classes=2, class_aware_enabled=True) == 0.01
-    assert bench.resolve_effective_pseudo_error_rate(0.01, n_classes=4, class_aware_enabled=True) == 0.02
-    assert bench.resolve_effective_pseudo_error_rate(0.01, n_classes=7, class_aware_enabled=True) == 0.03
-    assert bench.resolve_effective_pseudo_error_rate(0.01, n_classes=12, class_aware_enabled=True) == 0.04
-    assert bench.resolve_effective_pseudo_error_rate(0.03, n_classes=12, class_aware_enabled=True) == 0.08
-
-
-def test_resolve_effective_pseudo_error_rate_returns_base_rate_when_disabled():
-    assert bench.resolve_effective_pseudo_error_rate(0.01, n_classes=12, class_aware_enabled=False) == 0.01
-    assert bench.resolve_effective_pseudo_error_rate(-1.0, n_classes=12, class_aware_enabled=False) == 0.0
+    np.testing.assert_array_equal(y_pred, np.array([0, 1, 1, 0]))
+    assert meta["rounds"] == 3
+    assert meta["round_accs"] == [0.25, 0.5, 0.75]
+    assert meta["round_accs_json"] == "[0.25, 0.5, 0.75]"
+    assert meta["pass1_acc"] == 0.25
 
 
 def test_format_dataset_result_log_for_single_model_ok():
@@ -322,8 +321,6 @@ def test_build_arg_parser_enables_entropy_artifacts_by_default_and_supports_opt_
     parser = bench.build_arg_parser()
     assert parser.parse_args([]).save_entropy_artifacts is True
     assert parser.parse_args(["--no-save-entropy-artifacts"]).save_entropy_artifacts is False
-    assert parser.parse_args([]).class_aware_pseudo_tolerance is True
-    assert parser.parse_args(["--no-class-aware-pseudo-tolerance"]).class_aware_pseudo_tolerance is False
 
 
 def test_resolve_data_root_uses_current_directory_subfolder(tmp_path, monkeypatch):
@@ -358,16 +355,17 @@ def test_write_dataset_outputs_persists_pseudo_columns_and_summary(tmp_path):
     csv_text = all_csv.read_text(encoding="utf-8")
     summary_text = summary_path.read_text(encoding="utf-8")
     assert "n_train_initial" in csv_text
+    assert "acc_rounds_json" in csv_text
     assert "acc_round1" in csv_text
     assert "acc_round2" in csv_text
     assert "acc_delta" in csv_text
     assert "acc_improved" in csv_text
     assert "pseudo_selected" in csv_text
     assert "entropy_file" in csv_text
-    assert "effective_pseudo_max_error_rate" in csv_text
     assert '"{""0"": 0.123456}"' in csv_text
     assert "avg_acc_round1_ok: 0.500000" in summary_text
-    assert "avg_acc_round2_ok: 0.750000" in summary_text
+    assert "avg_acc_round2_ok: 0.625000" in summary_text
+    assert "avg_acc_round3_ok: 0.750000" in summary_text
     assert "avg_acc_delta_ok: 0.250000" in summary_text
     assert "improved_dataset_count: 1" in summary_text
     assert "degraded_dataset_count: 0" in summary_text
@@ -480,6 +478,7 @@ def test_write_model_pool_outputs_includes_pseudo_aggregates(tmp_path):
                 "failed_count": 1,
                 "skipped_count": 0,
                 "avg_accuracy_ok": 0.7,
+                "avg_acc_rounds_json": "[0.5, 0.7]",
                 "avg_acc_round1_ok": 0.5,
                 "avg_acc_round2_ok": 0.7,
                 "avg_acc_delta_ok": 0.2,
@@ -538,6 +537,7 @@ def test_write_model_pool_outputs_skips_none_avg_pseudo_error_rate_ok(tmp_path):
                 "failed_count": 0,
                 "skipped_count": 0,
                 "avg_accuracy_ok": 0.7,
+                "avg_acc_rounds_json": "[0.5, 0.7]",
                 "avg_acc_round1_ok": 0.5,
                 "avg_acc_round2_ok": 0.7,
                 "avg_acc_delta_ok": 0.2,
@@ -569,6 +569,7 @@ def test_write_model_pool_outputs_skips_none_avg_pseudo_error_rate_ok(tmp_path):
                 "failed_count": 0,
                 "skipped_count": 0,
                 "avg_accuracy_ok": 0.8,
+                "avg_acc_rounds_json": "[0.6, 0.8]",
                 "avg_acc_round1_ok": 0.6,
                 "avg_acc_round2_ok": 0.8,
                 "avg_acc_delta_ok": 0.2,

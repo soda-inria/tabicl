@@ -539,7 +539,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
             for X_batch, y_batch in zip(Xs_split, ys_split):
                 X_batch = torch.from_numpy(X_batch).float().to(self.device_)
                 y_batch = torch.from_numpy(y_batch).float().to(self.device_)
-                with torch.no_grad():
+                with torch.inference_mode():
                     self.model_.forward_with_cache(
                         X_train=X_batch,
                         y_train=y_batch,
@@ -600,7 +600,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
             if shuffle_batch is not None:
                 shuffle_batch = shuffle_batch.tolist()
 
-            with torch.no_grad():
+            with torch.inference_mode():
                 out = self.model_(
                     X=X_batch,
                     y_train=y_batch,
@@ -645,7 +645,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
             offset += bs
 
             X_batch = torch.from_numpy(X_batch).float().to(self.device_)
-            with torch.no_grad():
+            with torch.inference_mode():
                 out = self.model_.forward_with_cache(
                     X_test=X_batch,
                     cache=cache_subset,

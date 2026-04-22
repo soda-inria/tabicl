@@ -29,8 +29,9 @@ DEFAULT_MODEL_PATH = "tabicl-classifier-v1.1-20250506.ckpt"
 DEFAULT_CHECKPOINT_VERSION = "tabicl-classifier-v1.1-20250506.ckpt"
 CLASSIFICATION_TASKS = {"binclass", "multiclass"}
 CATEGORICAL_MISSING_TOKEN = "__tabicl_missing__"
-DEFAULT_PSEUDO_MAX_ERROR_RATE = 0.0001
-DEFAULT_PSEUDO_ROUNDS = 3
+DEFAULT_PSEUDO_MAX_ERROR_RATE = 0.1
+DEFAULT_PSEUDO_ROUNDS = 2
+DEFAULT_TARGET_TEST_COVERAGE = 0.7
 
 np = None
 pd = None
@@ -341,7 +342,7 @@ def stringify_class_label(label: Any) -> str:
     return str(label)
 
 
-def serialize_threshold_by_class(threshold_by_class: dict[str, Optional[float]]) -> str:
+def serialize_threshold_by_class(threshold_by_class: dict[str, Any]) -> str:
     return json.dumps(threshold_by_class, ensure_ascii=False, sort_keys=True)
 
 
@@ -419,57 +420,93 @@ def compute_avg_round_accs_from_ok_df(ok_df) -> List[float]:
     return avg_round_accs
 
 
-def choose_entropy_thresholds_by_class(
-    entropy,
+def choose_pmax_quota_by_class(
+    pmax,
     predicted_labels,
-    correct_mask,
-    max_error_rate: float,
-) -> tuple[dict[str, Optional[float]], np.ndarray, int, int, float]:
+    target_test_coverage: float,
+) -> tuple[dict[str, dict[str, Any]], np.ndarray, int]:
     ensure_runtime_deps()
 
-    entropy_arr = np.asarray(entropy, dtype=np.float64).reshape(-1)
+    pmax_arr = np.asarray(pmax, dtype=np.float64).reshape(-1)
     predicted_arr = np.asarray(predicted_labels)
-    correct_arr = np.asarray(correct_mask, dtype=bool).reshape(-1)
-    if entropy_arr.size == 0:
-        return {}, np.zeros(0, dtype=bool), 0, 0, 0.0
+    if pmax_arr.size == 0:
+        return {}, np.zeros(0, dtype=bool), 0
 
-    selected_mask_all = np.zeros(entropy_arr.shape[0], dtype=bool)
-    threshold_by_class: dict[str, Optional[float]] = {}
-    selected_total = 0
-    correct_total = 0
+    bounded_coverage = float(np.clip(target_test_coverage, 0.0, 1.0))
+    target_total = int(np.floor((bounded_coverage * pmax_arr.size) + 0.5))
+    target_total = int(np.clip(target_total, 0, pmax_arr.size))
+    selected_mask_all = np.zeros(pmax_arr.shape[0], dtype=bool)
 
+    class_entries: list[dict[str, Any]] = []
     for class_label in pd.unique(pd.Series(predicted_arr)):
-        class_mask = np.asarray(predicted_arr == class_label, dtype=bool)
         class_key = stringify_class_label(class_label)
-        class_entropy = entropy_arr[class_mask]
-        class_correct = correct_arr[class_mask]
-        (
-            threshold,
-            class_selected_mask,
-            class_selected_count,
-            class_selected_correct,
-            _class_selected_precision,
-        ) = choose_entropy_threshold(
-            entropy=class_entropy,
-            correct_mask=class_correct,
-            max_error_rate=max_error_rate,
+        class_indices = np.flatnonzero(np.asarray(predicted_arr == class_label, dtype=bool))
+        class_entries.append(
+            {
+                "key": class_key,
+                "label": class_label,
+                "indices": class_indices,
+                "available": int(class_indices.size),
+            }
         )
 
-        threshold_by_class[class_key] = (
-            float(threshold) if np.isfinite(threshold) else None
-        )
-        if class_selected_count > 0:
-            class_indices = np.flatnonzero(class_mask)
-            selected_mask_all[class_indices[class_selected_mask]] = True
-            selected_total += int(class_selected_count)
-            correct_total += int(class_selected_correct)
+    class_entries.sort(key=lambda item: item["key"])
+    quotas: dict[str, int] = {entry["key"]: 0 for entry in class_entries}
+    if class_entries and target_total > 0:
+        base_quota = target_total // len(class_entries)
+        remaining = target_total
+        for entry in class_entries:
+            quota = min(base_quota, int(entry["available"]))
+            quotas[entry["key"]] = quota
+            remaining -= quota
 
-    selected_precision = (
-        float(correct_total / selected_total)
-        if selected_total > 0
-        else 0.0
-    )
-    return threshold_by_class, selected_mask_all, selected_total, correct_total, selected_precision
+        while remaining > 0:
+            eligible = [
+                entry
+                for entry in class_entries
+                if quotas[entry["key"]] < int(entry["available"])
+            ]
+            if not eligible:
+                break
+            eligible.sort(
+                key=lambda entry: (
+                    quotas[entry["key"]],
+                    -int(entry["available"]),
+                    entry["key"],
+                )
+            )
+            chosen_key = eligible[0]["key"]
+            quotas[chosen_key] += 1
+            remaining -= 1
+
+    quota_by_class: dict[str, dict[str, Any]] = {}
+    selected_total = 0
+    for entry in class_entries:
+        class_key = entry["key"]
+        class_indices = np.asarray(entry["indices"], dtype=np.int64)
+        quota = int(quotas[class_key])
+        selected_indices = np.asarray([], dtype=np.int64)
+        if quota > 0:
+            order = np.lexsort((class_indices, -pmax_arr[class_indices]))
+            selected_indices = class_indices[order[:quota]]
+            selected_mask_all[selected_indices] = True
+            selected_total += int(selected_indices.size)
+
+        min_pmax = (
+            float(np.min(pmax_arr[selected_indices]))
+            if selected_indices.size > 0
+            else None
+        )
+        quota_by_class[class_key] = {
+            "available": int(entry["available"]),
+            "quota": quota,
+            "selected": int(selected_indices.size),
+            "min_pmax": min_pmax,
+            "target_total": target_total,
+            "target_test_coverage": bounded_coverage,
+        }
+
+    return quota_by_class, selected_mask_all, selected_total
 
 
 def append_feature_rows(X_existing, X_new):
@@ -500,6 +537,7 @@ def run_entropy_two_pass_pseudo(
     *,
     pseudo_max_error_rate: float,
     pseudo_rounds: int,
+    target_test_coverage: float = DEFAULT_TARGET_TEST_COVERAGE,
     entropy_save_dir: Path | None = None,
     dataset_key: str | None = None,
 ) -> tuple[np.ndarray, float, float, dict[str, Any]]:
@@ -523,10 +561,11 @@ def run_entropy_two_pass_pseudo(
     total_selected = 0
     total_correct = 0
     total_wrong = 0
-    last_threshold_by_class: dict[str, Optional[float]] = {}
+    last_threshold_by_class: dict[str, Any] = {}
     last_threshold_json = ""
     last_precision = float("nan")
     last_error_rate = float("nan")
+    bounded_target_test_coverage = float(np.clip(target_test_coverage, 0.0, 1.0))
 
     for round_idx in range(1, rounds + 1):
         fit_started = time.perf_counter()
@@ -539,7 +578,7 @@ def run_entropy_two_pass_pseudo(
         total_pred_time += time.perf_counter() - pred_started
         y_pred_last = y_pred
 
-        entropy = entropy_from_proba(proba)
+        pmax = np.asarray(np.max(proba, axis=1), dtype=np.float64)
         correct = np.asarray(y_pred == y_test_values)
         round_acc = float(correct.mean()) if correct.size > 0 else float("nan")
         round_accs.append(round_acc)
@@ -550,13 +589,16 @@ def run_entropy_two_pass_pseudo(
             threshold_by_class,
             selected_mask_all,
             selected_cnt_all,
-            _selected_correct_all,
-            selected_precision_all,
-        ) = choose_entropy_thresholds_by_class(
-            entropy=entropy,
+        ) = choose_pmax_quota_by_class(
+            pmax=pmax,
             predicted_labels=y_pred,
-            correct_mask=correct,
-            max_error_rate=pseudo_max_error_rate,
+            target_test_coverage=bounded_target_test_coverage,
+        )
+        selected_correct_all = int(correct[selected_mask_all].sum()) if selected_cnt_all > 0 else 0
+        selected_precision_all = (
+            float(selected_correct_all / selected_cnt_all)
+            if selected_cnt_all > 0
+            else 0.0
         )
         selected_new_mask = selected_mask_all & (~added_mask)
         selected_cnt = int(selected_new_mask.sum())
@@ -575,7 +617,7 @@ def run_entropy_two_pass_pseudo(
             np.savez_compressed(
                 entropy_save_path,
                 round_idx=np.asarray(round_idx, dtype=np.int32),
-                entropy=entropy.astype(np.float32),
+                pmax=pmax.astype(np.float32),
                 y_pred=np.asarray(y_pred),
                 y_test=np.asarray(y_test_values),
                 selected_mask=selected_mask_all.astype(np.uint8),
@@ -623,6 +665,7 @@ def run_entropy_two_pass_pseudo(
         "rounds": rounds,
         "last_round_precision": last_precision,
         "last_round_error_rate": last_error_rate,
+        "target_test_coverage": bounded_target_test_coverage,
         "entropy_files": entropy_files,
         "n_train_final": final_train_count,
     }
@@ -1104,6 +1147,7 @@ def evaluate_one_dataset(
     *,
     pseudo_max_error_rate: float,
     pseudo_rounds: int,
+    target_test_coverage: float,
     entropy_save_dir: Path | None = None,
 ) -> ResultRow:
     ensure_runtime_deps()
@@ -1166,6 +1210,7 @@ def evaluate_one_dataset(
             y_test,
             pseudo_max_error_rate=pseudo_max_error_rate,
             pseudo_rounds=pseudo_rounds,
+            target_test_coverage=target_test_coverage,
             entropy_save_dir=entropy_save_dir,
             dataset_key=dataset_key,
         )
@@ -1231,6 +1276,7 @@ def worker_main(
     model_kwargs: Dict,
     pseudo_max_error_rate: float,
     pseudo_rounds: int,
+    target_test_coverage: float,
     entropy_save_dir: str,
     verbose: bool,
 ) -> None:
@@ -1270,6 +1316,7 @@ def worker_main(
                 Path(dataset_dir),
                 pseudo_max_error_rate=pseudo_max_error_rate,
                 pseudo_rounds=pseudo_rounds,
+                target_test_coverage=target_test_coverage,
                 entropy_save_dir=Path(entropy_save_dir) if entropy_save_dir else None,
             )
             rows.append(row)
@@ -1349,6 +1396,7 @@ def model_pool_worker_main(
     base_model_kwargs: Dict,
     pseudo_max_error_rate: float,
     pseudo_rounds: int,
+    target_test_coverage: float,
     verbose: bool,
 ) -> None:
     device_str = "cuda:0"
@@ -1402,6 +1450,7 @@ def model_pool_worker_main(
                         dataset_dir,
                         pseudo_max_error_rate=pseudo_max_error_rate,
                         pseudo_rounds=pseudo_rounds,
+                        target_test_coverage=target_test_coverage,
                         entropy_save_dir=entropy_save_dir,
                     )
                     rows.append(row)
@@ -1684,7 +1733,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--models-dir", default=None)
     parser.add_argument("--checkpoint-version", default=DEFAULT_CHECKPOINT_VERSION)
-    parser.add_argument("--out-dir", default="1B_result/iclv1.1_0.0001_round3")
+    parser.add_argument("--out-dir", default="2A_result/iclv1.1_0.01_round2")
     parser.add_argument("--workers", type=int, default=None)
     parser.add_argument("--gpus", default=None)
     parser.add_argument("--n-estimators", type=int, default=8)
@@ -1696,6 +1745,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--random-state", type=int, default=42)
     parser.add_argument("--pseudo-max-error-rate", type=float, default=DEFAULT_PSEUDO_MAX_ERROR_RATE)
     parser.add_argument("--pseudo-rounds", type=int, default=DEFAULT_PSEUDO_ROUNDS)
+    parser.add_argument("--target-test-coverage", type=float, default=DEFAULT_TARGET_TEST_COVERAGE)
     parser.add_argument(
         "--save-entropy-artifacts",
         action=argparse.BooleanOptionalAction,
@@ -1764,6 +1814,7 @@ def run_single_model_mode(
                 dict(model_kwargs),
                 float(np.clip(args.pseudo_max_error_rate, 0.0, 1.0)),
                 max(1, int(args.pseudo_rounds)),
+                float(np.clip(args.target_test_coverage, 0.0, 1.0)),
                 str(entropy_save_dir) if entropy_save_dir is not None else "",
                 args.verbose,
             ),
@@ -1863,6 +1914,7 @@ def run_multi_model_mode(
                     dict(base_model_kwargs),
                     float(np.clip(args.pseudo_max_error_rate, 0.0, 1.0)),
                     max(1, int(args.pseudo_rounds)),
+                    float(np.clip(args.target_test_coverage, 0.0, 1.0)),
                     args.verbose,
                 ),
                 daemon=False,
@@ -2022,6 +2074,7 @@ def main() -> None:
     ensure_runtime_deps()
     args.pseudo_max_error_rate = float(np.clip(args.pseudo_max_error_rate, 0.0, 1.0))
     args.pseudo_rounds = max(1, int(args.pseudo_rounds))
+    args.target_test_coverage = float(np.clip(args.target_test_coverage, 0.0, 1.0))
 
     if args.models_dir is not None and args.model_path is not None:
         raise ValueError("--models-dir and --model-path are mutually exclusive")

@@ -1,0 +1,23 @@
+
+--- Run at 2026-04-10 15:43:51 ---
+Model family: v1.1
+Checkpoint version: tabicl-classifier-v1.1-20250506.ckpt
+Model path: tabicl-classifier-v1.1-20250506.ckpt
+n_estimators: 32
+Total datasets: 178
+Average accuracy: 0.844108
+Average baseline accuracy: 0.837755
+Average pseudo ACC gain: 0.006352
+Datasets improved by pseudo: 145
+Datasets degraded by pseudo: 0
+Datasets unchanged by pseudo: 33
+Total inference time s: 5466.359
+Average inference time s: 30.710
+Script total execution time s: 3485.027
+Pseudo label rule: correct_prediction_only
+Average pseudo-added samples: 2509.623596
+Datasets with pseudo update applied: 174
+Average train_ratio before/after pseudo update: 0.799916 / 0.963042
+Datasets with NaN values: 17
+Average accuracy (NaN datasets): 0.780881
+List (NaN datasets): ASP-POTASSCO-classification, Credit_c, Customer_Personality_Analysis, Fitness_Club_c, HR_Analytics_Job_Change_of_Data_Scientists, Marketing_Campaign, Rain_in_Australia, UJI_Pen_Characters, Water_Quality_and_Potability, ada_prior, baseball, customer_satisfaction_in_airline, dabetes_130-us_hospitals, in_vehicle_coupon_recommendation, internet_usage, jm1, mice_protein_expression

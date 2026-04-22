@@ -29,8 +29,8 @@ DEFAULT_MODEL_PATH = "tabicl-classifier-v1.1-20250506.ckpt"
 DEFAULT_CHECKPOINT_VERSION = "tabicl-classifier-v1.1-20250506.ckpt"
 CLASSIFICATION_TASKS = {"binclass", "multiclass"}
 CATEGORICAL_MISSING_TOKEN = "__tabicl_missing__"
-DEFAULT_PSEUDO_MAX_ERROR_RATE = 0.0001
-DEFAULT_PSEUDO_ROUNDS = 3
+DEFAULT_PSEUDO_MAX_ERROR_RATE = 0.01
+DEFAULT_PSEUDO_ROUNDS = 2
 
 np = None
 pd = None
@@ -49,7 +49,6 @@ class ResultRow:
     n_features: int
     n_classes: int
     accuracy: Optional[float]
-    acc_rounds_json: str
     acc_round1: Optional[float]
     acc_round2: Optional[float]
     acc_delta: Optional[float]
@@ -58,6 +57,8 @@ class ResultRow:
     train_ratio_after: Optional[float]
     pass1_acc: Optional[float]
     entropy_threshold: Optional[str]
+    curriculum_error_schedule: Optional[str]
+    curriculum_rounds_applied: int
     pseudo_selected: int
     pseudo_correct: int
     pseudo_wrong: int
@@ -81,7 +82,6 @@ class ModelSummaryRow:
     failed_count: int
     skipped_count: int
     avg_accuracy_ok: Optional[float]
-    avg_acc_rounds_json: Optional[str]
     avg_acc_round1_ok: Optional[float]
     avg_acc_round2_ok: Optional[float]
     avg_acc_delta_ok: Optional[float]
@@ -225,7 +225,6 @@ def make_empty_result_row(
         n_features=0,
         n_classes=0,
         accuracy=None,
-        acc_rounds_json="[]",
         acc_round1=None,
         acc_round2=None,
         acc_delta=None,
@@ -234,6 +233,8 @@ def make_empty_result_row(
         train_ratio_after=None,
         pass1_acc=None,
         entropy_threshold=None,
+        curriculum_error_schedule=None,
+        curriculum_rounds_applied=0,
         pseudo_selected=0,
         pseudo_correct=0,
         pseudo_wrong=0,
@@ -345,78 +346,17 @@ def serialize_threshold_by_class(threshold_by_class: dict[str, Optional[float]])
     return json.dumps(threshold_by_class, ensure_ascii=False, sort_keys=True)
 
 
-def serialize_round_accs(round_accs: List[float]) -> str:
-    return json.dumps([float(item) for item in round_accs], ensure_ascii=False)
+def serialize_curriculum_error_schedule(schedule: list[float]) -> str:
+    return json.dumps([float(item) for item in schedule], ensure_ascii=False)
 
 
-def parse_round_accs_json(value: Any) -> List[float]:
-    ensure_runtime_deps()
-
-    if value is None:
-        return []
-    if isinstance(value, float) and np.isnan(value):
-        return []
-    if isinstance(value, (list, tuple, np.ndarray)):
-        raw_items = value
-    else:
-        text = str(value).strip()
-        if not text:
-            return []
-        try:
-            raw_items = json.loads(text)
-        except Exception:
-            return []
-
-    round_accs: List[float] = []
-    for item in raw_items:
-        try:
-            numeric = float(item)
-        except Exception:
-            continue
-        if numeric == numeric:
-            round_accs.append(numeric)
-    return round_accs
-
-
-def compute_avg_round_accs_from_ok_df(ok_df) -> List[float]:
-    ensure_runtime_deps()
-
-    if ok_df is None or len(ok_df) == 0:
-        return []
-
-    fallback_columns = [
-        column
-        for column in ("acc_round1", "acc_round2")
-        if column in ok_df.columns
-    ]
-    per_row_round_accs: List[List[float]] = []
-    for _, row in ok_df.iterrows():
-        row_accs = (
-            parse_round_accs_json(row["acc_rounds_json"])
-            if "acc_rounds_json" in ok_df.columns
-            else []
-        )
-        if not row_accs:
-            for column in fallback_columns:
-                try:
-                    numeric = float(row[column])
-                except Exception:
-                    continue
-                if numeric == numeric:
-                    row_accs.append(numeric)
-        per_row_round_accs.append(row_accs)
-
-    max_rounds = max((len(items) for items in per_row_round_accs), default=0)
-    avg_round_accs: List[float] = []
-    for round_idx in range(max_rounds):
-        values = [
-            items[round_idx]
-            for items in per_row_round_accs
-            if round_idx < len(items)
-        ]
-        if values:
-            avg_round_accs.append(float(np.mean(values)))
-    return avg_round_accs
+def build_curriculum_error_schedule(
+    pseudo_max_error_rate: float,
+    pseudo_rounds: int,
+) -> list[float]:
+    rounds = max(1, int(pseudo_rounds))
+    max_error_rate = float(np.clip(pseudo_max_error_rate, 0.0, 1.0))
+    return [float(max_error_rate * (round_idx / rounds)) for round_idx in range(1, rounds + 1)]
 
 
 def choose_entropy_thresholds_by_class(
@@ -491,7 +431,7 @@ def predict_labels_from_proba(classifier, proba: np.ndarray, X_test):
     return np.asarray(classifier.predict(X_test))
 
 
-def run_entropy_two_pass_pseudo(
+def run_classwise_cpl_pseudo(
     classifier,
     X_train,
     y_train,
@@ -506,6 +446,11 @@ def run_entropy_two_pass_pseudo(
     ensure_runtime_deps()
 
     rounds = max(1, int(pseudo_rounds))
+    curriculum_error_schedule = build_curriculum_error_schedule(
+        pseudo_max_error_rate=pseudo_max_error_rate,
+        pseudo_rounds=rounds,
+    )
+    curriculum_error_schedule_json = serialize_curriculum_error_schedule(curriculum_error_schedule)
     # Avoid eagerly duplicating large train blocks; we only materialize a new
     # object once pseudo-labeled rows are appended.
     cur_X_train = X_train
@@ -518,7 +463,6 @@ def run_entropy_two_pass_pseudo(
     total_pred_time = 0.0
     y_pred_last = None
     pass1_acc = float("nan")
-    round_accs: List[float] = []
     entropy_files: list[str] = []
     total_selected = 0
     total_correct = 0
@@ -527,8 +471,11 @@ def run_entropy_two_pass_pseudo(
     last_threshold_json = ""
     last_precision = float("nan")
     last_error_rate = float("nan")
+    rounds_applied = 0
 
     for round_idx in range(1, rounds + 1):
+        rounds_applied = round_idx
+        target_error_rate = float(curriculum_error_schedule[round_idx - 1])
         fit_started = time.perf_counter()
         classifier.fit(cur_X_train, cur_y_train)
         total_fit_time += time.perf_counter() - fit_started
@@ -541,10 +488,8 @@ def run_entropy_two_pass_pseudo(
 
         entropy = entropy_from_proba(proba)
         correct = np.asarray(y_pred == y_test_values)
-        round_acc = float(correct.mean()) if correct.size > 0 else float("nan")
-        round_accs.append(round_acc)
         if round_idx == 1:
-            pass1_acc = round_acc
+            pass1_acc = float(correct.mean()) if correct.size > 0 else float("nan")
 
         (
             threshold_by_class,
@@ -556,7 +501,7 @@ def run_entropy_two_pass_pseudo(
             entropy=entropy,
             predicted_labels=y_pred,
             correct_mask=correct,
-            max_error_rate=pseudo_max_error_rate,
+            max_error_rate=target_error_rate,
         )
         selected_new_mask = selected_mask_all & (~added_mask)
         selected_cnt = int(selected_new_mask.sum())
@@ -582,12 +527,18 @@ def run_entropy_two_pass_pseudo(
                 selected_new_mask=selected_new_mask.astype(np.uint8),
                 selected_correct=np.asarray(correct[selected_mask_all]).astype(np.uint8),
                 threshold_by_class_json=np.asarray(last_threshold_json),
+                target_error_rate=np.asarray(target_error_rate, dtype=np.float32),
+                curriculum_error_schedule_json=np.asarray(curriculum_error_schedule_json),
                 selected_count=np.asarray(selected_cnt_all, dtype=np.int64),
                 selected_count_new=np.asarray(selected_cnt, dtype=np.int64),
+                round_selected_count_new=np.asarray(selected_cnt, dtype=np.int64),
                 selected_precision=np.asarray(selected_precision_all, dtype=np.float32),
                 selected_error_rate=np.asarray(last_error_rate, dtype=np.float32),
             )
             entropy_files.append(str(entropy_save_path))
+
+        if selected_cnt <= 0:
+            break
 
         if selected_cnt > 0:
             if isinstance(X_test_values, pd.DataFrame):
@@ -600,6 +551,9 @@ def run_entropy_two_pass_pseudo(
             total_selected += selected_cnt
             total_correct += selected_correct
             total_wrong += selected_wrong
+
+        if bool(added_mask.all()):
+            break
 
     if y_pred_last is None:
         raise RuntimeError("Pseudo-label inference produced no predictions")
@@ -616,10 +570,11 @@ def run_entropy_two_pass_pseudo(
         "selected_wrong": total_wrong,
         "selected_precision": float(total_correct / total_selected) if total_selected > 0 else 0.0,
         "selected_error_rate": float(total_wrong / total_selected) if total_selected > 0 else 0.0,
+        "curriculum_error_schedule": list(curriculum_error_schedule),
+        "curriculum_error_schedule_json": curriculum_error_schedule_json,
+        "curriculum_rounds_applied": int(rounds_applied),
         "train_ratio_final": final_train_ratio,
         "pass1_acc": pass1_acc,
-        "round_accs": list(round_accs),
-        "round_accs_json": serialize_round_accs(round_accs),
         "rounds": rounds,
         "last_round_precision": last_precision,
         "last_round_error_rate": last_error_rate,
@@ -969,8 +924,6 @@ def build_model_summary_row(
     )
     avg_acc_round1_ok = float(ok_df["acc_round1"].mean()) if len(ok_df) else None
     avg_acc_round2_ok = float(ok_df["acc_round2"].mean()) if len(ok_df) else None
-    avg_acc_rounds = compute_avg_round_accs_from_ok_df(ok_df)
-    avg_acc_rounds_json = serialize_round_accs(avg_acc_rounds)
     avg_acc_delta_ok = float(ok_df["acc_delta"].mean()) if len(ok_df) else None
     avg_pass1_acc_ok = float(ok_df["pass1_acc"].mean()) if len(ok_df) else None
     avg_train_ratio_before_ok = float(ok_df["train_ratio_before"].mean()) if len(ok_df) else None
@@ -994,7 +947,6 @@ def build_model_summary_row(
             failed_count=len(dataset_dirs),
             skipped_count=0,
             avg_accuracy_ok=None,
-            avg_acc_rounds_json=None,
             avg_acc_round1_ok=None,
             avg_acc_round2_ok=None,
             avg_acc_delta_ok=None,
@@ -1027,7 +979,6 @@ def build_model_summary_row(
         failed_count=int(len(failed_df)),
         skipped_count=int(len(skipped_df)),
         avg_accuracy_ok=(float(ok_df["accuracy"].mean()) if len(ok_df) else None),
-        avg_acc_rounds_json=avg_acc_rounds_json,
         avg_acc_round1_ok=avg_acc_round1_ok,
         avg_acc_round2_ok=avg_acc_round2_ok,
         avg_acc_delta_ok=avg_acc_delta_ok,
@@ -1158,7 +1109,7 @@ def evaluate_one_dataset(
         )
         dataset_key = dataset_entropy_key(dataset_dir) if entropy_save_dir is not None else None
 
-        y_pred, fit_seconds, predict_seconds, pseudo_meta = run_entropy_two_pass_pseudo(
+        y_pred, fit_seconds, predict_seconds, pseudo_meta = run_classwise_cpl_pseudo(
             classifier,
             X_train,
             y_train,
@@ -1170,10 +1121,9 @@ def evaluate_one_dataset(
             dataset_key=dataset_key,
         )
 
-        round_accs = [float(item) for item in pseudo_meta.get("round_accs", [])]
         accuracy = float(np.mean(np.asarray(y_pred) == np.asarray(y_test)))
-        acc_round1 = round_accs[0] if round_accs else float(pseudo_meta["pass1_acc"])
-        acc_round2 = round_accs[-1] if round_accs else accuracy
+        acc_round1 = float(pseudo_meta["pass1_acc"])
+        acc_round2 = accuracy
         acc_delta = float(acc_round2 - acc_round1)
         acc_improved = bool(acc_delta > 0.0)
         entropy_files = pseudo_meta.get("entropy_files", [])
@@ -1191,7 +1141,6 @@ def evaluate_one_dataset(
             n_features=int(X_train.shape[1]),
             n_classes=int(len(classes)),
             accuracy=accuracy,
-            acc_rounds_json=str(pseudo_meta["round_accs_json"]),
             acc_round1=acc_round1,
             acc_round2=acc_round2,
             acc_delta=acc_delta,
@@ -1200,6 +1149,8 @@ def evaluate_one_dataset(
             train_ratio_after=float(pseudo_meta["train_ratio_final"]),
             pass1_acc=acc_round1,
             entropy_threshold=str(pseudo_meta["threshold_by_class_json"]),
+            curriculum_error_schedule=str(pseudo_meta["curriculum_error_schedule_json"]),
+            curriculum_rounds_applied=int(pseudo_meta["curriculum_rounds_applied"]),
             pseudo_selected=int(pseudo_meta["selected_cnt"]),
             pseudo_correct=int(pseudo_meta["selected_correct"]),
             pseudo_wrong=int(pseudo_meta["selected_wrong"]),
@@ -1313,7 +1264,6 @@ def worker_main(
                     "n_features": 0,
                     "n_classes": 0,
                     "accuracy": None,
-                    "acc_rounds_json": "[]",
                     "acc_round1": None,
                     "acc_round2": None,
                     "acc_delta": None,
@@ -1322,6 +1272,8 @@ def worker_main(
                     "train_ratio_after": None,
                     "pass1_acc": None,
                     "entropy_threshold": None,
+                    "curriculum_error_schedule": None,
+                    "curriculum_rounds_applied": 0,
                     "pseudo_selected": 0,
                     "pseudo_correct": 0,
                     "pseudo_wrong": 0,
@@ -1529,7 +1481,6 @@ def write_summary(
     ok_df = result_df[result_df["status"] == "ok"].copy() if len(result_df) else pd.DataFrame()
     failed_df = result_df[result_df["status"] == "fail"].copy() if len(result_df) else pd.DataFrame()
     skipped_df = result_df[result_df["status"] == "skip"].copy() if len(result_df) else pd.DataFrame()
-    avg_round_accs = compute_avg_round_accs_from_ok_df(ok_df)
 
     lines = [
         f"discovered_datasets: {len(dataset_dirs)}",
@@ -1538,25 +1489,21 @@ def write_summary(
         f"failed_count: {len(failed_df)}",
         f"skipped_count: {len(skipped_df)}",
         f"avg_accuracy_ok: {format_optional_metric(ok_df['accuracy'].mean() if len(ok_df) else None)}",
+        f"avg_acc_round1_ok: {format_optional_metric(ok_df['acc_round1'].mean() if len(ok_df) else None)}",
+        f"avg_acc_round2_ok: {format_optional_metric(ok_df['acc_round2'].mean() if len(ok_df) else None)}",
+        f"avg_acc_delta_ok: {format_optional_metric(ok_df['acc_delta'].mean() if len(ok_df) else None)}",
+        f"improved_dataset_count: {int((ok_df['acc_delta'] > 0).sum()) if len(ok_df) else 0}",
+        f"degraded_dataset_count: {int((ok_df['acc_delta'] < 0).sum()) if len(ok_df) else 0}",
+        f"unchanged_dataset_count: {int((ok_df['acc_delta'] == 0).sum()) if len(ok_df) else 0}",
+        f"avg_pass1_acc_ok: {format_optional_metric(ok_df['pass1_acc'].mean() if len(ok_df) else None)}",
+        f"avg_train_ratio_before_ok: {format_optional_metric(ok_df['train_ratio_before'].mean() if len(ok_df) else None)}",
+        f"avg_train_ratio_after_ok: {format_optional_metric(ok_df['train_ratio_after'].mean() if len(ok_df) else None)}",
+        f"avg_pseudo_selected_ok: {format_optional_metric(ok_df['pseudo_selected'].mean() if len(ok_df) else None)}",
+        f"total_pseudo_selected_ok: {int(ok_df['pseudo_selected'].sum()) if len(ok_df) else 0}",
+        f"avg_pseudo_precision_ok: {format_optional_metric(ok_df['pseudo_precision'].mean() if len(ok_df) else None)}",
+        f"avg_pseudo_error_rate_ok: {format_optional_metric(compute_avg_pseudo_error_rate_ok(result_df))}",
+        f"wall_seconds: {wall_seconds:.3f}",
     ]
-    for round_idx, avg_round_acc in enumerate(avg_round_accs, start=1):
-        lines.append(f"avg_acc_round{round_idx}_ok: {format_optional_metric(avg_round_acc)}")
-    lines.extend(
-        [
-            f"avg_acc_delta_ok: {format_optional_metric(ok_df['acc_delta'].mean() if len(ok_df) else None)}",
-            f"improved_dataset_count: {int((ok_df['acc_delta'] > 0).sum()) if len(ok_df) else 0}",
-            f"degraded_dataset_count: {int((ok_df['acc_delta'] < 0).sum()) if len(ok_df) else 0}",
-            f"unchanged_dataset_count: {int((ok_df['acc_delta'] == 0).sum()) if len(ok_df) else 0}",
-            f"avg_pass1_acc_ok: {format_optional_metric(ok_df['pass1_acc'].mean() if len(ok_df) else None)}",
-            f"avg_train_ratio_before_ok: {format_optional_metric(ok_df['train_ratio_before'].mean() if len(ok_df) else None)}",
-            f"avg_train_ratio_after_ok: {format_optional_metric(ok_df['train_ratio_after'].mean() if len(ok_df) else None)}",
-            f"avg_pseudo_selected_ok: {format_optional_metric(ok_df['pseudo_selected'].mean() if len(ok_df) else None)}",
-            f"total_pseudo_selected_ok: {int(ok_df['pseudo_selected'].sum()) if len(ok_df) else 0}",
-            f"avg_pseudo_precision_ok: {format_optional_metric(ok_df['pseudo_precision'].mean() if len(ok_df) else None)}",
-            f"avg_pseudo_error_rate_ok: {format_optional_metric(compute_avg_pseudo_error_rate_ok(result_df))}",
-            f"wall_seconds: {wall_seconds:.3f}",
-        ]
-    )
 
     if len(failed_df):
         failed_names = ", ".join(failed_df["dataset_name"].astype(str).tolist())
@@ -1630,11 +1577,6 @@ def write_model_pool_outputs(
 
     ok_df = summary_df[summary_df["status"] == "ok"].copy() if len(summary_df) else pd.DataFrame()
     failed_df = summary_df[summary_df["status"] == "fail"].copy() if len(summary_df) else pd.DataFrame()
-    avg_round_accs = []
-    if len(ok_df) and "avg_acc_rounds_json" in ok_df.columns:
-        avg_round_accs = compute_avg_round_accs_from_ok_df(
-            ok_df.rename(columns={"avg_acc_rounds_json": "acc_rounds_json"})
-        )
 
     lines = [
         f"total_models: {len(summary_df)}",
@@ -1642,25 +1584,21 @@ def write_model_pool_outputs(
         f"failed_models: {len(failed_df)}",
         f"average_avg_dataset_seconds_ok: {format_optional_metric(ok_df['avg_dataset_seconds_ok'].mean() if len(ok_df) else None)}",
         f"average_avg_accuracy_ok: {format_optional_metric(ok_df['avg_accuracy_ok'].mean() if len(ok_df) else None)}",
+        f"average_avg_acc_round1_ok: {format_optional_metric(ok_df['avg_acc_round1_ok'].mean() if len(ok_df) else None)}",
+        f"average_avg_acc_round2_ok: {format_optional_metric(ok_df['avg_acc_round2_ok'].mean() if len(ok_df) else None)}",
+        f"average_avg_acc_delta_ok: {format_optional_metric(ok_df['avg_acc_delta_ok'].mean() if len(ok_df) else None)}",
+        f"total_improved_dataset_count: {int(ok_df['improved_dataset_count'].sum()) if len(ok_df) else 0}",
+        f"total_degraded_dataset_count: {int(ok_df['degraded_dataset_count'].sum()) if len(ok_df) else 0}",
+        f"total_unchanged_dataset_count: {int(ok_df['unchanged_dataset_count'].sum()) if len(ok_df) else 0}",
+        f"average_avg_pass1_acc_ok: {format_optional_metric(ok_df['avg_pass1_acc_ok'].mean() if len(ok_df) else None)}",
+        f"average_avg_train_ratio_before_ok: {format_optional_metric(ok_df['avg_train_ratio_before_ok'].mean() if len(ok_df) else None)}",
+        f"average_avg_train_ratio_after_ok: {format_optional_metric(ok_df['avg_train_ratio_after_ok'].mean() if len(ok_df) else None)}",
+        f"average_avg_pseudo_selected_ok: {format_optional_metric(ok_df['avg_pseudo_selected_ok'].mean() if len(ok_df) else None)}",
+        f"total_pseudo_selected_ok: {int(ok_df['total_pseudo_selected_ok'].sum()) if len(ok_df) else 0}",
+        f"average_avg_pseudo_precision_ok: {format_optional_metric(ok_df['avg_pseudo_precision_ok'].mean() if len(ok_df) else None)}",
+        f"average_avg_pseudo_error_rate_ok: {format_optional_metric(ok_df['avg_pseudo_error_rate_ok'].mean() if len(ok_df) else None)}",
+        f"global_wall_seconds: {wall_seconds:.3f}",
     ]
-    for round_idx, avg_round_acc in enumerate(avg_round_accs, start=1):
-        lines.append(f"average_avg_acc_round{round_idx}_ok: {format_optional_metric(avg_round_acc)}")
-    lines.extend(
-        [
-            f"average_avg_acc_delta_ok: {format_optional_metric(ok_df['avg_acc_delta_ok'].mean() if len(ok_df) else None)}",
-            f"total_improved_dataset_count: {int(ok_df['improved_dataset_count'].sum()) if len(ok_df) else 0}",
-            f"total_degraded_dataset_count: {int(ok_df['degraded_dataset_count'].sum()) if len(ok_df) else 0}",
-            f"total_unchanged_dataset_count: {int(ok_df['unchanged_dataset_count'].sum()) if len(ok_df) else 0}",
-            f"average_avg_pass1_acc_ok: {format_optional_metric(ok_df['avg_pass1_acc_ok'].mean() if len(ok_df) else None)}",
-            f"average_avg_train_ratio_before_ok: {format_optional_metric(ok_df['avg_train_ratio_before_ok'].mean() if len(ok_df) else None)}",
-            f"average_avg_train_ratio_after_ok: {format_optional_metric(ok_df['avg_train_ratio_after_ok'].mean() if len(ok_df) else None)}",
-            f"average_avg_pseudo_selected_ok: {format_optional_metric(ok_df['avg_pseudo_selected_ok'].mean() if len(ok_df) else None)}",
-            f"total_pseudo_selected_ok: {int(ok_df['total_pseudo_selected_ok'].sum()) if len(ok_df) else 0}",
-            f"average_avg_pseudo_precision_ok: {format_optional_metric(ok_df['avg_pseudo_precision_ok'].mean() if len(ok_df) else None)}",
-            f"average_avg_pseudo_error_rate_ok: {format_optional_metric(ok_df['avg_pseudo_error_rate_ok'].mean() if len(ok_df) else None)}",
-            f"global_wall_seconds: {wall_seconds:.3f}",
-        ]
-    )
 
     if len(failed_df):
         lines.append(
@@ -1684,7 +1622,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--models-dir", default=None)
     parser.add_argument("--checkpoint-version", default=DEFAULT_CHECKPOINT_VERSION)
-    parser.add_argument("--out-dir", default="1B_result/iclv1.1_0.0001_round3")
+    parser.add_argument("--out-dir", default="single1B_result/persudo_test_tabiclv1.1_0.01")
     parser.add_argument("--workers", type=int, default=None)
     parser.add_argument("--gpus", default=None)
     parser.add_argument("--n-estimators", type=int, default=8)

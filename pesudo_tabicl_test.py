@@ -21,12 +21,31 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-import ce_pesudo as base
+from ce_pesudo import (
+    classifier_config_from_args,
+    compute_train_ratio,
+    concat_feature_blocks,
+    concat_target_blocks,
+    find_data_files,
+    instantiate_classifier,
+    load_dataset_info,
+    load_table,
+    maybe_retry_with_checkpoint_alias,
+    parse_auto_bool,
+    parse_gpu_ids,
+    parse_kv_cache,
+    parse_optional_int,
+    resolve_device_ids,
+    slice_rows,
+    split_single_file_dataset,
+    summarize_task_types,
+    worker_log,
+)
 
 
-DEFAULT_DATA_ROOT = base.DEFAULT_DATA_ROOT
-PSEUDO_ACC_DELTA_TOL = base.PSEUDO_ACC_DELTA_TOL
-CLASSIFICATION_TASKS = base.CLASSIFICATION_TASKS
+DEFAULT_DATA_ROOT = "data178"
+PSEUDO_ACC_DELTA_TOL = 1e-9
+CLASSIFICATION_TASKS = {"binclass", "multiclass", "unknown"}
 PSEUDO_RULE = "correct_prediction_only"
 
 
@@ -52,7 +71,7 @@ def run_correct_prediction_resplit_inference(
     """
     y_train = np.asarray(y_train)
     y_test = np.asarray(y_test)
-    train_ratio_before = base.compute_train_ratio(y_train, y_test)
+    train_ratio_before = compute_train_ratio(y_train, y_test)
 
     classifier, first_fit_time = fit_classifier_fn(X_train, y_train)
 
@@ -80,13 +99,13 @@ def run_correct_prediction_resplit_inference(
     if pseudo_added == 0 or pseudo_added == len(y_test):
         return result
 
-    X_correct = base.slice_rows(X_test, correct_mask)
-    X_remaining = base.slice_rows(X_test, ~correct_mask)
+    X_correct = slice_rows(X_test, correct_mask)
+    X_remaining = slice_rows(X_test, ~correct_mask)
     y_pseudo = baseline_pred[correct_mask]
     y_remaining_true = y_test[~correct_mask]
 
-    X_labeled = base.concat_feature_blocks([X_train, X_correct])
-    y_labeled_train = base.concat_target_blocks([y_train, y_pseudo])
+    X_labeled = concat_feature_blocks([X_train, X_correct])
+    y_labeled_train = concat_target_blocks([y_train, y_pseudo])
 
     classifier, second_fit_time = fit_classifier_fn(X_labeled, y_labeled_train)
     predict_start = time.perf_counter()
@@ -100,7 +119,7 @@ def run_correct_prediction_resplit_inference(
             "fit_time": first_fit_time + second_fit_time,
             "predict_time": first_predict_time + second_predict_time,
             "pseudo_applied": True,
-            "train_ratio_after": base.compute_train_ratio(y_labeled_train, y_remaining_true),
+            "train_ratio_after": compute_train_ratio(y_labeled_train, y_remaining_true),
             "y_pred": final_pred,
             "y_eval": y_test,
         }
@@ -131,20 +150,20 @@ def evaluate_datasets_worker(
             from tabicl import TabICLClassifier
             from sklearn.utils.multiclass import type_of_target
         except ImportError as exc:
-            base.worker_log(msg_prefix, f"导入失败: {exc}")
+            worker_log(msg_prefix, f"导入失败: {exc}")
             return
 
         active_config = dict(classifier_config)
         active_config["device"] = device_str
 
-        base.worker_log(msg_prefix, f"启动成功，设备={device_str}")
+        worker_log(msg_prefix, f"启动成功，设备={device_str}")
 
         try:
-            clf, fit_kwargs, notes = base.instantiate_classifier(TabICLClassifier, active_config)
+            clf, fit_kwargs, notes = instantiate_classifier(TabICLClassifier, active_config)
             for note in notes:
-                base.worker_log(msg_prefix, note)
+                worker_log(msg_prefix, note)
         except Exception as exc:
-            base.worker_log(msg_prefix, f"模型初始化失败: {exc}")
+            worker_log(msg_prefix, f"模型初始化失败: {exc}")
             return
 
         for dataset_dir in assigned_datasets:
@@ -152,29 +171,29 @@ def evaluate_datasets_worker(
             dataset_dir = Path(dataset_dir)
 
             try:
-                info = base.load_dataset_info(dataset_dir)
+                info = load_dataset_info(dataset_dir)
                 task_type = str(info.get("task_type", "")).lower() if info else ""
                 if task_type == "regression":
-                    base.worker_log(msg_prefix, f"跳过 {dataset_dir.name}: task_type=regression")
+                    worker_log(msg_prefix, f"跳过 {dataset_dir.name}: task_type=regression")
                     continue
                 if task_type and task_type not in CLASSIFICATION_TASKS:
-                    base.worker_log(msg_prefix, f"跳过 {dataset_dir.name}: 未知 task_type={task_type}")
+                    worker_log(msg_prefix, f"跳过 {dataset_dir.name}: 未知 task_type={task_type}")
                     continue
 
-                train_path, val_path, test_path = base.find_data_files(dataset_dir)
+                train_path, val_path, test_path = find_data_files(dataset_dir)
                 if train_path is None and test_path is None:
-                    base.worker_log(msg_prefix, f"跳过 {dataset_dir.name}: 无可识别数据文件")
+                    worker_log(msg_prefix, f"跳过 {dataset_dir.name}: 无可识别数据文件")
                     continue
 
                 if train_path and test_path:
-                    X_train, y_train = base.load_table(
+                    X_train, y_train = load_table(
                         train_path,
                         context=f"{dataset_dir.name}-train",
                         coerce_numeric=coerce_numeric,
                         dataset_id=dataset_dir.name,
                         missing_registry=datasets_with_missing,
                     )
-                    X_test, y_test = base.load_table(
+                    X_test, y_test = load_table(
                         test_path,
                         context=f"{dataset_dir.name}-test",
                         coerce_numeric=coerce_numeric,
@@ -182,24 +201,24 @@ def evaluate_datasets_worker(
                         missing_registry=datasets_with_missing,
                     )
                 else:
-                    X_all, y_all = base.load_table(
+                    X_all, y_all = load_table(
                         train_path,
                         context=f"{dataset_dir.name}-single",
                         coerce_numeric=coerce_numeric,
                         dataset_id=dataset_dir.name,
                         missing_registry=datasets_with_missing,
                     )
-                    X_train, X_test, y_train, y_test = base.split_single_file_dataset(
+                    X_train, X_test, y_train, y_test = split_single_file_dataset(
                         X_all,
                         y_all,
                         dataset_name=dataset_dir.name,
                         random_state=random_state,
                     )
                     val_path = None
-                    base.worker_log(msg_prefix, f"{dataset_dir.name}: 单文件数据按 80/20 自动切分")
+                    worker_log(msg_prefix, f"{dataset_dir.name}: 单文件数据按 80/20 自动切分")
 
                 if val_path:
-                    X_val, y_val = base.load_table(
+                    X_val, y_val = load_table(
                         val_path,
                         context=f"{dataset_dir.name}-val",
                         coerce_numeric=coerce_numeric,
@@ -219,7 +238,7 @@ def evaluate_datasets_worker(
                     target_type = None
 
                 if (not task_type or task_type == "unknown") and target_type and target_type.startswith("continuous"):
-                    base.worker_log(msg_prefix, f"跳过 {dataset_dir.name}: 检测到连续标签")
+                    worker_log(msg_prefix, f"跳过 {dataset_dir.name}: 检测到连续标签")
                     continue
 
                 def fit_with_retry(train_X, train_y):
@@ -228,7 +247,7 @@ def evaluate_datasets_worker(
                     try:
                         clf.fit(train_X, train_y, **fit_kwargs)
                     except ValueError as exc:
-                        clf, fit_kwargs = base.maybe_retry_with_checkpoint_alias(
+                        clf, fit_kwargs = maybe_retry_with_checkpoint_alias(
                             classifier_cls=TabICLClassifier,
                             classifier_config=active_config,
                             fit_kwargs=fit_kwargs,
@@ -259,7 +278,7 @@ def evaluate_datasets_worker(
                 train_ratio_after = float(pseudo_result["train_ratio_after"])
 
                 acc = float(np.mean(np.asarray(y_pred) == np.asarray(y_eval)))
-                base.worker_log(
+                worker_log(
                     msg_prefix,
                     (
                         f"{dataset_dir.name}: accuracy={acc:.4f}"
@@ -286,14 +305,14 @@ def evaluate_datasets_worker(
                 )
 
             except Exception as exc:
-                base.worker_log(msg_prefix, f"评测失败 {dataset_dir.name}: {exc}")
+                worker_log(msg_prefix, f"评测失败 {dataset_dir.name}: {exc}")
                 traceback.print_exc()
 
     except BaseException as exc:
-        base.worker_log(msg_prefix, f"worker 异常退出: {exc.__class__.__name__}: {exc}")
+        worker_log(msg_prefix, f"worker 异常退出: {exc.__class__.__name__}: {exc}")
         traceback.print_exc()
     finally:
-        base.worker_log(msg_prefix, f"处理结束，成功数据集数: {len(results)} / 已领取任务数: {processed_count}")
+        worker_log(msg_prefix, f"处理结束，成功数据集数: {len(results)} / 已领取任务数: {processed_count}")
         try:
             result_queue.put((rank, results, datasets_with_missing))
         except Exception:
@@ -336,7 +355,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
     parser.add_argument(
         "--n-estimators",
-        type=base.parse_optional_int,
+        type=parse_optional_int,
         default=None,
         help="若不指定，则按 README 自动使用 v1/v1.1=32、v2=8",
     )
@@ -347,18 +366,18 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--softmax-temperature", type=float, default=0.9)
     parser.add_argument("--average-logits", action=bool_action, default=True)
     parser.add_argument("--support-many-classes", action=bool_action, default=True)
-    parser.add_argument("--batch-size", type=base.parse_optional_int, default=8, help="整数或 none")
-    parser.add_argument("--kv-cache", type=base.parse_kv_cache, default=False)
-    parser.add_argument("--use-amp", type=base.parse_auto_bool, default="auto")
-    parser.add_argument("--use-fa3", type=base.parse_auto_bool, default="auto")
+    parser.add_argument("--batch-size", type=parse_optional_int, default=8, help="整数或 none")
+    parser.add_argument("--kv-cache", type=parse_kv_cache, default=False)
+    parser.add_argument("--use-amp", type=parse_auto_bool, default="auto")
+    parser.add_argument("--use-fa3", type=parse_auto_bool, default="auto")
     parser.add_argument("--offload-mode", choices=["auto", "gpu", "cpu", "disk"], default="auto")
     parser.add_argument("--disk-offload-dir", default=None)
     parser.add_argument("--random-state", type=int, default=42)
-    parser.add_argument("--n-jobs", type=base.parse_optional_int, default=None, help="整数或 none")
+    parser.add_argument("--n-jobs", type=parse_optional_int, default=None, help="整数或 none")
     parser.add_argument("--verbose", action="store_true", help="启用 TabICL 模型自身的 verbose 输出")
 
     parser.add_argument("--num-gpus", type=int, default=3, help="使用的 GPU 数量；默认使用 0..num_gpus-1")
-    parser.add_argument("--gpu-ids", type=base.parse_gpu_ids, default="0,1,2", help="显式指定 GPU 编号，例如 0,2,3")
+    parser.add_argument("--gpu-ids", type=parse_gpu_ids, default="0,1,2", help="显式指定 GPU 编号，例如 0,2,3")
     return parser
 
 
@@ -490,7 +509,7 @@ def main(argv=None) -> int:
         format="[%(levelname)s] %(message)s",
     )
 
-    model_family, classifier_config = base.classifier_config_from_args(args)
+    model_family, classifier_config = classifier_config_from_args(args)
     if model_family == "regressor":
         raise ValueError("当前 bench 脚本只支持分类模型，请改用 classifier checkpoint")
 
@@ -510,9 +529,9 @@ def main(argv=None) -> int:
         logging.info("没有可处理的数据集目录。")
         return 0
 
-    base.summarize_task_types(dirs)
+    summarize_task_types(dirs)
 
-    device_ids = base.resolve_device_ids(args)
+    device_ids = resolve_device_ids(args)
     worker_device_ids = device_ids[: min(len(device_ids), len(dirs))]
     script_start_time = time.perf_counter()
 

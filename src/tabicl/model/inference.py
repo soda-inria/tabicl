@@ -1063,7 +1063,7 @@ class InferenceManager:
 
     def _run_forward(self, forward_fn: Callable[..., Tensor], inputs: Dict[str, Any]) -> Tensor:
         """Execute forward function with no_grad and optional AMP."""
-        with torch.no_grad(), flash_attn3_toggle(self.use_fa3):
+        with torch.inference_mode(), flash_attn3_toggle(self.use_fa3):
             if self.use_amp and self.exe_device.type == "cuda":
                 with torch.autocast(device_type="cuda"):
                     return forward_fn(**inputs)
