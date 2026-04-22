@@ -42,6 +42,7 @@ Optional dependencies can be installed as needed:
 ```bash
 pip install tabicl[forecast]   # time series forecasting
 pip install tabicl[shap]       # SHAP-based explainability
+pip install tabicl[finetune]   # fine-tuning on a single dataset
 pip install tabicl[pretrain]   # pre-training
 pip install tabicl[all]        # everything
 ```
@@ -139,6 +140,54 @@ clf = TabICLClassifier(
 - **TabICLv1.1**: TabICLv1 post-trained on an early version of the v2 prior. Classification only.
 - **TabICLv1**: Original model. Classification only.
   TabICLv1 and v1.1 originally used `n_estimators=32`; we reduced the default to 8 afterwards.
+## Fine-tuning
+
+Out of the box, TabICL works zero-shot via in-context learning.
+When a specific downstream dataset matters enough to spend a few GPU-minutes on,
+`FinetunedTabICLClassifier` / `FinetunedTabICLRegressor` adapt the pretrained
+checkpoint with a full PyTorch training loop (AdamW, cosine-with-warmup, AMP,
+gradient clipping, early stopping, and `torchrun`-aware DDP). A safety net
+restores the best-seen weights at the end, so fine-tuning never underperforms
+zero-shot on the validation set.
+
+Install the fine-tune dependencies first:
+
+```bash
+pip install tabicl[finetune]
+```
+
+Minimal usage — the API mirrors the zero-shot estimators:
+
+```python
+from tabicl import FinetunedTabICLClassifier
+
+clf = FinetunedTabICLClassifier(
+    epochs=30,
+    learning_rate=1e-5,
+    device="cuda",
+    verbose=True,  # shows a tqdm bar + per-epoch train/val summary
+)
+clf.fit(X_train, y_train, X_val=X_val, y_val=y_val, output_dir="./ckpts")
+y_pred = clf.predict(X_test)
+y_proba = clf.predict_proba(X_test)
+```
+
+Checkpoints written to `output_dir` share the schema of the pretraining
+`Trainer`, so they load directly back into the zero-shot estimators:
+
+```python
+from tabicl import TabICLClassifier
+clf = TabICLClassifier(model_path="ckpts/best.ckpt")
+clf.fit(X_train, y_train)
+clf.predict(X_test)
+```
+
+Multi-GPU fine-tuning is auto-detected under `torchrun`:
+
+```bash
+torchrun --nproc-per-node=4 my_finetune.py
+```
+
 ## Time series forecasting
 
 TabICL can be used for zero-shot time series forecasting via `TabICLForecaster`.
