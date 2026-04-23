@@ -245,7 +245,7 @@ allbp,/home/crc00006699/zh/tabiclv2/data178/allbp,multiclass,3017,604,755,29,3,0
 allrep,/home/crc00006699/zh/tabiclv2/data178/allrep,multiclass,3017,604,755,29,4,0.9854304635761588,2.813203811645508,1.0640554428100586,ok,,3017,2262,755,755,0.059217296851178,1,2e-06,True,2.7074904441833496,stratified,stratified split
 analcatdata_authorship,/home/crc00006699/zh/tabiclv2/data178/analcatdata_authorship,multiclass,672,135,169,69,4,0.9881656804733728,1.675691843032837,0.5997641086578369,ok,,672,504,168,169,0.0053172159823589,1,2e-06,True,1.5706307888031006,stratified,stratified split
 artificial-characters,/home/crc00006699/zh/tabiclv2/data178/artificial-characters,multiclass,8174,1635,2044,7,10,0.8693737769080235,8.941125631332397,2.622121334075928,ok,,8174,6130,2044,2044,0.4707349613308906,1,2e-06,True,8.87111496925354,stratified,stratified split
-autoUniv-au4-2500,/home/crc00006699/zh/tabiclv2/data178/autoUniv-au4-2500,multiclass,2000,400,500,100,3,0.516,3.24148941040039,1.6923205852508545,ok,,2000,1500,500,500,0.9115438113609948,1,2e-06,True,2.9863197803497314,stratified,stratified split
+autoUniv-au4-2500,/home/crc00006699/zh/tabiclv2/data178/autoUniv-au4-2500,multiclass,2000,400,500,100,3,0.516,3.24148941040039,1.6923205852508545,ok,,2000,1500,500,500,0.9115438113609948,1,2e-06,True,2.986319780349731,stratified,stratified split
 autoUniv-au7-1100,/home/crc00006699/zh/tabiclv2/data178/autoUniv-au7-1100,multiclass,880,176,220,12,5,0.4,1.421621322631836,0.5136575698852539,ok,,880,660,220,220,1.3808463215827942,1,2e-06,True,1.3884506225585938,stratified,stratified split
 bank,/home/crc00006699/zh/tabiclv2/data178/bank,binclass,36168,7234,9043,16,2,0.9087692137564968,130.0715789794922,26.2113299369812,ok,,36168,27126,9042,9043,0.19804456209143,1,2e-06,True,129.54784536361694,stratified,stratified split
 banknote_authentication,/home/crc00006699/zh/tabiclv2/data178/banknote_authentication,binclass,1097,220,275,4,2,0.5527272727272727,1.0088725090026855,0.212214708328247,ok,,1097,822,275,275,0.6910492877165476,1,2e-06,True,0.9903430938720704,stratified,stratified split
@@ -414,7 +414,7 @@ predict_students_dropout_and_academic_success,/home/crc00006699/zh/tabiclv2/data
 qsar,/home/crc00006699/zh/tabiclv2/data178/qsar,binclass,844,169,211,40,2,0.90521327014218,1.6529812812805176,0.732109785079956,ok,,844,633,211,211,0.3152479579051335,1,2e-06,True,1.577188491821289,stratified,stratified split
 rice_cammeo_and_osmancik,/home/crc00006699/zh/tabiclv2/data178/rice_cammeo_and_osmancik,binclass,3048,610,762,7,2,0.926509186351706,2.108783721923828,0.7189328670501709,ok,,3048,2286,762,762,0.1989601865410804,1,2e-06,True,2.077623128890991,stratified,stratified split
 ringnorm,/home/crc00006699/zh/tabiclv2/data178/ringnorm,binclass,5920,1184,1480,20,2,0.9797297297297296,6.038860559463501,2.1212379932403564,ok,,5920,4440,1480,1480,0.0559504566093285,1,2e-06,True,5.930408000946045,stratified,stratified split
-rl,/home/crc00006699/zh/tabiclv2/data178/rl,binclass,3976,796,994,12,2,0.8551307847082495,3.553363561630249,1.1493561267852783,ok,,3976,2982,994,994,0.4372698565324147,1,2e-06,True,3.4889862537384038,stratified,stratified split
+rl,/home/crc00006699/zh/tabiclv2/data178/rl,binclass,3976,796,994,12,2,0.8551307847082495,3.553363561630249,1.1493561267852783,ok,,3976,2982,994,994,0.4372698565324147,1,2e-06,True,3.488986253738404,stratified,stratified split
 satimage,/home/crc00006699/zh/tabiclv2/data178/satimage,multiclass,5144,1029,1286,36,6,0.9307931570762052,5.253339767456055,2.2741916179656982,ok,,5144,3858,1286,1286,0.2241602055728435,1,2e-06,True,5.09328556060791,stratified,stratified split
 segment,/home/crc00006699/zh/tabiclv2/data178/segment,multiclass,1848,370,462,17,7,0.935064935064935,1.921546220779419,0.5505025386810303,ok,,1848,1386,462,462,0.1425599182645479,1,2e-06,True,1.876528024673462,stratified,stratified split
 seismic+bumps,/home/crc00006699/zh/tabiclv2/data178/seismic+bumps,binclass,2067,414,517,18,2,0.9342359767891684,1.9393069744110107,0.648409366607666,ok,,2067,1550,517,517,0.230448296914498,1,2e-06,True,1.8884646892547607,stratified,stratified split
@@ -435,62 +435,7 @@ thyroid-dis,/home/crc00006699/zh/tabiclv2/data178/thyroid-dis,multiclass,2240,44
 turiye_student_evaluation,/home/crc00006699/zh/tabiclv2/data178/turiye_student_evaluation,multiclass,4656,932,1164,32,5,0.5214776632302406,4.626752853393555,1.8178184032440183,ok,,4656,3492,1164,1164,1.2326306800047555,1,2e-06,True,4.492197513580322,stratified,stratified split
 twonorm,/home/crc00006699/zh/tabiclv2/data178/twonorm,binclass,5920,1184,1480,20,2,0.979054054054054,6.040346622467041,1.9856669902801516,ok,,5920,4440,1480,1480,0.0533922327061494,1,2e-06,True,5.935527324676514,stratified,stratified split
 vehicle,/home/crc00006699/zh/tabiclv2/data178/vehicle,multiclass,676,136,170,18,4,0.8647058823529412,1.444394588470459,0.4380054473876953,ok,,676,507,169,170,0.2839118043581645,1,2e-06,True,1.4106760025024414,stratified,stratified split
-volkert,/home/crc00006699/zh/tabiclv2/data178/volkert,multiclass,0,0,0,0,0,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
-Original Traceback (most recent call last):
-  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
-    output = module(*input, **kwargs)
-  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
-    return forward_call(*args, **kwargs)
-  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
-    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
-  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 335, in _train_forward
-    self.col_embedder(
-  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
-    return forward_call(*args, **kwargs)
-  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 728, in forward
-    embeddings = self._train_forward(X, y_train, d, embed_with_test)
-  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 460, in _train_forward
-    return self._train_forward_without_feature_group(X, y_train, d, embed_with_test)
-  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 491, in _train_forward_without_feature_group
-    embeddings = self._compute_embeddings(features, train_size, y_train, embed_with_test)
-  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 373, in _compute_embeddings
-    src = self.tf_col(src, train_size=None if embed_with_test else train_size)
-  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
-    return forward_call(*args, **kwargs)
-  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 331, in forward
-    out = block(out, train_size)
-  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
-    return forward_call(*args, **kwargs)
-  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 676, in forward
-    out[~skip_mask] = self.induced_attention(src[~skip_mask], train_size)
-  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 647, in induced_attention
-    out = self.multihead_attn2(src, hidden, hidden)
-  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
-    return forward_call(*args, **kwargs)
-  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
-    attn_result = self._attn_block(
-  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
-    result = self.attn(
-  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
-    return forward_call(*args, **kwargs)
-  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
-    return multi_head_attention_forward(
-  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 293, in multi_head_attention_forward
-    attn_output = F.linear(attn_output, out_proj_weight, out_proj_bias)  # (batch_shape, tgt_len, E)
-torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 3.27 GiB. GPU 0 has a total capacity of 23.69 GiB of which 3.15 GiB is free. Process 29314 has 20.54 GiB memory in use. Of the allocated memory 20.07 GiB is allocated by PyTorch, and 56.94 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
-",0,0,0,0,,0,,False,0.0,,
+volkert,/home/crc00006699/zh/tabiclv2/data178/volkert,multiclass,46648,9330,11662,180,10,0.7337506431143886,5.66342306137085,280.0815114974976,ok,,46648,0,0,11662,,0,2e-06,False,0.0,baseline_fill,filled from baseline result for volkert after TTT OOM
 walking-activity,/home/crc00006699/zh/tabiclv2/data178/walking-activity,multiclass,119465,23893,29867,4,22,0.6641443733886898,1.511321783065796,362.22232460975647,ok,,119465,89598,29867,29867,,0,2e-06,False,0.6747887134552002,stratified,stratified split | TTT training skipped because n_classes=22 exceeds model max_classes=10
 wall-robot-navigation,/home/crc00006699/zh/tabiclv2/data178/wall-robot-navigation,multiclass,4364,873,1092,24,4,0.9862637362637364,4.278726100921631,1.5415513515472412,ok,,4364,3273,1091,1092,0.048876442015171,1,2e-06,True,4.174338579177856,stratified,stratified split
 water_quality,/home/crc00006699/zh/tabiclv2/data178/water_quality,binclass,6396,1280,1600,20,2,0.908125,6.391070127487183,2.249769926071167,ok,,6396,4797,1599,1600,0.2361115862925847,1,2e-06,True,6.3017418384552,stratified,stratified split

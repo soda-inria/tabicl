@@ -1,9 +1,0 @@
-discovered_datasets: 178
-processed_datasets: 178
-ok_count: 171
-failed_count: 7
-skipped_count: 0
-avg_accuracy_ok: 0.839075
-wall_seconds: 4837.584
-failed_datasets: Credit_c, Rain_in_Australia, SDSS17, accelerometer, customer_satisfaction_in_airline, dabetes_130-us_hospitals, volkert
-skipped_datasets: (none)

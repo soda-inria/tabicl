@@ -1,0 +1,91 @@
+step50 下降数据集替换 baseline accuracy 后的结果说明
+========================================================================
+
+输入文件
+- baseline: result/ttt_step_result/iclv1.1_baseline/tabiclv1_1_classification_3gpu/all_classification_results.csv
+- step50: result/ttt_step_result/iclv1.1_ttt_step50/all_classification_results.csv
+
+替换规则
+- 只比较 baseline 与 step50 都成功的 172 个数据集。
+- 若某个数据集 step50_accuracy < baseline_accuracy，则将该数据集的 step50_accuracy 替换为 baseline_accuracy。
+- step50 失败的 6 个数据集没有 step50 accuracy，本次不纳入 adjusted average，也不做替换。
+- 这是 oracle replacement / 上界分析：它使用了 test accuracy 事后判断哪些数据集下降，不能视为无泄漏的正式 benchmark 结果。若要作为真实方法，需要用 validation/holdout gate、TTT loss 或 early stopping 在测试标签不可见时决定是否回退 baseline。
+
+核心结果
+- common dataset 数量: 172
+- 被替换的下降数据集数量: 47
+- step50 原始平均 accuracy: 0.838709
+- common baseline 平均 accuracy: 0.838128
+- 替换后 adjusted 平均 accuracy: 0.840185
+- adjusted 相对 step50 原始结果: +0.1477 pp
+- adjusted 相对 common baseline: +0.2057 pp
+- adjusted 相对 baseline 全部 ok 数据集均值 0.837755: +0.2430 pp
+
+替换前后 dataset 计数
+- 替换前 step50 vs baseline: 提升 72, 下降 47, 持平 53
+- 替换后 adjusted vs baseline: 提升 72, 下降 0, 持平 100
+
+解释
+- 这相当于假设存在一个完美 gate：当 TTT 伤害某个数据集时，自动回退 baseline。
+- 在这个 oracle gate 下，step50 的 47 个负收益全部被截断，平均 accuracy 从 0.838709 提升到 0.840185。
+- 结果说明 step50 的潜在收益较大，但主要问题是回归尾部；如果后续能设计无泄漏 gate，把明显下降的数据集挡住，step50 会比固定无条件 TTT 更有价值。
+
+下降并被替换的数据集列表
+------------------------------------------------------------------------
+rank	dataset_name	task_type	baseline_acc	step50_acc	recovered
+1	banknote_authentication	binclass	0.549091	0.516364	+3.2727 pp
+2	FOREX_audchf-day-High	binclass	0.754768	0.730245	+2.4523 pp
+3	abalone	multiclass	0.651914	0.629187	+2.2727 pp
+4	FOREX_cadjpy-day-High	binclass	0.716621	0.694823	+2.1798 pp
+5	sports_articles_for_objectivity_analysis	binclass	0.855000	0.835000	+2.0000 pp
+6	semeion	multiclass	0.959248	0.949843	+0.9404 pp
+7	golf_play_dataset_extended	binclass	0.936073	0.926941	+0.9132 pp
+8	first-order-theorem-proving	multiclass	0.637255	0.628268	+0.8987 pp
+9	spambase	binclass	0.959826	0.951140	+0.8686 pp
+10	cmc	multiclass	0.589831	0.583051	+0.6780 pp
+11	phoneme	binclass	0.903793	0.897317	+0.6475 pp
+12	internet_firewall	multiclass	0.931029	0.925078	+0.5951 pp
+13	house_16H	binclass	0.890660	0.885471	+0.5189 pp
+14	dna	multiclass	0.965517	0.960815	+0.4702 pp
+15	Diabetic_Retinopathy_Debrecen	binclass	0.748918	0.744589	+0.4329 pp
+16	Pumpkin_Seeds	binclass	0.872000	0.868000	+0.4000 pp
+17	wine	binclass	0.774951	0.771037	+0.3914 pp
+18	Basketball_c	binclass	0.712687	0.708955	+0.3731 pp
+19	pc4	binclass	0.914384	0.910959	+0.3425 pp
+20	contraceptive_method_choice	multiclass	0.627119	0.623729	+0.3390 pp
+21	GAMETES_Heterogeneity_20atts_1600_Het_0.4_0.2_50_EDM-2_001	binclass	0.681250	0.678125	+0.3125 pp
+22	MIC	binclass	0.909091	0.906061	+0.3030 pp
+23	waveform_database_generator_version_1	multiclass	0.866000	0.863000	+0.3000 pp
+24	Telecom_Churn_Dataset	binclass	0.955022	0.952024	+0.2999 pp
+25	E-CommereShippingData	binclass	0.678182	0.675455	+0.2727 pp
+26	estimation_of_obesity_levels	multiclass	0.985816	0.983452	+0.2364 pp
+27	Marketing_Campaign	binclass	0.890625	0.888393	+0.2232 pp
+28	National_Health_and_Nutrition_Health_Survey	binclass	0.839912	0.837719	+0.2193 pp
+29	segment	multiclass	0.935065	0.932900	+0.2165 pp
+30	BNG(tic-tac-toe)	binclass	0.815088	0.812929	+0.2159 pp
+31	thyroid	multiclass	0.993750	0.991667	+0.2083 pp
+32	online_shoppers	binclass	0.904298	0.902271	+0.2028 pp
+33	pol	binclass	0.983639	0.982152	+0.1487 pp
+34	mammography	binclass	0.988824	0.987483	+0.1341 pp
+35	dis	binclass	0.984106	0.982781	+0.1325 pp
+36	microaggregation2	multiclass	0.640500	0.639250	+0.1250 pp
+37	ada	binclass	0.848193	0.846988	+0.1205 pp
+38	ada_prior	binclass	0.841183	0.840088	+0.1095 pp
+39	Employee	binclass	0.852846	0.851772	+0.1074 pp
+40	BLE_RSSI_dataset_for_Indoor_localization	multiclass	0.740611	0.739609	+0.1002 pp
+41	sylvine	binclass	0.970732	0.969756	+0.0976 pp
+42	PhishingWebsites	binclass	0.979195	0.978290	+0.0905 pp
+43	California-Housing-Classification	binclass	0.912791	0.912064	+0.0727 pp
+44	water_quality	binclass	0.908125	0.907500	+0.0625 pp
+45	Bank_Customer_Churn_Dataset	binclass	0.877000	0.876500	+0.0500 pp
+46	MagicTelescope	binclass	0.884858	0.884595	+0.0263 pp
+47	Click_prediction_small	binclass	0.832040	0.831790	+0.0250 pp
+
+step50 失败但本次未替换的数据集
+------------------------------------------------------------------------
+- Credit_c: RuntimeError: CUDA error: invalid configuration argument
+- Rain_in_Australia: RuntimeError: CUDA error: invalid configuration argument
+- SDSS17: RuntimeError: CUDA error: invalid configuration argument
+- accelerometer: RuntimeError: CUDA error: invalid configuration argument
+- customer_satisfaction_in_airline: RuntimeError: CUDA error: invalid configuration argument
+- dabetes_130-us_hospitals: RuntimeError: CUDA error: invalid configuration argument

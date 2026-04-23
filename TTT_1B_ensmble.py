@@ -692,6 +692,24 @@ def _fit_preserving_model_weights(classifier, X, y) -> None:
             classifier._load_model = original_load_model
 
 
+def _iter_classification_ensemble_batches(classifier, X_c_encoded, y_c_encoded):
+    ensemble_data = classifier.ensemble_generator_.transform(X_c_encoded, mode="both")
+    class_shuffles_by_norm = classifier.ensemble_generator_.class_shuffles_
+
+    for norm_method, (Xs, ys) in ensemble_data.items():
+        class_shuffles = class_shuffles_by_norm[norm_method]
+        if len(class_shuffles) != Xs.shape[0]:
+            raise RuntimeError(
+                f"Ensemble data/class shuffle mismatch for norm_method={norm_method!r}: "
+                f"{Xs.shape[0]} views vs {len(class_shuffles)} class shuffles"
+            )
+
+        y_targets = []
+        for class_shuffle in class_shuffles:
+            y_targets.append(np.asarray(class_shuffle, dtype=np.int64)[y_c_encoded])
+        yield Xs, ys, np.stack(y_targets, axis=0)
+
+
 def run_ttt_holdout_update(classifier, X_b, y_b, X_c, y_c, config: TTTConfig) -> TTTUpdateResult:
     ensure_runtime_deps()
 
@@ -750,11 +768,8 @@ def run_ttt_holdout_update(classifier, X_b, y_b, X_c, y_c, config: TTTConfig) ->
 
     optimizer = torch.optim.AdamW(trainable_params, lr=config.lr, weight_decay=config.weight_decay)
 
-    X_b_encoded = classifier.X_encoder_.transform(X_b)
     X_c_encoded = classifier.X_encoder_.transform(X_c)
-    y_b_encoded = classifier.y_encoder_.transform(y_b)
     y_c_encoded = classifier.y_encoder_.transform(y_c)
-    X_ttt = np.concatenate([X_b_encoded, X_c_encoded], axis=0)
 
     device = classifier.device_
     device_type = getattr(device, "type", str(device).split(":")[0])
@@ -778,24 +793,50 @@ def run_ttt_holdout_update(classifier, X_b, y_b, X_c, y_c, config: TTTConfig) ->
                 reason="No hold-out samples available for TTT",
             )
 
-        X_batch = torch.from_numpy(X_ttt).float().unsqueeze(0).to(device)
-        y_train_batch = torch.from_numpy(y_b_encoded).float().unsqueeze(0).to(device)
-        y_target_batch = torch.from_numpy(y_c_encoded).long().to(device)
-        d_batch = torch.tensor([X_ttt.shape[1]], device=device)
+        ensemble_batches = list(_iter_classification_ensemble_batches(classifier, X_c_encoded, y_c_encoded))
+        total_views = int(sum(Xs.shape[0] for Xs, _, _ in ensemble_batches))
+        if total_views == 0:
+            return TTTUpdateResult(
+                applied=False,
+                loss=None,
+                steps=0,
+                update_seconds=time.time() - update_start,
+                reason="No ensemble views available for TTT",
+            )
 
         for _ in range(config.steps):
             optimizer.zero_grad(set_to_none=True)
+            step_loss = 0.0
 
-            with forward_context():
-                logits = classifier.model_(X_batch, y_train_batch, d_batch)
-                loss = F.cross_entropy(logits.flatten(end_dim=-2), y_target_batch.flatten())
+            for Xs, ys, y_targets in ensemble_batches:
+                for start_idx in range(0, Xs.shape[0], config.micro_batch_size):
+                    end_idx = min(start_idx + config.micro_batch_size, Xs.shape[0])
+                    X_batch_np = Xs[start_idx:end_idx]
+                    y_train_np = ys[start_idx:end_idx]
+                    y_target_np = y_targets[start_idx:end_idx]
 
-            loss.backward()
+                    X_batch = torch.from_numpy(X_batch_np).float().to(device)
+                    y_train_batch = torch.from_numpy(y_train_np).float().to(device)
+                    y_target_batch = torch.from_numpy(y_target_np).long().to(device)
+                    d_batch = torch.full(
+                        (X_batch.shape[0],),
+                        X_batch.shape[2],
+                        device=device,
+                        dtype=torch.long,
+                    )
+
+                    with forward_context():
+                        logits = classifier.model_(X_batch, y_train_batch, d_batch)
+                        loss = F.cross_entropy(logits.flatten(end_dim=-2), y_target_batch.flatten())
+                        scaled_loss = loss * (X_batch.shape[0] / total_views)
+
+                    scaled_loss.backward()
+                    step_loss += float(scaled_loss.detach().cpu())
 
             if config.grad_clip > 0:
                 torch.nn.utils.clip_grad_norm_(trainable_params, config.grad_clip)
             optimizer.step()
-            last_loss = float(loss.detach().cpu())
+            last_loss = step_loss
     finally:
         if hasattr(classifier.model_, "clear_cache"):
             classifier.model_.clear_cache()
@@ -1422,10 +1463,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--models-dir", default=None)
     parser.add_argument("--checkpoint-version", default=DEFAULT_CHECKPOINT_VERSION)
-    parser.add_argument("--out-dir", default="1a_result_all/iclv1.1_ttt_step")
-    parser.add_argument("--workers", type=int, default=1)
+    parser.add_argument("--out-dir", default="1b_result/iclv1.1_ensmble_ttt_step")
+    parser.add_argument("--workers", type=int, default=None)
     parser.add_argument("--gpus", default=None)
-    parser.add_argument("--gpu-groups", default="0,1,2")
+    parser.add_argument("--gpu-groups", default=None)
     parser.add_argument("--n-estimators", type=int, default=32)
     parser.add_argument("--batch-size", type=parse_optional_int, default=8)
     parser.add_argument("--kv-cache", type=parse_kv_cache, default=False)
@@ -1444,8 +1485,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--ttt-micro-batch-size", type=int, default=1)
     parser.add_argument("--ttt-weight-decay", type=float, default=0.0)
     parser.add_argument("--ttt-steps", type=int, default=1)
-    parser.add_argument("--ttt-freeze-col", type=parse_bool, default=False)
-    parser.add_argument("--ttt-freeze-row", type=parse_bool, default=False)
+    parser.add_argument("--ttt-freeze-col", type=parse_bool, default=True)
+    parser.add_argument("--ttt-freeze-row", type=parse_bool, default=True)
     parser.add_argument("--ttt-data-parallel",default=True, action="store_true")
     parser.add_argument("--verbose", action="store_true")
     return parser
