@@ -163,7 +163,7 @@ if is_main_process:
 # disc boundary. Panel titles split accuracy into inside-disc vs
 # outside-disc so the localized improvement is visible at a glance.
 if is_main_process:
-    h = 0.06
+    h = 0.15
     xx, yy = np.meshgrid(
         np.arange(-3.0, 3.0 + h, h),
         np.arange(-3.0, 3.0 + h, h),
