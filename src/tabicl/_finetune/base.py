@@ -26,6 +26,7 @@ import torch
 import torch.distributed as dist
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 from torch import nn
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.nn.utils import clip_grad_norm_
@@ -710,18 +711,31 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
             dtype=None,
         )
         self.X_raw_ = X
-        self.y_raw_ = y
+        self.y_raw_ = y  # original labels; the final estimator re-encodes internally
+
+        # 3b. Label-encode classification targets. The meta-batch builder uses
+        # raw labels as array indices and class counts (see data.py), which
+        # only works for 0..K-1 integer labels. Without this step, sklearn-
+        # legal inputs such as strings, negative ints, or sparse ids like
+        # {1, 3} would crash or misalign cross-entropy targets.
+        if self._model_type == "classifier":
+            self._label_encoder_ = LabelEncoder().fit(y)
+            y_fit = self._label_encoder_.transform(y).astype(np.int64)
+        else:
+            y_fit = y
 
         # 4. Val split
         if X_val is not None and y_val is not None:
-            X_train_arr, y_train_arr = X, y
+            X_train_arr, y_train_arr = X, y_fit
             X_val_arr = check_array(X_val, ensure_all_finite=False, dtype=None)
             y_val_arr = np.asarray(y_val)
+            if self._model_type == "classifier":
+                y_val_arr = self._label_encoder_.transform(y_val_arr).astype(np.int64)
         else:
-            stratify = y if self._model_type == "classifier" else None
+            stratify = y_fit if self._model_type == "classifier" else None
             X_train_arr, X_val_arr, y_train_arr, y_val_arr = train_test_split(
                 X,
-                y,
+                y_fit,
                 test_size=self.validation_split_ratio,
                 random_state=self.random_state,
                 stratify=stratify,
@@ -941,17 +955,26 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
                     break
 
             # 10.6  Wall-clock time-budget check — stop if the *next* epoch
-            #       would push us past ``self.time_limit``.
+            #       would push us past ``self.time_limit``. Decision is made
+            #       on rank 0 and broadcast: rank-local wall clocks can drift,
+            #       and if one rank ``break``s while others enter the next
+            #       epoch, DDP's next all-reduce deadlocks.
             if self.time_limit is not None:
-                elapsed = time.monotonic() - start_time
-                epochs_done = epoch + 1
-                projected = elapsed + (elapsed / epochs_done)
-                if projected > self.time_limit:
-                    if master:
+                if master:
+                    elapsed = time.monotonic() - start_time
+                    projected = elapsed + (elapsed / (epoch + 1))
+                    should_stop = projected > self.time_limit
+                    stop_log = (projected, self.time_limit) if should_stop else None
+                else:
+                    should_stop = False
+                    stop_log = None
+                should_stop = self._broadcast_metric(float(should_stop), using_ddp, device) > 0.5
+                if should_stop:
+                    if master and stop_log is not None:
                         logger.info(
                             "Time limit reached (%.1fs > %.1fs); stopping.",
-                            projected,
-                            self.time_limit,
+                            stop_log[0],
+                            stop_log[1],
                         )
                     break
 
@@ -986,6 +1009,17 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
             self.model_.eval()
             self._final_estimator_ = self._build_inner_estimator(self.model_, self.n_estimators_inference, device)
             self._final_estimator_.fit(self.X_raw_, self.y_raw_)
+            # Make the final estimator self-contained on pickle. Two reasons:
+            # (a) ``model_`` holds the fine-tuned weights, which aren't in any
+            #     on-disk checkpoint by default — the inner's pickle default
+            #     (`save_model_weights=False`) would silently lose them and
+            #     reload the *pretrained* checkpoint on unpickle.
+            # (b) the ``_load_model`` attribute we shadowed with a no-op lambda
+            #     in ``_build_inner_estimator`` isn't picklable. With weights
+            #     saved, ``__setstate__`` won't call it, so we can safely drop
+            #     the instance-level shadow and restore the class method.
+            self._final_estimator_._save_model_weights = True
+            self._final_estimator_.__dict__.pop("_load_model", None)
 
         self.is_fitted_ = True
         # Drop heavy training-only refs to keep pickle clean
