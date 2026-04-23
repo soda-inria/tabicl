@@ -140,15 +140,15 @@ clf = TabICLClassifier(
 - **TabICLv1.1**: TabICLv1 post-trained on an early version of the v2 prior. Classification only.
 - **TabICLv1**: Original model. Classification only.
   TabICLv1 and v1.1 originally used `n_estimators=32`; we reduced the default to 8 afterwards.
+
 ## Fine-tuning
 
-Out of the box, TabICL works zero-shot via in-context learning.
-When a specific downstream dataset matters enough to spend a few GPU-minutes on,
-`FinetunedTabICLClassifier` / `FinetunedTabICLRegressor` adapt the pretrained
-checkpoint with a full PyTorch training loop (AdamW, cosine-with-warmup, AMP,
-gradient clipping, early stopping, and `torchrun`-aware DDP). A safety net
-restores the best-seen weights at the end, so fine-tuning never underperforms
-zero-shot on the validation set.
+Zero-shot in-context learning is TabICL's default, but when a single downstream
+dataset is important enough to spend a few minutes adapting to,
+`FinetunedTabICLClassifier` and `FinetunedTabICLRegressor` specialize the
+pretrained checkpoint with a full PyTorch training loop, including AdamW with a
+cosine-with-warmup schedule, gradient clipping, early stopping
+against a held-out split, and multi-GPU runs.
 
 Install the fine-tune dependencies first:
 
@@ -156,24 +156,33 @@ Install the fine-tune dependencies first:
 pip install tabicl[finetune]
 ```
 
-Minimal usage — the API mirrors the zero-shot estimators:
+### Usage
 
 ```python
 from tabicl import FinetunedTabICLClassifier
 
 clf = FinetunedTabICLClassifier(
-    epochs=30,
-    learning_rate=1e-5,
-    device="cuda",
-    verbose=True,  # shows a tqdm bar + per-epoch train/val summary
+    epochs=50,                    # max passes over training data; early stopping may cut it short
+    learning_rate=1e-5,           # AdamW LR
+    n_estimators_finetune=2,      # ensemble members per training meta-batch
+    n_estimators_validation=2,    # ensemble size for end-of-epoch validation
+    n_estimators_inference=8,     # ensemble size of the fitted estimator used in predict()
+    early_stopping=True,          # stop when val metric plateaus for `patience` epochs
+    patience=10,                  # non-improving epochs tolerated before stopping
+    eval_metric="roc_auc",        # classifier: "roc_auc" | "log_loss" | "accuracy"
+    random_state=0,               # random seed
+    verbose=True,                 # tqdm progress bar
 )
+
 clf.fit(X_train, y_train, X_val=X_val, y_val=y_val, output_dir="./ckpts")
 y_pred = clf.predict(X_test)
-y_proba = clf.predict_proba(X_test)
 ```
 
-Checkpoints written to `output_dir` share the schema of the pretraining
-`Trainer`, so they load directly back into the zero-shot estimators:
+`FinetunedTabICLRegressor` takes the same parameters (with `eval_metric` one of
+`"mse" | "mae" | "r2"`). See each class's docstring for the full surface.
+
+The checkpoint file written to `output_dir` follows the pretraining checkpoint
+schema, so it loads directly back into the zero-shot estimators:
 
 ```python
 from tabicl import TabICLClassifier
@@ -185,8 +194,13 @@ clf.predict(X_test)
 Multi-GPU fine-tuning is auto-detected under `torchrun`:
 
 ```bash
-torchrun --nproc-per-node=4 my_finetune.py
+torchrun --nproc-per-node=2 finetune_script.py
 ```
+
+The tutorial [`tutorials/finetune_classifier.py`](tutorials/finetune_classifier.py)
+walks through the fine-tuning for a binary classification task.
+
+<img src="./docs/figures/finetune_decision_boundaries.png" width="85%" alt="Decision boundaries before and after fine-tuning" style="display: block; margin: auto;">
 
 ## Time series forecasting
 
