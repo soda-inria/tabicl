@@ -688,7 +688,7 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         from sklearn.utils.validation import check_X_y, check_array
 
         # 1. DDP setup
-        using_ddp, _, _, local_rank, master, device = _ddp_env(self._resolve_device())
+        using_ddp, rank, world_size, local_rank, master, device = _ddp_env(self._resolve_device())
         self._is_master_ = master
 
         # 2. Logger (WandbLogger when wandb_kwargs is set, else no-op)
@@ -779,8 +779,25 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
 
         best_state = {k: v.detach().cpu().clone() for k, v in self.model_.state_dict().items()}
 
-        # 9. Estimate steps per epoch for scheduler
-        chunks_per_epoch = max(1, count_chunks(len(y_train_arr), self.max_data_size))
+        # 9. Estimate steps per epoch for scheduler. Under DDP the count is
+        # per-rank (drop_last sharding), so ``total_steps`` matches the
+        # number of ``scheduler.step()`` calls each rank actually makes and
+        # all ranks move through warmup/decay in lockstep.
+        chunks_per_epoch = max(
+            1,
+            count_chunks(len(y_train_arr), self.max_data_size, rank=rank, world_size=world_size),
+        )
+        if using_ddp and master:
+            global_chunks = count_chunks(len(y_train_arr), self.max_data_size)
+            if global_chunks < world_size:
+                warnings.warn(
+                    f"Fine-tune produced {global_chunks} chunk(s)/epoch but "
+                    f"world_size={world_size}; falling back to chunk replication "
+                    f"(no DDP speedup). Increase n_samples or decrease "
+                    f"max_data_size to benefit from DDP.",
+                    UserWarning,
+                    stacklevel=2,
+                )
         total_steps = max(1, self.epochs * chunks_per_epoch)
         scheduler = None
         if self.use_lr_scheduler:
@@ -826,6 +843,8 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
                 feat_shuffle_method=self.feat_shuffle_method,
                 class_shuffle_method=getattr(self, "class_shuffle_method", "shift"),
                 outlier_threshold=self.outlier_threshold,
+                rank=rank,
+                world_size=world_size,
             )
             # Only show the nested per-batch bar when there's more than one
             # chunk in the epoch — otherwise the outer epoch bar is enough.
@@ -899,6 +918,11 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
                     f"val_{self._metric_name}={primary:.4f} | "
                     f"time={epoch_time:.1f}s"
                 )
+                # ``logger.info`` always fires so wandb / file-logger consumers
+                # get the per-epoch line even when the tqdm bar is disabled.
+                # The bar's ``set_postfix`` already surfaces the same fields to
+                # the terminal, so we deliberately skip ``tqdm.write(summary)``
+                # to avoid printing each epoch's line twice.
                 logger.info(summary)
                 if show_bar:
                     display_best = (
@@ -906,7 +930,6 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
                         if not np.isnan(primary) and self._metric_improved(primary, best_metric)
                         else best_metric
                     )
-                    tqdm.write(summary)
                     epoch_iter.set_postfix(
                         {
                             "train_loss": train_loss_str,
@@ -1034,6 +1057,11 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         decision (e.g. classifier skipping batches with unseen query labels).
         Under DDP we ``all_reduce(MAX)`` the flag so every rank skips together,
         which is required to keep DDP's backward all-reduce from deadlocking.
+        With rank-aware chunk sharding, ranks may inspect different chunks and
+        disagree on the local skip flag; MAX consensus means "if any rank
+        wants to skip, every rank drops its own shard-chunk this iteration",
+        which is slightly more conservative than single-GPU but preserves
+        step-count parity.
         """
         should_skip = self._task_skip_batch(batch)
         if using_ddp:

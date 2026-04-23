@@ -283,8 +283,17 @@ class FinetunedTabICLRegressor(FinetunedTabICLBase, RegressorMixin):
         return self.eval_metric
 
     def _create_inner_estimator(self, *, n_estimators: int, device: torch.device) -> TabICLRegressor:
-        """Construct a fresh :class:`TabICLRegressor` with matching config."""
+        """Construct a fresh :class:`TabICLRegressor` with matching config.
+
+        Note: ``self.verbose`` drives only the outer fine-tuning tqdm bar and
+        epoch summary. The inner estimator defaults to ``verbose=False`` so
+        its per-inference "Available GPU memory / Offload decision" logs do
+        not fire on every end-of-epoch validation pass. Callers who want the
+        inner chatter can request it via
+        ``extra_regressor_kwargs={"verbose": True}``.
+        """
         kwargs = dict(self.extra_regressor_kwargs or {})
+        kwargs.setdefault("verbose", False)
         kwargs.update(
             dict(
                 n_estimators=n_estimators,
@@ -296,7 +305,6 @@ class FinetunedTabICLRegressor(FinetunedTabICLBase, RegressorMixin):
                 checkpoint_version=self.checkpoint_version,
                 device=device,
                 random_state=self.random_state,
-                verbose=self.verbose,
             )
         )
         return TabICLRegressor(**kwargs)

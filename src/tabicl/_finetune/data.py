@@ -66,19 +66,41 @@ class MetaBatch:
     y_scaler_std: Optional[float] = None
 
 
-def count_chunks(n_samples: int, max_chunk_size: int, min_chunk_size: int = 50) -> int:
-    """Return how many meta-batch chunks :func:`iter_epoch_meta_batches` will yield.
+def count_chunks(
+    n_samples: int,
+    max_chunk_size: int,
+    min_chunk_size: int = 50,
+    *,
+    rank: int = 0,
+    world_size: int = 1,
+) -> int:
+    """Return how many meta-batch chunks this rank will yield per epoch.
 
     Deterministic and cheap (no actual permutation / tensor work). Useful to
-    size a tqdm progress bar before starting the epoch.
+    size a tqdm progress bar and the LR scheduler before starting the epoch.
+
+    Under DDP (``world_size > 1``) chunks are split across ranks with
+    drop_last semantics, so every rank yields exactly
+    ``global_n_chunks // world_size`` chunks; the tail remainder is dropped
+    to keep per-rank step counts equal (required so DDP's per-iteration
+    gradient all-reduce does not deadlock). If the global chunk count is
+    smaller than ``world_size`` every rank falls back to the full list —
+    no parallelism, but no hang either.
+
+    With the defaults ``rank=0, world_size=1`` behavior is unchanged.
     """
     if n_samples <= 0:
         return 0
     if n_samples <= max_chunk_size:
-        return 1
-    n_full = n_samples // max_chunk_size
-    remainder = n_samples - n_full * max_chunk_size
-    return n_full + (1 if remainder >= min_chunk_size else 0)
+        global_n = 1
+    else:
+        n_full = n_samples // max_chunk_size
+        remainder = n_samples - n_full * max_chunk_size
+        global_n = n_full + (1 if remainder >= min_chunk_size else 0)
+    del rank  # shard count is the same on every rank under drop_last
+    if world_size <= 1 or global_n < world_size:
+        return global_n
+    return global_n // world_size
 
 
 def _chunk_indices(
@@ -254,6 +276,8 @@ def iter_epoch_meta_batches(
     class_shuffle_method: str,
     outlier_threshold: float,
     min_chunk_size: int = 50,
+    rank: int = 0,
+    world_size: int = 1,
 ) -> Iterator[MetaBatch]:
     """Yield one :class:`MetaBatch` per chunk of ``(X, y)`` for a single epoch.
 
@@ -262,11 +286,27 @@ def iter_epoch_meta_batches(
     splits within each chunk. Preprocessors inside each chunk are seeded with
     ``preprocessing_seed`` (fixed across epochs) so normalization and shuffles
     are stable — only the *samples* seen as context vs query change.
+
+    Under DDP (``world_size > 1``) the chunk list is split across ranks with
+    drop_last semantics: rank ``r`` yields chunks ``[r * k, (r + 1) * k)``
+    where ``k = global_n_chunks // world_size``. The per-chunk ``chunk_idx``
+    passed into :func:`_build_meta_batch` is the *global* index, so every
+    rank's sharded output is a bit-identical subset of the single-GPU
+    stream (preprocessing seeds derive from ``chunk_idx`` and must not
+    depend on rank). If ``global_n_chunks < world_size`` every rank falls
+    back to the whole list (replication).
     """
     rng = np.random.default_rng(epoch_seed)
     chunks = _chunk_indices(len(y), max_chunk_size=max_chunk_size, rng=rng, min_chunk_size=min_chunk_size)
 
-    for chunk_idx, indices in enumerate(chunks):
+    if world_size > 1 and len(chunks) >= world_size:
+        per_rank = len(chunks) // world_size
+        start = rank * per_rank
+        sharded = list(enumerate(chunks))[start : start + per_rank]
+    else:
+        sharded = list(enumerate(chunks))
+
+    for chunk_idx, indices in sharded:
         X_chunk = X[indices]
         y_chunk = y[indices]
         query_size = max(1, int(len(indices) * query_ratio))
