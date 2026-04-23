@@ -67,11 +67,15 @@ pretrain = [
     "xgboost",  # used in the TabICLv1 prior
     "wandb",  # logging in pre-training
 ]
+finetune = [
+    "transformers",  # get_scheduler reuses the pretraining cosine-warmup schedules
+    "wandb",  # optional, only engaged when wandb_kwargs is passed
+]
 test = [
     "pandas",
 ]
 all = [
-    "tabicl[doc,forecast,shap,pretrain,test]",
+    "tabicl[doc,forecast,shap,pretrain,finetune,test]",
 ]
 
 [build-system]

@@ -6,6 +6,8 @@ __all__ = [
     "TabICLRegressor",
     "TabICLForecaster",
     "TabICLUnsupervised",
+    "FinetunedTabICLClassifier",
+    "FinetunedTabICLRegressor",
     "InferenceConfig",
 ]
 
@@ -25,5 +27,10 @@ def __getattr__(name):
         from ._unsupervised import TabICLUnsupervised
 
         return TabICLUnsupervised
+
+    if name in {"FinetunedTabICLClassifier", "FinetunedTabICLRegressor"}:
+        from . import _finetune
+
+        return getattr(_finetune, name)
 
     raise AttributeError(f"module 'tabicl' has no attribute {name}")

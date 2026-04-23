@@ -12,6 +12,12 @@ Estimators
 .. autoclass:: tabicl.TabICLRegressor
    :members:
 
+.. autoclass:: tabicl.FinetunedTabICLClassifier
+   :members:
+
+.. autoclass:: tabicl.FinetunedTabICLRegressor
+   :members:
+
 .. autoclass:: tabicl.TabICLForecaster
    :members:
 
