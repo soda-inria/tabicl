@@ -17,7 +17,7 @@ from tabicl._finetune.base import ValidationMetrics, FinetunedTabICLBase
 from tabicl._finetune.data import MetaBatch
 
 
-class FinetunedTabICLClassifier(FinetunedTabICLBase, ClassifierMixin):
+class FinetunedTabICLClassifier(ClassifierMixin, FinetunedTabICLBase):
     """Fine-tune a pretrained TabICL for single-dataset classification.
 
     Subclass of :class:`FinetunedTabICLBase` that implements cross-entropy loss on

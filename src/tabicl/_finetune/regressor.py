@@ -44,7 +44,7 @@ def _pinball_loss(quantiles: torch.Tensor, targets: torch.Tensor, alpha: torch.T
     return torch.maximum(alpha * diff, (alpha - 1.0) * diff).mean()
 
 
-class FinetunedTabICLRegressor(FinetunedTabICLBase, RegressorMixin):
+class FinetunedTabICLRegressor(RegressorMixin, FinetunedTabICLBase):
     """Fine-tune a pretrained TabICL for single-dataset regression.
 
     Subclass of :class:`FinetunedTabICLBase` that trains against pinball (quantile)
