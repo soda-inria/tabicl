@@ -289,8 +289,15 @@ class TabICL(nn.Module):
         self._cache = None
 
     def _train_forward(
-        self, X: Tensor, y_train: Tensor, d: Optional[Tensor] = None, embed_with_test: bool = False
-    ) -> Tensor:
+        self,
+        X: Tensor,
+        y_train: Tensor,
+        d: Optional[Tensor] = None,
+        embed_with_test: bool = False,
+        return_col_embedding_sample: bool = False,
+        return_test_representations: bool = False,
+        return_test_icl_representations: bool = False,
+    ) -> Tensor | tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor] | tuple[Tensor, Tensor, Tensor, Tensor]:
         """Column-wise embedding -> row-wise interaction -> dataset-wise in-context learning for training.
 
         Parameters
@@ -313,6 +320,15 @@ class TabICL(nn.Module):
         embed_with_test : bool, default=False
             If True, allow training samples to attend to test samples during embedding.
 
+        return_col_embedding_sample : bool, default=False
+            If True, additionally return a detached copy of ``col_embeddings[0, 0]``.
+
+        return_test_representations : bool, default=False
+            If True, also return test-only row representations after row interaction.
+
+        return_test_icl_representations : bool, default=False
+            If True, also return test-only ICL representations right before the ICL decoder.
+
         Returns
         -------
         Tensor
@@ -330,19 +346,54 @@ class TabICL(nn.Module):
         if d is not None and len(d.unique()) == 1 and d[0] == H:
             d = None
 
+        col_embeddings = self.col_embedder(
+            X,
+            y_train=y_train,
+            d=d,
+            embed_with_test=embed_with_test,
+        )
+
+        col_embedding_sample = None
+        if return_col_embedding_sample:
+            col_embedding_sample = col_embeddings[0, 0].detach().clone()
+
         # Column-wise embedding -> Row-wise interaction
         representations = self.row_interactor(
-            self.col_embedder(
-                X,
-                y_train=y_train,
-                d=d,
-                embed_with_test=embed_with_test,
-            ),
+            col_embeddings,
             d=d,
         )
 
+        test_representations = None
+        if return_test_representations:
+            test_representations = representations[:, train_size:].detach().clone()
+
         # Dataset-wise in-context learning
-        return self.icl_predictor(representations, y_train=y_train)
+        out = self.icl_predictor(
+            representations,
+            y_train=y_train,
+            return_test_icl_representations=return_test_icl_representations,
+        )
+        test_icl_representations = None
+        if return_test_icl_representations:
+            out, test_icl_representations = out
+
+        extras = []
+        if return_col_embedding_sample:
+            extras.append(col_embedding_sample)
+        if return_test_representations:
+            extras.append(test_representations)
+        if return_test_icl_representations:
+            extras.append(test_icl_representations)
+
+        if extras:
+            return (out, *extras)
+        if return_col_embedding_sample and return_test_representations:
+            return out, col_embedding_sample, test_representations
+        if return_col_embedding_sample:
+            return out, col_embedding_sample
+        if return_test_representations:
+            return out, test_representations
+        return out
 
     def _inference_forward(
         self,
@@ -353,7 +404,10 @@ class TabICL(nn.Module):
         return_logits: bool = True,
         softmax_temperature: float = 0.9,
         inference_config: Optional[InferenceConfig] = None,
-    ) -> Tensor:
+        return_col_embedding_sample: bool = False,
+        return_test_representations: bool = False,
+        return_test_icl_representations: bool = False,
+    ) -> Tensor | tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor] | tuple[Tensor, Tensor, Tensor, Tensor]:
         """Column-wise embedding -> row-wise interaction -> dataset-wise in-context learning.
 
         Parameters
@@ -387,6 +441,15 @@ class TabICL(nn.Module):
         inference_config : Optional[InferenceConfig], default=None
             Inference configuration.
 
+        return_col_embedding_sample : bool, default=False
+            If True, additionally return a detached copy of ``col_embeddings[0, 0]``.
+
+        return_test_representations : bool, default=False
+            If True, also return test-only row representations after row interaction.
+
+        return_test_icl_representations : bool, default=False
+            If True, also return test-only ICL representations right before the ICL decoder.
+
         Returns
         -------
         Tensor
@@ -404,17 +467,28 @@ class TabICL(nn.Module):
         if inference_config is None:
             inference_config = InferenceConfig()
 
+        col_embeddings = self.col_embedder(
+            X,
+            y_train=y_train,
+            embed_with_test=embed_with_test,
+            feature_shuffles=feature_shuffles,
+            mgr_config=inference_config.COL_CONFIG,
+        )
+
+        col_embedding_sample = None
+        if return_col_embedding_sample:
+            col_embedding_sample = torch.mean(col_embeddings[0], dim=0).detach().clone()
+
+        #breakpoint()
         # Column-wise embedding -> Row-wise interaction
         representations = self.row_interactor(
-            self.col_embedder(
-                X,
-                y_train=y_train,
-                embed_with_test=embed_with_test,
-                feature_shuffles=feature_shuffles,
-                mgr_config=inference_config.COL_CONFIG,
-            ),
+            col_embeddings,
             mgr_config=inference_config.ROW_CONFIG,
         )
+
+        test_representations = None
+        if return_test_representations:
+            test_representations = representations[:, train_size:].detach().clone()
 
         # Dataset-wise in-context learning
         out = self.icl_predictor(
@@ -423,8 +497,30 @@ class TabICL(nn.Module):
             return_logits=return_logits,
             softmax_temperature=softmax_temperature,
             mgr_config=inference_config.ICL_CONFIG,
+            return_test_icl_representations=return_test_icl_representations,
         )
 
+        test_icl_representations = None
+        if return_test_icl_representations:
+            out, test_icl_representations = out
+
+        extras = []
+        if return_col_embedding_sample:
+            extras.append(col_embedding_sample)
+        if return_test_representations:
+            extras.append(test_representations)
+        if return_test_icl_representations:
+            extras.append(test_icl_representations)
+
+        if extras:
+            return (out, *extras)
+
+        if return_col_embedding_sample and return_test_representations:
+            return out, col_embedding_sample, test_representations
+        if return_col_embedding_sample:
+            return out, col_embedding_sample
+        if return_test_representations:
+            return out, test_representations
         return out
 
     def forward(
@@ -437,7 +533,10 @@ class TabICL(nn.Module):
         return_logits: bool = True,
         softmax_temperature: float = 0.9,
         inference_config: Optional[InferenceConfig] = None,
-    ) -> Tensor:
+        return_col_embedding_sample: bool = False,
+        return_test_representations: bool = False,
+        return_test_icl_representations: bool = False,
+    ) -> Tensor | tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor] | tuple[Tensor, Tensor, Tensor, Tensor]:
         """Column-wise embedding -> row-wise interaction -> dataset-wise in-context learning.
 
         Parameters
@@ -474,6 +573,16 @@ class TabICL(nn.Module):
         inference_config : Optional[InferenceConfig], default=None
             Inference configuration. Used only in inference mode.
 
+        return_col_embedding_sample : bool, default=False
+            If True, additionally return a detached copy of ``col_embeddings[0, 0]``.
+            In that case, the return value is ``(predictions, col_embedding_sample)``.
+
+        return_test_representations : bool, default=False
+            If True, also return test-only row representations after row interaction.
+
+        return_test_icl_representations : bool, default=False
+            If True, also return test-only ICL representations right before the ICL decoder.
+
         Returns
         -------
         Tensor
@@ -493,7 +602,15 @@ class TabICL(nn.Module):
         """
 
         if self.training:
-            out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+            out = self._train_forward(
+                X,
+                y_train,
+                d=d,
+                embed_with_test=embed_with_test,
+                return_col_embedding_sample=return_col_embedding_sample,
+                return_test_representations=return_test_representations,
+                return_test_icl_representations=return_test_icl_representations,
+            )
         else:
             out = self._inference_forward(
                 X,
@@ -503,6 +620,9 @@ class TabICL(nn.Module):
                 return_logits=return_logits,
                 softmax_temperature=softmax_temperature,
                 inference_config=inference_config,
+                return_col_embedding_sample=return_col_embedding_sample,
+                return_test_representations=return_test_representations,
+                return_test_icl_representations=return_test_icl_representations,
             )
 
         return out
@@ -610,7 +730,10 @@ class TabICL(nn.Module):
         cache: Optional[TabICLCache] = None,
         cache_mode: str = "kv",
         inference_config: Optional[InferenceConfig] = None,
-    ) -> Optional[Tensor]:
+        return_col_embedding_sample: bool = False,
+        return_test_representations: bool = False,
+        return_test_icl_representations: bool = False,
+    ) -> Optional[Tensor | tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]]:
         """Forward pass with caching support for efficient inference.
 
         This method enables caching of training data computations to speed up
@@ -700,6 +823,12 @@ class TabICL(nn.Module):
         if inference_config is None:
             inference_config = InferenceConfig()
 
+        if return_test_icl_representations:
+            raise ValueError(
+                "return_test_icl_representations is not supported in forward_with_cache. "
+                "It is only available through non-cached forward paths."
+            )
+
         # Auto-detect cache mode from cache contents
         if use_cache and self._cache is not None and self._cache.cache_type == "repr":
             cache_mode = "repr"
@@ -727,18 +856,33 @@ class TabICL(nn.Module):
             X = X_test
             y_train = None
 
+        col_embeddings = self.col_embedder.forward_with_cache(
+            X,
+            col_cache=self._cache.col_cache,
+            y_train=y_train,
+            use_cache=use_cache,
+            store_cache=store_cache,
+            mgr_config=inference_config.COL_CONFIG,
+        )
+
+        col_embedding_sample = None
+        if return_col_embedding_sample:
+            col_embedding_sample = col_embeddings[0, 0].detach().clone()
+
         # Column-wise embedding with cache support -> Row-wise interaction
         representations = self.row_interactor(
-            self.col_embedder.forward_with_cache(
-                X,
-                col_cache=self._cache.col_cache,
-                y_train=y_train,
-                use_cache=use_cache,
-                store_cache=store_cache,
-                mgr_config=inference_config.COL_CONFIG,
-            ),
+            col_embeddings,
             mgr_config=inference_config.ROW_CONFIG,
         )
+
+        test_representations = None
+        if return_test_representations:
+            if store_cache:
+                train_size = y_train.shape[1]
+                if X_test is not None:
+                    test_representations = representations[:, train_size:].detach().clone()
+            else:
+                test_representations = representations.detach().clone()
 
         # Dataset-wise in-context learning
         if cache_mode == "repr":
@@ -780,6 +924,12 @@ class TabICL(nn.Module):
             if X_test is None:
                 return None
 
+        if return_col_embedding_sample and return_test_representations:
+            return out, col_embedding_sample, test_representations
+        if return_col_embedding_sample:
+            return out, col_embedding_sample
+        if return_test_representations:
+            return out, test_representations
         return out
 
     def predict_stats_with_cache(

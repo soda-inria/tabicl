@@ -541,6 +541,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
                 X_batch = torch.from_numpy(X_batch).float().to(self.device_)
                 y_batch = torch.from_numpy(y_batch).float().to(self.device_)
                 with torch.no_grad():
+                    print("Forwarding with cache!")
                     self.model_.forward_with_cache(
                         X_train=X_batch,
                         y_train=y_batch,
@@ -556,8 +557,14 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
             self.model_kv_cache_[norm_method] = TabICLCache.concat(caches)
 
     def _batch_forward(
-        self, Xs: np.ndarray, ys: np.ndarray, feature_shuffles: Optional[np.ndarray] = None
-    ) -> np.ndarray:
+        self,
+        Xs: np.ndarray,
+        ys: np.ndarray,
+        feature_shuffles: Optional[np.ndarray] = None,
+        return_col_embedding_sample: bool = False,
+        return_test_representations: bool = False,
+        return_test_icl_representations: bool = False,
+    ) -> np.ndarray | tuple[np.ndarray, np.ndarray] | tuple[np.ndarray, np.ndarray, np.ndarray] | tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Process model forward passes in batches to manage memory efficiently.
 
         This method handles the batched inference through the TabICL model,
@@ -595,6 +602,9 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
             feature_shuffles = np.array_split(feature_shuffles, n_batches)
 
         outputs = []
+        col_embedding_sample = None
+        test_representations = []
+        test_icl_representations = []
         for X_batch, y_batch, shuffle_batch in zip(Xs, ys, feature_shuffles):
             X_batch = torch.from_numpy(X_batch).float().to(self.device_)
             y_batch = torch.from_numpy(y_batch).float().to(self.device_)
@@ -609,12 +619,57 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
                     return_logits=True if self.average_logits else False,
                     softmax_temperature=self.softmax_temperature,
                     inference_config=self.inference_config_,
+                    return_col_embedding_sample=return_col_embedding_sample,
+                    return_test_representations=return_test_representations,
+                    return_test_icl_representations=return_test_icl_representations,
                 )
+            if return_col_embedding_sample or return_test_representations or return_test_icl_representations:
+                out, *extras = out
+                extra_idx = 0
+                if return_col_embedding_sample:
+                    sample = extras[extra_idx]
+                    extra_idx += 1
+                    if col_embedding_sample is None:
+                        col_embedding_sample = sample.detach().cpu().numpy()
+                if return_test_representations:
+                    repr_test = extras[extra_idx]
+                    extra_idx += 1
+                    test_representations.append(repr_test.detach().cpu().numpy())
+                if return_test_icl_representations:
+                    icl_repr_test = extras[extra_idx]
+                    test_icl_representations.append(icl_repr_test.detach().cpu().numpy())
             outputs.append(out.float().cpu().numpy())
 
-        return np.concatenate(outputs, axis=0)
+        outputs = np.concatenate(outputs, axis=0)
+        if return_col_embedding_sample and return_test_representations and return_test_icl_representations:
+            return (
+                outputs,
+                col_embedding_sample,
+                np.concatenate(test_representations, axis=0),
+                np.concatenate(test_icl_representations, axis=0),
+            )
+        if return_col_embedding_sample and return_test_icl_representations:
+            return outputs, col_embedding_sample, np.concatenate(test_icl_representations, axis=0)
+        if return_test_representations and return_test_icl_representations:
+            return outputs, np.concatenate(test_representations, axis=0), np.concatenate(test_icl_representations, axis=0)
+        if return_col_embedding_sample and return_test_representations:
+            return outputs, col_embedding_sample, np.concatenate(test_representations, axis=0)
+        if return_col_embedding_sample:
+            return outputs, col_embedding_sample
+        if return_test_representations:
+            return outputs, np.concatenate(test_representations, axis=0)
+        if return_test_icl_representations:
+            return outputs, np.concatenate(test_icl_representations, axis=0)
+        return outputs
 
-    def _batch_forward_with_cache(self, Xs: np.ndarray, kv_cache: TabICLCache) -> np.ndarray:
+    def _batch_forward_with_cache(
+        self,
+        Xs: np.ndarray,
+        kv_cache: TabICLCache,
+        return_col_embedding_sample: bool = False,
+        return_test_representations: bool = False,
+        return_test_icl_representations: bool = False,
+    ) -> np.ndarray | tuple[np.ndarray, np.ndarray] | tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Process model forward passes using a pre-computed KV cache.
 
         The cache is sliced along the batch dimension to match each batch.
@@ -633,12 +688,20 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
             Model outputs (logits or probabilities) of shape
             ``(n_datasets, test_size, n_classes)``.
         """
+        if return_test_icl_representations:
+            raise ValueError(
+                "return_test_icl_representations is not supported with KV cache. "
+                "Use predict_proba(..., return_test_icl_representations=True) without kv_cache."
+            )
+
         n_total = Xs.shape[0]
         batch_size = self.batch_size or n_total
         n_batches = int(np.ceil(n_total / batch_size))
         Xs_split = np.array_split(Xs, n_batches)
 
         outputs = []
+        col_embedding_sample = None
+        test_representations = []
         offset = 0
         for X_batch in Xs_split:
             bs = X_batch.shape[0]
@@ -653,11 +716,38 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
                     return_logits=True if self.average_logits else False,
                     softmax_temperature=self.softmax_temperature,
                     inference_config=self.inference_config_,
+                    return_col_embedding_sample=return_col_embedding_sample,
+                    return_test_representations=return_test_representations,
                 )
+            if return_col_embedding_sample and return_test_representations:
+                out, sample, repr_test = out
+                if col_embedding_sample is None:
+                    col_embedding_sample = sample.detach().cpu().numpy()
+                test_representations.append(repr_test.detach().cpu().numpy())
+            elif return_col_embedding_sample:
+                out, sample = out
+                if col_embedding_sample is None:
+                    col_embedding_sample = sample.detach().cpu().numpy()
+            elif return_test_representations:
+                out, repr_test = out
+                test_representations.append(repr_test.detach().cpu().numpy())
             outputs.append(out.float().cpu().numpy())
-        return np.concatenate(outputs, axis=0)
+        outputs = np.concatenate(outputs, axis=0)
+        if return_col_embedding_sample and return_test_representations:
+            return outputs, col_embedding_sample, np.concatenate(test_representations, axis=0)
+        if return_col_embedding_sample:
+            return outputs, col_embedding_sample
+        if return_test_representations:
+            return outputs, np.concatenate(test_representations, axis=0)
+        return outputs
 
-    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+    def predict_proba(
+        self,
+        X: np.ndarray,
+        return_col_embedding_sample: bool = False,
+        return_test_representations: bool = False,
+        return_test_icl_representations: bool = False,
+    ) -> np.ndarray | tuple[np.ndarray, np.ndarray] | tuple[np.ndarray, np.ndarray, np.ndarray] | tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Predict class probabilities for test samples.
 
         Applies the ensemble of TabICL models to make predictions, with each ensemble
@@ -677,10 +767,30 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
             useful for computing SHAP values, where masked features are
             represented as all-NaN columns.
 
+        return_col_embedding_sample : bool, default=False
+            If True, also return a NumPy copy of ``col_embeddings[0, 0]`` from the
+            first ensemble member processed.
+
+        return_test_representations : bool, default=False
+            If True, also return test-only row representations from the row
+            interaction stage, i.e., rows after the first ``train_size`` rows.
+
+        return_test_icl_representations : bool, default=False
+            If True, also return test-only ICL representations right before
+            the ICL decoder.
+
         Returns
         -------
         np.ndarray of shape (n_samples, n_classes)
             Class probabilities for each test sample.
+
+        tuple
+            Optional additional outputs are appended after probabilities in this order:
+            ``col_embedding_sample``, then ``test_representations``.
+        -------
+        np.ndarray of shape (n_samples, n_classes)
+            Class probabilities for each test sample.
+
         """
         check_is_fitted(self)
         if isinstance(X, np.ndarray) and len(X.shape) == 1:
@@ -748,24 +858,76 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         use_cache = has_kv_cache and feature_mask is None
 
         if use_cache:
+            if return_test_icl_representations:
+                raise ValueError(
+                    "return_test_icl_representations is not supported with KV cache. "
+                    "Use this option with kv_cache disabled."
+                )
             # Cache exists: forward only test data and use the pre-computed cache for training data
             test_data = self.ensemble_generator_.transform(X, mode="test")
             outputs = []
+            col_embedding_sample = None
+            all_test_representations = []
             for norm_method, (Xs_test,) in test_data.items():
                 kv_cache = self.model_kv_cache_[norm_method]
-                outputs.append(self._batch_forward_with_cache(Xs_test, kv_cache))
+                out = self._batch_forward_with_cache(
+                    Xs_test,
+                    kv_cache,
+                    return_col_embedding_sample=return_col_embedding_sample,
+                    return_test_representations=return_test_representations,
+                    return_test_icl_representations=return_test_icl_representations,
+                )
+                if return_col_embedding_sample and return_test_representations:
+                    out, sample, repr_test = out
+                    if col_embedding_sample is None:
+                        col_embedding_sample = sample
+                    all_test_representations.append(repr_test)
+                elif return_col_embedding_sample:
+                    out, sample = out
+                    if col_embedding_sample is None:
+                        col_embedding_sample = sample
+                elif return_test_representations:
+                    out, repr_test = out
+                    all_test_representations.append(repr_test)
+                outputs.append(out)
             outputs = np.concatenate(outputs, axis=0)
         else:
             # No cache or masked features: forward both training and test data
             data = self.ensemble_generator_.transform(X, mode="both", feature_mask=feature_mask)
             outputs = []
+            col_embedding_sample = None
+            all_test_representations = []
+            all_test_icl_representations = []
             for norm_method, (Xs, ys) in data.items():
                 if feature_mask is None:
                     feature_shuffles = self.ensemble_generator_.feature_shuffles_[norm_method]
                 else:
                     feature_shuffles = self.ensemble_generator_.masked_feature_shuffles_[norm_method]
 
-                outputs.append(self._batch_forward(Xs, ys, feature_shuffles))
+                out = self._batch_forward(
+                    Xs,
+                    ys,
+                    feature_shuffles,
+                    return_col_embedding_sample=return_col_embedding_sample,
+                    return_test_representations=return_test_representations,
+                    return_test_icl_representations=return_test_icl_representations,
+                )
+                if return_col_embedding_sample or return_test_representations or return_test_icl_representations:
+                    out, *extras = out
+                    extra_idx = 0
+                    if return_col_embedding_sample:
+                        sample = extras[extra_idx]
+                        extra_idx += 1
+                        if col_embedding_sample is None:
+                            col_embedding_sample = sample
+                    if return_test_representations:
+                        repr_test = extras[extra_idx]
+                        extra_idx += 1
+                        all_test_representations.append(repr_test)
+                    if return_test_icl_representations:
+                        icl_repr_test = extras[extra_idx]
+                        all_test_icl_representations.append(icl_repr_test)
+                outputs.append(out)
             outputs = np.concatenate(outputs, axis=0)
 
         # Extract class shuffle patterns from ensemble generator
@@ -794,7 +956,44 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
             torch.set_num_threads(old_n_threads)
 
         # Normalize probabilities
-        return avg / avg.sum(axis=1, keepdims=True)
+        proba = avg / avg.sum(axis=1, keepdims=True)
+
+        test_representations = None
+        if return_test_representations:
+            test_representations = np.concatenate(all_test_representations, axis=0)
+
+        test_icl_representations = None
+        if return_test_icl_representations:
+            test_icl_representations = np.concatenate(all_test_icl_representations, axis=0)
+
+        if return_col_embedding_sample and return_test_representations and return_test_icl_representations:
+            self.col_embedding_sample_ = col_embedding_sample
+            self.test_representations_ = test_representations
+            self.test_icl_representations_ = test_icl_representations
+            return proba, col_embedding_sample, test_representations, test_icl_representations
+        if return_col_embedding_sample and return_test_icl_representations:
+            self.col_embedding_sample_ = col_embedding_sample
+            self.test_icl_representations_ = test_icl_representations
+            return proba, col_embedding_sample, test_icl_representations
+        if return_test_representations and return_test_icl_representations:
+            self.test_representations_ = test_representations
+            self.test_icl_representations_ = test_icl_representations
+            return proba, test_representations, test_icl_representations
+
+        if return_col_embedding_sample and return_test_representations:
+            self.col_embedding_sample_ = col_embedding_sample
+            self.test_representations_ = test_representations
+            return proba, col_embedding_sample, test_representations
+        if return_col_embedding_sample:
+            self.col_embedding_sample_ = col_embedding_sample
+            return proba, col_embedding_sample
+        if return_test_representations:
+            self.test_representations_ = test_representations
+            return proba, test_representations
+        if return_test_icl_representations:
+            self.test_icl_representations_ = test_icl_representations
+            return proba, test_icl_representations
+        return proba
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """Predict class labels for test samples.

@@ -236,7 +236,12 @@ class ICLearning(nn.Module):
         indices = unique_vals.argsort()
         return indices[torch.searchsorted(unique_vals, y)]
 
-    def _icl_predictions(self, R: Tensor, y_train: Tensor) -> Tensor:
+    def _icl_predictions(
+        self,
+        R: Tensor,
+        y_train: Tensor,
+        return_test_icl_representations: bool = False,
+    ) -> Tensor | tuple[Tensor, Tensor]:
         """In-context learning predictions.
 
         Parameters
@@ -250,6 +255,11 @@ class ICLearning(nn.Module):
         y_train : Tensor
             Training targets of shape (B, train_size), where train_size is the position
             to split the input into training and test data.
+
+        return_test_icl_representations : bool, default=False
+            If True, also return test-only ICL representations right before the decoder,
+            i.e., the post-transformer (and post-LayerNorm when enabled) tensor sliced
+            as ``src[:, train_size:]``.
 
         Returns
         -------
@@ -270,7 +280,13 @@ class ICLearning(nn.Module):
         src = self.tf_icl(R, train_size=train_size)
         if self.norm_first:
             src = self.ln(src)
+
+        #
         out = self.decoder(src)
+
+        if return_test_icl_representations:
+            test_icl_representations = src[:, train_size:].detach().clone()
+            return out, test_icl_representations
 
         return out
 
@@ -281,7 +297,8 @@ class ICLearning(nn.Module):
         return_logits: bool = False,
         softmax_temperature: float = 0.9,
         auto_batch: bool = True,
-    ) -> Tensor:
+        return_test_icl_representations: bool = False,
+    ) -> Tensor | tuple[Tensor, Tensor]:
         """Generate predictions for standard classification with up to `max_classes` classes.
 
         Parameters
@@ -305,6 +322,10 @@ class ICLearning(nn.Module):
         auto_batch : bool, default=True
             Whether to use InferenceManager to automatically split inputs into smaller batches.
 
+        return_test_icl_representations : bool, default=False
+            If True, also return test-only ICL representations right before decoder,
+            i.e., ``src[:, train_size:]`` from ``_icl_predictions``.
+
         Returns
         -------
         Tensor
@@ -316,9 +337,25 @@ class ICLearning(nn.Module):
                 If return_logits=False: Probabilities of shape (B, test_size, num_classes)
         """
 
-        out = self.inference_mgr(
-            self._icl_predictions, inputs=OrderedDict([("R", R), ("y_train", y_train)]), auto_batch=auto_batch
-        )
+        if return_test_icl_representations:
+            out, test_icl_representations = self.inference_mgr._run_forward(
+                self._icl_predictions,
+                self.inference_mgr._prepare_inputs(
+                    OrderedDict(
+                        [
+                            ("R", R),
+                            ("y_train", y_train),
+                            ("return_test_icl_representations", True),
+                        ]
+                    )
+                ),
+            )
+        else:
+            out = self.inference_mgr(
+                self._icl_predictions,
+                inputs=OrderedDict([("R", R), ("y_train", y_train)]),
+                auto_batch=auto_batch,
+            )
 
         train_size = y_train.shape[1]
         if self.max_classes == 0:
@@ -329,11 +366,17 @@ class ICLearning(nn.Module):
             if not return_logits:
                 out = torch.softmax(out / softmax_temperature, dim=-1)
 
+        if return_test_icl_representations:
+            return out, test_icl_representations
         return out
 
     def _predict_hierarchical(
-        self, R_test: Tensor, softmax_temperature: float = 0.9, inference_recurrence: Optional[int] = None
-    ) -> Tensor:
+        self,
+        R_test: Tensor,
+        softmax_temperature: float = 0.9,
+        inference_recurrence: Optional[int] = None,
+        return_test_icl_representations: bool = False,
+    ) -> Tensor | tuple[Tensor, Tensor]:
         """Generate predictions using the hierarchical classification tree.
 
         This method traverses the tree from leaves to root, computing probabilities at each level
@@ -347,6 +390,10 @@ class ICLearning(nn.Module):
         softmax_temperature : float, default=0.9
             Temperature for the softmax function.
 
+        return_test_icl_representations : bool, default=False
+            If True, also return root-level test-only ICL representations right
+            before decoder, shape (test_size, D).
+
         Returns
         -------
         Tensor
@@ -357,7 +404,9 @@ class ICLearning(nn.Module):
         device = R_test.device
         num_classes = len(self.root.classes_)
 
-        def process_node(node, R_test):
+        root_test_icl_representations = None
+
+        def process_node(node, R_test, is_root: bool = False):
             """Recursively process a node in the hierarchical tree.
 
             For leaf nodes: Directly predict class probabilities within the node's subset
@@ -390,21 +439,33 @@ class ICLearning(nn.Module):
 
             # Get group probabilities for this node
             node_y = node.group_indices.to(device)
-            group_probs = self._predict_standard(
+            group_out = self._predict_standard(
                 R=node_R.unsqueeze(0),
                 y_train=node_y.unsqueeze(0),
                 softmax_temperature=softmax_temperature,
                 auto_batch=False,
-            ).squeeze(0)
+                return_test_icl_representations=return_test_icl_representations if is_root else False,
+            )
+
+            nonlocal root_test_icl_representations
+            if is_root and return_test_icl_representations:
+                group_probs, root_test_icl_representations = group_out
+                group_probs = group_probs.squeeze(0)
+                root_test_icl_representations = root_test_icl_representations.squeeze(0)
+            else:
+                group_probs = group_out.squeeze(0)
 
             # Recursively process child nodes and combine predictions
             for group_idx, child_node in enumerate(node.child_nodes):
-                child_probs = process_node(child_node, R_test)
+                child_probs = process_node(child_node, R_test, is_root=False)
                 final_probs += child_probs * group_probs[:, group_idx : group_idx + 1]
 
             return final_probs
 
-        return process_node(self.root, R_test)
+        probs = process_node(self.root, R_test, is_root=True)
+        if return_test_icl_representations:
+            return probs, root_test_icl_representations
+        return probs
 
     def _inference_forward(
         self,
@@ -413,7 +474,8 @@ class ICLearning(nn.Module):
         return_logits: bool = True,
         softmax_temperature: float = 0.9,
         mgr_config: MgrConfig = None,
-    ) -> Tensor:
+        return_test_icl_representations: bool = False,
+    ) -> Tensor | tuple[Tensor, Tensor]:
         """In-context learning based on learned row representations for inference.
 
         Parameters
@@ -437,6 +499,9 @@ class ICLearning(nn.Module):
         mgr_config : MgrConfig, default=None
             Configuration for InferenceManager.
 
+        return_test_icl_representations : bool, default=False
+            If True, also return test-only ICL representations right before decoder.
+
         Returns
         -------
         Tensor
@@ -453,7 +518,11 @@ class ICLearning(nn.Module):
         self.inference_mgr.configure(**mgr_config)
 
         if self.max_classes == 0:  # Regression
-            out = self._predict_standard(R, y_train)
+            out = self._predict_standard(
+                R,
+                y_train,
+                return_test_icl_representations=return_test_icl_representations,
+            )
         else:  # Classification
             num_classes = len(torch.unique(y_train[0]))
             assert all(
@@ -463,11 +532,16 @@ class ICLearning(nn.Module):
             if num_classes <= self.max_classes:
                 # Standard classification
                 out = self._predict_standard(
-                    R, y_train, return_logits=return_logits, softmax_temperature=softmax_temperature
+                    R,
+                    y_train,
+                    return_logits=return_logits,
+                    softmax_temperature=softmax_temperature,
+                    return_test_icl_representations=return_test_icl_representations,
                 )
             else:
                 # Hierarchical classification
                 out = []
+                test_icl_representations = []
                 train_size = y_train.shape[1]
                 for ri, yi in zip(R, y_train):
                     if mgr_config.offload:
@@ -475,11 +549,23 @@ class ICLearning(nn.Module):
                     else:
                         ri, yi = ri.to(mgr_config.device), yi.to(mgr_config.device)
                     self._fit_hierarchical(ri[:train_size], yi)
-                    probs = self._predict_hierarchical(ri[train_size:])
+                    hier_out = self._predict_hierarchical(
+                        ri[train_size:],
+                        softmax_temperature=softmax_temperature,
+                        return_test_icl_representations=return_test_icl_representations,
+                    )
+                    if return_test_icl_representations:
+                        probs, test_icl_repr = hier_out
+                        test_icl_representations.append(test_icl_repr)
+                    else:
+                        probs = hier_out
                     out.append(probs)
                 out = torch.stack(out, dim=0)
                 if return_logits:
                     out = softmax_temperature * torch.log(out + 1e-6)
+
+                if return_test_icl_representations:
+                    return out, torch.stack(test_icl_representations, dim=0)
 
         return out
 
@@ -490,7 +576,8 @@ class ICLearning(nn.Module):
         return_logits: bool = True,
         softmax_temperature: float = 0.9,
         mgr_config: MgrConfig = None,
-    ) -> Tensor:
+        return_test_icl_representations: bool = False,
+    ) -> Tensor | tuple[Tensor, Tensor]:
         """In-context learning based on learned row representations.
 
         Parameters
@@ -514,6 +601,9 @@ class ICLearning(nn.Module):
         mgr_config : MgrConfig, default=None
             Configuration for InferenceManager. Used only in inference mode.
 
+        return_test_icl_representations : bool, default=False
+            If True, also return test-only ICL representations right before decoder.
+
         Returns
         -------
         Tensor
@@ -534,10 +624,30 @@ class ICLearning(nn.Module):
 
         if self.training:
             train_size = y_train.shape[1]
-            out = self._icl_predictions(R, y_train)
-            out = out[:, train_size:]
+            out = self._icl_predictions(
+                R,
+                y_train,
+                return_test_icl_representations=return_test_icl_representations,
+            )
+            if return_test_icl_representations:
+                out, test_icl_representations = out
+                out = out[:, train_size:]
+            else:
+                out = out[:, train_size:]
         else:
-            out = self._inference_forward(R, y_train, return_logits, softmax_temperature, mgr_config)
+            out = self._inference_forward(
+                R,
+                y_train,
+                return_logits,
+                softmax_temperature,
+                mgr_config,
+                return_test_icl_representations,
+            )
+
+        if return_test_icl_representations:
+            if self.training:
+                return out, test_icl_representations
+            return out
 
         return out
 
