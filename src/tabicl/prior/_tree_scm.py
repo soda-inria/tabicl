@@ -207,8 +207,8 @@ class TreeSCM(nn.Module):
         num_layers: int = 5,
         hidden_dim: int = 10,
         tree_model: str = "xgboost",
-        max_depth_lambda: float = 0.5,
-        n_estimators_lambda: float = 0.5,
+        tree_depth_lambda: float = 0.5,
+        tree_n_estimators_lambda: float = 0.5,
         sampling: str = "normal",
         pre_sample_cause_stats: bool = False,
         noise_std: float = 0.01,
@@ -234,8 +234,8 @@ class TreeSCM(nn.Module):
         self.num_layers = num_layers
         self.hidden_dim = hidden_dim
         self.tree_model = tree_model
-        self.tree_depth_lambda = max_depth_lambda
-        self.tree_n_estimators_lambda = n_estimators_lambda
+        self.tree_depth_lambda = tree_depth_lambda
+        self.tree_n_estimators_lambda = tree_n_estimators_lambda
         self.sampling = sampling
         self.pre_sample_cause_stats = pre_sample_cause_stats
         self.noise_std = noise_std
