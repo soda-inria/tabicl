@@ -4,7 +4,7 @@
 
 # TabICLv2: A state-of-the-art tabular foundation model
 
-This repository is the official implementation of **TabICLv2** ([arXiv](https://arxiv.org/abs/2602.11139)) 
+This repository is the official implementation of **TabICLv2** ([ICML 2026](https://arxiv.org/abs/2602.11139)) 
 and **TabICL** ([ICML 2025](https://arxiv.org/abs/2502.05564)).
 
 **State-of-the-art accuracy even without hyperparameter tuning:** 
@@ -394,7 +394,7 @@ please cite our papers for **[TabICL](https://arxiv.org/abs/2502.05564)** and **
 @article{qu2026tabiclv2,
   title={{TabICLv2}: {A} better, faster, scalable, and open tabular foundation model},
   author={Qu, Jingang and Holzm{\"u}ller, David and Varoquaux, Ga{\"e}l and Le Morvan, Marine},
-  journal={arXiv preprint arXiv:2602.11139},
+  booktitle={International Conference on Machine Learning},
   year={2026}
 }
 ```
