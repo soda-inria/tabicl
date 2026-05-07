@@ -1,0 +1,124 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.38593740467492305,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.19426274563665066,
+      "selected": true
+    },
+    {
+      "id": "feature_13",
+      "kind": "feature",
+      "feature_index": 13,
+      "association_score": 0.3731648368369617,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.2126193139085698,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.38593740467492305
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.19426274563665066
+    },
+    {
+      "source": "feature_13",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3731648368369617
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2126193139085698
+    }
+  ],
+  "selected_feature_indices": [
+    5,
+    9,
+    13,
+    14
+  ],
+  "candidate_feature_indices": [
+    5,
+    13,
+    12,
+    14,
+    15,
+    8,
+    9,
+    17,
+    7,
+    10,
+    11,
+    2,
+    6,
+    4,
+    16,
+    3,
+    1,
+    0
+  ],
+  "association_scores": {
+    "5": 0.38593740467492305,
+    "13": 0.3731648368369617,
+    "12": 0.22642928650198682,
+    "14": 0.2126193139085698,
+    "15": 0.20376349084168072,
+    "8": 0.19529421832034627,
+    "9": 0.19426274563665066,
+    "17": 0.1632933935930121,
+    "7": 0.1451452155412126,
+    "10": 0.09383245895402294,
+    "11": 0.07194836521738467,
+    "2": 0.0697074832648806,
+    "6": 0.06612969117365107,
+    "4": 0.03613648445331846,
+    "16": 0.027480129468929443,
+    "3": 0.026808749483556323,
+    "1": 0.008800774359454281,
+    "0": 0.006918532045879726
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 18,
+  "sample_count": 5000,
+  "selector_seconds": 0.07034945487976074,
+  "status": "ok selected=4 candidates=18 samples=5000",
+  "dataset_name": "Rain_in_Australia"
+}

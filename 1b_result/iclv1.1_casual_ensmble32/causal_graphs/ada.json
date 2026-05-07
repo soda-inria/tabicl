@@ -1,0 +1,310 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.08506710974353716,
+      "selected": true
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.10408090836341019,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.18347748822985863,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.14701077151277714,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.34417367367265966,
+      "selected": true
+    },
+    {
+      "id": "feature_16",
+      "kind": "feature",
+      "feature_index": 16,
+      "association_score": 0.10357385844606057,
+      "selected": true
+    },
+    {
+      "id": "feature_24",
+      "kind": "feature",
+      "feature_index": 24,
+      "association_score": 0.2473860499172759,
+      "selected": true
+    },
+    {
+      "id": "feature_31",
+      "kind": "feature",
+      "feature_index": 31,
+      "association_score": 0.21506422336811848,
+      "selected": true
+    },
+    {
+      "id": "feature_35",
+      "kind": "feature",
+      "feature_index": 35,
+      "association_score": 0.12879091254442893,
+      "selected": true
+    },
+    {
+      "id": "feature_39",
+      "kind": "feature",
+      "feature_index": 39,
+      "association_score": 0.2619218904113662,
+      "selected": true
+    },
+    {
+      "id": "feature_41",
+      "kind": "feature",
+      "feature_index": 41,
+      "association_score": 0.16690920153513306,
+      "selected": true
+    },
+    {
+      "id": "feature_43",
+      "kind": "feature",
+      "feature_index": 43,
+      "association_score": 0.4626190871006891,
+      "selected": true
+    },
+    {
+      "id": "feature_45",
+      "kind": "feature",
+      "feature_index": 45,
+      "association_score": 0.21103595889496513,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.08506710974353716
+    },
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10408090836341019
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.18347748822985863
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.14701077151277714
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.34417367367265966
+    },
+    {
+      "source": "feature_16",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10357385844606057
+    },
+    {
+      "source": "feature_24",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2473860499172759
+    },
+    {
+      "source": "feature_31",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.21506422336811848
+    },
+    {
+      "source": "feature_35",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.12879091254442893
+    },
+    {
+      "source": "feature_39",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2619218904113662
+    },
+    {
+      "source": "feature_41",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.16690920153513306
+    },
+    {
+      "source": "feature_43",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4626190871006891
+    },
+    {
+      "source": "feature_45",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.21103595889496513
+    }
+  ],
+  "selected_feature_indices": [
+    1,
+    7,
+    8,
+    9,
+    14,
+    16,
+    24,
+    31,
+    35,
+    39,
+    41,
+    43,
+    45
+  ],
+  "candidate_feature_indices": [
+    43,
+    30,
+    14,
+    26,
+    39,
+    24,
+    40,
+    15,
+    31,
+    6,
+    45,
+    8,
+    41,
+    4,
+    9,
+    29,
+    35,
+    17,
+    18,
+    7,
+    16,
+    23,
+    19,
+    1,
+    2,
+    22,
+    5,
+    47,
+    34,
+    32,
+    12,
+    0,
+    37,
+    38,
+    21,
+    10,
+    42,
+    36,
+    33,
+    11,
+    46,
+    3,
+    28,
+    25,
+    44,
+    27,
+    13,
+    20
+  ],
+  "association_scores": {
+    "43": 0.4626190871006891,
+    "30": 0.4214307825833898,
+    "14": 0.34417367367265966,
+    "26": 0.3373728178351099,
+    "39": 0.2619218904113662,
+    "24": 0.2473860499172759,
+    "40": 0.220006601149975,
+    "15": 0.21627733007793387,
+    "31": 0.21506422336811848,
+    "6": 0.21308110820653114,
+    "45": 0.21103595889496513,
+    "8": 0.18347748822985863,
+    "41": 0.16690920153513306,
+    "4": 0.1553811756686164,
+    "9": 0.14701077151277714,
+    "29": 0.1361658961025162,
+    "35": 0.12879091254442893,
+    "17": 0.1272778036159321,
+    "18": 0.10538660259324757,
+    "7": 0.10408090836341019,
+    "16": 0.10357385844606057,
+    "23": 0.0919357835045449,
+    "19": 0.08849819054668825,
+    "1": 0.08506710974353716,
+    "2": 0.07876918947667781,
+    "22": 0.07321181546559448,
+    "5": 0.07084196473703297,
+    "47": 0.06930264672767449,
+    "34": 0.05291876712799543,
+    "32": 0.052113120470333126,
+    "12": 0.04788145128165481,
+    "0": 0.04645139710262454,
+    "37": 0.04241500245244908,
+    "38": 0.037399123499847274,
+    "21": 0.03705321937330215,
+    "10": 0.03538552005724228,
+    "42": 0.030230201781226467,
+    "36": 0.027597771366349423,
+    "33": 0.023734727410367758,
+    "11": 0.018115408382107536,
+    "46": 0.009975724164374526,
+    "3": 0.009686602622909183,
+    "28": 0.005564477583148986,
+    "25": 0.004916708383148518,
+    "44": 0.0029307410921772955,
+    "27": 0.0025665584942941725,
+    "13": 0.0,
+    "20": 0.0
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 48,
+  "sample_count": 3317,
+  "selector_seconds": 0.35901689529418945,
+  "status": "ok selected=13 candidates=48 samples=3317",
+  "dataset_name": "ada"
+}

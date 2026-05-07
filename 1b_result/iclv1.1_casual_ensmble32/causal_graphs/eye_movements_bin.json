@@ -1,0 +1,128 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.038269818100573554,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.0427622795010473,
+      "selected": true
+    },
+    {
+      "id": "feature_18",
+      "kind": "feature",
+      "feature_index": 18,
+      "association_score": 0.09060348892498761,
+      "selected": true
+    },
+    {
+      "id": "feature_19",
+      "kind": "feature",
+      "feature_index": 19,
+      "association_score": 0.08089603595582244,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.038269818100573554
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.0427622795010473
+    },
+    {
+      "source": "feature_18",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.09060348892498761
+    },
+    {
+      "source": "feature_19",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.08089603595582244
+    }
+  ],
+  "selected_feature_indices": [
+    6,
+    14,
+    18,
+    19
+  ],
+  "candidate_feature_indices": [
+    18,
+    19,
+    8,
+    14,
+    6,
+    13,
+    9,
+    16,
+    7,
+    15,
+    4,
+    11,
+    1,
+    0,
+    5,
+    10,
+    2,
+    12,
+    3,
+    17
+  ],
+  "association_scores": {
+    "18": 0.09060348892498761,
+    "19": 0.08089603595582244,
+    "8": 0.04714871533319209,
+    "14": 0.0427622795010473,
+    "6": 0.038269818100573554,
+    "13": 0.02974976332291514,
+    "9": 0.029561324162840737,
+    "16": 0.022259547134295853,
+    "7": 0.01858354146985129,
+    "15": 0.01818479825915819,
+    "4": 0.017708128464398964,
+    "11": 0.017316826352589784,
+    "1": 0.016894817615574226,
+    "0": 0.01661159195987681,
+    "5": 0.015956637385084065,
+    "10": 0.012972480223554513,
+    "2": 0.010655599202582654,
+    "12": 0.010314598313331654,
+    "3": 0.003348924966118076,
+    "17": 0.001083442340765853
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 20,
+  "sample_count": 5000,
+  "selector_seconds": 0.02216315269470215,
+  "status": "ok selected=4 candidates=20 samples=5000",
+  "dataset_name": "eye_movements_bin"
+}

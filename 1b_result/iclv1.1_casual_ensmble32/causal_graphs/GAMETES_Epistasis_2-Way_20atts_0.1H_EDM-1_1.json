@@ -1,0 +1,114 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.0597486744838416,
+      "selected": true
+    },
+    {
+      "id": "feature_11",
+      "kind": "feature",
+      "feature_index": 11,
+      "association_score": 0.04897712006464289,
+      "selected": true
+    },
+    {
+      "id": "feature_17",
+      "kind": "feature",
+      "feature_index": 17,
+      "association_score": 0.04245081709069869,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.0597486744838416
+    },
+    {
+      "source": "feature_11",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.04897712006464289
+    },
+    {
+      "source": "feature_17",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.04245081709069869
+    }
+  ],
+  "selected_feature_indices": [
+    6,
+    11,
+    17
+  ],
+  "candidate_feature_indices": [
+    6,
+    11,
+    17,
+    12,
+    14,
+    5,
+    2,
+    3,
+    19,
+    13,
+    18,
+    7,
+    8,
+    1,
+    15,
+    10,
+    4,
+    0,
+    9,
+    16
+  ],
+  "association_scores": {
+    "6": 0.0597486744838416,
+    "11": 0.04897712006464289,
+    "17": 0.04245081709069869,
+    "12": 0.034591212420970505,
+    "14": 0.03220428002471738,
+    "5": 0.030577572034856233,
+    "2": 0.02448838471670357,
+    "3": 0.023270230163578702,
+    "19": 0.020884985213399723,
+    "13": 0.019591205010340045,
+    "18": 0.019299131182517085,
+    "7": 0.01924144607210112,
+    "8": 0.01848693441858563,
+    "1": 0.01658229229902127,
+    "15": 0.015198372590126083,
+    "10": 0.011459483567090891,
+    "4": 0.006006550712362549,
+    "0": 0.005567697439509012,
+    "9": 0.0017145849879718663,
+    "16": 0.0010915320011868968
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 20,
+  "sample_count": 1280,
+  "selector_seconds": 0.0032129287719726562,
+  "status": "ok selected=3 candidates=20 samples=1280",
+  "dataset_name": "GAMETES_Epistasis_2-Way_20atts_0.1H_EDM-1_1"
+}

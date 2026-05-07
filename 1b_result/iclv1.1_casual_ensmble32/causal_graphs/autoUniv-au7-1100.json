@@ -1,0 +1,140 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.10646404837157963,
+      "selected": true
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.2698149632116644,
+      "selected": true
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.1692774882280375,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.08963637417545979,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.08791005013097603,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.10526423820149224,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10646404837157963
+    },
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2698149632116644
+    },
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1692774882280375
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.08963637417545979
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.08791005013097603
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10526423820149224
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    2,
+    3,
+    4,
+    5,
+    10
+  ],
+  "candidate_feature_indices": [
+    2,
+    3,
+    0,
+    10,
+    4,
+    5,
+    6,
+    1,
+    9,
+    8,
+    7,
+    11
+  ],
+  "association_scores": {
+    "2": 0.2698149632116644,
+    "3": 0.1692774882280375,
+    "0": 0.10646404837157963,
+    "10": 0.10526423820149224,
+    "4": 0.08963637417545979,
+    "5": 0.08791005013097603,
+    "6": 0.06103258718356534,
+    "1": 0.04803577841174143,
+    "9": 0.026939962721883398,
+    "8": 0.02038871001824232,
+    "7": 0.009579301029473427,
+    "11": 0.00743439235976816
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 12,
+  "sample_count": 880,
+  "selector_seconds": 0.01630091667175293,
+  "status": "ok selected=6 candidates=12 samples=880",
+  "dataset_name": "autoUniv-au7-1100"
+}

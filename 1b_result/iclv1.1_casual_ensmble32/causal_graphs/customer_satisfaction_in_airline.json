@@ -1,0 +1,214 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.29353349557581926,
+      "selected": true
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.2784572115928472,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.10489724925777341,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.5076359323854914,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.3855871468801928,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.4114970864212925,
+      "selected": true
+    },
+    {
+      "id": "feature_11",
+      "kind": "feature",
+      "feature_index": 11,
+      "association_score": 0.3600089635641753,
+      "selected": true
+    },
+    {
+      "id": "feature_12",
+      "kind": "feature",
+      "feature_index": 12,
+      "association_score": 0.3200067677599471,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.2577853167989085,
+      "selected": true
+    },
+    {
+      "id": "feature_19",
+      "kind": "feature",
+      "feature_index": 19,
+      "association_score": 0.05795794843228557,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.29353349557581926
+    },
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2784572115928472
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10489724925777341
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.5076359323854914
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3855871468801928
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4114970864212925
+    },
+    {
+      "source": "feature_11",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3600089635641753
+    },
+    {
+      "source": "feature_12",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3200067677599471
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2577853167989085
+    },
+    {
+      "source": "feature_19",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.05795794843228557
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    2,
+    5,
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    19
+  ],
+  "candidate_feature_indices": [
+    8,
+    10,
+    9,
+    11,
+    16,
+    12,
+    0,
+    2,
+    13,
+    14,
+    15,
+    3,
+    7,
+    17,
+    1,
+    5,
+    20,
+    18,
+    19,
+    6,
+    4
+  ],
+  "association_scores": {
+    "8": 0.5076359323854914,
+    "10": 0.4114970864212925,
+    "9": 0.3855871468801928,
+    "11": 0.3600089635641753,
+    "16": 0.32253693050706544,
+    "12": 0.3200067677599471,
+    "0": 0.29353349557581926,
+    "2": 0.2784572115928472,
+    "13": 0.2610658669160249,
+    "14": 0.2577853167989085,
+    "15": 0.25275136831253286,
+    "3": 0.22285324433195128,
+    "7": 0.21348631308135874,
+    "17": 0.13931684302712374,
+    "1": 0.11392912777188828,
+    "5": 0.10489724925777341,
+    "20": 0.06168699446697212,
+    "18": 0.05900397279851187,
+    "19": 0.05795794843228557,
+    "6": 0.03276682828458518,
+    "4": 0.011540057126815289
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 21,
+  "sample_count": 5000,
+  "selector_seconds": 0.3558216094970703,
+  "status": "ok selected=10 candidates=21 samples=5000",
+  "dataset_name": "customer_satisfaction_in_airline"
+}

@@ -1,0 +1,96 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.46067850443052,
+      "selected": true
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.21879728756273967,
+      "selected": true
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.19108069893677726,
+      "selected": true
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.2187092181392397,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.46067850443052
+    },
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.21879728756273967
+    },
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.19108069893677726
+    },
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2187092181392397
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "candidate_feature_indices": [
+    0,
+    1,
+    3,
+    2
+  ],
+  "association_scores": {
+    "0": 0.46067850443052,
+    "1": 0.21879728756273967,
+    "3": 0.2187092181392397,
+    "2": 0.19108069893677726
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 4,
+  "sample_count": 5000,
+  "selector_seconds": 0.01079869270324707,
+  "status": "ok selected=4 candidates=4 samples=5000",
+  "dataset_name": "mozilla4"
+}

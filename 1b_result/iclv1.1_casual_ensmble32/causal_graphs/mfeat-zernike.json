@@ -1,0 +1,210 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.13481002286791374,
+      "selected": true
+    },
+    {
+      "id": "feature_18",
+      "kind": "feature",
+      "feature_index": 18,
+      "association_score": 0.3283215533355747,
+      "selected": true
+    },
+    {
+      "id": "feature_20",
+      "kind": "feature",
+      "feature_index": 20,
+      "association_score": 0.26665876050497167,
+      "selected": true
+    },
+    {
+      "id": "feature_23",
+      "kind": "feature",
+      "feature_index": 23,
+      "association_score": 0.2591681532258025,
+      "selected": true
+    },
+    {
+      "id": "feature_28",
+      "kind": "feature",
+      "feature_index": 28,
+      "association_score": 0.3709093132202176,
+      "selected": true
+    },
+    {
+      "id": "feature_38",
+      "kind": "feature",
+      "feature_index": 38,
+      "association_score": 0.14867639503456706,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.13481002286791374
+    },
+    {
+      "source": "feature_18",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3283215533355747
+    },
+    {
+      "source": "feature_20",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.26665876050497167
+    },
+    {
+      "source": "feature_23",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2591681532258025
+    },
+    {
+      "source": "feature_28",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3709093132202176
+    },
+    {
+      "source": "feature_38",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.14867639503456706
+    }
+  ],
+  "selected_feature_indices": [
+    4,
+    18,
+    20,
+    23,
+    28,
+    38
+  ],
+  "candidate_feature_indices": [
+    28,
+    18,
+    29,
+    20,
+    9,
+    23,
+    12,
+    46,
+    0,
+    31,
+    33,
+    38,
+    25,
+    36,
+    43,
+    7,
+    4,
+    15,
+    37,
+    30,
+    42,
+    22,
+    3,
+    21,
+    10,
+    24,
+    5,
+    14,
+    44,
+    32,
+    2,
+    16,
+    27,
+    45,
+    17,
+    41,
+    19,
+    35,
+    40,
+    8,
+    34,
+    6,
+    13,
+    1,
+    39,
+    26,
+    11
+  ],
+  "association_scores": {
+    "28": 0.3709093132202176,
+    "18": 0.3283215533355747,
+    "29": 0.26906266664688283,
+    "20": 0.26665876050497167,
+    "9": 0.26158675718338786,
+    "23": 0.2591681532258025,
+    "12": 0.2056923883128431,
+    "46": 0.1795444921467225,
+    "0": 0.17222897084173816,
+    "31": 0.15440420823975834,
+    "33": 0.15178842868335768,
+    "38": 0.14867639503456706,
+    "25": 0.14408451150670654,
+    "36": 0.14278656175872054,
+    "43": 0.13987817427113172,
+    "7": 0.13670677868900458,
+    "4": 0.13481002286791374,
+    "15": 0.13347081696689397,
+    "37": 0.12872069395939478,
+    "30": 0.12331201204047088,
+    "42": 0.12171617901775927,
+    "22": 0.11926040945661198,
+    "3": 0.11924811819295073,
+    "21": 0.11632468645119848,
+    "10": 0.10680074687655373,
+    "24": 0.1019289724826275,
+    "5": 0.10068567149278326,
+    "14": 0.09241920783763526,
+    "44": 0.0896971856368851,
+    "32": 0.08276218601495092,
+    "2": 0.07900019120927876,
+    "16": 0.07328791940247786,
+    "27": 0.07011857597052856,
+    "45": 0.06895749897493722,
+    "17": 0.0643383910907255,
+    "41": 0.06298036197466611,
+    "19": 0.060397248469120424,
+    "35": 0.05856433934562326,
+    "40": 0.05751000831016942,
+    "8": 0.05547392574152517,
+    "34": 0.03985242249186896,
+    "6": 0.026527732038370444,
+    "13": 0.013681459405986189,
+    "1": 0.012649094825304399,
+    "39": 0.009274303032626103,
+    "26": 0.0033922358613320304,
+    "11": 0.0021774220765621802
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 47,
+  "sample_count": 1600,
+  "selector_seconds": 0.11561131477355957,
+  "status": "ok selected=6 candidates=47 samples=1600",
+  "dataset_name": "mfeat-zernike"
+}

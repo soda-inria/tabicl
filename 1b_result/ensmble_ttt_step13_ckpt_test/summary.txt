@@ -1,0 +1,17 @@
+discovered_datasets: 178
+processed_datasets: 178
+ok_count: 178
+failed_count: 0
+skipped_count: 0
+avg_accuracy_ok: 0.840709
+ckpt_step: 13
+step_ckpts_found: 160
+missing_ckpts: 18
+ambiguous_ckpts: 0
+wall_seconds: 397.957
+baseline_fallback_count: 18
+failed_datasets: (none)
+skipped_datasets: (none)
+missing_ckpt_datasets: ASP-POTASSCO-classification, Credit_c, Rain_in_Australia, SDSS17, UJI_Pen_Characters, accelerometer, customer_satisfaction_in_airline, dabetes_130-us_hospitals, internet_usage, kr-vs-k, kropt, letter, one-hundred-plants-margin, one-hundred-plants-shape, one-hundred-plants-texture, texture, volkert, walking-activity
+baseline_fallback_datasets: ASP-POTASSCO-classification, Credit_c, Rain_in_Australia, SDSS17, UJI_Pen_Characters, accelerometer, customer_satisfaction_in_airline, dabetes_130-us_hospitals, internet_usage, kr-vs-k, kropt, letter, one-hundred-plants-margin, one-hundred-plants-shape, one-hundred-plants-texture, texture, volkert, walking-activity
+ambiguous_ckpt_datasets: (none)

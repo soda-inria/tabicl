@@ -1,0 +1,94 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.05932940109585073,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.059200782236481925,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.04867028341893043,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.05932940109585073
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.059200782236481925
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.04867028341893043
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    5,
+    6
+  ],
+  "candidate_feature_indices": [
+    0,
+    5,
+    6,
+    1,
+    2,
+    7,
+    9,
+    4,
+    8,
+    3
+  ],
+  "association_scores": {
+    "0": 0.05932940109585073,
+    "5": 0.059200782236481925,
+    "6": 0.04867028341893043,
+    "1": 0.048050954293378426,
+    "2": 0.030982821256862855,
+    "7": 0.03062836683731841,
+    "9": 0.016617405375523326,
+    "4": 0.016613937527648212,
+    "8": 0.004627007533935663,
+    "3": 0.00430298803431606
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 10,
+  "sample_count": 1467,
+  "selector_seconds": 0.0018696784973144531,
+  "status": "ok selected=3 candidates=10 samples=1467",
+  "dataset_name": "FOREX_audcad-day-High"
+}

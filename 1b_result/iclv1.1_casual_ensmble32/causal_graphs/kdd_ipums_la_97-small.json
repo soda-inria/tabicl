@@ -1,0 +1,184 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.29084905282037266,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.36276495964328415,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.6745616809048856,
+      "selected": true
+    },
+    {
+      "id": "feature_12",
+      "kind": "feature",
+      "feature_index": 12,
+      "association_score": 0.4887761404355234,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.4940110122483628,
+      "selected": true
+    },
+    {
+      "id": "feature_16",
+      "kind": "feature",
+      "feature_index": 16,
+      "association_score": 0.4968660173711629,
+      "selected": true
+    },
+    {
+      "id": "feature_17",
+      "kind": "feature",
+      "feature_index": 17,
+      "association_score": 0.495603232919071,
+      "selected": true
+    },
+    {
+      "id": "feature_19",
+      "kind": "feature",
+      "feature_index": 19,
+      "association_score": 0.287902331804209,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.29084905282037266
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.36276495964328415
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.6745616809048856
+    },
+    {
+      "source": "feature_12",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4887761404355234
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4940110122483628
+    },
+    {
+      "source": "feature_16",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4968660173711629
+    },
+    {
+      "source": "feature_17",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.495603232919071
+    },
+    {
+      "source": "feature_19",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.287902331804209
+    }
+  ],
+  "selected_feature_indices": [
+    7,
+    8,
+    10,
+    12,
+    14,
+    16,
+    17,
+    19
+  ],
+  "candidate_feature_indices": [
+    10,
+    11,
+    16,
+    18,
+    17,
+    15,
+    14,
+    13,
+    12,
+    3,
+    8,
+    6,
+    7,
+    19,
+    9,
+    5,
+    4,
+    1,
+    0,
+    2
+  ],
+  "association_scores": {
+    "10": 0.6745616809048856,
+    "11": 0.5822953721978507,
+    "16": 0.4968660173711629,
+    "18": 0.49560493841439224,
+    "17": 0.495603232919071,
+    "15": 0.4947171717613082,
+    "14": 0.4940110122483628,
+    "13": 0.48897764167890545,
+    "12": 0.4887761404355234,
+    "3": 0.3762469559036763,
+    "8": 0.36276495964328415,
+    "6": 0.2920692773533434,
+    "7": 0.29084905282037266,
+    "19": 0.287902331804209,
+    "9": 0.25171065010237753,
+    "5": 0.232982020400971,
+    "4": 0.20358815575074699,
+    "1": 0.02044349172398889,
+    "0": 0.01718177907483196,
+    "2": 0.009632877210882575
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 20,
+  "sample_count": 4150,
+  "selector_seconds": 0.16229987144470215,
+  "status": "ok selected=8 candidates=20 samples=4150",
+  "dataset_name": "kdd_ipums_la_97-small"
+}

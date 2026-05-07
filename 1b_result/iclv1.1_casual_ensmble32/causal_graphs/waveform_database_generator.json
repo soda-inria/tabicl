@@ -1,0 +1,116 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.016728229249343238,
+      "selected": true
+    },
+    {
+      "id": "feature_17",
+      "kind": "feature",
+      "feature_index": 17,
+      "association_score": 0.019282044818906396,
+      "selected": true
+    },
+    {
+      "id": "feature_19",
+      "kind": "feature",
+      "feature_index": 19,
+      "association_score": 0.021477556039539224,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.016728229249343238
+    },
+    {
+      "source": "feature_17",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.019282044818906396
+    },
+    {
+      "source": "feature_19",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.021477556039539224
+    }
+  ],
+  "selected_feature_indices": [
+    6,
+    17,
+    19
+  ],
+  "candidate_feature_indices": [
+    19,
+    17,
+    6,
+    20,
+    13,
+    4,
+    5,
+    16,
+    15,
+    12,
+    1,
+    9,
+    2,
+    10,
+    11,
+    7,
+    0,
+    3,
+    18,
+    8,
+    14
+  ],
+  "association_scores": {
+    "19": 0.021477556039539224,
+    "17": 0.019282044818906396,
+    "6": 0.016728229249343238,
+    "20": 0.016360519751761147,
+    "13": 0.015651038992058823,
+    "4": 0.014732573687073895,
+    "5": 0.011460915432922731,
+    "16": 0.010082212361941893,
+    "15": 0.010052138853445058,
+    "12": 0.00817639343913373,
+    "1": 0.007882025865001873,
+    "9": 0.006960848765418701,
+    "2": 0.006845787974671395,
+    "10": 0.005916020888228416,
+    "11": 0.005745248768240235,
+    "7": 0.0030617140799345387,
+    "0": 0.0014641130598675362,
+    "3": 0.0011637410659666024,
+    "18": 0.0008645543069874081,
+    "8": 6.853056204880117e-05,
+    "14": 4.259026118507751e-05
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 21,
+  "sample_count": 3999,
+  "selector_seconds": 0.005286455154418945,
+  "status": "ok selected=3 candidates=21 samples=3999",
+  "dataset_name": "waveform_database_generator"
+}

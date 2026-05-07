@@ -1,0 +1,90 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.03216841245095703,
+      "selected": true
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.018512312409525385,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.027841644286886263,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.03216841245095703
+    },
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.018512312409525385
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.027841644286886263
+    }
+  ],
+  "selected_feature_indices": [
+    2,
+    3,
+    5
+  ],
+  "candidate_feature_indices": [
+    2,
+    5,
+    3,
+    1,
+    0,
+    6,
+    7,
+    4
+  ],
+  "association_scores": {
+    "2": 0.03216841245095703,
+    "5": 0.027841644286886263,
+    "3": 0.018512312409525385,
+    "1": 0.012073657166967212,
+    "0": 0.009207255122905909,
+    "6": 0.008602836133419493,
+    "7": 0.006740375569413768,
+    "4": 0.004188141543773039
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 8,
+  "sample_count": 2620,
+  "selector_seconds": 0.001825094223022461,
+  "status": "ok selected=3 candidates=8 samples=2620",
+  "dataset_name": "Water_Quality_and_Potability"
+}

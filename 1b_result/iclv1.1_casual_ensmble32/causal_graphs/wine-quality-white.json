@@ -1,0 +1,138 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.20537957530443307,
+      "selected": true
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.09320495925567218,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.21262688328135984,
+      "selected": true
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.30190185368755257,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.10625775550111873,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.4366665072589234,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.20537957530443307
+    },
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.09320495925567218
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.21262688328135984
+    },
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.30190185368755257
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10625775550111873
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4366665072589234
+    }
+  ],
+  "selected_feature_indices": [
+    1,
+    3,
+    4,
+    7,
+    8,
+    10
+  ],
+  "candidate_feature_indices": [
+    10,
+    7,
+    4,
+    1,
+    6,
+    0,
+    8,
+    3,
+    9,
+    5,
+    2
+  ],
+  "association_scores": {
+    "10": 0.4366665072589234,
+    "7": 0.30190185368755257,
+    "4": 0.21262688328135984,
+    "1": 0.20537957530443307,
+    "6": 0.1718567715447137,
+    "0": 0.1130354697600635,
+    "8": 0.10625775550111873,
+    "3": 0.09320495925567218,
+    "9": 0.05434967218277149,
+    "5": 0.01009784510537521,
+    "2": 0.0031638474003073676
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 11,
+  "sample_count": 3918,
+  "selector_seconds": 0.06682777404785156,
+  "status": "ok selected=6 candidates=11 samples=3918",
+  "dataset_name": "wine-quality-white"
+}

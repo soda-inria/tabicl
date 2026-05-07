@@ -1,0 +1,82 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.24140342520496505,
+      "selected": true
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.09451965958070735,
+      "selected": true
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.09827577799373612,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.24140342520496505
+    },
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.09451965958070735
+    },
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.09827577799373612
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    1,
+    3
+  ],
+  "candidate_feature_indices": [
+    0,
+    3,
+    1,
+    2
+  ],
+  "association_scores": {
+    "0": 0.24140342520496505,
+    "3": 0.09827577799373612,
+    "1": 0.09451965958070735,
+    "2": 0.031150164574451855
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 4,
+  "sample_count": 5000,
+  "selector_seconds": 0.011132478713989258,
+  "status": "ok selected=3 candidates=4 samples=5000",
+  "dataset_name": "walking-activity"
+}

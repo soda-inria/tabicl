@@ -1,0 +1,100 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.07532355736021153,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.057344455738312275,
+      "selected": true
+    },
+    {
+      "id": "feature_12",
+      "kind": "feature",
+      "feature_index": 12,
+      "association_score": 0.07092440771114171,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07532355736021153
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.057344455738312275
+    },
+    {
+      "source": "feature_12",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07092440771114171
+    }
+  ],
+  "selected_feature_indices": [
+    1,
+    6,
+    12
+  ],
+  "candidate_feature_indices": [
+    1,
+    12,
+    6,
+    8,
+    5,
+    10,
+    7,
+    9,
+    3,
+    0,
+    11,
+    2,
+    4
+  ],
+  "association_scores": {
+    "1": 0.07532355736021153,
+    "12": 0.07092440771114171,
+    "6": 0.057344455738312275,
+    "8": 0.04324136336863334,
+    "5": 0.04232834403539227,
+    "10": 0.03638803675047502,
+    "7": 0.03352769630496638,
+    "9": 0.027381580523995887,
+    "3": 0.02703287794202394,
+    "0": 0.02155700289666143,
+    "11": 0.01402661180098116,
+    "2": 0.007281528341712176,
+    "4": 0.007057377721908428
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 13,
+  "sample_count": 3796,
+  "selector_seconds": 0.012266397476196289,
+  "status": "ok selected=3 candidates=13 samples=3796",
+  "dataset_name": "Gender_Gap_in_Spanish_WP"
+}

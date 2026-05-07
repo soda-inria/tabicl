@@ -1,0 +1,130 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.19839353011518238,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.1987835456744239,
+      "selected": true
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.18911832766861528,
+      "selected": true
+    },
+    {
+      "id": "feature_11",
+      "kind": "feature",
+      "feature_index": 11,
+      "association_score": 0.1499587931414762,
+      "selected": true
+    },
+    {
+      "id": "feature_13",
+      "kind": "feature",
+      "feature_index": 13,
+      "association_score": 0.12711636082888111,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.19839353011518238
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1987835456744239
+    },
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.18911832766861528
+    },
+    {
+      "source": "feature_11",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1499587931414762
+    },
+    {
+      "source": "feature_13",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.12711636082888111
+    }
+  ],
+  "selected_feature_indices": [
+    2,
+    4,
+    7,
+    11,
+    13
+  ],
+  "candidate_feature_indices": [
+    4,
+    2,
+    7,
+    11,
+    10,
+    13,
+    8,
+    3,
+    0,
+    1,
+    5,
+    12,
+    6,
+    9
+  ],
+  "association_scores": {
+    "4": 0.1987835456744239,
+    "2": 0.19839353011518238,
+    "7": 0.18911832766861528,
+    "11": 0.1499587931414762,
+    "10": 0.1326116004389105,
+    "13": 0.12711636082888111,
+    "8": 0.10699910298833394,
+    "3": 0.08694250448337618,
+    "0": 0.08527607676682811,
+    "1": 0.06809983361351378,
+    "5": 0.05750490544948217,
+    "12": 0.05416731462408358,
+    "6": 0.029095618862761758,
+    "9": 0.02599961372116178
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 14,
+  "sample_count": 5000,
+  "selector_seconds": 0.08692407608032227,
+  "status": "ok selected=5 candidates=14 samples=5000",
+  "dataset_name": "JapaneseVowels"
+}

@@ -986,16 +986,16 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--models-dir", default=None)
     parser.add_argument("--checkpoint-version", default=DEFAULT_CHECKPOINT_VERSION)
-    parser.add_argument("--out-dir", default="baseline/iclv1.1_ensmble1")
-    parser.add_argument("--workers", type=int, default=3)
-    parser.add_argument("--gpus", default="0,1,2")
+    parser.add_argument("--out-dir", default="baseline/iclv1.1_ensmble64")
+    parser.add_argument("--workers", type=int, default=1)
+    parser.add_argument("--gpus", default="0")
     parser.add_argument(
         "--n-estimators",
         "--ensemble",
         "--ensmble",
         dest="n_estimators",
         type=int,
-        default=1,
+        default=64,
         help="Number of TabICL ensemble estimators. --ensemble/--ensmble are aliases for this value.",
     )
     parser.add_argument("--batch-size", type=parse_optional_int, default=8)

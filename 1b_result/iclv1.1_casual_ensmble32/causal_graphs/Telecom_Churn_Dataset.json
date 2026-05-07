@@ -1,0 +1,164 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.25014872321952364,
+      "selected": true
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.10952979634926359,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.22009185269452394,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.10848631829386993,
+      "selected": true
+    },
+    {
+      "id": "feature_13",
+      "kind": "feature",
+      "feature_index": 13,
+      "association_score": 0.06392012606464556,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.04866052326772208,
+      "selected": true
+    },
+    {
+      "id": "feature_16",
+      "kind": "feature",
+      "feature_index": 16,
+      "association_score": 0.20631265240584626,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.25014872321952364
+    },
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10952979634926359
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.22009185269452394
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10848631829386993
+    },
+    {
+      "source": "feature_13",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.06392012606464556
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.04866052326772208
+    },
+    {
+      "source": "feature_16",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.20631265240584626
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    1,
+    4,
+    9,
+    13,
+    14,
+    16
+  ],
+  "candidate_feature_indices": [
+    0,
+    6,
+    4,
+    16,
+    1,
+    7,
+    9,
+    3,
+    15,
+    13,
+    14,
+    12,
+    10,
+    8,
+    5,
+    2,
+    11
+  ],
+  "association_scores": {
+    "0": 0.25014872321952364,
+    "6": 0.22009460637291492,
+    "4": 0.22009185269452394,
+    "16": 0.20631265240584626,
+    "1": 0.10952979634926359,
+    "7": 0.10849539529254822,
+    "9": 0.10848631829386993,
+    "3": 0.09940980163876299,
+    "15": 0.06392590218746348,
+    "13": 0.06392012606464556,
+    "14": 0.04866052326772208,
+    "12": 0.025643397933535313,
+    "10": 0.025643062303658405,
+    "8": 0.021148388244984904,
+    "5": 0.020325569692742827,
+    "2": 0.012920179476095308,
+    "11": 0.004096529821844605
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 17,
+  "sample_count": 2666,
+  "selector_seconds": 0.05077719688415527,
+  "status": "ok selected=7 candidates=17 samples=2666",
+  "dataset_name": "Telecom_Churn_Dataset"
+}

@@ -1,0 +1,104 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.217722608141768,
+      "selected": true
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.4734508460805097,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.29596682663357243,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.16710744919884693,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.217722608141768
+    },
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4734508460805097
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.29596682663357243
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.16710744919884693
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    1,
+    5,
+    6
+  ],
+  "candidate_feature_indices": [
+    1,
+    5,
+    7,
+    0,
+    4,
+    6,
+    3,
+    2
+  ],
+  "association_scores": {
+    "1": 0.4734508460805097,
+    "5": 0.29596682663357243,
+    "7": 0.23284019228868746,
+    "0": 0.217722608141768,
+    "4": 0.17483574386816184,
+    "6": 0.16710744919884693,
+    "3": 0.07982374001430148,
+    "2": 0.02140555603976833
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 8,
+  "sample_count": 614,
+  "selector_seconds": 0.008795499801635742,
+  "status": "ok selected=4 candidates=8 samples=614",
+  "dataset_name": "Pima_Indians_Diabetes_Database"
+}

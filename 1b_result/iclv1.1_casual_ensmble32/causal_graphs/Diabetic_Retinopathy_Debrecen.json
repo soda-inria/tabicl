@@ -1,0 +1,112 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.08132369127865187,
+      "selected": true
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.3050254136663148,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.24650800710530374,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.08132369127865187
+    },
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3050254136663148
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.24650800710530374
+    }
+  ],
+  "selected_feature_indices": [
+    1,
+    3,
+    5
+  ],
+  "candidate_feature_indices": [
+    3,
+    4,
+    5,
+    6,
+    15,
+    7,
+    16,
+    14,
+    13,
+    8,
+    12,
+    1,
+    0,
+    9,
+    11,
+    2,
+    18,
+    17,
+    10
+  ],
+  "association_scores": {
+    "3": 0.3050254136663148,
+    "4": 0.2782999684143029,
+    "5": 0.24650800710530374,
+    "6": 0.20911226250612358,
+    "15": 0.1816080600382367,
+    "7": 0.17156535107737295,
+    "16": 0.170192773080919,
+    "14": 0.16371506686968426,
+    "13": 0.15997857530539394,
+    "8": 0.13939242437425,
+    "12": 0.11315023755855806,
+    "1": 0.08132369127865187,
+    "0": 0.06079165923899782,
+    "9": 0.06073577245713311,
+    "11": 0.05113106634529531,
+    "2": 0.04650726191419081,
+    "18": 0.03243178542806489,
+    "17": 0.009562345064518054,
+    "10": 0.007995797802487041
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 19,
+  "sample_count": 920,
+  "selector_seconds": 0.025371074676513672,
+  "status": "ok selected=3 candidates=19 samples=920",
+  "dataset_name": "Diabetic_Retinopathy_Debrecen"
+}

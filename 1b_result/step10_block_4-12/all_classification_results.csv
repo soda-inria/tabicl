@@ -1,0 +1,449 @@
+dataset_name,dataset_dir,task_type,n_train,n_val,n_test,n_features,n_classes,accuracy,fit_seconds,predict_seconds,status,error,n_train_a,n_train_b,n_holdout_c,n_test_d,ttt_loss,ttt_steps,ttt_lr,ttt_applied,ttt_update_seconds,ttt_split_strategy,ttt_split_reason
+ASP-POTASSCO-classification,/home/crc00006699/zh/tabiclv2/data178/ASP-POTASSCO-classification,multiclass,1035,207,259,141,11,0.4401544401544401,1.2375309467315674,3.765934467315674,ok,,1035,776,259,259,,0,5e-06,False,0.6766409873962402,stratified,stratified split | TTT training skipped because n_classes=11 exceeds model max_classes=10
+Amazon_employee_access,/home/crc00006699/zh/tabiclv2/data178/Amazon_employee_access,binclass,26215,5243,6554,7,2,0.9452242905096124,462.6721565723419,12.481653213500977,ok,,26215,19661,6554,6554,0.1578755276277661,10,5e-06,True,462.42764377594,stratified,stratified split
+BLE_RSSI_dataset_for_Indoor_localization,/home/crc00006699/zh/tabiclv2/data178/BLE_RSSI_dataset_for_Indoor_localization,multiclass,7987,1598,1997,3,3,0.7406109163745619,41.78903007507324,1.4258956909179688,ok,,7987,5990,1997,1997,0.5770065113902092,10,5e-06,True,41.75478458404541,stratified,stratified split
+BNG(breast-w),/home/crc00006699/zh/tabiclv2/data178/BNG(breast-w),binclass,31492,6299,7874,9,2,0.9885699771399544,665.7556374073029,19.49833655357361,ok,,31492,23619,7873,7874,0.0342587237246334,10,5e-06,True,665.486266374588,stratified,stratified split
+BNG(cmc),/home/crc00006699/zh/tabiclv2/data178/BNG(cmc),multiclass,44236,8848,11060,9,3,0.5863471971066908,1257.73534989357,34.76707601547241,ok,,44236,33177,11059,11060,0.8812226206064224,10,5e-06,True,1257.2982079982758,stratified,stratified split
+BNG(tic-tac-toe),/home/crc00006699/zh/tabiclv2/data178/BNG(tic-tac-toe),binclass,31492,6299,7874,9,2,0.8157226314452629,666.3818671703339,19.412928104400635,ok,,31492,23619,7873,7874,0.4009722732007503,10,5e-06,True,666.0365631580353,stratified,stratified split
+Bank_Customer_Churn_Dataset,/home/crc00006699/zh/tabiclv2/data178/Bank_Customer_Churn_Dataset,binclass,8000,1600,2000,10,2,0.874,57.75481414794922,2.578958511352539,ok,,8000,6000,2000,2000,0.3229673057794571,10,5e-06,True,57.660138845443726,stratified,stratified split
+Basketball_c,/home/crc00006699/zh/tabiclv2/data178/Basketball_c,binclass,1072,215,268,11,2,0.6940298507462687,10.537545680999756,0.3491957187652588,ok,,1072,804,268,268,0.5380537882447243,10,5e-06,True,10.502070665359495,stratified,stratified split
+California-Housing-Classification,/home/crc00006699/zh/tabiclv2/data178/California-Housing-Classification,binclass,16512,3303,4128,8,2,0.91109496124031,197.90862035751343,7.05582857131958,ok,,16512,12384,4128,4128,0.2267432827502489,10,5e-06,True,197.7658491134644,stratified,stratified split
+Cardiovascular-Disease-dataset,/home/crc00006699/zh/tabiclv2/data178/Cardiovascular-Disease-dataset,binclass,56000,11200,14000,11,2,0.7331428571428571,1992.861611366272,53.67673587799072,ok,,56000,42000,14000,14000,0.5409773588180542,10,5e-06,True,1992.3203094005585,stratified,stratified split
+Click_prediction_small,/home/crc00006699/zh/tabiclv2/data178/Click_prediction_small,binclass,31958,6392,7990,3,2,0.8321652065081352,331.7694070339203,7.432254552841186,ok,,31958,23968,7990,7990,0.4398280158638954,10,5e-06,True,331.67156457901,stratified,stratified split
+Credit_c,/home/crc00006699/zh/tabiclv2/data178/Credit_c,multiclass,0,0,0,0,0,0.792,1.7806065082550049,111.15165758132936,ok,"baseline_fallback_from_v1.1_baseline; original_error: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 334, in _train_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 269, in forward
+    representations = self._train_forward(embeddings, d)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 204, in _train_forward
+    representations = self._aggregate_embeddings(embeddings, key_mask)  # (B, T, C*E)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 147, in _aggregate_embeddings
+    embeddings = block(embeddings, key_padding_mask=key_mask, rope=rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 118, in sdpa_with_flattened_batch
+    out = F.scaled_dot_product_attention(q, k, v, attn_mask, dropout_p)
+RuntimeError: CUDA error: invalid configuration argument
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+",0,0,0,0,,0,,False,0.0,,
+Customer_Personality_Analysis,/home/crc00006699/zh/tabiclv2/data178/Customer_Personality_Analysis,binclass,1792,359,448,24,2,0.8816964285714286,12.626205921173096,0.7263021469116211,ok,,1792,1344,448,448,0.2664437852799892,10,5e-06,True,12.55846071243286,stratified,stratified split
+Diabetic_Retinopathy_Debrecen,/home/crc00006699/zh/tabiclv2/data178/Diabetic_Retinopathy_Debrecen,binclass,920,184,231,19,2,0.7445887445887446,10.780521154403688,0.5235939025878906,ok,,920,690,230,231,0.4820574671030044,10,5e-06,True,10.73451280593872,stratified,stratified split
+E-CommereShippingData,/home/crc00006699/zh/tabiclv2/data178/E-CommereShippingData,binclass,8799,1760,2200,10,2,0.6777272727272727,69.37471914291382,3.044150829315185,ok,,8799,6599,2200,2200,0.5006488561630249,10,5e-06,True,69.276615858078,stratified,stratified split
+Employee,/home/crc00006699/zh/tabiclv2/data178/Employee,binclass,3722,745,931,8,2,0.8549946294307197,21.03635597229004,1.0025136470794678,ok,,3722,2791,931,931,0.3776673041284084,10,5e-06,True,20.98774218559265,stratified,stratified split
+FICO-HELOC-cleaned,/home/crc00006699/zh/tabiclv2/data178/FICO-HELOC-cleaned,binclass,7896,1580,1975,23,2,0.7463291139240507,61.17441654205322,3.101188898086548,ok,,7896,5922,1974,1975,0.5323874354362488,10,5e-06,True,60.9998414516449,stratified,stratified split
+FOREX_audcad-day-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audcad-day-High,binclass,1467,294,367,10,2,0.7520435967302452,11.027362585067747,0.4314467906951904,ok,,1467,1100,367,367,0.5753895342350006,10,5e-06,True,10.99253249168396,stratified,stratified split
+FOREX_audcad-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audcad-hour-High,binclass,35060,7012,8765,10,2,0.7147746719908727,815.0329160690308,23.49135136604309,ok,,35060,26295,8765,8765,0.5519765391945839,10,5e-06,True,814.7264358997345,stratified,stratified split
+FOREX_audchf-day-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audchf-day-High,binclass,1466,294,367,10,2,0.7493188010899182,10.977057933807371,0.4248716831207275,ok,,1466,1099,367,367,0.5356999337673187,10,5e-06,True,10.940774202346802,stratified,stratified split
+FOREX_audjpy-day-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audjpy-day-High,binclass,1465,293,367,10,2,0.7574931880108992,10.985798835754396,0.3898108005523681,ok,,1465,1098,367,367,0.5000721253454685,10,5e-06,True,10.95393419265747,stratified,stratified split
+FOREX_audjpy-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audjpy-hour-High,binclass,35060,7012,8765,10,2,0.724814603536794,811.4519872665405,23.484798431396484,ok,,35060,26295,8765,8765,0.5611303746700287,10,5e-06,True,811.1751296520233,stratified,stratified split
+FOREX_audsgd-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audsgd-hour-High,binclass,35060,7012,8765,10,2,0.7053051911009698,811.1610202789307,23.30336833000183,ok,,35060,26295,8765,8765,0.5762670859694481,10,5e-06,True,810.8113458156586,stratified,stratified split
+FOREX_audusd-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audusd-hour-High,binclass,35060,7012,8765,10,2,0.7018824871648602,810.9133629798889,23.33212947845459,ok,,35060,26295,8765,8765,0.5771533772349358,10,5e-06,True,810.577883720398,stratified,stratified split
+FOREX_cadjpy-day-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_cadjpy-day-High,binclass,1467,294,367,10,2,0.7166212534059946,11.046513557434082,0.4189832210540771,ok,,1467,1100,367,367,0.5359322801232338,10,5e-06,True,11.011043310165403,stratified,stratified split
+FOREX_cadjpy-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_cadjpy-hour-High,binclass,35060,7012,8765,10,2,0.7148887621220764,811.148059129715,23.46601605415344,ok,,35060,26295,8765,8765,0.5681870430707932,10,5e-06,True,810.8547134399414,stratified,stratified split
+Firm-Teacher_Clave-Direction_Classification,/home/crc00006699/zh/tabiclv2/data178/Firm-Teacher_Clave-Direction_Classification,multiclass,8640,1728,2160,16,4,0.8759259259259259,64.80117297172546,3.0797390937805176,ok,,8640,6480,2160,2160,0.3358245827257633,10,5e-06,True,64.62882494926453,stratified,stratified split
+Fitness_Club_c,/home/crc00006699/zh/tabiclv2/data178/Fitness_Club_c,binclass,1200,240,300,6,2,0.7933333333333333,8.312399864196777,0.2576296329498291,ok,,1200,900,300,300,0.5048517510294914,10,5e-06,True,8.279837608337402,stratified,stratified split
+GAMETES_Epistasis_2-Way_20atts_0.1H_EDM-1_1,/home/crc00006699/zh/tabiclv2/data178/GAMETES_Epistasis_2-Way_20atts_0.1H_EDM-1_1,binclass,1280,256,320,20,2,0.678125,10.802570343017578,0.4162654876708984,ok,,1280,960,320,320,0.6418062895536423,10,5e-06,True,10.738606452941896,stratified,stratified split
+GAMETES_Heterogeneity_20atts_1600_Het_0.4_0.2_50_EDM-2_001,/home/crc00006699/zh/tabiclv2/data178/GAMETES_Heterogeneity_20atts_1600_Het_0.4_0.2_50_EDM-2_001,binclass,1280,256,320,20,2,0.68125,10.983547449111938,0.4291639328002929,ok,,1280,960,320,320,0.4919372871518135,10,5e-06,True,10.922807455062866,stratified,stratified split
+Gender_Gap_in_Spanish_WP,/home/crc00006699/zh/tabiclv2/data178/Gender_Gap_in_Spanish_WP,multiclass,3796,760,950,13,3,0.608421052631579,21.149126291275024,1.1800944805145264,ok,,3796,2847,949,950,0.8036685138940811,10,5e-06,True,21.09600806236267,stratified,stratified split
+GesturePhaseSegmentationProcessed,/home/crc00006699/zh/tabiclv2/data178/GesturePhaseSegmentationProcessed,multiclass,7898,1580,1975,32,5,0.8030379746835443,63.76456141471863,3.4628281593322754,ok,,7898,5923,1975,1975,0.6654045432806015,10,5e-06,True,63.54905366897583,stratified,stratified split
+HR_Analytics_Job_Change_of_Data_Scientists,/home/crc00006699/zh/tabiclv2/data178/HR_Analytics_Job_Change_of_Data_Scientists,binclass,15326,3066,3832,13,2,0.8001043841336117,173.61210560798645,6.651318550109863,ok,,15326,11494,3832,3832,0.430594939738512,10,5e-06,True,173.39385676383972,stratified,stratified split
+IBM_HR_Analytics_Employee_Attrition_and_Performance,/home/crc00006699/zh/tabiclv2/data178/IBM_HR_Analytics_Employee_Attrition_and_Performance,binclass,1176,236,294,31,2,0.8673469387755102,10.6811842918396,0.5131580829620361,ok,,1176,882,294,294,0.2608516700565815,10,5e-06,True,10.60801887512207,stratified,stratified split
+INNHotelsGroup,/home/crc00006699/zh/tabiclv2/data178/INNHotelsGroup,binclass,29020,5804,7255,17,2,0.9026878015161958,570.8485772609711,17.970896005630493,ok,,29020,21765,7255,7255,0.2346515040844679,10,5e-06,True,570.4085726737976,stratified,stratified split
+Indian_pines,/home/crc00006699/zh/tabiclv2/data178/Indian_pines,multiclass,7315,1463,1829,220,8,0.965008201202843,117.69942498207092,11.01875925064087,ok,,7315,5486,1829,1829,0.1355555979534983,10,5e-06,True,116.52143263816832,stratified,stratified split
+JapaneseVowels,/home/crc00006699/zh/tabiclv2/data178/JapaneseVowels,multiclass,7968,1594,1993,14,9,0.9989964877069744,58.92247772216797,2.842969417572021,ok,,7968,5976,1992,1993,0.0039035282679833,10,5e-06,True,58.8199679851532,stratified,stratified split
+KDDCup09_upselling,/home/crc00006699/zh/tabiclv2/data178/KDDCup09_upselling,binclass,4102,821,1026,49,2,0.8138401559454191,28.805219411849976,2.131898880004883,ok,,4102,3076,1026,1026,0.3491091355681419,10,5e-06,True,28.59271740913391,stratified,stratified split
+MIC,/home/crc00006699/zh/tabiclv2/data178/MIC,binclass,1319,264,330,104,2,0.896969696969697,13.08990478515625,1.2888453006744385,ok,,1319,989,330,330,0.2938403747975826,10,5e-06,True,12.823466539382936,stratified,stratified split
+MagicTelescope,/home/crc00006699/zh/tabiclv2/data178/MagicTelescope,binclass,15216,3044,3804,9,2,0.88801261829653,169.97161555290222,6.336691856384277,ok,,15216,11412,3804,3804,0.2853316180408001,10,5e-06,True,169.84161710739136,stratified,stratified split
+Marketing_Campaign,/home/crc00006699/zh/tabiclv2/data178/Marketing_Campaign,binclass,1792,359,448,27,2,0.8928571428571429,12.341506719589232,0.6743350028991699,ok,,1792,1344,448,448,0.2422036491334438,10,5e-06,True,12.26096224784851,stratified,stratified split
+Mobile_Price_Classification,/home/crc00006699/zh/tabiclv2/data178/Mobile_Price_Classification,multiclass,1600,320,400,20,4,0.945,10.758675813674929,0.5553672313690186,ok,,1600,1200,400,400,0.1632294356822967,10,5e-06,True,10.69862699508667,stratified,stratified split
+National_Health_and_Nutrition_Health_Survey,/home/crc00006699/zh/tabiclv2/data178/National_Health_and_Nutrition_Health_Survey,binclass,1822,365,456,7,2,0.8399122807017544,11.457124948501589,0.4742524623870849,ok,,1822,1366,456,456,0.3604629840701818,10,5e-06,True,11.42811393737793,stratified,stratified split
+PhishingWebsites,/home/crc00006699/zh/tabiclv2/data178/PhishingWebsites,binclass,8844,1769,2211,30,2,0.9800995024875622,76.46997022628784,3.879531383514404,ok,,8844,6633,2211,2211,0.0511382301338017,10,5e-06,True,76.19332957267761,stratified,stratified split
+PieChart3,/home/crc00006699/zh/tabiclv2/data178/PieChart3,binclass,861,173,216,37,2,0.875,10.51787519454956,0.7536661624908447,ok,,861,645,216,216,0.3007739931344986,10,5e-06,True,10.4491229057312,stratified,stratified split
+Pima_Indians_Diabetes_Database,/home/crc00006699/zh/tabiclv2/data178/Pima_Indians_Diabetes_Database,binclass,614,123,154,8,2,0.7792207792207793,10.396421670913696,0.318882942199707,ok,,614,460,154,154,0.4299746491014957,10,5e-06,True,10.370306968688965,stratified,stratified split
+PizzaCutter3,/home/crc00006699/zh/tabiclv2/data178/PizzaCutter3,binclass,834,167,209,37,2,0.8803827751196173,10.605306386947632,0.7193400859832764,ok,,834,625,209,209,0.3164623230695724,10,5e-06,True,10.535483598709106,stratified,stratified split
+Pumpkin_Seeds,/home/crc00006699/zh/tabiclv2/data178/Pumpkin_Seeds,binclass,2000,400,500,12,2,0.874,12.959867238998411,0.6040430068969727,ok,,2000,1500,500,500,0.2210414558649063,10,5e-06,True,12.920219659805298,stratified,stratified split
+QSAR_biodegradation,/home/crc00006699/zh/tabiclv2/data178/QSAR_biodegradation,binclass,843,169,211,41,2,0.8767772511848341,10.439825057983398,0.7428433895111084,ok,,843,632,211,211,0.2733783796429634,10,5e-06,True,10.323330163955688,stratified,stratified split
+Rain_in_Australia,/home/crc00006699/zh/tabiclv2/data178/Rain_in_Australia,multiclass,0,0,0,0,0,0.8503712360786471,2.0024683475494385,296.4315595626831,ok,"baseline_fallback_from_v1.1_baseline; original_error: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 334, in _train_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 269, in forward
+    representations = self._train_forward(embeddings, d)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 204, in _train_forward
+    representations = self._aggregate_embeddings(embeddings, key_mask)  # (B, T, C*E)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 147, in _aggregate_embeddings
+    embeddings = block(embeddings, key_padding_mask=key_mask, rope=rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 118, in sdpa_with_flattened_batch
+    out = F.scaled_dot_product_attention(q, k, v, attn_mask, dropout_p)
+RuntimeError: CUDA error: invalid configuration argument
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+",0,0,0,0,,0,,False,0.0,,
+SDSS17,/home/crc00006699/zh/tabiclv2/data178/SDSS17,multiclass,0,0,0,0,0,0.9762,1.0477042198181152,106.15025877952576,ok,"baseline_fallback_from_v1.1_baseline; original_error: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 334, in _train_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 269, in forward
+    representations = self._train_forward(embeddings, d)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 204, in _train_forward
+    representations = self._aggregate_embeddings(embeddings, key_mask)  # (B, T, C*E)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 147, in _aggregate_embeddings
+    embeddings = block(embeddings, key_padding_mask=key_mask, rope=rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 118, in sdpa_with_flattened_batch
+    out = F.scaled_dot_product_attention(q, k, v, attn_mask, dropout_p)
+RuntimeError: CUDA error: invalid configuration argument
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+",0,0,0,0,,0,,False,0.0,,
+Satellite,/home/crc00006699/zh/tabiclv2/data178/Satellite,binclass,4080,816,1020,36,2,0.992156862745098,26.51023769378662,1.6658203601837158,ok,,4080,3060,1020,1020,0.0145179006503894,10,5e-06,True,26.375890493392944,stratified,stratified split
+Telecom_Churn_Dataset,/home/crc00006699/zh/tabiclv2/data178/Telecom_Churn_Dataset,binclass,2666,534,667,17,2,0.9550224887556222,15.055190801620483,0.7697165012359619,ok,,2666,1999,667,667,0.1529694907367229,10,5e-06,True,14.992313861846924,stratified,stratified split
+UJI_Pen_Characters,/home/crc00006699/zh/tabiclv2/data178/UJI_Pen_Characters,multiclass,1091,219,273,80,35,0.5421245421245421,0.8479077816009521,2.032799243927002,ok,,1091,818,273,273,,0,5e-06,False,0.4174273014068603,stratified,stratified split | TTT training skipped because n_classes=35 exceeds model max_classes=10
+Water_Quality_and_Potability,/home/crc00006699/zh/tabiclv2/data178/Water_Quality_and_Potability,binclass,2620,524,656,8,2,0.6265243902439024,14.2849600315094,0.6676568984985352,ok,,2620,1965,655,656,0.6253794282674789,10,5e-06,True,14.25083875656128,stratified,stratified split
+Wilt,/home/crc00006699/zh/tabiclv2/data178/Wilt,binclass,3856,772,965,5,2,0.9917098445595854,15.5786030292511,0.6634714603424072,ok,,3856,2892,964,965,0.0153957133879885,10,5e-06,True,15.546080112457275,stratified,stratified split
+abalone,/home/crc00006699/zh/tabiclv2/data178/abalone,multiclass,3341,669,836,8,3,0.6471291866028708,16.902602195739746,0.9526119232177734,ok,,3341,2505,836,836,0.6596405804157257,10,5e-06,True,16.857004404067993,stratified,stratified split
+accelerometer,/home/crc00006699/zh/tabiclv2/data178/accelerometer,multiclass,0,0,0,0,0,0.7410542139145779,0.7155473232269287,231.66927766799927,ok,"baseline_fallback_from_v1.1_baseline; original_error: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 334, in _train_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 269, in forward
+    representations = self._train_forward(embeddings, d)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 204, in _train_forward
+    representations = self._aggregate_embeddings(embeddings, key_mask)  # (B, T, C*E)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 147, in _aggregate_embeddings
+    embeddings = block(embeddings, key_padding_mask=key_mask, rope=rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 118, in sdpa_with_flattened_batch
+    out = F.scaled_dot_product_attention(q, k, v, attn_mask, dropout_p)
+RuntimeError: CUDA error: invalid configuration argument
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+",0,0,0,0,,0,,False,0.0,,
+ada,/home/crc00006699/zh/tabiclv2/data178/ada,binclass,3317,664,830,48,2,0.8409638554216867,20.746944904327396,1.741105318069458,ok,,3317,2487,830,830,0.3212000392377376,10,5e-06,True,20.609507083892822,stratified,stratified split
+ada_agnostic,/home/crc00006699/zh/tabiclv2/data178/ada_agnostic,binclass,3649,730,913,48,2,0.8378970427163198,24.98940682411194,1.870805740356445,ok,,3649,2736,913,913,0.3320173621177673,10,5e-06,True,24.843878030776978,stratified,stratified split
+ada_prior,/home/crc00006699/zh/tabiclv2/data178/ada_prior,binclass,3649,730,913,14,2,0.8499452354874042,20.98104357719421,1.0286757946014404,ok,,3649,2736,913,913,0.3376828469336033,10,5e-06,True,20.90840578079224,stratified,stratified split
+airlines_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True,/home/crc00006699/zh/tabiclv2/data178/airlines_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True,binclass,1600,320,400,7,2,0.625,9.844245672225952,0.3309202194213867,ok,,1600,1200,400,400,0.6174476444721222,10,5e-06,True,9.80910873413086,stratified,stratified split
+allbp,/home/crc00006699/zh/tabiclv2/data178/allbp,multiclass,3017,604,755,29,3,0.981456953642384,17.02596640586853,1.0504391193389893,ok,,3017,2262,755,755,0.0611692951060831,10,5e-06,True,16.912431478500366,stratified,stratified split
+allrep,/home/crc00006699/zh/tabiclv2/data178/allrep,multiclass,3017,604,755,29,4,0.9854304635761588,17.21516466140747,1.0310697555541992,ok,,3017,2262,755,755,0.0444236351177096,10,5e-06,True,17.10514998435974,stratified,stratified split
+analcatdata_authorship,/home/crc00006699/zh/tabiclv2/data178/analcatdata_authorship,multiclass,672,135,169,69,4,0.9881656804733728,10.75319242477417,0.4078783988952636,ok,,672,504,168,169,0.0001834013201005,10,5e-06,True,10.641180276870728,stratified,stratified split
+artificial-characters,/home/crc00006699/zh/tabiclv2/data178/artificial-characters,multiclass,8174,1635,2044,7,10,0.8884540117416829,58.732805490493774,2.6323368549346924,ok,,8174,6130,2044,2044,0.3857334293425083,10,5e-06,True,58.65655589103699,stratified,stratified split
+autoUniv-au4-2500,/home/crc00006699/zh/tabiclv2/data178/autoUniv-au4-2500,multiclass,2000,400,500,100,3,0.556,18.58358860015869,1.7264420986175537,ok,,2000,1500,500,500,0.9006802961230278,10,5e-06,True,18.322768926620483,stratified,stratified split
+autoUniv-au7-1100,/home/crc00006699/zh/tabiclv2/data178/autoUniv-au7-1100,multiclass,880,176,220,12,5,0.4136363636363636,10.55488419532776,0.479405403137207,ok,,880,660,220,220,1.2957714647054672,10,5e-06,True,10.517762899398804,stratified,stratified split
+bank,/home/crc00006699/zh/tabiclv2/data178/bank,binclass,36168,7234,9043,16,2,0.908437465442884,861.490930557251,25.728769302368164,ok,,36168,27126,9042,9043,0.1942398324608802,10,5e-06,True,860.9867641925812,stratified,stratified split
+banknote_authentication,/home/crc00006699/zh/tabiclv2/data178/banknote_authentication,binclass,1097,220,275,4,2,0.5563636363636364,5.965507745742798,0.2096040248870849,ok,,1097,822,275,275,0.6854735463857651,10,5e-06,True,5.940101385116577,stratified,stratified split
+baseball,/home/crc00006699/zh/tabiclv2/data178/baseball,multiclass,1072,215,268,16,3,0.9514925373134328,10.4726083278656,0.3410911560058594,ok,,1072,804,268,268,0.1604065932333469,10,5e-06,True,10.426332473754885,stratified,stratified split
+car-evaluation,/home/crc00006699/zh/tabiclv2/data178/car-evaluation,multiclass,1382,277,346,21,4,0.9884393063583816,10.902944326400757,0.5112648010253906,ok,,1382,1036,346,346,0.009393124259077,10,5e-06,True,10.83756399154663,stratified,stratified split
+churn,/home/crc00006699/zh/tabiclv2/data178/churn,binclass,4000,800,1000,20,2,0.952,23.646541833877563,1.341456413269043,ok,,4000,3000,1000,1000,0.1615198273211717,10,5e-06,True,23.554760456085205,stratified,stratified split
+cmc,/home/crc00006699/zh/tabiclv2/data178/cmc,multiclass,1178,236,295,9,3,0.5728813559322034,10.68103289604187,0.3701186180114746,ok,,1178,883,295,295,0.8217630237340927,10,5e-06,True,10.647660970687866,stratified,stratified split
+company_bankruptcy_prediction,/home/crc00006699/zh/tabiclv2/data178/company_bankruptcy_prediction,binclass,5455,1091,1364,95,2,0.9699413489736072,52.02241945266724,4.076538562774658,ok,,5455,4091,1364,1364,0.0853855470195412,10,5e-06,True,51.59638714790344,stratified,stratified split
+compass,/home/crc00006699/zh/tabiclv2/data178/compass,binclass,13315,2663,3329,17,2,0.8696305196755783,139.17304039001465,5.642103433609009,ok,,13315,9986,3329,3329,0.3416585065424442,10,5e-06,True,138.95188975334167,stratified,stratified split
+contraceptive_method_choice,/home/crc00006699/zh/tabiclv2/data178/contraceptive_method_choice,multiclass,1178,236,295,9,3,0.6474576271186441,10.707788705825806,0.3709719181060791,ok,,1178,883,295,295,0.863762617111206,10,5e-06,True,10.67613124847412,stratified,stratified split
+credit,/home/crc00006699/zh/tabiclv2/data178/credit,binclass,13371,2675,3343,10,2,0.7849237212084954,136.68464541435242,5.333284854888916,ok,,13371,10028,3343,3343,0.4560196474194526,10,5e-06,True,136.55192375183103,stratified,stratified split
+customer_satisfaction_in_airline,/home/crc00006699/zh/tabiclv2/data178/customer_satisfaction_in_airline,binclass,0,0,0,0,0,0.9615414228518632,2.281546115875244,256.28031945228577,ok,"baseline_fallback_from_v1.1_baseline; original_error: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 334, in _train_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 269, in forward
+    representations = self._train_forward(embeddings, d)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 204, in _train_forward
+    representations = self._aggregate_embeddings(embeddings, key_mask)  # (B, T, C*E)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 147, in _aggregate_embeddings
+    embeddings = block(embeddings, key_padding_mask=key_mask, rope=rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 118, in sdpa_with_flattened_batch
+    out = F.scaled_dot_product_attention(q, k, v, attn_mask, dropout_p)
+RuntimeError: CUDA error: invalid configuration argument
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+",0,0,0,0,,0,,False,0.0,,
+dabetes_130-us_hospitals,/home/crc00006699/zh/tabiclv2/data178/dabetes_130-us_hospitals,binclass,0,0,0,0,0,0.6411516163898988,1.7948837280273438,113.52792263031006,ok,"baseline_fallback_from_v1.1_baseline; original_error: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 334, in _train_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 269, in forward
+    representations = self._train_forward(embeddings, d)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 204, in _train_forward
+    representations = self._aggregate_embeddings(embeddings, key_mask)  # (B, T, C*E)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 147, in _aggregate_embeddings
+    embeddings = block(embeddings, key_padding_mask=key_mask, rope=rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 118, in sdpa_with_flattened_batch
+    out = F.scaled_dot_product_attention(q, k, v, attn_mask, dropout_p)
+RuntimeError: CUDA error: invalid configuration argument
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+",0,0,0,0,,0,,False,0.0,,
+default_of_credit_card_clients,/home/crc00006699/zh/tabiclv2/data178/default_of_credit_card_clients,binclass,24000,4800,6000,23,2,0.8285,403.7495400905609,13.796939373016356,ok,,24000,18000,6000,6000,0.4214453361928463,10,5e-06,True,403.2275230884552,stratified,stratified split
+delta_ailerons,/home/crc00006699/zh/tabiclv2/data178/delta_ailerons,binclass,5703,1141,1426,5,2,0.9495091164095372,25.84285283088684,1.033388614654541,ok,,5703,4277,1426,1426,0.1611854564398527,10,5e-06,True,25.7977237701416,stratified,stratified split
+dis,/home/crc00006699/zh/tabiclv2/data178/dis,binclass,3017,604,755,29,2,0.9854304635761588,17.399762630462646,1.154210090637207,ok,,3017,2262,755,755,0.0370444050058722,10,5e-06,True,17.28921914100647,stratified,stratified split
+dna,/home/crc00006699/zh/tabiclv2/data178/dna,multiclass,2548,510,638,180,3,0.962382445141066,31.42709898948669,3.340175151824951,ok,,2548,1911,637,638,0.2261147368699312,10,5e-06,True,30.813188552856445,stratified,stratified split
+drug_consumption,/home/crc00006699/zh/tabiclv2/data178/drug_consumption,multiclass,1507,302,377,12,7,0.403183023872679,10.99574613571167,0.4177236557006836,ok,,1507,1130,377,377,1.508023276925087,10,5e-06,True,10.960769414901732,stratified,stratified split
+dry_bean_dataset,/home/crc00006699/zh/tabiclv2/data178/dry_bean_dataset,multiclass,10888,2178,2723,16,7,0.9298567756151304,100.28102707862854,4.2835352420806885,ok,,10888,8166,2722,2723,0.184097334742546,10,5e-06,True,100.11260080337524,stratified,stratified split
+eeg-eye-state,/home/crc00006699/zh/tabiclv2/data178/eeg-eye-state,binclass,11984,2397,2996,14,2,0.9929906542056076,113.92390847206116,4.808532476425171,ok,,11984,8988,2996,2996,0.0347524895332753,10,5e-06,True,113.76794862747192,stratified,stratified split
+electricity,/home/crc00006699/zh/tabiclv2/data178/electricity,binclass,36249,7250,9063,8,2,0.9080878296369856,853.6408388614655,24.5178325176239,ok,,36249,27186,9063,9063,0.2365408744663,10,5e-06,True,853.3286051750183,stratified,stratified split
+estimation_of_obesity_levels,/home/crc00006699/zh/tabiclv2/data178/estimation_of_obesity_levels,multiclass,1688,338,423,16,7,0.9858156028368794,11.220454931259155,0.539766788482666,ok,,1688,1266,422,423,0.0116310070734471,10,5e-06,True,11.168903827667236,stratified,stratified split
+eye_movements,/home/crc00006699/zh/tabiclv2/data178/eye_movements,multiclass,8748,1750,2188,27,3,0.7454296160877514,73.7806146144867,3.7012343406677246,ok,,8748,6561,2187,2188,0.6397512257099152,10,5e-06,True,73.53586006164551,stratified,stratified split
+eye_movements_bin,/home/crc00006699/zh/tabiclv2/data178/eye_movements_bin,binclass,6086,1218,1522,20,2,0.6636005256241787,40.23970580101013,2.19768500328064,ok,,6086,4564,1522,1522,0.6176408901810646,10,5e-06,True,40.10933542251587,stratified,stratified split
+first-order-theorem-proving,/home/crc00006699/zh/tabiclv2/data178/first-order-theorem-proving,multiclass,4894,979,1224,51,6,0.630718954248366,33.91647386550903,2.5462779998779297,ok,,4894,3670,1224,1224,1.0308764725923538,10,5e-06,True,33.694904804229736,stratified,stratified split
+gas-drift,/home/crc00006699/zh/tabiclv2/data178/gas-drift,multiclass,11128,2226,2782,128,6,0.9971243709561468,157.03801250457764,11.8823344707489,ok,,11128,8346,2782,2782,0.0073653644649311,10,5e-06,True,155.8064296245575,stratified,stratified split
+gina_agnostic,/home/crc00006699/zh/tabiclv2/data178/gina_agnostic,binclass,2774,555,694,970,2,0.9337175792507204,189.4436399936676,87.02610349655151,ok,,2774,2080,694,694,0.2817422300577163,10,5e-06,True,186.63833093643188,stratified,stratified split
+golf_play_dataset_extended,/home/crc00006699/zh/tabiclv2/data178/golf_play_dataset_extended,binclass,876,176,219,9,2,0.9315068493150684,10.86834478378296,0.4257984161376953,ok,,876,657,219,219,0.1742034070193767,10,5e-06,True,10.833510875701904,stratified,stratified split
+heloc,/home/crc00006699/zh/tabiclv2/data178/heloc,binclass,8000,1600,2000,22,2,0.7285,60.767902135849,3.1258113384246826,ok,,8000,6000,2000,2000,0.5377113744616508,10,5e-06,True,60.61169171333313,stratified,stratified split
+hill-valley,/home/crc00006699/zh/tabiclv2/data178/hill-valley,binclass,969,194,243,100,2,0.9629629629629628,11.94732141494751,0.9475769996643066,ok,,969,726,243,243,0.1427414156496524,10,5e-06,True,11.799631595611572,stratified,stratified split
+house_16H,/home/crc00006699/zh/tabiclv2/data178/house_16H,binclass,10790,2158,2698,16,2,0.8891771682727947,99.14685273170473,4.229959964752197,ok,,10790,8092,2698,2698,0.2461940068751573,10,5e-06,True,98.98051118850708,stratified,stratified split
+htru,/home/crc00006699/zh/tabiclv2/data178/htru,binclass,14318,2864,3580,8,2,0.9810055865921788,155.12457275390625,5.673367738723755,ok,,14318,10738,3580,3580,0.0671388283371925,10,5e-06,True,155.01760149002075,stratified,stratified split
+ibm-employee-performance,/home/crc00006699/zh/tabiclv2/data178/ibm-employee-performance,binclass,1176,236,294,30,2,1.0,10.82248592376709,0.5243573188781738,ok,,1176,882,294,294,0.0019433336274232,10,5e-06,True,10.74877142906189,stratified,stratified split
+in_vehicle_coupon_recommendation,/home/crc00006699/zh/tabiclv2/data178/in_vehicle_coupon_recommendation,binclass,10147,2030,2537,21,2,0.7903035080804099,86.85296392440796,4.064614295959473,ok,,10147,7610,2537,2537,0.4911244176328182,10,5e-06,True,86.59623599052429,stratified,stratified split
+internet_firewall,/home/crc00006699/zh/tabiclv2/data178/internet_firewall,multiclass,52425,10485,13107,7,4,0.9310292210269322,1737.133821725845,46.53699684143066,ok,,52425,39318,13107,13107,0.1041075503453612,10,5e-06,True,1736.8726828098297,stratified,stratified split
+internet_usage,/home/crc00006699/zh/tabiclv2/data178/internet_usage,multiclass,8086,1618,2022,70,46,0.5296735905044511,1.633893966674805,9.3789701461792,ok,,8086,6064,2022,2022,,0,5e-06,False,0.7518525123596191,stratified,stratified split | TTT training skipped because n_classes=46 exceeds model max_classes=10
+jm1,/home/crc00006699/zh/tabiclv2/data178/jm1,binclass,8708,1742,2177,21,2,0.821773082223243,71.66563892364502,3.212544202804565,ok,,8708,6531,2177,2177,0.4033772088587284,10,5e-06,True,71.49923062324524,stratified,stratified split
+jungle_chess_2pcs_raw_endgame_complete,/home/crc00006699/zh/tabiclv2/data178/jungle_chess_2pcs_raw_endgame_complete,multiclass,35855,7171,8964,6,3,0.9135430611334224,841.7618618011475,23.732914924621586,ok,,35855,26891,8964,8964,0.2093202155083418,10,5e-06,True,841.560683965683,stratified,stratified split
+kc1,/home/crc00006699/zh/tabiclv2/data178/kc1,binclass,1687,338,422,21,2,0.8815165876777251,11.4160578250885,0.5792253017425537,ok,,1687,1265,422,422,0.3178142197430134,10,5e-06,True,11.359949111938477,stratified,stratified split
+kdd_ipums_la_97-small,/home/crc00006699/zh/tabiclv2/data178/kdd_ipums_la_97-small,binclass,4150,830,1038,20,2,0.8863198458574181,24.450360774993896,1.4478378295898438,ok,,4150,3112,1038,1038,0.2702453657984733,10,5e-06,True,24.362881660461422,stratified,stratified split
+kr-vs-k,/home/crc00006699/zh/tabiclv2/data178/kr-vs-k,multiclass,22444,4489,5612,6,18,0.8508553100498931,0.8886692523956299,23.600730895996094,ok,,22444,16833,5611,5612,,0,5e-06,False,0.4156436920166015,stratified,stratified split | TTT training skipped because n_classes=18 exceeds model max_classes=10
+kropt,/home/crc00006699/zh/tabiclv2/data178/kropt,multiclass,22444,4489,5612,6,18,0.852815395580898,0.9310059547424316,23.55726289749145,ok,,22444,16833,5611,5612,,0,5e-06,False,0.4494006633758545,stratified,stratified split | TTT training skipped because n_classes=18 exceeds model max_classes=10
+led24,/home/crc00006699/zh/tabiclv2/data178/led24,multiclass,2560,512,640,24,10,0.7296875,14.608421087265016,0.8767175674438477,ok,,2560,1920,640,640,0.7753816992044449,10,5e-06,True,14.511175632476808,stratified,stratified split
+led7,/home/crc00006699/zh/tabiclv2/data178/led7,multiclass,2560,512,640,7,10,0.74375,14.265129804611206,0.6349680423736572,ok,,2560,1920,640,640,0.870409831404686,10,5e-06,True,14.222503185272217,stratified,stratified split
+letter,/home/crc00006699/zh/tabiclv2/data178/letter,multiclass,16000,3200,4000,15,26,0.98625,0.9824333190917968,14.956907033920288,ok,,16000,12000,4000,4000,,0,5e-06,False,0.4548444747924804,stratified,stratified split | TTT training skipped because n_classes=26 exceeds model max_classes=10
+madeline,/home/crc00006699/zh/tabiclv2/data178/madeline,binclass,2512,503,628,259,2,0.7515923566878981,41.96389937400818,4.574798107147217,ok,,2512,1884,628,628,0.5674564093351364,10,5e-06,True,41.35058546066284,stratified,stratified split
+mammography,/home/crc00006699/zh/tabiclv2/data178/mammography,binclass,8946,1790,2237,6,2,0.9892713455520786,52.03102350234985,2.3016252517700195,ok,,8946,6709,2237,2237,0.0425162934698164,10,5e-06,True,51.95257306098938,stratified,stratified split
+maternal_health_risk,/home/crc00006699/zh/tabiclv2/data178/maternal_health_risk,multiclass,811,163,203,6,3,0.8719211822660099,10.48449158668518,0.4254846572875976,ok,,811,608,203,203,0.3821543455123901,10,5e-06,True,10.463732481002808,stratified,stratified split
+mfeat-factors,/home/crc00006699/zh/tabiclv2/data178/mfeat-factors,multiclass,1600,320,400,216,10,0.9725,23.33045244216919,2.583967447280884,ok,,1600,1200,400,400,0.0201154388487339,10,5e-06,True,22.95016074180603,stratified,stratified split
+mfeat-fourier,/home/crc00006699/zh/tabiclv2/data178/mfeat-fourier,multiclass,1600,320,400,76,10,0.895,13.04003381729126,1.2112655639648438,ok,,1600,1200,400,400,0.2467475328594446,10,5e-06,True,12.889104127883911,stratified,stratified split
+mfeat-karhunen,/home/crc00006699/zh/tabiclv2/data178/mfeat-karhunen,multiclass,1600,320,400,64,10,0.9725,12.309099197387695,0.9806931018829346,ok,,1600,1200,400,400,0.0147586127277463,10,5e-06,True,12.186241388320925,stratified,stratified split
+mfeat-morphological,/home/crc00006699/zh/tabiclv2/data178/mfeat-morphological,multiclass,1600,320,400,6,10,0.7675,11.08466911315918,0.3616650104522705,ok,,1600,1200,400,400,0.5811614841222763,10,5e-06,True,11.056999444961548,stratified,stratified split
+mfeat-pixel,/home/crc00006699/zh/tabiclv2/data178/mfeat-pixel,multiclass,1600,320,400,240,10,0.9775,25.528247833251957,2.791430950164795,ok,,1600,1200,400,400,0.0207463649567216,10,5e-06,True,24.86415386199951,stratified,stratified split
+mfeat-zernike,/home/crc00006699/zh/tabiclv2/data178/mfeat-zernike,multiclass,1600,320,400,47,10,0.9,11.260350704193115,0.8386955261230469,ok,,1600,1200,400,400,0.2054126393049955,10,5e-06,True,11.153111457824709,stratified,stratified split
+mice_protein_expression,/home/crc00006699/zh/tabiclv2/data178/mice_protein_expression,multiclass,864,173,216,75,8,1.0,10.921260833740234,0.7131798267364502,ok,,864,648,216,216,6.105134980316507e-05,10,5e-06,True,10.804049253463743,stratified,stratified split
+microaggregation2,/home/crc00006699/zh/tabiclv2/data178/microaggregation2,multiclass,16000,3200,4000,20,5,0.63625,196.49362897872925,7.48644232749939,ok,,16000,12000,4000,4000,0.8720015361905098,10,5e-06,True,196.2517638206482,stratified,stratified split
+mobile_c36_oversampling,/home/crc00006699/zh/tabiclv2/data178/mobile_c36_oversampling,binclass,41408,8282,10352,6,2,0.9929482225656878,824.3780176639557,23.09065961837769,ok,,41408,31056,10352,10352,0.0181454506237059,10,5e-06,True,824.179979801178,stratified,stratified split
+mozilla4,/home/crc00006699/zh/tabiclv2/data178/mozilla4,binclass,12436,2488,3109,4,2,0.9398520424573816,60.70726776123047,2.3199622631073,ok,,12436,9327,3109,3109,0.1567206420004367,10,5e-06,True,60.63383197784424,stratified,stratified split
+naticusdroid+android+permissions+dataset,/home/crc00006699/zh/tabiclv2/data178/naticusdroid+android+permissions+dataset,binclass,23465,4693,5867,86,2,0.97204704278166,449.3045012950897,22.14022397994995,ok,,23465,17598,5867,5867,0.0822186116129159,10,5e-06,True,447.54736852645874,stratified,stratified split
+national-longitudinal-survey-binary,/home/crc00006699/zh/tabiclv2/data178/national-longitudinal-survey-binary,binclass,3926,786,982,16,2,0.9989816700610998,23.166900873184204,1.2320520877838137,ok,,3926,2944,982,982,0.0007956356312206,10,5e-06,True,23.081058979034424,stratified,stratified split
+okcupid_stem,/home/crc00006699/zh/tabiclv2/data178/okcupid_stem,multiclass,21341,4269,5336,13,3,0.7477511244377811,324.7286305427551,10.817683458328249,ok,,21341,16005,5336,5336,0.5816837549209595,10,5e-06,True,324.4239912033081,stratified,stratified split
+one-hundred-plants-margin,/home/crc00006699/zh/tabiclv2/data178/one-hundred-plants-margin,multiclass,1280,256,320,64,100,0.909375,0.8693320751190186,3.436034917831421,ok,,1280,960,320,320,,0,5e-06,False,0.4275500774383545,stratified,stratified split | TTT training skipped because n_classes=100 exceeds model max_classes=10
+one-hundred-plants-shape,/home/crc00006699/zh/tabiclv2/data178/one-hundred-plants-shape,multiclass,1280,256,320,64,100,0.8,0.9345316886901855,3.4361588954925537,ok,,1280,960,320,320,,0,5e-06,False,0.4156186580657959,stratified,stratified split | TTT training skipped because n_classes=100 exceeds model max_classes=10
+one-hundred-plants-texture,/home/crc00006699/zh/tabiclv2/data178/one-hundred-plants-texture,multiclass,1279,256,320,64,100,0.91875,0.8485820293426514,3.4203577041625977,ok,,1279,959,320,320,,0,5e-06,False,0.4170215129852295,stratified,stratified split | TTT training skipped because n_classes=100 exceeds model max_classes=10
+online_shoppers,/home/crc00006699/zh/tabiclv2/data178/online_shoppers,binclass,9864,1973,2466,14,2,0.9051094890510948,81.78054714202881,3.588468074798584,ok,,9864,7398,2466,2466,0.2148911897093057,10,5e-06,True,81.62542843818665,stratified,stratified split
+optdigits,/home/crc00006699/zh/tabiclv2/data178/optdigits,multiclass,4496,900,1124,64,10,0.99644128113879,34.624964475631714,2.576551914215088,ok,,4496,3372,1124,1124,0.0273230192251503,10,5e-06,True,34.37159609794617,stratified,stratified split
+ozone-level-8hr,/home/crc00006699/zh/tabiclv2/data178/ozone-level-8hr,binclass,2027,406,507,72,2,0.9526627218934912,16.51692271232605,1.370488166809082,ok,,2027,1520,507,507,0.127960605546832,10,5e-06,True,16.356712818145752,stratified,stratified split
+page-blocks,/home/crc00006699/zh/tabiclv2/data178/page-blocks,multiclass,4378,876,1095,10,5,0.978082191780822,24.60000586509705,1.3079099655151367,ok,,4378,3283,1095,1095,0.070237785577774,10,5e-06,True,24.54472541809082,stratified,stratified split
+pc1,/home/crc00006699/zh/tabiclv2/data178/pc1,binclass,887,178,222,21,2,0.945945945945946,10.69518232345581,0.5719020366668701,ok,,887,665,222,222,0.104977217502892,10,5e-06,True,10.650604248046877,stratified,stratified split
+pc3,/home/crc00006699/zh/tabiclv2/data178/pc3,binclass,1250,250,313,37,2,0.8977635782747604,10.910290956497192,0.6195836067199707,ok,,1250,937,313,313,0.2027356158941984,10,5e-06,True,10.83519697189331,stratified,stratified split
+pc4,/home/crc00006699/zh/tabiclv2/data178/pc4,binclass,1166,234,292,37,2,0.9178082191780822,10.67272686958313,0.5817224979400635,ok,,1166,874,292,292,0.1406563278287649,10,5e-06,True,10.597400665283203,stratified,stratified split
+pendigits,/home/crc00006699/zh/tabiclv2/data178/pendigits,multiclass,8793,1759,2199,16,10,0.9968167348794906,70.91811156272888,3.284598588943481,ok,,8793,6594,2199,2199,0.0044380646431818,10,5e-06,True,70.78402400016785,stratified,stratified split
+phoneme,/home/crc00006699/zh/tabiclv2/data178/phoneme,binclass,4323,865,1081,5,2,0.902867715078631,17.66659688949585,0.7896108627319336,ok,,4323,3242,1081,1081,0.1788911242038011,10,5e-06,True,17.626436948776245,stratified,stratified split
+pol,/home/crc00006699/zh/tabiclv2/data178/pol,binclass,8065,1613,2017,26,2,0.9806643529995042,63.06176710128784,3.2761006355285645,ok,,8065,6048,2017,2017,0.0534609970636665,10,5e-06,True,62.90549612045288,stratified,stratified split
+predict_students_dropout_and_academic_success,/home/crc00006699/zh/tabiclv2/data178/predict_students_dropout_and_academic_success,multiclass,3539,708,885,34,3,0.7717514124293785,22.646368265151978,1.5030102729797363,ok,,3539,2654,885,885,0.5631828159093857,10,5e-06,True,22.49035382270813,stratified,stratified split
+qsar,/home/crc00006699/zh/tabiclv2/data178/qsar,binclass,844,169,211,40,2,0.90521327014218,10.56434154510498,0.7522690296173096,ok,,844,633,211,211,0.2889061495661735,10,5e-06,True,10.484858751296995,stratified,stratified split
+rice_cammeo_and_osmancik,/home/crc00006699/zh/tabiclv2/data178/rice_cammeo_and_osmancik,binclass,3048,610,762,7,2,0.9225721784776902,15.381979942321776,0.7782385349273682,ok,,3048,2286,762,762,0.1911036381497979,10,5e-06,True,15.34734034538269,stratified,stratified split
+ringnorm,/home/crc00006699/zh/tabiclv2/data178/ringnorm,binclass,5920,1184,1480,20,2,0.977027027027027,38.68103003501892,2.145665645599365,ok,,5920,4440,1480,1480,0.0473176194354891,10,5e-06,True,38.56871390342712,stratified,stratified split
+rl,/home/crc00006699/zh/tabiclv2/data178/rl,binclass,3976,796,994,12,2,0.8531187122736419,22.6011061668396,1.1531083583831787,ok,,3976,2982,994,994,0.4066195078194141,10,5e-06,True,22.530897855758667,stratified,stratified split
+satimage,/home/crc00006699/zh/tabiclv2/data178/satimage,multiclass,5144,1029,1286,36,6,0.9362363919129082,32.770347118377686,2.3251256942749023,ok,,5144,3858,1286,1286,0.1915907859802246,10,5e-06,True,32.60698246955872,stratified,stratified split
+segment,/home/crc00006699/zh/tabiclv2/data178/segment,multiclass,1848,370,462,17,7,0.9437229437229436,12.435689687728882,0.5869674682617188,ok,,1848,1386,462,462,0.1196927959099412,10,5e-06,True,12.38634705543518,stratified,stratified split
+seismic+bumps,/home/crc00006699/zh/tabiclv2/data178/seismic+bumps,binclass,2067,414,517,18,2,0.9342359767891684,13.06251049041748,0.6489341259002686,ok,,2067,1550,517,517,0.2193215116858482,10,5e-06,True,13.004222631454468,stratified,stratified split
+semeion,/home/crc00006699/zh/tabiclv2/data178/semeion,multiclass,1274,255,319,256,10,0.9592476489028212,22.791290998458862,2.5652573108673096,ok,,1274,955,319,319,0.1647608745843172,10,5e-06,True,22.3331139087677,stratified,stratified split
+shuttle,/home/crc00006699/zh/tabiclv2/data178/shuttle,multiclass,46400,9280,11600,9,7,0.999396551724138,1377.3644454479218,37.92040491104126,ok,,46400,34800,11600,11600,0.00017808784105,10,5e-06,True,1376.989048242569,stratified,stratified split
+spambase,/home/crc00006699/zh/tabiclv2/data178/spambase,binclass,3680,736,921,57,2,0.9576547231270358,26.295812606811523,2.058701753616333,ok,,3680,2760,920,921,0.0933112697675824,10,5e-06,True,26.124348402023315,stratified,stratified split
+splice,/home/crc00006699/zh/tabiclv2/data178/splice,multiclass,2552,511,638,60,3,0.9529780564263324,17.65706729888916,1.5854554176330566,ok,,2552,1914,638,638,0.1169695444405078,10,5e-06,True,17.438135385513306,stratified,stratified split
+sports_articles_for_objectivity_analysis,/home/crc00006699/zh/tabiclv2/data178/sports_articles_for_objectivity_analysis,binclass,800,160,200,59,2,0.84,10.669299364089966,0.8628654479980469,ok,,800,600,200,200,0.423503465950489,10,5e-06,True,10.560118436813354,stratified,stratified split
+statlog,/home/crc00006699/zh/tabiclv2/data178/statlog,binclass,800,160,200,20,2,0.735,10.564945459365845,0.5053763389587402,ok,,800,600,200,200,0.4304118044674396,10,5e-06,True,10.509963989257812,stratified,stratified split
+steel_plates_faults,/home/crc00006699/zh/tabiclv2/data178/steel_plates_faults,multiclass,1552,311,389,27,7,0.8380462724935732,10.928591251373293,0.6157271862030029,ok,,1552,1164,388,389,0.5056111738085747,10,5e-06,True,10.862502098083496,stratified,stratified split
+sylvine,/home/crc00006699/zh/tabiclv2/data178/sylvine,binclass,4099,820,1025,20,2,0.9697560975609756,24.136732816696167,1.4304630756378174,ok,,4099,3074,1025,1025,0.1007541771978139,10,5e-06,True,24.043660163879395,stratified,stratified split
+taiwanese_bankruptcy_prediction,/home/crc00006699/zh/tabiclv2/data178/taiwanese_bankruptcy_prediction,binclass,5455,1091,1364,95,2,0.9721407624633432,51.93082165718079,4.059681415557861,ok,,5455,4091,1364,1364,0.0788850989192724,10,5e-06,True,51.50642538070679,stratified,stratified split
+telco-customer-churn,/home/crc00006699/zh/tabiclv2/data178/telco-customer-churn,binclass,5634,1127,1409,18,2,0.8076650106458482,36.469571113586426,2.0384809970855717,ok,,5634,4225,1409,1409,0.4100562371313572,10,5e-06,True,36.33712196350098,stratified,stratified split
+texture,/home/crc00006699/zh/tabiclv2/data178/texture,multiclass,4400,880,1100,40,11,1.0,0.8956120014190674,4.0023603439331055,ok,,4400,3300,1100,1100,,0,5e-06,False,0.4334895610809326,stratified,stratified split | TTT training skipped because n_classes=11 exceeds model max_classes=10
+thyroid,/home/crc00006699/zh/tabiclv2/data178/thyroid,multiclass,5760,1152,1440,21,3,0.99375,37.39992928504944,1.9995810985565183,ok,,5760,4320,1440,1440,0.0065002117189578,10,5e-06,True,37.30431270599365,stratified,stratified split
+thyroid-ann,/home/crc00006699/zh/tabiclv2/data178/thyroid-ann,multiclass,3017,604,755,21,3,0.9933774834437086,16.779125213623047,1.0191431045532229,ok,,3017,2262,755,755,0.012262528645806,10,5e-06,True,16.707098722457886,stratified,stratified split
+thyroid-dis,/home/crc00006699/zh/tabiclv2/data178/thyroid-dis,multiclass,2240,448,560,26,5,0.6910714285714286,13.557507514953612,0.8412320613861084,ok,,2240,1680,560,560,0.6796878352761269,10,5e-06,True,13.462921619415283,stratified,stratified split
+turiye_student_evaluation,/home/crc00006699/zh/tabiclv2/data178/turiye_student_evaluation,multiclass,4656,932,1164,32,5,0.5120274914089347,29.2997944355011,1.966137170791626,ok,,4656,3492,1164,1164,1.212841048836708,10,5e-06,True,29.157513856887817,stratified,stratified split
+twonorm,/home/crc00006699/zh/tabiclv2/data178/twonorm,binclass,5920,1184,1480,20,2,0.9783783783783784,38.9050395488739,2.1747050285339355,ok,,5920,4440,1480,1480,0.0499846916645765,10,5e-06,True,38.79959559440613,stratified,stratified split
+vehicle,/home/crc00006699/zh/tabiclv2/data178/vehicle,multiclass,676,136,170,18,4,0.888235294117647,10.504227876663208,0.4325361251831054,ok,,676,507,169,170,0.2137765157967806,10,5e-06,True,10.463976860046388,stratified,stratified split
+volkert,/home/crc00006699/zh/tabiclv2/data178/volkert,multiclass,46648,9330,11662,180,10,0.7337506431143886,5.550964593887329,281.1190342903137,ok,,46648,0,0,11662,,0,5e-06,False,0.0,,TTT skipped for dataset=volkert to avoid OOM
+walking-activity,/home/crc00006699/zh/tabiclv2/data178/walking-activity,multiclass,119465,23893,29867,4,22,0.6641443733886898,1.5004360675811768,356.8162670135498,ok,,119465,89598,29867,29867,,0,5e-06,False,0.6748385429382324,stratified,stratified split | TTT training skipped because n_classes=22 exceeds model max_classes=10
+wall-robot-navigation,/home/crc00006699/zh/tabiclv2/data178/wall-robot-navigation,multiclass,4364,873,1092,24,4,0.9853479853479854,26.0856671333313,1.5275554656982422,ok,,4364,3273,1091,1092,0.0360126895830035,10,5e-06,True,25.975579500198364,stratified,stratified split
+water_quality,/home/crc00006699/zh/tabiclv2/data178/water_quality,binclass,6396,1280,1600,20,2,0.908125,40.90721225738525,2.267814874649048,ok,,6396,4797,1599,1600,0.2295123785734176,10,5e-06,True,40.81823444366455,stratified,stratified split
+waveform-5000,/home/crc00006699/zh/tabiclv2/data178/waveform-5000,multiclass,4000,800,1000,40,3,0.878,26.755772590637207,1.8659985065460205,ok,,4000,3000,1000,1000,0.2694617509841919,10,5e-06,True,26.61019325256348,stratified,stratified split
+waveform_database_generator,/home/crc00006699/zh/tabiclv2/data178/waveform_database_generator,multiclass,3999,800,1000,21,3,0.332,23.894306182861328,1.3916690349578855,ok,,3999,2999,1000,1000,1.097086250782013,10,5e-06,True,23.808868408203125,stratified,stratified split
+waveform_database_generator_version_1,/home/crc00006699/zh/tabiclv2/data178/waveform_database_generator_version_1,multiclass,4000,800,1000,21,3,0.868,23.88992977142334,1.3970096111297607,ok,,4000,3000,1000,1000,0.2596267983317375,10,5e-06,True,23.804338932037357,stratified,stratified split
+website_phishing,/home/crc00006699/zh/tabiclv2/data178/website_phishing,multiclass,1082,217,271,9,3,0.92619926199262,10.519188642501833,0.3369829654693603,ok,,1082,811,271,271,0.2179838009178638,10,5e-06,True,10.484262704849243,stratified,stratified split
+wine,/home/crc00006699/zh/tabiclv2/data178/wine,binclass,2043,409,511,4,2,0.7710371819960861,6.785868406295776,0.290013313293457,ok,,2043,1532,511,511,0.3986764326691627,10,5e-06,True,6.762156486511231,stratified,stratified split
+wine-quality-red,/home/crc00006699/zh/tabiclv2/data178/wine-quality-red,multiclass,1279,256,320,4,6,0.659375,10.667910814285278,0.3365941047668457,ok,,1279,959,320,320,0.7965971231460571,10,5e-06,True,10.644473791122437,stratified,stratified split
+wine-quality-white,/home/crc00006699/zh/tabiclv2/data178/wine-quality-white,multiclass,3918,784,980,11,7,0.6836734693877551,22.5403950214386,1.1841626167297363,ok,,3918,2938,980,980,0.7801335602998734,10,5e-06,True,22.481806993484497,stratified,stratified split
+yeast,/home/crc00006699/zh/tabiclv2/data178/yeast,multiclass,1187,238,297,8,10,0.6262626262626263,10.646401643753052,0.3648111820220947,ok,,1187,890,297,297,0.9922853484749794,10,5e-06,True,10.614662408828735,stratified,stratified split

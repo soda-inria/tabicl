@@ -1,0 +1,134 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.038439646828955766,
+      "selected": true
+    },
+    {
+      "id": "feature_20",
+      "kind": "feature",
+      "feature_index": 20,
+      "association_score": 0.775350083552313,
+      "selected": true
+    },
+    {
+      "id": "feature_27",
+      "kind": "feature",
+      "feature_index": 27,
+      "association_score": 0.037510767571542536,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.038439646828955766
+    },
+    {
+      "source": "feature_20",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.775350083552313
+    },
+    {
+      "source": "feature_27",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.037510767571542536
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    20,
+    27
+  ],
+  "candidate_feature_indices": [
+    20,
+    0,
+    27,
+    10,
+    1,
+    12,
+    22,
+    29,
+    4,
+    2,
+    21,
+    8,
+    5,
+    9,
+    28,
+    19,
+    23,
+    16,
+    25,
+    14,
+    15,
+    17,
+    26,
+    13,
+    3,
+    7,
+    11,
+    24,
+    6,
+    18
+  ],
+  "association_scores": {
+    "20": 0.775350083552313,
+    "0": 0.038439646828955766,
+    "27": 0.037510767571542536,
+    "10": 0.0334644653446875,
+    "1": 0.029836794779535224,
+    "12": 0.028712281884649155,
+    "22": 0.02854304773035277,
+    "29": 0.027996574741612386,
+    "4": 0.027428807163491317,
+    "2": 0.02673651620931803,
+    "21": 0.02557869953590668,
+    "8": 0.02444230814409862,
+    "5": 0.02051198348536528,
+    "9": 0.01923873661693795,
+    "28": 0.017505960133851806,
+    "19": 0.015985026228109354,
+    "23": 0.015876489911847345,
+    "16": 0.014359721748889104,
+    "25": 0.012814785975308047,
+    "14": 0.012793708081430403,
+    "15": 0.012304094088991647,
+    "17": 0.01109347977840127,
+    "26": 0.01070286627943484,
+    "13": 0.010551354595368703,
+    "3": 0.009434854934541537,
+    "7": 0.007680127169319606,
+    "11": 0.006600119515292794,
+    "24": 0.0017209803183649407,
+    "6": 0.0009221426938228223,
+    "18": 0.0006854161308667945
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 30,
+  "sample_count": 1176,
+  "selector_seconds": 0.004625797271728516,
+  "status": "ok selected=3 candidates=30 samples=1176",
+  "dataset_name": "ibm-employee-performance"
+}

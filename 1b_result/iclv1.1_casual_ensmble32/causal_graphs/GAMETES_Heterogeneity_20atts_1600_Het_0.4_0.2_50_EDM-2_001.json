@@ -1,0 +1,114 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.030295903721161054,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.029803448635145426,
+      "selected": true
+    },
+    {
+      "id": "feature_13",
+      "kind": "feature",
+      "feature_index": 13,
+      "association_score": 0.051992502597446755,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.030295903721161054
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.029803448635145426
+    },
+    {
+      "source": "feature_13",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.051992502597446755
+    }
+  ],
+  "selected_feature_indices": [
+    1,
+    8,
+    13
+  ],
+  "candidate_feature_indices": [
+    13,
+    1,
+    8,
+    12,
+    5,
+    6,
+    11,
+    3,
+    10,
+    0,
+    7,
+    17,
+    2,
+    9,
+    14,
+    16,
+    15,
+    18,
+    19,
+    4
+  ],
+  "association_scores": {
+    "13": 0.051992502597446755,
+    "1": 0.030295903721161054,
+    "8": 0.029803448635145426,
+    "12": 0.029209135574922163,
+    "5": 0.027133707949401474,
+    "6": 0.026824501423074205,
+    "11": 0.024505882155482966,
+    "3": 0.022539507641959403,
+    "10": 0.01832582637259727,
+    "0": 0.017114112807544213,
+    "7": 0.016777551888943715,
+    "17": 0.016509454369715123,
+    "2": 0.01575047301349538,
+    "9": 0.014580833795254928,
+    "14": 0.014533578948115345,
+    "16": 0.014247153774214122,
+    "15": 0.013336463324022043,
+    "18": 0.012409379041637292,
+    "19": 0.0056362407583384665,
+    "4": 0.0038698403772137917
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 20,
+  "sample_count": 1280,
+  "selector_seconds": 0.0031898021697998047,
+  "status": "ok selected=3 candidates=20 samples=1280",
+  "dataset_name": "GAMETES_Heterogeneity_20atts_1600_Het_0.4_0.2_50_EDM-2_001"
+}

@@ -1,0 +1,384 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.23713004941944632,
+      "selected": true
+    },
+    {
+      "id": "feature_12",
+      "kind": "feature",
+      "feature_index": 12,
+      "association_score": 0.2724378328584618,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.272284298323672,
+      "selected": true
+    },
+    {
+      "id": "feature_25",
+      "kind": "feature",
+      "feature_index": 25,
+      "association_score": 0.16074937455685648,
+      "selected": true
+    },
+    {
+      "id": "feature_27",
+      "kind": "feature",
+      "feature_index": 27,
+      "association_score": 0.25019294459621216,
+      "selected": true
+    },
+    {
+      "id": "feature_28",
+      "kind": "feature",
+      "feature_index": 28,
+      "association_score": 0.21098772042207786,
+      "selected": true
+    },
+    {
+      "id": "feature_29",
+      "kind": "feature",
+      "feature_index": 29,
+      "association_score": 0.18720399744675215,
+      "selected": true
+    },
+    {
+      "id": "feature_33",
+      "kind": "feature",
+      "feature_index": 33,
+      "association_score": 0.22980978661533857,
+      "selected": true
+    },
+    {
+      "id": "feature_35",
+      "kind": "feature",
+      "feature_index": 35,
+      "association_score": 0.25845336935965196,
+      "selected": true
+    },
+    {
+      "id": "feature_37",
+      "kind": "feature",
+      "feature_index": 37,
+      "association_score": 0.1667357157677479,
+      "selected": true
+    },
+    {
+      "id": "feature_51",
+      "kind": "feature",
+      "feature_index": 51,
+      "association_score": 0.1647499357216938,
+      "selected": true
+    },
+    {
+      "id": "feature_52",
+      "kind": "feature",
+      "feature_index": 52,
+      "association_score": 0.37755986583605405,
+      "selected": true
+    },
+    {
+      "id": "feature_53",
+      "kind": "feature",
+      "feature_index": 53,
+      "association_score": 0.23814131051869436,
+      "selected": true
+    },
+    {
+      "id": "feature_60",
+      "kind": "feature",
+      "feature_index": 60,
+      "association_score": 0.22035329731232706,
+      "selected": true
+    },
+    {
+      "id": "feature_62",
+      "kind": "feature",
+      "feature_index": 62,
+      "association_score": 0.12998135238337297,
+      "selected": true
+    },
+    {
+      "id": "feature_63",
+      "kind": "feature",
+      "feature_index": 63,
+      "association_score": 0.14704724272863856,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.23713004941944632
+    },
+    {
+      "source": "feature_12",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2724378328584618
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.272284298323672
+    },
+    {
+      "source": "feature_25",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.16074937455685648
+    },
+    {
+      "source": "feature_27",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.25019294459621216
+    },
+    {
+      "source": "feature_28",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.21098772042207786
+    },
+    {
+      "source": "feature_29",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.18720399744675215
+    },
+    {
+      "source": "feature_33",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.22980978661533857
+    },
+    {
+      "source": "feature_35",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.25845336935965196
+    },
+    {
+      "source": "feature_37",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1667357157677479
+    },
+    {
+      "source": "feature_51",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1647499357216938
+    },
+    {
+      "source": "feature_52",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.37755986583605405
+    },
+    {
+      "source": "feature_53",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.23814131051869436
+    },
+    {
+      "source": "feature_60",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.22035329731232706
+    },
+    {
+      "source": "feature_62",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.12998135238337297
+    },
+    {
+      "source": "feature_63",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.14704724272863856
+    }
+  ],
+  "selected_feature_indices": [
+    5,
+    12,
+    14,
+    25,
+    27,
+    28,
+    29,
+    33,
+    35,
+    37,
+    51,
+    52,
+    53,
+    60,
+    62,
+    63
+  ],
+  "candidate_feature_indices": [
+    52,
+    12,
+    14,
+    35,
+    27,
+    53,
+    5,
+    6,
+    33,
+    60,
+    28,
+    29,
+    37,
+    51,
+    25,
+    36,
+    19,
+    63,
+    20,
+    11,
+    22,
+    50,
+    61,
+    62,
+    4,
+    41,
+    42,
+    13,
+    21,
+    10,
+    7,
+    15,
+    18,
+    26,
+    57,
+    1,
+    55,
+    47,
+    23,
+    46,
+    49,
+    24,
+    34,
+    16,
+    9,
+    54,
+    30,
+    56,
+    38,
+    3,
+    58,
+    48,
+    8,
+    43,
+    40,
+    59,
+    31,
+    2,
+    32,
+    45,
+    17,
+    44,
+    0,
+    39
+  ],
+  "association_scores": {
+    "52": 0.37755986583605405,
+    "12": 0.2724378328584618,
+    "14": 0.272284298323672,
+    "35": 0.25845336935965196,
+    "27": 0.25019294459621216,
+    "53": 0.23814131051869436,
+    "5": 0.23713004941944632,
+    "6": 0.23564496970220625,
+    "33": 0.22980978661533857,
+    "60": 0.22035329731232706,
+    "28": 0.21098772042207786,
+    "29": 0.18720399744675215,
+    "37": 0.1667357157677479,
+    "51": 0.1647499357216938,
+    "25": 0.16074937455685648,
+    "36": 0.15931891036942034,
+    "19": 0.1481087739841512,
+    "63": 0.14704724272863856,
+    "20": 0.14489750086174438,
+    "11": 0.14344750055899302,
+    "22": 0.13894018509877373,
+    "50": 0.1358817423545115,
+    "61": 0.13014198722183762,
+    "62": 0.12998135238337297,
+    "4": 0.12585622175255579,
+    "41": 0.124123190691298,
+    "42": 0.11067346586308384,
+    "13": 0.10369463671853316,
+    "21": 0.10362004433055973,
+    "10": 0.09740744974121476,
+    "7": 0.09721216442107167,
+    "15": 0.09454344015773987,
+    "18": 0.07158002334056002,
+    "26": 0.07025637590928947,
+    "57": 0.055204212228128775,
+    "1": 0.050667826361483086,
+    "55": 0.042467311706731486,
+    "47": 0.04073058006941732,
+    "23": 0.04056478587818034,
+    "46": 0.03525357452093725,
+    "49": 0.033372171528620174,
+    "24": 0.028560411601480613,
+    "34": 0.026948353696421432,
+    "16": 0.020808808090647647,
+    "9": 0.020676101630859083,
+    "54": 0.020561843469932235,
+    "30": 0.018446139451662825,
+    "56": 0.018351970292924038,
+    "38": 0.016643566174824646,
+    "3": 0.016111724436108147,
+    "58": 0.015774373738824093,
+    "48": 0.015253754410902085,
+    "8": 0.015091993545591431,
+    "43": 0.014683131152457958,
+    "40": 0.014019277291750202,
+    "59": 0.005862304087169137,
+    "31": 0.005287474322087104,
+    "2": 0.004747227968053874,
+    "32": 0.004460529091186193,
+    "45": 0.0036538516967503315,
+    "17": 0.0028894793454815547,
+    "44": 2.497990528040663e-05,
+    "0": 0.0,
+    "39": 0.0
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 64,
+  "sample_count": 4496,
+  "selector_seconds": 0.6188144683837891,
+  "status": "ok selected=16 candidates=64 samples=4496",
+  "dataset_name": "optdigits"
+}

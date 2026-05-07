@@ -1,0 +1,138 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.19701530025405248,
+      "selected": true
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.3205482175861998,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.24157666456234625,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.11741077157828482,
+      "selected": true
+    },
+    {
+      "id": "feature_17",
+      "kind": "feature",
+      "feature_index": 17,
+      "association_score": 0.21627453212828407,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.19701530025405248
+    },
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3205482175861998
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.24157666456234625
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.11741077157828482
+    },
+    {
+      "source": "feature_17",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.21627453212828407
+    }
+  ],
+  "selected_feature_indices": [
+    5,
+    7,
+    8,
+    14,
+    17
+  ],
+  "candidate_feature_indices": [
+    7,
+    10,
+    6,
+    11,
+    8,
+    12,
+    17,
+    5,
+    13,
+    3,
+    1,
+    14,
+    4,
+    2,
+    16,
+    9,
+    15,
+    0
+  ],
+  "association_scores": {
+    "7": 0.3205482175861998,
+    "10": 0.2839126760468468,
+    "6": 0.27344012903855064,
+    "11": 0.27305060308381296,
+    "8": 0.24157666456234625,
+    "12": 0.2288837258006029,
+    "17": 0.21627453212828407,
+    "5": 0.19701530025405248,
+    "13": 0.18389366767832252,
+    "3": 0.17233497174023765,
+    "1": 0.16024844376668507,
+    "14": 0.11741077157828482,
+    "4": 0.09353045010166598,
+    "2": 0.05633974962742872,
+    "16": 0.053586254447535474,
+    "9": 0.036637265118121015,
+    "15": 0.02287203418615582,
+    "0": 0.01077631810940347
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 18,
+  "sample_count": 676,
+  "selector_seconds": 0.02275252342224121,
+  "status": "ok selected=5 candidates=18 samples=676",
+  "dataset_name": "vehicle"
+}

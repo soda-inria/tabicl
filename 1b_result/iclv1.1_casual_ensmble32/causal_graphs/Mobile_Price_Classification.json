@@ -1,0 +1,128 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.19898720643069598,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.13264717866018555,
+      "selected": true
+    },
+    {
+      "id": "feature_15",
+      "kind": "feature",
+      "feature_index": 15,
+      "association_score": 0.1458959698749357,
+      "selected": true
+    },
+    {
+      "id": "feature_16",
+      "kind": "feature",
+      "feature_index": 16,
+      "association_score": 0.9164410018975636,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.19898720643069598
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.13264717866018555
+    },
+    {
+      "source": "feature_15",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1458959698749357
+    },
+    {
+      "source": "feature_16",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.9164410018975636
+    }
+  ],
+  "selected_feature_indices": [
+    6,
+    14,
+    15,
+    16
+  ],
+  "candidate_feature_indices": [
+    16,
+    6,
+    15,
+    14,
+    18,
+    9,
+    13,
+    11,
+    17,
+    4,
+    8,
+    2,
+    3,
+    1,
+    5,
+    19,
+    10,
+    0,
+    12,
+    7
+  ],
+  "association_scores": {
+    "16": 0.9164410018975636,
+    "6": 0.19898720643069598,
+    "15": 0.1458959698749357,
+    "14": 0.13264717866018555,
+    "18": 0.049984439453453565,
+    "9": 0.04124659735852246,
+    "13": 0.03585552334504574,
+    "11": 0.033156138252741336,
+    "17": 0.02732457442295454,
+    "4": 0.025715504999996676,
+    "8": 0.02085503627177711,
+    "2": 0.02069541883798959,
+    "3": 0.018830553489605627,
+    "1": 0.01845276580506778,
+    "5": 0.016212113468721697,
+    "19": 0.009855778913219768,
+    "10": 0.009441965781019558,
+    "0": 0.007826237921249275,
+    "12": 0.00537449304209586,
+    "7": 0.004216921207819799
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 20,
+  "sample_count": 1600,
+  "selector_seconds": 0.009074926376342773,
+  "status": "ok selected=4 candidates=20 samples=1600",
+  "dataset_name": "Mobile_Price_Classification"
+}

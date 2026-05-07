@@ -1,0 +1,198 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.426769676207554,
+      "selected": true
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.4156377343255177,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.416712764745593,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.4327301034330343,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.4217389518483137,
+      "selected": true
+    },
+    {
+      "id": "feature_12",
+      "kind": "feature",
+      "feature_index": 12,
+      "association_score": 0.4245218845380469,
+      "selected": true
+    },
+    {
+      "id": "feature_13",
+      "kind": "feature",
+      "feature_index": 13,
+      "association_score": 0.4156012638477676,
+      "selected": true
+    },
+    {
+      "id": "feature_16",
+      "kind": "feature",
+      "feature_index": 16,
+      "association_score": 0.4172435738520263,
+      "selected": true
+    },
+    {
+      "id": "feature_19",
+      "kind": "feature",
+      "feature_index": 19,
+      "association_score": 0.41010334691771033,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.426769676207554
+    },
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4156377343255177
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.416712764745593
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4327301034330343
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4217389518483137
+    },
+    {
+      "source": "feature_12",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4245218845380469
+    },
+    {
+      "source": "feature_13",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4156012638477676
+    },
+    {
+      "source": "feature_16",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4172435738520263
+    },
+    {
+      "source": "feature_19",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.41010334691771033
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    3,
+    4,
+    8,
+    10,
+    12,
+    13,
+    16,
+    19
+  ],
+  "candidate_feature_indices": [
+    8,
+    0,
+    12,
+    10,
+    16,
+    4,
+    3,
+    13,
+    19,
+    18,
+    6,
+    14,
+    15,
+    11,
+    1,
+    9,
+    5,
+    17,
+    7,
+    2
+  ],
+  "association_scores": {
+    "8": 0.4327301034330343,
+    "0": 0.426769676207554,
+    "12": 0.4245218845380469,
+    "10": 0.4217389518483137,
+    "16": 0.4172435738520263,
+    "4": 0.416712764745593,
+    "3": 0.4156377343255177,
+    "13": 0.4156012638477676,
+    "19": 0.41010334691771033,
+    "18": 0.4094833157167276,
+    "6": 0.4093648108136526,
+    "14": 0.404830619599093,
+    "15": 0.4033553685699928,
+    "11": 0.4022730259363836,
+    "1": 0.40161726362834577,
+    "9": 0.4009804176392745,
+    "5": 0.3975460687616403,
+    "17": 0.39244953272471,
+    "7": 0.3907049824367749,
+    "2": 0.3828919432989261
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 20,
+  "sample_count": 5000,
+  "selector_seconds": 0.6473445892333984,
+  "status": "ok selected=9 candidates=20 samples=5000",
+  "dataset_name": "twonorm"
+}

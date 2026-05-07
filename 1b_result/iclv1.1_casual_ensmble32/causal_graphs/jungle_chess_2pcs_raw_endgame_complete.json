@@ -1,0 +1,100 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.14857760797903657,
+      "selected": true
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.36924508121447824,
+      "selected": true
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.13179765862022944,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.33014187287784696,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.14857760797903657
+    },
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.36924508121447824
+    },
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.13179765862022944
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.33014187287784696
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    2,
+    3,
+    5
+  ],
+  "candidate_feature_indices": [
+    2,
+    5,
+    0,
+    3,
+    1,
+    4
+  ],
+  "association_scores": {
+    "2": 0.36924508121447824,
+    "5": 0.33014187287784696,
+    "0": 0.14857760797903657,
+    "3": 0.13179765862022944,
+    "1": 0.0024819677330465226,
+    "4": 0.002253832548361917
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 6,
+  "sample_count": 5000,
+  "selector_seconds": 0.012536287307739258,
+  "status": "ok selected=4 candidates=6 samples=5000",
+  "dataset_name": "jungle_chess_2pcs_raw_endgame_complete"
+}

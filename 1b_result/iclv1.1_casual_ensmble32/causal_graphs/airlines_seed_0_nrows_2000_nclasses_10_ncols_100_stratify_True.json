@@ -1,0 +1,88 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.07912005421206017,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.166897321785695,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.022722084686492557,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07912005421206017
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.166897321785695
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.022722084686492557
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    5,
+    6
+  ],
+  "candidate_feature_indices": [
+    5,
+    0,
+    6,
+    2,
+    3,
+    4,
+    1
+  ],
+  "association_scores": {
+    "5": 0.166897321785695,
+    "0": 0.07912005421206017,
+    "6": 0.022722084686492557,
+    "2": 0.02168071476962995,
+    "3": 0.01662689289443983,
+    "4": 0.007154255636905732,
+    "1": 0.006199201094452294
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 7,
+  "sample_count": 1600,
+  "selector_seconds": 0.001428365707397461,
+  "status": "ok selected=3 candidates=7 samples=1600",
+  "dataset_name": "airlines_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True"
+}

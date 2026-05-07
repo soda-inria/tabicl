@@ -1,0 +1,176 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.05695835027520544,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.1346999083552421,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.0483846406061112,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.14325813599579165,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.06955078905203027,
+      "selected": true
+    },
+    {
+      "id": "feature_12",
+      "kind": "feature",
+      "feature_index": 12,
+      "association_score": 0.40091217214636865,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.09875791340228794,
+      "selected": true
+    },
+    {
+      "id": "feature_15",
+      "kind": "feature",
+      "feature_index": 15,
+      "association_score": 0.09393660019575943,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.05695835027520544
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1346999083552421
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.0483846406061112
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.14325813599579165
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.06955078905203027
+    },
+    {
+      "source": "feature_12",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.40091217214636865
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.09875791340228794
+    },
+    {
+      "source": "feature_15",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.09393660019575943
+    }
+  ],
+  "selected_feature_indices": [
+    2,
+    4,
+    5,
+    6,
+    10,
+    12,
+    14,
+    15
+  ],
+  "candidate_feature_indices": [
+    12,
+    6,
+    4,
+    14,
+    15,
+    10,
+    8,
+    13,
+    2,
+    5,
+    0,
+    1,
+    7,
+    9,
+    11,
+    3
+  ],
+  "association_scores": {
+    "12": 0.40091217214636865,
+    "6": 0.14325813599579165,
+    "4": 0.1346999083552421,
+    "14": 0.09875791340228794,
+    "15": 0.09393660019575943,
+    "10": 0.06955078905203027,
+    "8": 0.0625021729790572,
+    "13": 0.060185524284131806,
+    "2": 0.05695835027520544,
+    "5": 0.0483846406061112,
+    "0": 0.04237442980513911,
+    "1": 0.038968468358158204,
+    "7": 0.03060639626800277,
+    "9": 0.028339267631675567,
+    "11": 0.011966123534627011,
+    "3": 0.007555750328518113
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 16,
+  "sample_count": 5000,
+  "selector_seconds": 0.18277597427368164,
+  "status": "ok selected=8 candidates=16 samples=5000",
+  "dataset_name": "bank"
+}

@@ -1,0 +1,110 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.14911249317438172,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.22548561341911533,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.2589066392957582,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.14911249317438172
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.22548561341911533
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2589066392957582
+    }
+  ],
+  "selected_feature_indices": [
+    2,
+    5,
+    8
+  ],
+  "candidate_feature_indices": [
+    8,
+    5,
+    10,
+    9,
+    4,
+    2,
+    0,
+    16,
+    11,
+    17,
+    12,
+    7,
+    1,
+    6,
+    3,
+    13,
+    14,
+    15
+  ],
+  "association_scores": {
+    "8": 0.2589066392957582,
+    "5": 0.22548561341911533,
+    "10": 0.2189451000420051,
+    "9": 0.21334888857601683,
+    "4": 0.15456230956402123,
+    "2": 0.14911249317438172,
+    "0": 0.09477721615316297,
+    "16": 0.05819067387160191,
+    "11": 0.054270577083836403,
+    "17": 0.04096598660028474,
+    "12": 0.018118892408259347,
+    "7": 0.017888346166689204,
+    "1": 0.0049147437723607666,
+    "6": 0.002128966175239942,
+    "3": 0.0009506371735736399,
+    "13": 0.0,
+    "14": 0.0,
+    "15": 0.0
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 18,
+  "sample_count": 2067,
+  "selector_seconds": 0.009145021438598633,
+  "status": "ok selected=3 candidates=18 samples=2067",
+  "dataset_name": "seismic+bumps"
+}

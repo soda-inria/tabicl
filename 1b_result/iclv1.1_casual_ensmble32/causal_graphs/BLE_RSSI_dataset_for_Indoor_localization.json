@@ -1,0 +1,80 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.0032996569215797814,
+      "selected": true
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.4153427982985265,
+      "selected": true
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.2030520539005264,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.0032996569215797814
+    },
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4153427982985265
+    },
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2030520539005264
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    1,
+    2
+  ],
+  "candidate_feature_indices": [
+    1,
+    2,
+    0
+  ],
+  "association_scores": {
+    "1": 0.4153427982985265,
+    "2": 0.2030520539005264,
+    "0": 0.0032996569215797814
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 3,
+  "sample_count": 5000,
+  "selector_seconds": 0.002085447311401367,
+  "status": "ok selected=3 candidates=3 samples=5000",
+  "dataset_name": "BLE_RSSI_dataset_for_Indoor_localization"
+}

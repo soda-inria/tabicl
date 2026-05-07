@@ -1,0 +1,90 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.04103338736892255,
+      "selected": true
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.4048250450829747,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.32767388476292447,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.04103338736892255
+    },
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4048250450829747
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.32767388476292447
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    3,
+    4
+  ],
+  "candidate_feature_indices": [
+    3,
+    4,
+    6,
+    2,
+    7,
+    5,
+    0,
+    1
+  ],
+  "association_scores": {
+    "3": 0.4048250450829747,
+    "4": 0.32767388476292447,
+    "6": 0.22675166829393265,
+    "2": 0.14517563013371057,
+    "7": 0.1086957047210176,
+    "5": 0.04232783427765779,
+    "0": 0.04103338736892255,
+    "1": 0.017014861947492608
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 8,
+  "sample_count": 5000,
+  "selector_seconds": 0.010465621948242188,
+  "status": "ok selected=3 candidates=8 samples=5000",
+  "dataset_name": "electricity"
+}

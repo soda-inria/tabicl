@@ -1,0 +1,246 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.10746836469586327,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.0753699901390214,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.22631737806798763,
+      "selected": true
+    },
+    {
+      "id": "feature_15",
+      "kind": "feature",
+      "feature_index": 15,
+      "association_score": 0.054077323939580535,
+      "selected": true
+    },
+    {
+      "id": "feature_19",
+      "kind": "feature",
+      "feature_index": 19,
+      "association_score": 0.12336573629084471,
+      "selected": true
+    },
+    {
+      "id": "feature_28",
+      "kind": "feature",
+      "feature_index": 28,
+      "association_score": 0.0717370635528092,
+      "selected": true
+    },
+    {
+      "id": "feature_33",
+      "kind": "feature",
+      "feature_index": 33,
+      "association_score": 0.11129486557974612,
+      "selected": true
+    },
+    {
+      "id": "feature_34",
+      "kind": "feature",
+      "feature_index": 34,
+      "association_score": 0.14819224618505358,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10746836469586327
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.0753699901390214
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.22631737806798763
+    },
+    {
+      "source": "feature_15",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.054077323939580535
+    },
+    {
+      "source": "feature_19",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.12336573629084471
+    },
+    {
+      "source": "feature_28",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.0717370635528092
+    },
+    {
+      "source": "feature_33",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.11129486557974612
+    },
+    {
+      "source": "feature_34",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.14819224618505358
+    }
+  ],
+  "selected_feature_indices": [
+    2,
+    8,
+    9,
+    15,
+    19,
+    28,
+    33,
+    34
+  ],
+  "candidate_feature_indices": [
+    9,
+    34,
+    11,
+    19,
+    10,
+    17,
+    33,
+    2,
+    18,
+    35,
+    45,
+    6,
+    8,
+    30,
+    39,
+    28,
+    21,
+    1,
+    49,
+    4,
+    5,
+    7,
+    37,
+    15,
+    13,
+    31,
+    27,
+    26,
+    50,
+    24,
+    41,
+    14,
+    20,
+    42,
+    32,
+    16,
+    48,
+    25,
+    12,
+    40,
+    38,
+    36,
+    47,
+    29,
+    22,
+    44,
+    43,
+    23,
+    0,
+    46,
+    3
+  ],
+  "association_scores": {
+    "9": 0.22631737806798763,
+    "34": 0.14819224618505358,
+    "11": 0.136767002119447,
+    "19": 0.12336573629084471,
+    "10": 0.11633254169226283,
+    "17": 0.11371706669277958,
+    "33": 0.11129486557974612,
+    "2": 0.10746836469586327,
+    "18": 0.1014548525441566,
+    "35": 0.09654081450558416,
+    "45": 0.08720005785940768,
+    "6": 0.07793007226947839,
+    "8": 0.0753699901390214,
+    "30": 0.07315789523184112,
+    "39": 0.0720433729372314,
+    "28": 0.0717370635528092,
+    "21": 0.06535607221941117,
+    "1": 0.061403050698853316,
+    "49": 0.06128208975980925,
+    "4": 0.06103288405226531,
+    "5": 0.059491248230645284,
+    "7": 0.056606313770795634,
+    "37": 0.05572259877503733,
+    "15": 0.054077323939580535,
+    "13": 0.0508919737359914,
+    "31": 0.0508919737359914,
+    "27": 0.049485842882953275,
+    "26": 0.048084277060697636,
+    "50": 0.04756204528042814,
+    "24": 0.046845351049142926,
+    "41": 0.04446170838863457,
+    "14": 0.03807035926454458,
+    "20": 0.03765181655993124,
+    "42": 0.03708295123134202,
+    "32": 0.0331676371693374,
+    "16": 0.030026853949168604,
+    "48": 0.028379486059823746,
+    "25": 0.025939887450210936,
+    "12": 0.023955106924252907,
+    "40": 0.022583945415950647,
+    "38": 0.022453063356889045,
+    "36": 0.022425735760916117,
+    "47": 0.013541682161486957,
+    "29": 0.01318869066203149,
+    "22": 0.011019049880812,
+    "44": 0.008977788511335799,
+    "43": 0.008861106939087733,
+    "23": 0.008161399003943888,
+    "0": 0.007248067694038521,
+    "46": 0.006689310354821328,
+    "3": 0.004214049524720954
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 51,
+  "sample_count": 4894,
+  "selector_seconds": 0.33315062522888184,
+  "status": "ok selected=8 candidates=51 samples=4894",
+  "dataset_name": "first-order-theorem-proving"
+}

@@ -1,0 +1,94 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.054162378913752265,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.017482708103252257,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.059268330754013394,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.054162378913752265
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.017482708103252257
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.059268330754013394
+    }
+  ],
+  "selected_feature_indices": [
+    4,
+    5,
+    9
+  ],
+  "candidate_feature_indices": [
+    9,
+    4,
+    5,
+    0,
+    6,
+    1,
+    7,
+    2,
+    8,
+    3
+  ],
+  "association_scores": {
+    "9": 0.059268330754013394,
+    "4": 0.054162378913752265,
+    "5": 0.017482708103252257,
+    "0": 0.01747571081074479,
+    "6": 0.0170119686691496,
+    "1": 0.016955824928992877,
+    "7": 0.015505294861297255,
+    "2": 0.015445274648764667,
+    "8": 0.01394627284595249,
+    "3": 0.01394316939927538
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 10,
+  "sample_count": 5000,
+  "selector_seconds": 0.004006147384643555,
+  "status": "ok selected=3 candidates=10 samples=5000",
+  "dataset_name": "FOREX_audsgd-hour-High"
+}

@@ -1,0 +1,138 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.21841416604248035,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.03581181592592235,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.2272466361423673,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.1869415585512284,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.2729687956798588,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.05577178358839227,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.21841416604248035
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.03581181592592235
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2272466361423673
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1869415585512284
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2729687956798588
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.05577178358839227
+    }
+  ],
+  "selected_feature_indices": [
+    1,
+    4,
+    6,
+    8,
+    9,
+    10
+  ],
+  "candidate_feature_indices": [
+    9,
+    6,
+    1,
+    8,
+    2,
+    10,
+    4,
+    7,
+    5,
+    3,
+    0
+  ],
+  "association_scores": {
+    "9": 0.2729687956798588,
+    "6": 0.2272466361423673,
+    "1": 0.21841416604248035,
+    "8": 0.1869415585512284,
+    "2": 0.08342328739201134,
+    "10": 0.05577178358839227,
+    "4": 0.03581181592592235,
+    "7": 0.032389387819632784,
+    "5": 0.022998328151214834,
+    "3": 0.016875207538225585,
+    "0": 0.006480349463835284
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 11,
+  "sample_count": 5000,
+  "selector_seconds": 0.04421639442443848,
+  "status": "ok selected=6 candidates=11 samples=5000",
+  "dataset_name": "Cardiovascular-Disease-dataset"
+}

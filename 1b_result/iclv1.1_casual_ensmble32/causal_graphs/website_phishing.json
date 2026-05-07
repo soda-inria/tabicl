@@ -1,0 +1,134 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.662556626480831,
+      "selected": true
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.5097897177023908,
+      "selected": true
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.5247179945995015,
+      "selected": true
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.26599528052362476,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.2791078267787674,
+      "selected": true
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.23191691723020205,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.662556626480831
+    },
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.5097897177023908
+    },
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.5247179945995015
+    },
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.26599528052362476
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2791078267787674
+    },
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.23191691723020205
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    7
+  ],
+  "candidate_feature_indices": [
+    0,
+    2,
+    1,
+    4,
+    3,
+    5,
+    7,
+    6,
+    8
+  ],
+  "association_scores": {
+    "0": 0.662556626480831,
+    "2": 0.5247179945995015,
+    "1": 0.5097897177023908,
+    "4": 0.2791078267787674,
+    "3": 0.26599528052362476,
+    "5": 0.2342247208661441,
+    "7": 0.23191691723020205,
+    "6": 0.16966454999774166,
+    "8": 0.06395153256377126
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 9,
+  "sample_count": 1082,
+  "selector_seconds": 0.03666353225708008,
+  "status": "ok selected=6 candidates=9 samples=1082",
+  "dataset_name": "website_phishing"
+}

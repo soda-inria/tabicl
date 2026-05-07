@@ -1,0 +1,102 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.07632960672310543,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.08159701681093182,
+      "selected": true
+    },
+    {
+      "id": "feature_11",
+      "kind": "feature",
+      "feature_index": 11,
+      "association_score": 0.047597981905680584,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07632960672310543
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.08159701681093182
+    },
+    {
+      "source": "feature_11",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.047597981905680584
+    }
+  ],
+  "selected_feature_indices": [
+    1,
+    10,
+    11
+  ],
+  "candidate_feature_indices": [
+    10,
+    1,
+    12,
+    0,
+    11,
+    8,
+    2,
+    3,
+    9,
+    5,
+    6,
+    13,
+    7,
+    4
+  ],
+  "association_scores": {
+    "10": 0.08159701681093182,
+    "1": 0.07632960672310543,
+    "12": 0.06266923285440303,
+    "0": 0.05049650868625656,
+    "11": 0.047597981905680584,
+    "8": 0.0357926487984614,
+    "2": 0.03172780862116303,
+    "3": 0.023888150975366236,
+    "9": 0.023303807573016515,
+    "5": 0.01295327543360904,
+    "6": 0.01246131645336736,
+    "13": 0.012197518157779525,
+    "7": 0.009621389454469961,
+    "4": 0.0015149881011354378
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 14,
+  "sample_count": 5000,
+  "selector_seconds": 0.01326751708984375,
+  "status": "ok selected=3 candidates=14 samples=5000",
+  "dataset_name": "eeg-eye-state"
+}

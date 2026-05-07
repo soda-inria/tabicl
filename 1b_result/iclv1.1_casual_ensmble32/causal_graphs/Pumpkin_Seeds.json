@@ -1,0 +1,126 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.15975436011165453,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.1572888899481553,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.7007981966437429,
+      "selected": true
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.14376156437081225,
+      "selected": true
+    },
+    {
+      "id": "feature_11",
+      "kind": "feature",
+      "feature_index": 11,
+      "association_score": 0.7298454682756783,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.15975436011165453
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1572888899481553
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.7007981966437429
+    },
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.14376156437081225
+    },
+    {
+      "source": "feature_11",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.7298454682756783
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    4,
+    6,
+    7,
+    11
+  ],
+  "candidate_feature_indices": [
+    11,
+    10,
+    6,
+    9,
+    2,
+    3,
+    1,
+    8,
+    0,
+    4,
+    5,
+    7
+  ],
+  "association_scores": {
+    "11": 0.7298454682756783,
+    "10": 0.725303309363336,
+    "6": 0.7007981966437429,
+    "9": 0.672142921290387,
+    "2": 0.5567565216432859,
+    "3": 0.4098111497824721,
+    "1": 0.38000133528313756,
+    "8": 0.24646343716284674,
+    "0": 0.15975436011165453,
+    "4": 0.1572888899481553,
+    "5": 0.149265184090398,
+    "7": 0.14376156437081225
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 12,
+  "sample_count": 2000,
+  "selector_seconds": 0.03410673141479492,
+  "status": "ok selected=5 candidates=12 samples=2000",
+  "dataset_name": "Pumpkin_Seeds"
+}

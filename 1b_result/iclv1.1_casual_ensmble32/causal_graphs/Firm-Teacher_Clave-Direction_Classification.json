@@ -1,0 +1,176 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.2011885010486459,
+      "selected": true
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.27030931631674754,
+      "selected": true
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.15543499580838327,
+      "selected": true
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.12388353352822754,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.13227381856796522,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.14349852809855765,
+      "selected": true
+    },
+    {
+      "id": "feature_13",
+      "kind": "feature",
+      "feature_index": 13,
+      "association_score": 0.1291891066834664,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.17759013045989275,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2011885010486459
+    },
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.27030931631674754
+    },
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.15543499580838327
+    },
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.12388353352822754
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.13227381856796522
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.14349852809855765
+    },
+    {
+      "source": "feature_13",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1291891066834664
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.17759013045989275
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    1,
+    2,
+    7,
+    9,
+    10,
+    13,
+    14
+  ],
+  "candidate_feature_indices": [
+    1,
+    0,
+    14,
+    2,
+    10,
+    9,
+    13,
+    7,
+    5,
+    6,
+    11,
+    8,
+    15,
+    12,
+    3,
+    4
+  ],
+  "association_scores": {
+    "1": 0.27030931631674754,
+    "0": 0.2011885010486459,
+    "14": 0.17759013045989275,
+    "2": 0.15543499580838327,
+    "10": 0.14349852809855765,
+    "9": 0.13227381856796522,
+    "13": 0.1291891066834664,
+    "7": 0.12388353352822754,
+    "5": 0.12256892487648893,
+    "6": 0.11479637693336554,
+    "11": 0.10958132410234962,
+    "8": 0.10883062032018638,
+    "15": 0.10794536470199062,
+    "12": 0.07725818922273607,
+    "3": 0.07717382300327615,
+    "4": 0.06384680579219149
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 16,
+  "sample_count": 5000,
+  "selector_seconds": 0.5309605598449707,
+  "status": "ok selected=8 candidates=16 samples=5000",
+  "dataset_name": "Firm-Teacher_Clave-Direction_Classification"
+}

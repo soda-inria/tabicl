@@ -1,0 +1,220 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.11802221637352349,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.08855093247745634,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.16135375428623405,
+      "selected": true
+    },
+    {
+      "id": "feature_12",
+      "kind": "feature",
+      "feature_index": 12,
+      "association_score": 0.1662913522070802,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.17224846902242483,
+      "selected": true
+    },
+    {
+      "id": "feature_15",
+      "kind": "feature",
+      "feature_index": 15,
+      "association_score": 0.11955865040783596,
+      "selected": true
+    },
+    {
+      "id": "feature_16",
+      "kind": "feature",
+      "feature_index": 16,
+      "association_score": 0.19792726723742637,
+      "selected": true
+    },
+    {
+      "id": "feature_18",
+      "kind": "feature",
+      "feature_index": 18,
+      "association_score": 0.058890178645321825,
+      "selected": true
+    },
+    {
+      "id": "feature_19",
+      "kind": "feature",
+      "feature_index": 19,
+      "association_score": 0.05991596013004829,
+      "selected": true
+    },
+    {
+      "id": "feature_21",
+      "kind": "feature",
+      "feature_index": 21,
+      "association_score": 0.047245738700338484,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.11802221637352349
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.08855093247745634
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.16135375428623405
+    },
+    {
+      "source": "feature_12",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1662913522070802
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.17224846902242483
+    },
+    {
+      "source": "feature_15",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.11955865040783596
+    },
+    {
+      "source": "feature_16",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.19792726723742637
+    },
+    {
+      "source": "feature_18",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.058890178645321825
+    },
+    {
+      "source": "feature_19",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.05991596013004829
+    },
+    {
+      "source": "feature_21",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.047245738700338484
+    }
+  ],
+  "selected_feature_indices": [
+    2,
+    5,
+    8,
+    12,
+    14,
+    15,
+    16,
+    18,
+    19,
+    21
+  ],
+  "candidate_feature_indices": [
+    16,
+    14,
+    12,
+    8,
+    15,
+    2,
+    4,
+    5,
+    11,
+    17,
+    3,
+    19,
+    18,
+    13,
+    21,
+    23,
+    0,
+    6,
+    9,
+    22,
+    7,
+    10,
+    1,
+    20
+  ],
+  "association_scores": {
+    "16": 0.19792726723742637,
+    "14": 0.17224846902242483,
+    "12": 0.1662913522070802,
+    "8": 0.16135375428623405,
+    "15": 0.11955865040783596,
+    "2": 0.11802221637352349,
+    "4": 0.10106483511474346,
+    "5": 0.08855093247745634,
+    "11": 0.08483123324563326,
+    "17": 0.07880525716170984,
+    "3": 0.07149810569254676,
+    "19": 0.05991596013004829,
+    "18": 0.058890178645321825,
+    "13": 0.05466660873964917,
+    "21": 0.047245738700338484,
+    "23": 0.043404542669162834,
+    "0": 0.0407807691873713,
+    "6": 0.03464035737407919,
+    "9": 0.015636579264034823,
+    "22": 0.013414650347116266,
+    "7": 0.010408319644920472,
+    "10": 0.010315894858899772,
+    "1": 0.0032533149001045523,
+    "20": 0.0001410148482416676
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 24,
+  "sample_count": 4364,
+  "selector_seconds": 0.24723172187805176,
+  "status": "ok selected=10 candidates=24 samples=4364",
+  "dataset_name": "wall-robot-navigation"
+}

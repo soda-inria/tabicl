@@ -1,0 +1,158 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.05558084413152907,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.07912057769555939,
+      "selected": true
+    },
+    {
+      "id": "feature_16",
+      "kind": "feature",
+      "feature_index": 16,
+      "association_score": 0.5518201893823199,
+      "selected": true
+    },
+    {
+      "id": "feature_17",
+      "kind": "feature",
+      "feature_index": 17,
+      "association_score": 0.2187208200266547,
+      "selected": true
+    },
+    {
+      "id": "feature_18",
+      "kind": "feature",
+      "feature_index": 18,
+      "association_score": 0.32774131700239806,
+      "selected": true
+    },
+    {
+      "id": "feature_20",
+      "kind": "feature",
+      "feature_index": 20,
+      "association_score": 0.3416875604541581,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.05558084413152907
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07912057769555939
+    },
+    {
+      "source": "feature_16",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.5518201893823199
+    },
+    {
+      "source": "feature_17",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2187208200266547
+    },
+    {
+      "source": "feature_18",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.32774131700239806
+    },
+    {
+      "source": "feature_20",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3416875604541581
+    }
+  ],
+  "selected_feature_indices": [
+    1,
+    9,
+    16,
+    17,
+    18,
+    20
+  ],
+  "candidate_feature_indices": [
+    16,
+    20,
+    18,
+    17,
+    9,
+    2,
+    1,
+    0,
+    15,
+    19,
+    6,
+    12,
+    8,
+    4,
+    5,
+    7,
+    10,
+    3,
+    13,
+    11,
+    14
+  ],
+  "association_scores": {
+    "16": 0.5518201893823199,
+    "20": 0.3416875604541581,
+    "18": 0.32774131700239806,
+    "17": 0.2187208200266547,
+    "9": 0.07912057769555939,
+    "2": 0.068650486920035,
+    "1": 0.05558084413152907,
+    "0": 0.04370592807795398,
+    "15": 0.03674445208584913,
+    "19": 0.03150491583786553,
+    "6": 0.02951112166535932,
+    "12": 0.022933789798067036,
+    "8": 0.022818783069261925,
+    "4": 0.021864674144314197,
+    "5": 0.020817438380650335,
+    "7": 0.019748259805282258,
+    "10": 0.016029568302584195,
+    "3": 0.010890098318578798,
+    "13": 0.006690541863646093,
+    "11": 0.005002033868762507,
+    "14": 0.003844754341865149
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 21,
+  "sample_count": 5000,
+  "selector_seconds": 0.055124521255493164,
+  "status": "ok selected=6 candidates=21 samples=5000",
+  "dataset_name": "thyroid"
+}

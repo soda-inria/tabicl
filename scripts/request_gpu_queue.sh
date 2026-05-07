@@ -3,9 +3,9 @@ set -euo pipefail
 
 ACCOUNT="${ACCOUNT:-crc00006699}"
 PARTITION="${PARTITION:-gpu-rtx3090}"
-NODE="${NODE:-gpu3}"
-GPUS="${GPUS:-2}"
-TIME_LIMIT="${TIME_LIMIT:-72:00:00}"
+NODE="${NODE:-gpu1}"
+GPUS="${GPUS:-4}"
+TIME_LIMIT="${TIME_LIMIT:-144:00:00}"
 JOB_NAME="${JOB_NAME:-interact}"
 SHOW_QUEUE="${SHOW_QUEUE:-1}"
 USE_NODE=1
@@ -17,9 +17,9 @@ Request an interactive Slurm GPU allocation and wait in the queue.
 Defaults match the current RTX3090 server setup:
   account   crc00006699
   partition gpu-rtx3090
-  node      gpu3
+  node      gpu4
   gpus      2
-  time      72:00:00
+  time      144:00:00
 
 Usage:
   scripts/request_gpu_queue.sh [options] [-- command ...]
@@ -27,7 +27,7 @@ Usage:
 Options:
   -A, --account ACCOUNT      Slurm account
   -p, --partition PARTITION  Slurm partition
-  -w, --node NODE            Requested node, for example gpu3
+  -w, --node NODE            Requested node, for example gpu4
       --any-node             Do not pin to a specific node
   -g, --gpus N               Number of GPUs
   -t, --time HH:MM:SS        Time limit
@@ -38,11 +38,11 @@ Options:
 Examples:
   scripts/request_gpu_queue.sh
   scripts/request_gpu_queue.sh --any-node
-  scripts/request_gpu_queue.sh -w gpu3 -g 2 -t 72:00:00
+  scripts/request_gpu_queue.sh -w gpu4 -g 2 -t 72:00:00
   scripts/request_gpu_queue.sh --any-node -- bash -lc 'nvidia-smi && zsh'
 
 You can also override defaults with environment variables:
-  ACCOUNT=crc00006699 PARTITION=gpu-rtx3090 NODE=gpu3 GPUS=2 TIME_LIMIT=72:00:00 scripts/request_gpu_queue.sh
+  ACCOUNT=crc00006699 PARTITION=gpu-rtx3090 NODE=gpu4 GPUS=2 TIME_LIMIT=72:00:00 scripts/request_gpu_queue.sh
 USAGE
 }
 

@@ -1,0 +1,212 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.3065700487485479,
+      "selected": true
+    },
+    {
+      "id": "feature_12",
+      "kind": "feature",
+      "feature_index": 12,
+      "association_score": 0.34644186654904385,
+      "selected": true
+    },
+    {
+      "id": "feature_13",
+      "kind": "feature",
+      "feature_index": 13,
+      "association_score": 0.263149539071663,
+      "selected": true
+    },
+    {
+      "id": "feature_21",
+      "kind": "feature",
+      "feature_index": 21,
+      "association_score": 0.35600442662347165,
+      "selected": true
+    },
+    {
+      "id": "feature_32",
+      "kind": "feature",
+      "feature_index": 32,
+      "association_score": 0.3172527121830417,
+      "selected": true
+    },
+    {
+      "id": "feature_33",
+      "kind": "feature",
+      "feature_index": 33,
+      "association_score": 0.2745706395702657,
+      "selected": true
+    },
+    {
+      "id": "feature_39",
+      "kind": "feature",
+      "feature_index": 39,
+      "association_score": 0.14625432143576425,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3065700487485479
+    },
+    {
+      "source": "feature_12",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.34644186654904385
+    },
+    {
+      "source": "feature_13",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.263149539071663
+    },
+    {
+      "source": "feature_21",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.35600442662347165
+    },
+    {
+      "source": "feature_32",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3172527121830417
+    },
+    {
+      "source": "feature_33",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2745706395702657
+    },
+    {
+      "source": "feature_39",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.14625432143576425
+    }
+  ],
+  "selected_feature_indices": [
+    2,
+    12,
+    13,
+    21,
+    32,
+    33,
+    39
+  ],
+  "candidate_feature_indices": [
+    0,
+    26,
+    38,
+    21,
+    12,
+    14,
+    6,
+    32,
+    2,
+    35,
+    33,
+    13,
+    37,
+    24,
+    10,
+    4,
+    40,
+    7,
+    9,
+    5,
+    30,
+    19,
+    39,
+    17,
+    23,
+    36,
+    22,
+    31,
+    28,
+    20,
+    11,
+    16,
+    25,
+    3,
+    29,
+    18,
+    8,
+    34,
+    27,
+    15,
+    1
+  ],
+  "association_scores": {
+    "0": 0.38008194348568286,
+    "26": 0.37687477360244703,
+    "38": 0.3619034310540708,
+    "21": 0.35600442662347165,
+    "12": 0.34644186654904385,
+    "14": 0.3341707917077059,
+    "6": 0.3304690436248411,
+    "32": 0.3172527121830417,
+    "2": 0.3065700487485479,
+    "35": 0.2829565331776667,
+    "33": 0.2745706395702657,
+    "13": 0.263149539071663,
+    "37": 0.2554817736939021,
+    "24": 0.2441564750335258,
+    "10": 0.24409708492475257,
+    "4": 0.23233578028600704,
+    "40": 0.21796885312143235,
+    "7": 0.1920906059605947,
+    "9": 0.16726211243738753,
+    "5": 0.16593198721120486,
+    "30": 0.1656283685910524,
+    "19": 0.15442537082543756,
+    "39": 0.14625432143576425,
+    "17": 0.12713529765948636,
+    "23": 0.11596181606417334,
+    "36": 0.11302579100427801,
+    "22": 0.10706059763658515,
+    "31": 0.10011377107041589,
+    "28": 0.09812048103946436,
+    "20": 0.09711369842295109,
+    "11": 0.09345993513921497,
+    "16": 0.09240696440540673,
+    "25": 0.08484459496503455,
+    "3": 0.08451800564903415,
+    "29": 0.06071134081573944,
+    "18": 0.0522165277972322,
+    "8": 0.05078237856298506,
+    "34": 0.04185367418478268,
+    "27": 0.02940708502831607,
+    "15": 0.001915908333174646,
+    "1": 0.0006180140615986874
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 41,
+  "sample_count": 843,
+  "selector_seconds": 0.09360575675964355,
+  "status": "ok selected=7 candidates=41 samples=843",
+  "dataset_name": "QSAR_biodegradation"
+}

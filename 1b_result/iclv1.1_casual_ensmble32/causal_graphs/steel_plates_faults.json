@@ -1,0 +1,198 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.27838614855977273,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.30409282924350856,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.27791682380688587,
+      "selected": true
+    },
+    {
+      "id": "feature_12",
+      "kind": "feature",
+      "feature_index": 12,
+      "association_score": 0.21828796720651866,
+      "selected": true
+    },
+    {
+      "id": "feature_13",
+      "kind": "feature",
+      "feature_index": 13,
+      "association_score": 0.2438126670352144,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.2743499229356443,
+      "selected": true
+    },
+    {
+      "id": "feature_23",
+      "kind": "feature",
+      "feature_index": 23,
+      "association_score": 0.3140012974775635,
+      "selected": true
+    },
+    {
+      "id": "feature_26",
+      "kind": "feature",
+      "feature_index": 26,
+      "association_score": 0.23154677493037434,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.27838614855977273
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.30409282924350856
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.27791682380688587
+    },
+    {
+      "source": "feature_12",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.21828796720651866
+    },
+    {
+      "source": "feature_13",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2438126670352144
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2743499229356443
+    },
+    {
+      "source": "feature_23",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3140012974775635
+    },
+    {
+      "source": "feature_26",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.23154677493037434
+    }
+  ],
+  "selected_feature_indices": [
+    3,
+    9,
+    10,
+    12,
+    13,
+    14,
+    23,
+    26
+  ],
+  "candidate_feature_indices": [
+    23,
+    21,
+    6,
+    9,
+    2,
+    8,
+    7,
+    3,
+    10,
+    14,
+    13,
+    26,
+    22,
+    18,
+    12,
+    17,
+    19,
+    0,
+    1,
+    16,
+    15,
+    25,
+    24,
+    20,
+    5,
+    4,
+    11
+  ],
+  "association_scores": {
+    "23": 0.3140012974775635,
+    "21": 0.31067142858589814,
+    "6": 0.30983801363907076,
+    "9": 0.30409282924350856,
+    "2": 0.3002444771450825,
+    "8": 0.29386041866141027,
+    "7": 0.2818976034998948,
+    "3": 0.27838614855977273,
+    "10": 0.27791682380688587,
+    "14": 0.2743499229356443,
+    "13": 0.2438126670352144,
+    "26": 0.23154677493037434,
+    "22": 0.22273366771176972,
+    "18": 0.2220548195414657,
+    "12": 0.21828796720651866,
+    "17": 0.2152969612698421,
+    "19": 0.14664158430970128,
+    "0": 0.10817947497045424,
+    "1": 0.10817947497045423,
+    "16": 0.0965403608236731,
+    "15": 0.04968390210575678,
+    "25": 0.04656280278050496,
+    "24": 0.036567027265113676,
+    "20": 0.014686677118503222,
+    "5": 0.0032305506438287303,
+    "4": 0.0032216919536223933,
+    "11": 0.0009506462898059227
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 27,
+  "sample_count": 1552,
+  "selector_seconds": 0.07443714141845703,
+  "status": "ok selected=8 candidates=27 samples=1552",
+  "dataset_name": "steel_plates_faults"
+}

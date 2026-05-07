@@ -1,0 +1,238 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.15381065872371127,
+      "selected": true
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.2081789097681383,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.1111877799831265,
+      "selected": true
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.10088005032379666,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.10308479858028652,
+      "selected": true
+    },
+    {
+      "id": "feature_15",
+      "kind": "feature",
+      "feature_index": 15,
+      "association_score": 0.23789120537129693,
+      "selected": true
+    },
+    {
+      "id": "feature_16",
+      "kind": "feature",
+      "feature_index": 16,
+      "association_score": 0.3252795396736609,
+      "selected": true
+    },
+    {
+      "id": "feature_18",
+      "kind": "feature",
+      "feature_index": 18,
+      "association_score": 0.20189395844047275,
+      "selected": true
+    },
+    {
+      "id": "feature_20",
+      "kind": "feature",
+      "feature_index": 20,
+      "association_score": 0.22411456908678107,
+      "selected": true
+    },
+    {
+      "id": "feature_22",
+      "kind": "feature",
+      "feature_index": 22,
+      "association_score": 0.27200172912443316,
+      "selected": true
+    },
+    {
+      "id": "feature_24",
+      "kind": "feature",
+      "feature_index": 24,
+      "association_score": 0.18547503551946853,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.15381065872371127
+    },
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2081789097681383
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1111877799831265
+    },
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10088005032379666
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10308479858028652
+    },
+    {
+      "source": "feature_15",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.23789120537129693
+    },
+    {
+      "source": "feature_16",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3252795396736609
+    },
+    {
+      "source": "feature_18",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.20189395844047275
+    },
+    {
+      "source": "feature_20",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.22411456908678107
+    },
+    {
+      "source": "feature_22",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.27200172912443316
+    },
+    {
+      "source": "feature_24",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.18547503551946853
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    1,
+    4,
+    7,
+    9,
+    15,
+    16,
+    18,
+    20,
+    22,
+    24
+  ],
+  "candidate_feature_indices": [
+    16,
+    22,
+    15,
+    20,
+    1,
+    19,
+    18,
+    24,
+    17,
+    23,
+    0,
+    4,
+    9,
+    7,
+    3,
+    14,
+    5,
+    25,
+    12,
+    6,
+    8,
+    13,
+    10,
+    21,
+    2,
+    11
+  ],
+  "association_scores": {
+    "16": 0.3252795396736609,
+    "22": 0.27200172912443316,
+    "15": 0.23789120537129693,
+    "20": 0.22411456908678107,
+    "1": 0.2081789097681383,
+    "19": 0.20373588369434245,
+    "18": 0.20189395844047275,
+    "24": 0.18547503551946853,
+    "17": 0.17678359516835787,
+    "23": 0.1557135515813257,
+    "0": 0.15381065872371127,
+    "4": 0.1111877799831265,
+    "9": 0.10308479858028652,
+    "7": 0.10088005032379666,
+    "3": 0.07542400666719816,
+    "14": 0.07052935886986623,
+    "5": 0.05886352819437282,
+    "25": 0.05247620231098953,
+    "12": 0.044702990535436984,
+    "6": 0.03929753441775817,
+    "8": 0.03497542158181609,
+    "13": 0.03178173695697715,
+    "10": 0.02771276657970471,
+    "21": 0.023997299031530545,
+    "2": 0.01797115868967739,
+    "11": 0.01673059086938933
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 26,
+  "sample_count": 2240,
+  "selector_seconds": 0.20087122917175293,
+  "status": "ok selected=11 candidates=26 samples=2240",
+  "dataset_name": "thyroid-dis"
+}

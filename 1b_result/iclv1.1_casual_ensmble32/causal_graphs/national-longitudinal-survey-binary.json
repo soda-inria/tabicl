@@ -1,0 +1,120 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.2534897451637602,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.09899082482059664,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.622299560340339,
+      "selected": true
+    },
+    {
+      "id": "feature_15",
+      "kind": "feature",
+      "feature_index": 15,
+      "association_score": 0.27538833586604045,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2534897451637602
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.09899082482059664
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.622299560340339
+    },
+    {
+      "source": "feature_15",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.27538833586604045
+    }
+  ],
+  "selected_feature_indices": [
+    1,
+    6,
+    8,
+    15
+  ],
+  "candidate_feature_indices": [
+    8,
+    15,
+    1,
+    9,
+    10,
+    2,
+    6,
+    11,
+    12,
+    14,
+    0,
+    3,
+    13,
+    7,
+    4,
+    5
+  ],
+  "association_scores": {
+    "8": 0.622299560340339,
+    "15": 0.27538833586604045,
+    "1": 0.2534897451637602,
+    "9": 0.1591793274980863,
+    "10": 0.14470630056764552,
+    "2": 0.11789958112584237,
+    "6": 0.09899082482059664,
+    "11": 0.06123979409794378,
+    "12": 0.06058895777118411,
+    "14": 0.05164317762396411,
+    "0": 0.0416023118571032,
+    "3": 0.03546622310576271,
+    "13": 0.024519018895276863,
+    "7": 0.017764671903000746,
+    "4": 0.0035008368128572162,
+    "5": 0.0015141044540124334
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 16,
+  "sample_count": 3926,
+  "selector_seconds": 0.03145956993103027,
+  "status": "ok selected=4 candidates=16 samples=3926",
+  "dataset_name": "national-longitudinal-survey-binary"
+}

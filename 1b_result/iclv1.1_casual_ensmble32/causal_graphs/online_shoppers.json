@@ -1,0 +1,172 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.10521971918747891,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.07421156326479839,
+      "selected": true
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.10231283507491251,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.12229114153108489,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.15573062476853408,
+      "selected": true
+    },
+    {
+      "id": "feature_11",
+      "kind": "feature",
+      "feature_index": 11,
+      "association_score": 0.21186930454864172,
+      "selected": true
+    },
+    {
+      "id": "feature_12",
+      "kind": "feature",
+      "feature_index": 12,
+      "association_score": 0.4769485628893731,
+      "selected": true
+    },
+    {
+      "id": "feature_13",
+      "kind": "feature",
+      "feature_index": 13,
+      "association_score": 0.08424588019239591,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10521971918747891
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07421156326479839
+    },
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10231283507491251
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.12229114153108489
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.15573062476853408
+    },
+    {
+      "source": "feature_11",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.21186930454864172
+    },
+    {
+      "source": "feature_12",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4769485628893731
+    },
+    {
+      "source": "feature_13",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.08424588019239591
+    }
+  ],
+  "selected_feature_indices": [
+    3,
+    4,
+    7,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "candidate_feature_indices": [
+    12,
+    11,
+    10,
+    9,
+    3,
+    7,
+    13,
+    4,
+    8,
+    5,
+    1,
+    0,
+    2,
+    6
+  ],
+  "association_scores": {
+    "12": 0.4769485628893731,
+    "11": 0.21186930454864172,
+    "10": 0.15573062476853408,
+    "9": 0.12229114153108489,
+    "3": 0.10521971918747891,
+    "7": 0.10231283507491251,
+    "13": 0.08424588019239591,
+    "4": 0.07421156326479839,
+    "8": 0.05534559070788696,
+    "5": 0.027355565737458874,
+    "1": 0.009531112593527857,
+    "0": 0.007043502713322693,
+    "2": 0.0019763661488278275,
+    "6": 0.0004677059922813196
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 14,
+  "sample_count": 5000,
+  "selector_seconds": 0.09923624992370605,
+  "status": "ok selected=8 candidates=14 samples=5000",
+  "dataset_name": "online_shoppers"
+}

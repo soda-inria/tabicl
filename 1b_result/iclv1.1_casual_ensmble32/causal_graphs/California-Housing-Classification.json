@@ -1,0 +1,118 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.16636776212739957,
+      "selected": true
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.07331458833678886,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.0648845155722252,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.0834422727001588,
+      "selected": true
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.5204466379559181,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.16636776212739957
+    },
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07331458833678886
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.0648845155722252
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.0834422727001588
+    },
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.5204466379559181
+    }
+  ],
+  "selected_feature_indices": [
+    1,
+    2,
+    4,
+    6,
+    7
+  ],
+  "candidate_feature_indices": [
+    7,
+    1,
+    3,
+    6,
+    2,
+    4,
+    0,
+    5
+  ],
+  "association_scores": {
+    "7": 0.5204466379559181,
+    "1": 0.16636776212739957,
+    "3": 0.12726242269685425,
+    "6": 0.0834422727001588,
+    "2": 0.07331458833678886,
+    "4": 0.0648845155722252,
+    "0": 0.01399638704517665,
+    "5": 0.0008565322650576556
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 8,
+  "sample_count": 5000,
+  "selector_seconds": 0.0236358642578125,
+  "status": "ok selected=5 candidates=8 samples=5000",
+  "dataset_name": "California-Housing-Classification"
+}

@@ -1,0 +1,128 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.7145601277607853,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.1381101516947361,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.17876466458823143,
+      "selected": true
+    },
+    {
+      "id": "feature_19",
+      "kind": "feature",
+      "feature_index": 19,
+      "association_score": 0.09586320441364614,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.7145601277607853
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1381101516947361
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.17876466458823143
+    },
+    {
+      "source": "feature_19",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.09586320441364614
+    }
+  ],
+  "selected_feature_indices": [
+    6,
+    8,
+    9,
+    19
+  ],
+  "candidate_feature_indices": [
+    6,
+    9,
+    15,
+    8,
+    12,
+    19,
+    18,
+    16,
+    14,
+    0,
+    10,
+    11,
+    5,
+    4,
+    3,
+    2,
+    7,
+    1,
+    13,
+    17
+  ],
+  "association_scores": {
+    "6": 0.7145601277607853,
+    "9": 0.17876466458823143,
+    "15": 0.17655985817090392,
+    "8": 0.1381101516947361,
+    "12": 0.09838338251981141,
+    "19": 0.09586320441364614,
+    "18": 0.031950286585507366,
+    "16": 0.029966926772108722,
+    "14": 0.02802929166989395,
+    "0": 0.02385629436970209,
+    "10": 0.02104416580322757,
+    "11": 0.014777391575840751,
+    "5": 0.011106371817852855,
+    "4": 0.008709837897408357,
+    "3": 0.008675493049941519,
+    "2": 0.007498207239778085,
+    "7": 0.007400920497357059,
+    "1": 0.006773947527412188,
+    "13": 0.00625057342002988,
+    "17": 0.0011384493544846549
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 20,
+  "sample_count": 4099,
+  "selector_seconds": 0.016927242279052734,
+  "status": "ok selected=4 candidates=20 samples=4099",
+  "dataset_name": "sylvine"
+}

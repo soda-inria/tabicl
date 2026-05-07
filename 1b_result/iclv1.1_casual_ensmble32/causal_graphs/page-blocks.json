@@ -1,0 +1,108 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.3236394207057938,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.2182379210558004,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.1709466642840516,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.22521772514976038,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3236394207057938
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2182379210558004
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1709466642840516
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.22521772514976038
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    4,
+    5,
+    6
+  ],
+  "candidate_feature_indices": [
+    0,
+    6,
+    4,
+    2,
+    5,
+    7,
+    8,
+    3,
+    9,
+    1
+  ],
+  "association_scores": {
+    "0": 0.3236394207057938,
+    "6": 0.22521772514976038,
+    "4": 0.2182379210558004,
+    "2": 0.2137697178902772,
+    "5": 0.1709466642840516,
+    "7": 0.1578848230022773,
+    "8": 0.1486660574800049,
+    "3": 0.10178680046543521,
+    "9": 0.020769438681641477,
+    "1": 0.009753784430625315
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 10,
+  "sample_count": 4378,
+  "selector_seconds": 0.024894237518310547,
+  "status": "ok selected=4 candidates=10 samples=4378",
+  "dataset_name": "page-blocks"
+}

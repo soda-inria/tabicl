@@ -1,0 +1,116 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.2021979775738641,
+      "selected": true
+    },
+    {
+      "id": "feature_16",
+      "kind": "feature",
+      "feature_index": 16,
+      "association_score": 0.38704654354214063,
+      "selected": true
+    },
+    {
+      "id": "feature_17",
+      "kind": "feature",
+      "feature_index": 17,
+      "association_score": 0.3934028552123955,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2021979775738641
+    },
+    {
+      "source": "feature_16",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.38704654354214063
+    },
+    {
+      "source": "feature_17",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3934028552123955
+    }
+  ],
+  "selected_feature_indices": [
+    2,
+    16,
+    17
+  ],
+  "candidate_feature_indices": [
+    17,
+    16,
+    7,
+    19,
+    4,
+    8,
+    0,
+    18,
+    12,
+    5,
+    10,
+    14,
+    20,
+    3,
+    1,
+    11,
+    9,
+    13,
+    6,
+    2,
+    15
+  ],
+  "association_scores": {
+    "17": 0.3934028552123955,
+    "16": 0.38704654354214063,
+    "7": 0.3811884957690882,
+    "19": 0.36219221780623356,
+    "4": 0.35475835125918587,
+    "8": 0.3546265308425263,
+    "0": 0.35220901797590964,
+    "18": 0.34850218738732663,
+    "12": 0.3461585707432721,
+    "5": 0.33899483167513816,
+    "10": 0.3384719195724993,
+    "14": 0.31864918044881996,
+    "20": 0.2956400319184891,
+    "3": 0.29521896685362925,
+    "1": 0.29246556301292137,
+    "11": 0.26551060290848044,
+    "9": 0.2655097833643818,
+    "13": 0.23226359918936057,
+    "6": 0.23051339442304766,
+    "2": 0.2021979775738641,
+    "15": 0.015504622999558525
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 21,
+  "sample_count": 1687,
+  "selector_seconds": 0.01800060272216797,
+  "status": "ok selected=3 candidates=21 samples=1687",
+  "dataset_name": "kc1"
+}

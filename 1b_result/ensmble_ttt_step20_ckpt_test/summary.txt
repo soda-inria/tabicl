@@ -1,0 +1,17 @@
+discovered_datasets: 178
+processed_datasets: 178
+ok_count: 178
+failed_count: 0
+skipped_count: 0
+avg_accuracy_ok: 0.839130
+ckpt_step: 20
+step_ckpts_found: 144
+missing_ckpts: 34
+ambiguous_ckpts: 0
+wall_seconds: 472.514
+baseline_fallback_count: 34
+failed_datasets: (none)
+skipped_datasets: (none)
+missing_ckpt_datasets: ASP-POTASSCO-classification, BNG(cmc), Cardiovascular-Disease-dataset, Credit_c, FOREX_audcad-hour-High, FOREX_audjpy-hour-High, FOREX_audsgd-hour-High, FOREX_audusd-hour-High, FOREX_cadjpy-hour-High, Indian_pines, Rain_in_Australia, SDSS17, UJI_Pen_Characters, accelerometer, bank, customer_satisfaction_in_airline, dabetes_130-us_hospitals, electricity, gina_agnostic, internet_firewall, internet_usage, jungle_chess_2pcs_raw_endgame_complete, kr-vs-k, kropt, letter, mobile_c36_oversampling, naticusdroid+android+permissions+dataset, one-hundred-plants-margin, one-hundred-plants-shape, one-hundred-plants-texture, shuttle, texture, volkert, walking-activity
+baseline_fallback_datasets: ASP-POTASSCO-classification, BNG(cmc), Cardiovascular-Disease-dataset, Credit_c, FOREX_audcad-hour-High, FOREX_audjpy-hour-High, FOREX_audsgd-hour-High, FOREX_audusd-hour-High, FOREX_cadjpy-hour-High, Indian_pines, Rain_in_Australia, SDSS17, UJI_Pen_Characters, accelerometer, bank, customer_satisfaction_in_airline, dabetes_130-us_hospitals, electricity, gina_agnostic, internet_firewall, internet_usage, jungle_chess_2pcs_raw_endgame_complete, kr-vs-k, kropt, letter, mobile_c36_oversampling, naticusdroid+android+permissions+dataset, one-hundred-plants-margin, one-hundred-plants-shape, one-hundred-plants-texture, shuttle, texture, volkert, walking-activity
+ambiguous_ckpt_datasets: (none)

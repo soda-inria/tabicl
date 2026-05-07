@@ -1,0 +1,174 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.21239174223903345,
+      "selected": true
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.17204069168859062,
+      "selected": true
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.1903928819752391,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.07012280162050327,
+      "selected": true
+    },
+    {
+      "id": "feature_12",
+      "kind": "feature",
+      "feature_index": 12,
+      "association_score": 0.10412706298087752,
+      "selected": true
+    },
+    {
+      "id": "feature_13",
+      "kind": "feature",
+      "feature_index": 13,
+      "association_score": 0.11941931562281341,
+      "selected": true
+    },
+    {
+      "id": "feature_16",
+      "kind": "feature",
+      "feature_index": 16,
+      "association_score": 0.3003293258902336,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.21239174223903345
+    },
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.17204069168859062
+    },
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1903928819752391
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07012280162050327
+    },
+    {
+      "source": "feature_12",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10412706298087752
+    },
+    {
+      "source": "feature_13",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.11941931562281341
+    },
+    {
+      "source": "feature_16",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3003293258902336
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    1,
+    3,
+    8,
+    12,
+    13,
+    16
+  ],
+  "candidate_feature_indices": [
+    16,
+    0,
+    3,
+    21,
+    1,
+    7,
+    13,
+    4,
+    9,
+    12,
+    14,
+    10,
+    15,
+    8,
+    17,
+    5,
+    18,
+    6,
+    2,
+    20,
+    11,
+    19
+  ],
+  "association_scores": {
+    "16": 0.3003293258902336,
+    "0": 0.21239174223903345,
+    "3": 0.1903928819752391,
+    "21": 0.18774295001068148,
+    "1": 0.17204069168859062,
+    "7": 0.12719662429194203,
+    "13": 0.11941931562281341,
+    "4": 0.11622202377974183,
+    "9": 0.11447474691872492,
+    "12": 0.10412706298087752,
+    "14": 0.07791403104016838,
+    "10": 0.0769605215920361,
+    "15": 0.07260593252960544,
+    "8": 0.07012280162050327,
+    "17": 0.0674750872031919,
+    "5": 0.06415646168608372,
+    "18": 0.044970915553524025,
+    "6": 0.04148509122034569,
+    "2": 0.034400178831574424,
+    "20": 0.033422199009007975,
+    "11": 0.030016658562940994,
+    "19": 0.02495726730771376
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 22,
+  "sample_count": 5000,
+  "selector_seconds": 0.11321043968200684,
+  "status": "ok selected=7 candidates=22 samples=5000",
+  "dataset_name": "heloc"
+}

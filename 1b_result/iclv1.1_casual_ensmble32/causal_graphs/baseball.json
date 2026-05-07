@@ -1,0 +1,106 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.47688476022193055,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.4736510467231946,
+      "selected": true
+    },
+    {
+      "id": "feature_13",
+      "kind": "feature",
+      "feature_index": 13,
+      "association_score": 0.3513361778836596,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.47688476022193055
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4736510467231946
+    },
+    {
+      "source": "feature_13",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3513361778836596
+    }
+  ],
+  "selected_feature_indices": [
+    7,
+    9,
+    13
+  ],
+  "candidate_feature_indices": [
+    4,
+    7,
+    9,
+    5,
+    6,
+    3,
+    12,
+    2,
+    10,
+    1,
+    13,
+    14,
+    8,
+    11,
+    15,
+    0
+  ],
+  "association_scores": {
+    "4": 0.49649100190887835,
+    "7": 0.47688476022193055,
+    "9": 0.4736510467231946,
+    "5": 0.4717971265863549,
+    "6": 0.4684357650869746,
+    "3": 0.417596984917967,
+    "12": 0.4086796683053655,
+    "2": 0.3851148898496982,
+    "10": 0.3606504335621651,
+    "1": 0.35238924110639797,
+    "13": 0.3513361778836596,
+    "14": 0.33698642864169503,
+    "8": 0.2478933086508445,
+    "11": 0.06982350775472644,
+    "15": 0.05205793335308435,
+    "0": 0.032997346317023994
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 16,
+  "sample_count": 1072,
+  "selector_seconds": 0.01578545570373535,
+  "status": "ok selected=3 candidates=16 samples=1072",
+  "dataset_name": "baseball"
+}

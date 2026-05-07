@@ -1,0 +1,9 @@
+discovered_datasets: 178
+processed_datasets: 178
+ok_count: 156
+failed_count: 22
+skipped_count: 0
+avg_accuracy_ok: 0.841789
+wall_seconds: 12078.614
+failed_datasets: BNG(cmc), Cardiovascular-Disease-dataset, Credit_c, FOREX_audcad-hour-High, FOREX_audjpy-hour-High, FOREX_audsgd-hour-High, FOREX_audusd-hour-High, FOREX_cadjpy-hour-High, Indian_pines, Rain_in_Australia, SDSS17, accelerometer, bank, customer_satisfaction_in_airline, dabetes_130-us_hospitals, electricity, gina_agnostic, internet_firewall, jungle_chess_2pcs_raw_endgame_complete, mobile_c36_oversampling, naticusdroid+android+permissions+dataset, shuttle
+skipped_datasets: (none)

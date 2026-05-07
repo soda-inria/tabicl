@@ -1,0 +1,204 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.0479833346082593,
+      "selected": true
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.28968517637316993,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.2547711049384555,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.2461726044997423,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.22412607645493735,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.15880562335687343,
+      "selected": true
+    },
+    {
+      "id": "feature_17",
+      "kind": "feature",
+      "feature_index": 17,
+      "association_score": 0.07476340076422387,
+      "selected": true
+    },
+    {
+      "id": "feature_18",
+      "kind": "feature",
+      "feature_index": 18,
+      "association_score": 0.07388990832101448,
+      "selected": true
+    },
+    {
+      "id": "feature_21",
+      "kind": "feature",
+      "feature_index": 21,
+      "association_score": 0.0763681566901647,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.0479833346082593
+    },
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.28968517637316993
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2547711049384555
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2461726044997423
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.22412607645493735
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.15880562335687343
+    },
+    {
+      "source": "feature_17",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07476340076422387
+    },
+    {
+      "source": "feature_18",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07388990832101448
+    },
+    {
+      "source": "feature_21",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.0763681566901647
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    3,
+    4,
+    5,
+    6,
+    9,
+    17,
+    18,
+    21
+  ],
+  "candidate_feature_indices": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    9,
+    8,
+    21,
+    17,
+    18,
+    19,
+    22,
+    20,
+    0,
+    1,
+    11,
+    12,
+    13,
+    2,
+    14,
+    15,
+    16,
+    10
+  ],
+  "association_scores": {
+    "3": 0.28968517637316993,
+    "4": 0.2547711049384555,
+    "5": 0.2461726044997423,
+    "6": 0.22412607645493735,
+    "7": 0.1902944539354309,
+    "9": 0.15880562335687343,
+    "8": 0.15426552310269043,
+    "21": 0.0763681566901647,
+    "17": 0.07476340076422387,
+    "18": 0.07388990832101448,
+    "19": 0.07366960625028607,
+    "22": 0.06948122329481701,
+    "20": 0.05045329715566776,
+    "0": 0.0479833346082593,
+    "1": 0.03467355590412725,
+    "11": 0.03336237316653797,
+    "12": 0.026552583346535995,
+    "13": 0.024536153102915653,
+    "2": 0.022128102632707577,
+    "14": 0.020712419079098147,
+    "15": 0.018397524822384676,
+    "16": 0.018277679940885288,
+    "10": 0.009175955263676004
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 23,
+  "sample_count": 5000,
+  "selector_seconds": 0.26435160636901855,
+  "status": "ok selected=9 candidates=23 samples=5000",
+  "dataset_name": "default_of_credit_card_clients"
+}

@@ -1,0 +1,94 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.019983766641341317,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.09444160011518876,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.0953128155345211,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.019983766641341317
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.09444160011518876
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.0953128155345211
+    }
+  ],
+  "selected_feature_indices": [
+    3,
+    4,
+    9
+  ],
+  "candidate_feature_indices": [
+    9,
+    4,
+    3,
+    8,
+    5,
+    0,
+    6,
+    1,
+    7,
+    2
+  ],
+  "association_scores": {
+    "9": 0.0953128155345211,
+    "4": 0.09444160011518876,
+    "3": 0.019983766641341317,
+    "8": 0.019595795312308123,
+    "5": 0.01926075532444575,
+    "0": 0.019113056329484936,
+    "6": 0.01201825623271428,
+    "1": 0.011934770466218509,
+    "7": 0.0049586434002710745,
+    "2": 0.004728247823733026
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 10,
+  "sample_count": 1465,
+  "selector_seconds": 0.001870870590209961,
+  "status": "ok selected=3 candidates=10 samples=1465",
+  "dataset_name": "FOREX_audjpy-day-High"
+}

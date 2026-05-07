@@ -1,0 +1,184 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.2611366252469485,
+      "selected": true
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.10786346154677183,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.27913450247901045,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.24099080471391826,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.10523037578993864,
+      "selected": true
+    },
+    {
+      "id": "feature_12",
+      "kind": "feature",
+      "feature_index": 12,
+      "association_score": 0.08522114883324096,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.05152071785900699,
+      "selected": true
+    },
+    {
+      "id": "feature_15",
+      "kind": "feature",
+      "feature_index": 15,
+      "association_score": 0.04875164173353175,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2611366252469485
+    },
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10786346154677183
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.27913450247901045
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.24099080471391826
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10523037578993864
+    },
+    {
+      "source": "feature_12",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.08522114883324096
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.05152071785900699
+    },
+    {
+      "source": "feature_15",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.04875164173353175
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    2,
+    4,
+    6,
+    10,
+    12,
+    14,
+    15
+  ],
+  "candidate_feature_indices": [
+    4,
+    0,
+    6,
+    5,
+    18,
+    13,
+    2,
+    10,
+    3,
+    12,
+    14,
+    15,
+    16,
+    11,
+    7,
+    9,
+    1,
+    8,
+    17,
+    19
+  ],
+  "association_scores": {
+    "4": 0.27913450247901045,
+    "0": 0.2611366252469485,
+    "6": 0.24099080471391826,
+    "5": 0.14440748476293788,
+    "18": 0.13806372107142442,
+    "13": 0.11660102090285247,
+    "2": 0.10786346154677183,
+    "10": 0.10523037578993864,
+    "3": 0.09941299782969483,
+    "12": 0.08522114883324096,
+    "14": 0.05152071785900699,
+    "15": 0.04875164173353175,
+    "16": 0.03368859290384174,
+    "11": 0.02241890089301406,
+    "7": 0.009891690404628483,
+    "9": 0.0024931480581838967,
+    "1": 0.0,
+    "8": 0.0,
+    "17": 0.0,
+    "19": 0.0
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 20,
+  "sample_count": 5000,
+  "selector_seconds": 0.12324023246765137,
+  "status": "ok selected=8 candidates=20 samples=5000",
+  "dataset_name": "water_quality"
+}

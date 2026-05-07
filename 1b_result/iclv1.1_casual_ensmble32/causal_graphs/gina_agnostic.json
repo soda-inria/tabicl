@@ -1,0 +1,1128 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.29708128751157803,
+      "selected": true
+    },
+    {
+      "id": "feature_32",
+      "kind": "feature",
+      "feature_index": 32,
+      "association_score": 0.23660331752600974,
+      "selected": true
+    },
+    {
+      "id": "feature_50",
+      "kind": "feature",
+      "feature_index": 50,
+      "association_score": 0.2640024267332592,
+      "selected": true
+    },
+    {
+      "id": "feature_75",
+      "kind": "feature",
+      "feature_index": 75,
+      "association_score": 0.22712885152771875,
+      "selected": true
+    },
+    {
+      "id": "feature_82",
+      "kind": "feature",
+      "feature_index": 82,
+      "association_score": 0.25596246046072796,
+      "selected": true
+    },
+    {
+      "id": "feature_92",
+      "kind": "feature",
+      "feature_index": 92,
+      "association_score": 0.4255125828544567,
+      "selected": true
+    },
+    {
+      "id": "feature_142",
+      "kind": "feature",
+      "feature_index": 142,
+      "association_score": 0.2145275805437903,
+      "selected": true
+    },
+    {
+      "id": "feature_153",
+      "kind": "feature",
+      "feature_index": 153,
+      "association_score": 0.2602369490992971,
+      "selected": true
+    },
+    {
+      "id": "feature_157",
+      "kind": "feature",
+      "feature_index": 157,
+      "association_score": 0.2363685105322713,
+      "selected": true
+    },
+    {
+      "id": "feature_162",
+      "kind": "feature",
+      "feature_index": 162,
+      "association_score": 0.2471203755772059,
+      "selected": true
+    },
+    {
+      "id": "feature_167",
+      "kind": "feature",
+      "feature_index": 167,
+      "association_score": 0.4040583878441225,
+      "selected": true
+    },
+    {
+      "id": "feature_183",
+      "kind": "feature",
+      "feature_index": 183,
+      "association_score": 0.20735289308269897,
+      "selected": true
+    },
+    {
+      "id": "feature_184",
+      "kind": "feature",
+      "feature_index": 184,
+      "association_score": 0.23106219681841308,
+      "selected": true
+    },
+    {
+      "id": "feature_235",
+      "kind": "feature",
+      "feature_index": 235,
+      "association_score": 0.2710311086616954,
+      "selected": true
+    },
+    {
+      "id": "feature_240",
+      "kind": "feature",
+      "feature_index": 240,
+      "association_score": 0.23625920234568484,
+      "selected": true
+    },
+    {
+      "id": "feature_245",
+      "kind": "feature",
+      "feature_index": 245,
+      "association_score": 0.23145928232457805,
+      "selected": true
+    },
+    {
+      "id": "feature_250",
+      "kind": "feature",
+      "feature_index": 250,
+      "association_score": 0.23490235193288614,
+      "selected": true
+    },
+    {
+      "id": "feature_254",
+      "kind": "feature",
+      "feature_index": 254,
+      "association_score": 0.2645507798922628,
+      "selected": true
+    },
+    {
+      "id": "feature_265",
+      "kind": "feature",
+      "feature_index": 265,
+      "association_score": 0.22054006931542924,
+      "selected": true
+    },
+    {
+      "id": "feature_296",
+      "kind": "feature",
+      "feature_index": 296,
+      "association_score": 0.22427764714987758,
+      "selected": true
+    },
+    {
+      "id": "feature_330",
+      "kind": "feature",
+      "feature_index": 330,
+      "association_score": 0.2262916793841778,
+      "selected": true
+    },
+    {
+      "id": "feature_366",
+      "kind": "feature",
+      "feature_index": 366,
+      "association_score": 0.30984268591266334,
+      "selected": true
+    },
+    {
+      "id": "feature_380",
+      "kind": "feature",
+      "feature_index": 380,
+      "association_score": 0.21712274700134168,
+      "selected": true
+    },
+    {
+      "id": "feature_382",
+      "kind": "feature",
+      "feature_index": 382,
+      "association_score": 0.22682769015671195,
+      "selected": true
+    },
+    {
+      "id": "feature_402",
+      "kind": "feature",
+      "feature_index": 402,
+      "association_score": 0.2342592652150994,
+      "selected": true
+    },
+    {
+      "id": "feature_420",
+      "kind": "feature",
+      "feature_index": 420,
+      "association_score": 0.21992685690042968,
+      "selected": true
+    },
+    {
+      "id": "feature_423",
+      "kind": "feature",
+      "feature_index": 423,
+      "association_score": 0.23853676543232455,
+      "selected": true
+    },
+    {
+      "id": "feature_440",
+      "kind": "feature",
+      "feature_index": 440,
+      "association_score": 0.22809928206161284,
+      "selected": true
+    },
+    {
+      "id": "feature_442",
+      "kind": "feature",
+      "feature_index": 442,
+      "association_score": 0.2341640479892228,
+      "selected": true
+    },
+    {
+      "id": "feature_482",
+      "kind": "feature",
+      "feature_index": 482,
+      "association_score": 0.2387646095617298,
+      "selected": true
+    },
+    {
+      "id": "feature_488",
+      "kind": "feature",
+      "feature_index": 488,
+      "association_score": 0.2815671360774381,
+      "selected": true
+    },
+    {
+      "id": "feature_501",
+      "kind": "feature",
+      "feature_index": 501,
+      "association_score": 0.29508504032511884,
+      "selected": true
+    },
+    {
+      "id": "feature_532",
+      "kind": "feature",
+      "feature_index": 532,
+      "association_score": 0.19335051584341087,
+      "selected": true
+    },
+    {
+      "id": "feature_537",
+      "kind": "feature",
+      "feature_index": 537,
+      "association_score": 0.21441942374173473,
+      "selected": true
+    },
+    {
+      "id": "feature_573",
+      "kind": "feature",
+      "feature_index": 573,
+      "association_score": 0.3107070656564368,
+      "selected": true
+    },
+    {
+      "id": "feature_590",
+      "kind": "feature",
+      "feature_index": 590,
+      "association_score": 0.2628276109245477,
+      "selected": true
+    },
+    {
+      "id": "feature_627",
+      "kind": "feature",
+      "feature_index": 627,
+      "association_score": 0.1971979143923163,
+      "selected": true
+    },
+    {
+      "id": "feature_647",
+      "kind": "feature",
+      "feature_index": 647,
+      "association_score": 0.3188939709450415,
+      "selected": true
+    },
+    {
+      "id": "feature_668",
+      "kind": "feature",
+      "feature_index": 668,
+      "association_score": 0.33848045838527224,
+      "selected": true
+    },
+    {
+      "id": "feature_674",
+      "kind": "feature",
+      "feature_index": 674,
+      "association_score": 0.19766315909390814,
+      "selected": true
+    },
+    {
+      "id": "feature_705",
+      "kind": "feature",
+      "feature_index": 705,
+      "association_score": 0.20108533462370126,
+      "selected": true
+    },
+    {
+      "id": "feature_706",
+      "kind": "feature",
+      "feature_index": 706,
+      "association_score": 0.23042332301933827,
+      "selected": true
+    },
+    {
+      "id": "feature_728",
+      "kind": "feature",
+      "feature_index": 728,
+      "association_score": 0.2066740358245953,
+      "selected": true
+    },
+    {
+      "id": "feature_735",
+      "kind": "feature",
+      "feature_index": 735,
+      "association_score": 0.20463281950413362,
+      "selected": true
+    },
+    {
+      "id": "feature_753",
+      "kind": "feature",
+      "feature_index": 753,
+      "association_score": 0.40880530930853887,
+      "selected": true
+    },
+    {
+      "id": "feature_757",
+      "kind": "feature",
+      "feature_index": 757,
+      "association_score": 0.36013020106884824,
+      "selected": true
+    },
+    {
+      "id": "feature_778",
+      "kind": "feature",
+      "feature_index": 778,
+      "association_score": 0.2541628045325659,
+      "selected": true
+    },
+    {
+      "id": "feature_814",
+      "kind": "feature",
+      "feature_index": 814,
+      "association_score": 0.3048979305786224,
+      "selected": true
+    },
+    {
+      "id": "feature_826",
+      "kind": "feature",
+      "feature_index": 826,
+      "association_score": 0.21717515332422885,
+      "selected": true
+    },
+    {
+      "id": "feature_830",
+      "kind": "feature",
+      "feature_index": 830,
+      "association_score": 0.22177242037272357,
+      "selected": true
+    },
+    {
+      "id": "feature_835",
+      "kind": "feature",
+      "feature_index": 835,
+      "association_score": 0.2020516242345934,
+      "selected": true
+    },
+    {
+      "id": "feature_856",
+      "kind": "feature",
+      "feature_index": 856,
+      "association_score": 0.29203743332317333,
+      "selected": true
+    },
+    {
+      "id": "feature_861",
+      "kind": "feature",
+      "feature_index": 861,
+      "association_score": 0.1978085183261382,
+      "selected": true
+    },
+    {
+      "id": "feature_876",
+      "kind": "feature",
+      "feature_index": 876,
+      "association_score": 0.2086864459908233,
+      "selected": true
+    },
+    {
+      "id": "feature_899",
+      "kind": "feature",
+      "feature_index": 899,
+      "association_score": 0.2604873686650547,
+      "selected": true
+    },
+    {
+      "id": "feature_907",
+      "kind": "feature",
+      "feature_index": 907,
+      "association_score": 0.1993269500784174,
+      "selected": true
+    },
+    {
+      "id": "feature_908",
+      "kind": "feature",
+      "feature_index": 908,
+      "association_score": 0.27963592389675934,
+      "selected": true
+    },
+    {
+      "id": "feature_920",
+      "kind": "feature",
+      "feature_index": 920,
+      "association_score": 0.3052811602529909,
+      "selected": true
+    },
+    {
+      "id": "feature_921",
+      "kind": "feature",
+      "feature_index": 921,
+      "association_score": 0.2616195134072147,
+      "selected": true
+    },
+    {
+      "id": "feature_938",
+      "kind": "feature",
+      "feature_index": 938,
+      "association_score": 0.45456789645123646,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.29708128751157803
+    },
+    {
+      "source": "feature_32",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.23660331752600974
+    },
+    {
+      "source": "feature_50",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2640024267332592
+    },
+    {
+      "source": "feature_75",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.22712885152771875
+    },
+    {
+      "source": "feature_82",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.25596246046072796
+    },
+    {
+      "source": "feature_92",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4255125828544567
+    },
+    {
+      "source": "feature_142",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2145275805437903
+    },
+    {
+      "source": "feature_153",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2602369490992971
+    },
+    {
+      "source": "feature_157",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2363685105322713
+    },
+    {
+      "source": "feature_162",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2471203755772059
+    },
+    {
+      "source": "feature_167",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4040583878441225
+    },
+    {
+      "source": "feature_183",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.20735289308269897
+    },
+    {
+      "source": "feature_184",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.23106219681841308
+    },
+    {
+      "source": "feature_235",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2710311086616954
+    },
+    {
+      "source": "feature_240",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.23625920234568484
+    },
+    {
+      "source": "feature_245",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.23145928232457805
+    },
+    {
+      "source": "feature_250",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.23490235193288614
+    },
+    {
+      "source": "feature_254",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2645507798922628
+    },
+    {
+      "source": "feature_265",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.22054006931542924
+    },
+    {
+      "source": "feature_296",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.22427764714987758
+    },
+    {
+      "source": "feature_330",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2262916793841778
+    },
+    {
+      "source": "feature_366",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.30984268591266334
+    },
+    {
+      "source": "feature_380",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.21712274700134168
+    },
+    {
+      "source": "feature_382",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.22682769015671195
+    },
+    {
+      "source": "feature_402",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2342592652150994
+    },
+    {
+      "source": "feature_420",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.21992685690042968
+    },
+    {
+      "source": "feature_423",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.23853676543232455
+    },
+    {
+      "source": "feature_440",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.22809928206161284
+    },
+    {
+      "source": "feature_442",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2341640479892228
+    },
+    {
+      "source": "feature_482",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2387646095617298
+    },
+    {
+      "source": "feature_488",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2815671360774381
+    },
+    {
+      "source": "feature_501",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.29508504032511884
+    },
+    {
+      "source": "feature_532",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.19335051584341087
+    },
+    {
+      "source": "feature_537",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.21441942374173473
+    },
+    {
+      "source": "feature_573",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3107070656564368
+    },
+    {
+      "source": "feature_590",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2628276109245477
+    },
+    {
+      "source": "feature_627",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1971979143923163
+    },
+    {
+      "source": "feature_647",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3188939709450415
+    },
+    {
+      "source": "feature_668",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.33848045838527224
+    },
+    {
+      "source": "feature_674",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.19766315909390814
+    },
+    {
+      "source": "feature_705",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.20108533462370126
+    },
+    {
+      "source": "feature_706",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.23042332301933827
+    },
+    {
+      "source": "feature_728",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2066740358245953
+    },
+    {
+      "source": "feature_735",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.20463281950413362
+    },
+    {
+      "source": "feature_753",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.40880530930853887
+    },
+    {
+      "source": "feature_757",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.36013020106884824
+    },
+    {
+      "source": "feature_778",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2541628045325659
+    },
+    {
+      "source": "feature_814",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3048979305786224
+    },
+    {
+      "source": "feature_826",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.21717515332422885
+    },
+    {
+      "source": "feature_830",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.22177242037272357
+    },
+    {
+      "source": "feature_835",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2020516242345934
+    },
+    {
+      "source": "feature_856",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.29203743332317333
+    },
+    {
+      "source": "feature_861",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1978085183261382
+    },
+    {
+      "source": "feature_876",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2086864459908233
+    },
+    {
+      "source": "feature_899",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2604873686650547
+    },
+    {
+      "source": "feature_907",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1993269500784174
+    },
+    {
+      "source": "feature_908",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.27963592389675934
+    },
+    {
+      "source": "feature_920",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3052811602529909
+    },
+    {
+      "source": "feature_921",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2616195134072147
+    },
+    {
+      "source": "feature_938",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.45456789645123646
+    }
+  ],
+  "selected_feature_indices": [
+    6,
+    32,
+    50,
+    75,
+    82,
+    92,
+    142,
+    153,
+    157,
+    162,
+    167,
+    183,
+    184,
+    235,
+    240,
+    245,
+    250,
+    254,
+    265,
+    296,
+    330,
+    366,
+    380,
+    382,
+    402,
+    420,
+    423,
+    440,
+    442,
+    482,
+    488,
+    501,
+    532,
+    537,
+    573,
+    590,
+    627,
+    647,
+    668,
+    674,
+    705,
+    706,
+    728,
+    735,
+    753,
+    757,
+    778,
+    814,
+    826,
+    830,
+    835,
+    856,
+    861,
+    876,
+    899,
+    907,
+    908,
+    920,
+    921,
+    938
+  ],
+  "candidate_feature_indices": [
+    933,
+    388,
+    676,
+    938,
+    110,
+    189,
+    92,
+    803,
+    753,
+    173,
+    167,
+    391,
+    836,
+    461,
+    322,
+    757,
+    417,
+    726,
+    668,
+    766,
+    642,
+    879,
+    647,
+    509,
+    129,
+    177,
+    249,
+    573,
+    366,
+    120,
+    920,
+    108,
+    814,
+    6,
+    208,
+    466,
+    501,
+    22,
+    856,
+    448,
+    392,
+    906,
+    488,
+    908,
+    115,
+    657,
+    235,
+    770,
+    266,
+    254,
+    50,
+    612,
+    590,
+    921,
+    899,
+    153,
+    376,
+    535,
+    831,
+    82,
+    221,
+    261,
+    778,
+    98,
+    690,
+    574,
+    443,
+    860,
+    162,
+    875,
+    482,
+    423,
+    26,
+    882,
+    32,
+    157,
+    240,
+    945,
+    250,
+    402,
+    442,
+    883,
+    300,
+    578,
+    245,
+    184,
+    706,
+    418,
+    76,
+    440,
+    75,
+    382,
+    330,
+    296,
+    830,
+    275,
+    513,
+    265,
+    420,
+    83,
+    826,
+    380,
+    3,
+    877,
+    142,
+    537,
+    154,
+    876,
+    183,
+    728,
+    579,
+    735,
+    211,
+    354,
+    51,
+    835,
+    705,
+    77,
+    907,
+    952,
+    861,
+    674,
+    627,
+    327,
+    451,
+    653,
+    532,
+    228
+  ],
+  "association_scores": {
+    "933": 0.4728644679743601,
+    "388": 0.4722669359579955,
+    "676": 0.4576390705903587,
+    "938": 0.45456789645123646,
+    "110": 0.4337889629765108,
+    "189": 0.4276481722734268,
+    "92": 0.4255125828544567,
+    "803": 0.4132921642738413,
+    "753": 0.40880530930853887,
+    "173": 0.4042215348459727,
+    "167": 0.4040583878441225,
+    "391": 0.40065787098565625,
+    "836": 0.39701824681723263,
+    "461": 0.3763387373386775,
+    "322": 0.3631255210296331,
+    "757": 0.36013020106884824,
+    "417": 0.3467447777941108,
+    "726": 0.345240939682161,
+    "668": 0.33848045838527224,
+    "766": 0.33546789076174993,
+    "642": 0.3312470371933838,
+    "879": 0.325335393128608,
+    "647": 0.3188939709450415,
+    "509": 0.31849047320662427,
+    "129": 0.31635999678417176,
+    "177": 0.31572516441133336,
+    "249": 0.3131558774947126,
+    "573": 0.3107070656564368,
+    "366": 0.30984268591266334,
+    "120": 0.30753647810936796,
+    "920": 0.3052811602529909,
+    "108": 0.3051244694910163,
+    "814": 0.3048979305786224,
+    "6": 0.29708128751157803,
+    "208": 0.29638861349920437,
+    "466": 0.29514110842768426,
+    "501": 0.29508504032511884,
+    "22": 0.29281694059284297,
+    "856": 0.29203743332317333,
+    "448": 0.2917820407496538,
+    "392": 0.28803198835500804,
+    "906": 0.28699665576240574,
+    "488": 0.2815671360774381,
+    "908": 0.27963592389675934,
+    "115": 0.27672860459514664,
+    "657": 0.2725451229464819,
+    "235": 0.2710311086616954,
+    "770": 0.26632072545794006,
+    "266": 0.2653086349020907,
+    "254": 0.2645507798922628,
+    "50": 0.2640024267332592,
+    "612": 0.2633992239390757,
+    "590": 0.2628276109245477,
+    "921": 0.2616195134072147,
+    "899": 0.2604873686650547,
+    "153": 0.2602369490992971,
+    "376": 0.25934111490589695,
+    "535": 0.25909835463232794,
+    "831": 0.25800297478467893,
+    "82": 0.25596246046072796,
+    "221": 0.25503179356512734,
+    "261": 0.25488552063276665,
+    "778": 0.2541628045325659,
+    "98": 0.2534717661747176,
+    "690": 0.25342255082147436,
+    "574": 0.2507076565893745,
+    "443": 0.24851598100927713,
+    "860": 0.24782111475561774,
+    "162": 0.2471203755772059,
+    "875": 0.2445469143621589,
+    "482": 0.2387646095617298,
+    "423": 0.23853676543232455,
+    "26": 0.23793209463572107,
+    "882": 0.23682809724319176,
+    "32": 0.23660331752600974,
+    "157": 0.2363685105322713,
+    "240": 0.23625920234568484,
+    "945": 0.23614581597780954,
+    "250": 0.23490235193288614,
+    "402": 0.2342592652150994,
+    "442": 0.2341640479892228,
+    "883": 0.23391881215235402,
+    "300": 0.233376634440939,
+    "578": 0.23299053649031837,
+    "245": 0.23145928232457805,
+    "184": 0.23106219681841308,
+    "706": 0.23042332301933827,
+    "418": 0.2299245016193313,
+    "76": 0.22879927715115925,
+    "440": 0.22809928206161284,
+    "75": 0.22712885152771875,
+    "382": 0.22682769015671195,
+    "330": 0.2262916793841778,
+    "296": 0.22427764714987758,
+    "830": 0.22177242037272357,
+    "275": 0.22164071113058398,
+    "513": 0.2206118622153375,
+    "265": 0.22054006931542924,
+    "420": 0.21992685690042968,
+    "83": 0.21814528157694266,
+    "826": 0.21717515332422885,
+    "380": 0.21712274700134168,
+    "3": 0.21589642732674563,
+    "877": 0.2151203262398597,
+    "142": 0.2145275805437903,
+    "537": 0.21441942374173473,
+    "154": 0.20918333963989932,
+    "876": 0.2086864459908233,
+    "183": 0.20735289308269897,
+    "728": 0.2066740358245953,
+    "579": 0.20582237639730083,
+    "735": 0.20463281950413362,
+    "211": 0.20373690877360925,
+    "354": 0.20310788647436928,
+    "51": 0.2021533426411543,
+    "835": 0.2020516242345934,
+    "705": 0.20108533462370126,
+    "77": 0.19997320853626485,
+    "907": 0.1993269500784174,
+    "952": 0.19843169767291424,
+    "861": 0.1978085183261382,
+    "674": 0.19766315909390814,
+    "627": 0.1971979143923163,
+    "327": 0.1969197040821957,
+    "451": 0.19599005914501563,
+    "653": 0.19347742389872438,
+    "532": 0.19335051584341087,
+    "228": 0.19284955987048538
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 970,
+  "sample_count": 2774,
+  "selector_seconds": 2.32483172416687,
+  "status": "ok selected=60 candidates=128 samples=2774",
+  "dataset_name": "gina_agnostic"
+}

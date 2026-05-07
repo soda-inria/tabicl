@@ -1,0 +1,94 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.04099066559830745,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.02304215623279424,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.03692855377802843,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.04099066559830745
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.02304215623279424
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.03692855377802843
+    }
+  ],
+  "selected_feature_indices": [
+    4,
+    5,
+    9
+  ],
+  "candidate_feature_indices": [
+    4,
+    9,
+    5,
+    0,
+    6,
+    1,
+    7,
+    2,
+    8,
+    3
+  ],
+  "association_scores": {
+    "4": 0.04099066559830745,
+    "9": 0.03692855377802843,
+    "5": 0.02304215623279424,
+    "0": 0.023009301804457368,
+    "6": 0.022374987972117552,
+    "1": 0.022330839810267792,
+    "7": 0.021374772972607276,
+    "2": 0.02134720636700044,
+    "8": 0.01992860337998969,
+    "3": 0.019892524856399987
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 10,
+  "sample_count": 5000,
+  "selector_seconds": 0.004121541976928711,
+  "status": "ok selected=3 candidates=10 samples=5000",
+  "dataset_name": "FOREX_audusd-hour-High"
+}

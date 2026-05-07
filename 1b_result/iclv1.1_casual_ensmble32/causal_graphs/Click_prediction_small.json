@@ -1,0 +1,80 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.07613969969132252,
+      "selected": true
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.05817287881553716,
+      "selected": true
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.1264478045445438,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07613969969132252
+    },
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.05817287881553716
+    },
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1264478045445438
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    1,
+    2
+  ],
+  "candidate_feature_indices": [
+    2,
+    0,
+    1
+  ],
+  "association_scores": {
+    "2": 0.1264478045445438,
+    "0": 0.07613969969132252,
+    "1": 0.05817287881553716
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 3,
+  "sample_count": 5000,
+  "selector_seconds": 0.0028684139251708984,
+  "status": "ok selected=3 candidates=3 samples=5000",
+  "dataset_name": "Click_prediction_small"
+}

@@ -77,6 +77,10 @@ class TTTConfig:
     random_state: int = 42
     data_parallel: bool = False
     gpu_group: Optional[str] = None
+    save_ckpt: bool = True
+    save_ckpt_every: int = 2
+    save_ckpt_start_step: Optional[int] = None
+    ckpt_root: Optional[str] = None
 
 
 @dataclass
@@ -570,6 +574,11 @@ def force_memory_cleanup(device_str: str) -> None:
 
 
 def build_ttt_config(args: argparse.Namespace) -> TTTConfig:
+    if int(args.ttt_save_ckpt_every) < 1:
+        raise ValueError("--ttt-save-ckpt-every must be >= 1")
+    if args.ttt_save_ckpt_start_step is not None and int(args.ttt_save_ckpt_start_step) < 1:
+        raise ValueError("--ttt-save-ckpt-start-step must be >= 1 or None")
+
     return TTTConfig(
         enabled=bool(args.ttt_holdout),
         lr=float(args.ttt_lr),
@@ -583,6 +592,12 @@ def build_ttt_config(args: argparse.Namespace) -> TTTConfig:
         freeze_row=bool(args.ttt_freeze_row),
         random_state=int(args.random_state),
         data_parallel=bool(args.ttt_data_parallel),
+        save_ckpt=bool(args.ttt_save_ckpt),
+        save_ckpt_every=int(args.ttt_save_ckpt_every),
+        save_ckpt_start_step=(
+            int(args.ttt_save_ckpt_start_step) if args.ttt_save_ckpt_start_step is not None else None
+        ),
+        ckpt_root=str((Path(args.out_dir).expanduser() / "ttt_ckpts").resolve()),
     )
 
 
@@ -655,8 +670,53 @@ def _set_requires_grad(module, requires_grad: bool) -> None:
         param.requires_grad = requires_grad
 
 
-def _configure_ttt_trainable_params(classifier, config: TTTConfig):
+def _get_ttt_base_model(classifier):
     model = classifier.model_
+    return getattr(model, "module", model)
+
+
+def _resolve_ttt_data_parallel_device_ids(classifier, config: TTTConfig) -> List[int]:
+    if not config.data_parallel or not config.gpu_group:
+        return []
+
+    device = getattr(classifier, "device_", None)
+    device_type = getattr(device, "type", str(device).split(":")[0])
+    if device_type != "cuda":
+        return []
+
+    try:
+        gpu_ids = parse_gpu_id_list(normalize_gpu_group(config.gpu_group))
+    except Exception:
+        return []
+    if len(gpu_ids) < 2:
+        return []
+
+    import torch
+
+    if not torch.cuda.is_available():
+        return []
+
+    # Device visibility has already been rewritten per worker, so DataParallel
+    # must use process-local logical ids rather than original global ids.
+    return list(range(len(gpu_ids)))
+
+
+def _build_ttt_forward_model(classifier, config: TTTConfig):
+    base_model = _get_ttt_base_model(classifier)
+    device_ids = _resolve_ttt_data_parallel_device_ids(classifier, config)
+    if not device_ids:
+        return base_model, 1
+
+    import torch
+
+    try:
+        return torch.nn.DataParallel(base_model, device_ids=device_ids), len(device_ids)
+    except Exception:
+        return base_model, 1
+
+
+def _configure_ttt_trainable_params(classifier, config: TTTConfig):
+    model = _get_ttt_base_model(classifier)
     model.train()
 
     for param in model.parameters():
@@ -710,7 +770,84 @@ def _iter_classification_ensemble_batches(classifier, X_c_encoded, y_c_encoded):
         yield Xs, ys, np.stack(y_targets, axis=0)
 
 
-def run_ttt_holdout_update(classifier, X_b, y_b, X_c, y_c, config: TTTConfig) -> TTTUpdateResult:
+def _sanitize_path_component(value: str) -> str:
+    sanitized = re.sub(r"[^A-Za-z0-9._-]+", "_", str(value).strip())
+    sanitized = sanitized.strip("._")
+    return sanitized or "unknown"
+
+
+def _build_ttt_ckpt_path(config: TTTConfig, model_name: str, dataset_name: str, step_idx: int) -> Path:
+    if not config.ckpt_root:
+        raise ValueError("TTT checkpoint root is not configured")
+    return (
+        Path(config.ckpt_root)
+        / _sanitize_path_component(model_name)
+        / _sanitize_path_component(dataset_name)
+        / f"step_{step_idx}.ckpt"
+    )
+
+
+def _save_ttt_model_ckpt(classifier, config: TTTConfig, model_name: str, dataset_name: str, step_idx: int) -> Path:
+    import torch
+
+    model_config = getattr(classifier, "model_config_", None)
+    if model_config is None:
+        raise RuntimeError("TTT checkpoint save requested before model_config_ is available")
+
+    base_model = _get_ttt_base_model(classifier)
+    ckpt_path = _build_ttt_ckpt_path(config, model_name, dataset_name, step_idx)
+    ckpt_path.parent.mkdir(parents=True, exist_ok=True)
+
+    checkpoint = {
+        "config": dict(model_config),
+        "state_dict": {name: tensor.detach().cpu() for name, tensor in base_model.state_dict().items()},
+        "ttt_metadata": {
+            "model_name": str(model_name),
+            "dataset_name": str(dataset_name),
+            "step": int(step_idx),
+        },
+    }
+    torch.save(checkpoint, ckpt_path)
+    return ckpt_path
+
+
+def _should_save_ttt_ckpt_step(config: TTTConfig, step_idx: int) -> bool:
+    if not config.save_ckpt:
+        return False
+    if config.save_ckpt_start_step is None:
+        return step_idx % config.save_ckpt_every == 0
+    return (
+        step_idx >= config.save_ckpt_start_step
+        and (step_idx - config.save_ckpt_start_step) % config.save_ckpt_every == 0
+    )
+
+
+def _should_save_ttt_final_ckpt(config: TTTConfig) -> bool:
+    if not config.save_ckpt:
+        return False
+    if config.save_ckpt_start_step is None:
+        return True
+    return config.steps >= config.save_ckpt_start_step
+
+
+def _derive_model_name(model_path: str | None, checkpoint_version: str | None) -> str:
+    candidate = model_path if model_path else checkpoint_version
+    if not candidate:
+        return "tabicl_model"
+    return Path(str(candidate)).stem
+
+
+def run_ttt_holdout_update(
+    classifier,
+    X_b,
+    y_b,
+    X_c,
+    y_c,
+    config: TTTConfig,
+    *,
+    model_name: str,
+    dataset_name: str,
+) -> TTTUpdateResult:
     ensure_runtime_deps()
 
     if config.scheduler != "constant":
@@ -755,6 +892,7 @@ def run_ttt_holdout_update(classifier, X_b, y_b, X_c, y_c, config: TTTConfig) ->
     import torch
     import torch.nn.functional as F
 
+    base_model = _get_ttt_base_model(classifier)
     torch_dtype = _torch_dtype(config.dtype)
     trainable_params = _configure_ttt_trainable_params(classifier, config)
     if not trainable_params:
@@ -767,6 +905,8 @@ def run_ttt_holdout_update(classifier, X_b, y_b, X_c, y_c, config: TTTConfig) ->
         )
 
     optimizer = torch.optim.AdamW(trainable_params, lr=config.lr, weight_decay=config.weight_decay)
+    forward_model, data_parallel_world_size = _build_ttt_forward_model(classifier, config)
+    effective_micro_batch_size = config.micro_batch_size * data_parallel_world_size
 
     X_c_encoded = classifier.X_encoder_.transform(X_c)
     y_c_encoded = classifier.y_encoder_.transform(y_c)
@@ -804,13 +944,14 @@ def run_ttt_holdout_update(classifier, X_b, y_b, X_c, y_c, config: TTTConfig) ->
                 reason="No ensemble views available for TTT",
             )
 
-        for _ in range(config.steps):
+        last_saved_step = 0
+        for step_idx in range(1, config.steps + 1):
             optimizer.zero_grad(set_to_none=True)
             step_loss = 0.0
 
             for Xs, ys, y_targets in ensemble_batches:
-                for start_idx in range(0, Xs.shape[0], config.micro_batch_size):
-                    end_idx = min(start_idx + config.micro_batch_size, Xs.shape[0])
+                for start_idx in range(0, Xs.shape[0], effective_micro_batch_size):
+                    end_idx = min(start_idx + effective_micro_batch_size, Xs.shape[0])
                     X_batch_np = Xs[start_idx:end_idx]
                     y_train_np = ys[start_idx:end_idx]
                     y_target_np = y_targets[start_idx:end_idx]
@@ -826,7 +967,7 @@ def run_ttt_holdout_update(classifier, X_b, y_b, X_c, y_c, config: TTTConfig) ->
                     )
 
                     with forward_context():
-                        logits = classifier.model_(X_batch, y_train_batch, d_batch)
+                        logits = forward_model(X_batch, y_train_batch, d_batch)
                         loss = F.cross_entropy(logits.flatten(end_dim=-2), y_target_batch.flatten())
                         scaled_loss = loss * (X_batch.shape[0] / total_views)
 
@@ -837,11 +978,33 @@ def run_ttt_holdout_update(classifier, X_b, y_b, X_c, y_c, config: TTTConfig) ->
                 torch.nn.utils.clip_grad_norm_(trainable_params, config.grad_clip)
             optimizer.step()
             last_loss = step_loss
+            if step_idx % 3 == 0:
+                print(
+                    f"[ttt-loss] model={model_name} dataset={dataset_name} "
+                    f"step={step_idx} loss={step_loss:.6f}",
+                    flush=True,
+                )
+            if _should_save_ttt_ckpt_step(config, step_idx):
+                ckpt_path = _save_ttt_model_ckpt(classifier, config, model_name, dataset_name, step_idx)
+                last_saved_step = step_idx
+                print(
+                    f"[ttt-ckpt] saved model={model_name} dataset={dataset_name} "
+                    f"step={step_idx} path={ckpt_path}",
+                    flush=True,
+                )
+
+        if _should_save_ttt_final_ckpt(config) and last_loss is not None and last_saved_step != config.steps:
+            ckpt_path = _save_ttt_model_ckpt(classifier, config, model_name, dataset_name, config.steps)
+            print(
+                f"[ttt-ckpt] saved model={model_name} dataset={dataset_name} "
+                f"step={config.steps} path={ckpt_path}",
+                flush=True,
+            )
     finally:
-        if hasattr(classifier.model_, "clear_cache"):
-            classifier.model_.clear_cache()
+        if hasattr(base_model, "clear_cache"):
+            base_model.clear_cache()
         classifier.model_kv_cache_ = None
-        classifier.model_.eval()
+        base_model.eval()
 
     return TTTUpdateResult(
         applied=True,
@@ -971,7 +1134,13 @@ class BackgroundPrefetcher:
                 print(f"[prefetch] warning: failed to warm {model_path}: {exc}", flush=True)
 
 
-def evaluate_one_dataset(classifier, dataset_dir: Path, ttt_config: TTTConfig | None = None) -> ResultRow:
+def evaluate_one_dataset(
+    classifier,
+    dataset_dir: Path,
+    ttt_config: TTTConfig | None = None,
+    *,
+    model_name: str,
+) -> ResultRow:
     ensure_runtime_deps()
     if ttt_config is None:
         ttt_config = TTTConfig()
@@ -1053,7 +1222,16 @@ def evaluate_one_dataset(classifier, dataset_dir: Path, ttt_config: TTTConfig | 
                     y_b = np.asarray(y_train)[split.b_indices]
                     X_c = take_rows(X_train, split.c_indices)
                     y_c = np.asarray(y_train)[split.c_indices]
-                    ttt_result = run_ttt_holdout_update(classifier, X_b, y_b, X_c, y_c, ttt_config)
+                    ttt_result = run_ttt_holdout_update(
+                        classifier,
+                        X_b,
+                        y_b,
+                        X_c,
+                        y_c,
+                        ttt_config,
+                        model_name=model_name,
+                        dataset_name=dataset_dir.name,
+                    )
                 else:
                     ttt_result = TTTUpdateResult(
                         applied=False,
@@ -1159,6 +1337,10 @@ def worker_main(
         worker_kwargs = dict(model_kwargs)
         worker_kwargs["device"] = device_str
         classifier = TabICLClassifier(**worker_kwargs)
+        model_name = _derive_model_name(
+            str(worker_kwargs.get("model_path")) if worker_kwargs.get("model_path") is not None else None,
+            str(worker_kwargs.get("checkpoint_version")) if worker_kwargs.get("checkpoint_version") is not None else None,
+        )
 
         ready_queue.put(
             {
@@ -1173,7 +1355,12 @@ def worker_main(
 
         rows: List[ResultRow] = []
         for dataset_dir in assigned_dataset_dirs:
-            row = evaluate_one_dataset(classifier, Path(dataset_dir), worker_ttt_config)
+            row = evaluate_one_dataset(
+                classifier,
+                Path(dataset_dir),
+                worker_ttt_config,
+                model_name=model_name,
+            )
             rows.append(row)
             print(
                 format_dataset_result_log(
@@ -1277,12 +1464,18 @@ def model_pool_worker_main(
                 worker_kwargs["device"] = device_str
                 worker_kwargs["model_path"] = normalize_model_path(str(model_path))
                 classifier = TabICLClassifier(**worker_kwargs)
+                model_name = _derive_model_name(str(model_path), worker_kwargs.get("checkpoint_version"))
                 if not worker_ttt_config.enabled:
                     preload_model_once(classifier, worker_label, verbose)
 
                 rows: List[ResultRow] = []
                 for dataset_dir in resolved_dataset_dirs:
-                    row = evaluate_one_dataset(classifier, dataset_dir, worker_ttt_config)
+                    row = evaluate_one_dataset(
+                        classifier,
+                        dataset_dir,
+                        worker_ttt_config,
+                        model_name=model_name,
+                    )
                     rows.append(row)
                     print(
                         format_dataset_result_log(
@@ -1463,10 +1656,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--models-dir", default=None)
     parser.add_argument("--checkpoint-version", default=DEFAULT_CHECKPOINT_VERSION)
-    parser.add_argument("--out-dir", default="1b_result/iclv1.1_ensmble_ttt_step")
-    parser.add_argument("--workers", type=int, default=None)
+    parser.add_argument("--out-dir", default="1b_result/ensmble_ttt_step15_lr5e-6")
+    parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--gpus", default=None)
-    parser.add_argument("--gpu-groups", default=None)
+    parser.add_argument("--gpu-groups", default="0,1,2")
     parser.add_argument("--n-estimators", type=int, default=32)
     parser.add_argument("--batch-size", type=parse_optional_int, default=8)
     parser.add_argument("--kv-cache", type=parse_kv_cache, default=False)
@@ -1478,16 +1671,58 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-models", type=int, default=None)
     parser.add_argument("--prefetch-models", type=int, default=4)
     parser.add_argument("--ttt-holdout", default=True, action="store_true")
-    parser.add_argument("--ttt-lr", type=float, default=2e-6)
+    parser.add_argument("--ttt-lr", type=float, default=5e-6)
     parser.add_argument("--ttt-scheduler", choices=["constant"], default="constant")
     parser.add_argument("--ttt-grad-clip", type=float, default=1.0)
     parser.add_argument("--ttt-dtype", choices=["float32", "float16", "bfloat16"], default="float32")
-    parser.add_argument("--ttt-micro-batch-size", type=int, default=1)
+    parser.add_argument(
+        "--ttt-micro-batch-size",
+        type=int,
+        default=1,
+        help=(
+            "Per-step TTT micro-batch size. When TTT data parallel is active, "
+            "this value is interpreted per GPU and the effective batch becomes "
+            "micro_batch_size x number_of_gpus_in_gpu_group."
+        ),
+    )
     parser.add_argument("--ttt-weight-decay", type=float, default=0.0)
-    parser.add_argument("--ttt-steps", type=int, default=1)
+    parser.add_argument("--ttt-steps", type=int, default=15)
     parser.add_argument("--ttt-freeze-col", type=parse_bool, default=True)
     parser.add_argument("--ttt-freeze-row", type=parse_bool, default=True)
-    parser.add_argument("--ttt-data-parallel",default=True, action="store_true")
+    parser.add_argument(
+        "--ttt-save-ckpt",
+        type=parse_bool,
+        default=True,
+        help="Whether to save intermediate TabICL checkpoints during the TTT update path.",
+    )
+    parser.add_argument(
+        "--ttt-save-ckpt-every",
+        type=int,
+        default=12,
+        help="Save a TTT checkpoint every N optimizer steps and always save the final step.",
+    )
+    parser.add_argument(
+        "--ttt-save-ckpt-start-step",
+        type=parse_optional_int,
+        default=None,
+        help=(
+            "First optimizer step to save a TTT checkpoint. Use None to keep the legacy "
+            "multiple-of --ttt-save-ckpt-every schedule."
+        ),
+    )
+    parser.add_argument(
+        "--ttt-data-parallel",
+        dest="ttt_data_parallel",
+        action="store_true",
+        help="Enable intra-worker multi-GPU data parallelism for the TTT update path.",
+    )
+    parser.add_argument(
+        "--no-ttt-data-parallel",
+        dest="ttt_data_parallel",
+        action="store_false",
+        help="Disable intra-worker multi-GPU data parallelism for the TTT update path.",
+    )
+    parser.set_defaults(ttt_data_parallel=True)
     parser.add_argument("--verbose", action="store_true")
     return parser
 

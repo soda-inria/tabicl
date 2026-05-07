@@ -1,0 +1,136 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.20951813527640947,
+      "selected": true
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.11592427223271609,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.10487848002237442,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.10476818735940092,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.08970909032324925,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.09250124097971765,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.20951813527640947
+    },
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.11592427223271609
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10487848002237442
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10476818735940092
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.08970909032324925
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.09250124097971765
+    }
+  ],
+  "selected_feature_indices": [
+    1,
+    2,
+    4,
+    6,
+    8,
+    9
+  ],
+  "candidate_feature_indices": [
+    1,
+    2,
+    4,
+    6,
+    9,
+    8,
+    5,
+    0,
+    7,
+    3
+  ],
+  "association_scores": {
+    "1": 0.20951813527640947,
+    "2": 0.11592427223271609,
+    "4": 0.10487848002237442,
+    "6": 0.10476818735940092,
+    "9": 0.09250124097971765,
+    "8": 0.08970909032324925,
+    "5": 0.04126873664038104,
+    "0": 0.01767457257283086,
+    "7": 0.008004611985137923,
+    "3": 0.0027477478201345562
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 10,
+  "sample_count": 5000,
+  "selector_seconds": 0.04020237922668457,
+  "status": "ok selected=6 candidates=10 samples=5000",
+  "dataset_name": "credit"
+}

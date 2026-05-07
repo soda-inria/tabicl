@@ -1,0 +1,132 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.0392427990771703,
+      "selected": true
+    },
+    {
+      "id": "feature_24",
+      "kind": "feature",
+      "feature_index": 24,
+      "association_score": 0.07578092328870929,
+      "selected": true
+    },
+    {
+      "id": "feature_26",
+      "kind": "feature",
+      "feature_index": 26,
+      "association_score": 0.05077533322364414,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.0392427990771703
+    },
+    {
+      "source": "feature_24",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07578092328870929
+    },
+    {
+      "source": "feature_26",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.05077533322364414
+    }
+  ],
+  "selected_feature_indices": [
+    1,
+    24,
+    26
+  ],
+  "candidate_feature_indices": [
+    24,
+    26,
+    22,
+    15,
+    1,
+    27,
+    17,
+    16,
+    25,
+    4,
+    12,
+    28,
+    7,
+    18,
+    19,
+    0,
+    23,
+    2,
+    5,
+    6,
+    3,
+    11,
+    9,
+    14,
+    10,
+    8,
+    13,
+    20,
+    21
+  ],
+  "association_scores": {
+    "24": 0.07578092328870929,
+    "26": 0.05077533322364414,
+    "22": 0.043146064523080396,
+    "15": 0.0408091781337068,
+    "1": 0.0392427990771703,
+    "27": 0.03885270858747016,
+    "17": 0.0318029077608969,
+    "16": 0.02997942487306158,
+    "25": 0.028986217849826423,
+    "4": 0.024881853009908764,
+    "12": 0.019867210231658116,
+    "28": 0.016999114781808874,
+    "7": 0.0161530232786289,
+    "18": 0.01526751353168025,
+    "19": 0.01503867367410453,
+    "0": 0.014157696380269622,
+    "23": 0.014081609282412758,
+    "2": 0.01405348830643508,
+    "5": 0.014053488306434993,
+    "6": 0.013865014239362759,
+    "3": 0.013085344186932251,
+    "11": 0.012043248511827942,
+    "9": 0.009695717276496903,
+    "14": 0.009532700207891077,
+    "10": 0.00908562030906238,
+    "8": 0.0027372556705770163,
+    "13": 0.0022657496487604673,
+    "20": 0.0,
+    "21": 0.0
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 29,
+  "sample_count": 3017,
+  "selector_seconds": 0.008722543716430664,
+  "status": "ok selected=3 candidates=29 samples=3017",
+  "dataset_name": "dis"
+}

@@ -1,0 +1,198 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.27721598015373344,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.32402070572166913,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.2998347921111297,
+      "selected": true
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.16112740941211165,
+      "selected": true
+    },
+    {
+      "id": "feature_11",
+      "kind": "feature",
+      "feature_index": 11,
+      "association_score": 0.14131540719507454,
+      "selected": true
+    },
+    {
+      "id": "feature_12",
+      "kind": "feature",
+      "feature_index": 12,
+      "association_score": 0.20113777788715434,
+      "selected": true
+    },
+    {
+      "id": "feature_13",
+      "kind": "feature",
+      "feature_index": 13,
+      "association_score": 0.19006724883846687,
+      "selected": true
+    },
+    {
+      "id": "feature_16",
+      "kind": "feature",
+      "feature_index": 16,
+      "association_score": 0.23621834950075637,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.27721598015373344
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.32402070572166913
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2998347921111297
+    },
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.16112740941211165
+    },
+    {
+      "source": "feature_11",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.14131540719507454
+    },
+    {
+      "source": "feature_12",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.20113777788715434
+    },
+    {
+      "source": "feature_13",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.19006724883846687
+    },
+    {
+      "source": "feature_16",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.23621834950075637
+    }
+  ],
+  "selected_feature_indices": [
+    2,
+    4,
+    5,
+    7,
+    11,
+    12,
+    13,
+    16
+  ],
+  "candidate_feature_indices": [
+    4,
+    5,
+    2,
+    14,
+    16,
+    22,
+    12,
+    13,
+    3,
+    7,
+    19,
+    21,
+    11,
+    15,
+    9,
+    18,
+    17,
+    0,
+    10,
+    23,
+    24,
+    1,
+    8,
+    20,
+    6,
+    25,
+    26
+  ],
+  "association_scores": {
+    "4": 0.32402070572166913,
+    "5": 0.2998347921111297,
+    "2": 0.27721598015373344,
+    "14": 0.23897732862664064,
+    "16": 0.23621834950075637,
+    "22": 0.2128124127276301,
+    "12": 0.20113777788715434,
+    "13": 0.19006724883846687,
+    "3": 0.16703101752794677,
+    "7": 0.16112740941211165,
+    "19": 0.15310364320395428,
+    "21": 0.15296243202711363,
+    "11": 0.14131540719507454,
+    "15": 0.13403115438014668,
+    "9": 0.1323522673117641,
+    "18": 0.1286904024712319,
+    "17": 0.11508009007674823,
+    "0": 0.08711596913752709,
+    "10": 0.07993168829577245,
+    "23": 0.04224592340061549,
+    "24": 0.01637655125341171,
+    "1": 0.010612114442592342,
+    "8": 0.008665003757857816,
+    "20": 0.005318019436223402,
+    "6": 0.002587145820225994,
+    "25": 0.0,
+    "26": 0.0
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 27,
+  "sample_count": 1792,
+  "selector_seconds": 0.11074113845825195,
+  "status": "ok selected=8 candidates=27 samples=1792",
+  "dataset_name": "Marketing_Campaign"
+}

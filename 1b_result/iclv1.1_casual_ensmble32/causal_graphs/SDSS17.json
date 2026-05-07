@@ -1,0 +1,112 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.04900757773801694,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.2672337543205535,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.06525488971228822,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.07854815827474167,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.04900757773801694
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2672337543205535
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.06525488971228822
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07854815827474167
+    }
+  ],
+  "selected_feature_indices": [
+    5,
+    6,
+    8,
+    10
+  ],
+  "candidate_feature_indices": [
+    6,
+    7,
+    10,
+    8,
+    11,
+    5,
+    9,
+    4,
+    2,
+    0,
+    3,
+    1
+  ],
+  "association_scores": {
+    "6": 0.2672337543205535,
+    "7": 0.21926413572323805,
+    "10": 0.07854815827474167,
+    "8": 0.06525488971228822,
+    "11": 0.050142734595378456,
+    "5": 0.04900757773801694,
+    "9": 0.026032447642728596,
+    "4": 0.022591636437952842,
+    "2": 0.021075070229499688,
+    "0": 0.01891435112460254,
+    "3": 0.0009271472903825238,
+    "1": 0.0
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 12,
+  "sample_count": 5000,
+  "selector_seconds": 0.016855239868164062,
+  "status": "ok selected=4 candidates=12 samples=5000",
+  "dataset_name": "SDSS17"
+}

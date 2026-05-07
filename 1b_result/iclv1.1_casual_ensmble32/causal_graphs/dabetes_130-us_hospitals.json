@@ -1,0 +1,156 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.06351252471651436,
+      "selected": true
+    },
+    {
+      "id": "feature_11",
+      "kind": "feature",
+      "feature_index": 11,
+      "association_score": 0.06165061761888147,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.03908887725061004,
+      "selected": true
+    },
+    {
+      "id": "feature_16",
+      "kind": "feature",
+      "feature_index": 16,
+      "association_score": 0.08973599662686983,
+      "selected": true
+    },
+    {
+      "id": "feature_18",
+      "kind": "feature",
+      "feature_index": 18,
+      "association_score": 0.21184294166039944,
+      "selected": true
+    },
+    {
+      "id": "feature_19",
+      "kind": "feature",
+      "feature_index": 19,
+      "association_score": 0.10613405417644192,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.06351252471651436
+    },
+    {
+      "source": "feature_11",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.06165061761888147
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.03908887725061004
+    },
+    {
+      "source": "feature_16",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.08973599662686983
+    },
+    {
+      "source": "feature_18",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.21184294166039944
+    },
+    {
+      "source": "feature_19",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10613405417644192
+    }
+  ],
+  "selected_feature_indices": [
+    4,
+    11,
+    14,
+    16,
+    18,
+    19
+  ],
+  "candidate_feature_indices": [
+    18,
+    19,
+    17,
+    16,
+    4,
+    11,
+    10,
+    2,
+    12,
+    14,
+    5,
+    13,
+    15,
+    9,
+    1,
+    3,
+    0,
+    8,
+    6,
+    7
+  ],
+  "association_scores": {
+    "18": 0.21184294166039944,
+    "19": 0.10613405417644192,
+    "17": 0.09009556193736519,
+    "16": 0.08973599662686983,
+    "4": 0.06351252471651436,
+    "11": 0.06165061761888147,
+    "10": 0.054352554296610525,
+    "2": 0.047543494304154096,
+    "12": 0.04556411653160114,
+    "14": 0.03908887725061004,
+    "5": 0.03500494957362242,
+    "13": 0.031997910585797144,
+    "15": 0.028399658918809093,
+    "9": 0.022525728010850527,
+    "1": 0.020419067318181904,
+    "3": 0.017413607128828407,
+    "0": 0.011232611310022329,
+    "8": 0.005903118237635087,
+    "6": 0.0007084147089063449,
+    "7": 0.0005287819123146313
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 20,
+  "sample_count": 5000,
+  "selector_seconds": 0.07110095024108887,
+  "status": "ok selected=6 candidates=20 samples=5000",
+  "dataset_name": "dabetes_130-us_hospitals"
+}

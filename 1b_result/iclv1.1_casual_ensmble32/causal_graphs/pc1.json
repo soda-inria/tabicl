@@ -1,0 +1,116 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_13",
+      "kind": "feature",
+      "feature_index": 13,
+      "association_score": 0.24070510936905332,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.20798580138124587,
+      "selected": true
+    },
+    {
+      "id": "feature_17",
+      "kind": "feature",
+      "feature_index": 17,
+      "association_score": 0.2770511353880961,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_13",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.24070510936905332
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.20798580138124587
+    },
+    {
+      "source": "feature_17",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2770511353880961
+    }
+  ],
+  "selected_feature_indices": [
+    13,
+    14,
+    17
+  ],
+  "candidate_feature_indices": [
+    17,
+    15,
+    0,
+    12,
+    13,
+    8,
+    10,
+    5,
+    18,
+    4,
+    19,
+    14,
+    16,
+    11,
+    9,
+    1,
+    20,
+    3,
+    2,
+    7,
+    6
+  ],
+  "association_scores": {
+    "17": 0.2770511353880961,
+    "15": 0.26940067802482753,
+    "0": 0.25845463169875144,
+    "12": 0.2484994342436475,
+    "13": 0.24070510936905332,
+    "8": 0.23733704127143618,
+    "10": 0.235211193692892,
+    "5": 0.22800439816586301,
+    "18": 0.22365756949027102,
+    "4": 0.2217306136943497,
+    "19": 0.21757330762398894,
+    "14": 0.20798580138124587,
+    "16": 0.18649492031842035,
+    "11": 0.15625052932457922,
+    "9": 0.1562499444126848,
+    "1": 0.14383510074498312,
+    "20": 0.14137308906547347,
+    "3": 0.12982093343495768,
+    "2": 0.11598227096451898,
+    "7": 0.09422368303287802,
+    "6": 0.004433423327993916
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 21,
+  "sample_count": 887,
+  "selector_seconds": 0.01574397087097168,
+  "status": "ok selected=3 candidates=21 samples=887",
+  "dataset_name": "pc1"
+}

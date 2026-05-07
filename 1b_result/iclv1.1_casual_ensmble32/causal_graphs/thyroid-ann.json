@@ -1,0 +1,130 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.07986719373992751,
+      "selected": true
+    },
+    {
+      "id": "feature_16",
+      "kind": "feature",
+      "feature_index": 16,
+      "association_score": 0.5448607736223415,
+      "selected": true
+    },
+    {
+      "id": "feature_17",
+      "kind": "feature",
+      "feature_index": 17,
+      "association_score": 0.23958122275688717,
+      "selected": true
+    },
+    {
+      "id": "feature_20",
+      "kind": "feature",
+      "feature_index": 20,
+      "association_score": 0.40126779972477256,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07986719373992751
+    },
+    {
+      "source": "feature_16",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.5448607736223415
+    },
+    {
+      "source": "feature_17",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.23958122275688717
+    },
+    {
+      "source": "feature_20",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.40126779972477256
+    }
+  ],
+  "selected_feature_indices": [
+    9,
+    16,
+    17,
+    20
+  ],
+  "candidate_feature_indices": [
+    16,
+    20,
+    18,
+    17,
+    9,
+    2,
+    10,
+    6,
+    1,
+    15,
+    19,
+    12,
+    4,
+    11,
+    7,
+    5,
+    3,
+    8,
+    0,
+    13,
+    14
+  ],
+  "association_scores": {
+    "16": 0.5448607736223415,
+    "20": 0.40126779972477256,
+    "18": 0.36162197820261505,
+    "17": 0.23958122275688717,
+    "9": 0.07986719373992751,
+    "2": 0.06889315921244965,
+    "10": 0.038222056734439416,
+    "6": 0.03181036273816868,
+    "1": 0.02902749056462719,
+    "15": 0.027861878468927216,
+    "19": 0.026989192232338647,
+    "12": 0.0239739570933304,
+    "4": 0.021229508539941627,
+    "11": 0.018924645234325632,
+    "7": 0.018267876556769553,
+    "5": 0.016920297345253604,
+    "3": 0.013669025067487937,
+    "8": 0.011946885002780289,
+    "0": 0.008972923289606298,
+    "13": 0.0050558439000877075,
+    "14": 0.0048749682629035855
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 21,
+  "sample_count": 3017,
+  "selector_seconds": 0.01889777183532715,
+  "status": "ok selected=4 candidates=21 samples=3017",
+  "dataset_name": "thyroid-ann"
+}

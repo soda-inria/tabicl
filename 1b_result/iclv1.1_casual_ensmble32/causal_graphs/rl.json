@@ -1,0 +1,112 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.03689064884469053,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.10302692910853645,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.14582225014298789,
+      "selected": true
+    },
+    {
+      "id": "feature_11",
+      "kind": "feature",
+      "feature_index": 11,
+      "association_score": 0.15555874478714043,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.03689064884469053
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10302692910853645
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.14582225014298789
+    },
+    {
+      "source": "feature_11",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.15555874478714043
+    }
+  ],
+  "selected_feature_indices": [
+    1,
+    8,
+    10,
+    11
+  ],
+  "candidate_feature_indices": [
+    11,
+    10,
+    8,
+    9,
+    4,
+    7,
+    1,
+    0,
+    3,
+    6,
+    5,
+    2
+  ],
+  "association_scores": {
+    "11": 0.15555874478714043,
+    "10": 0.14582225014298789,
+    "8": 0.10302692910853645,
+    "9": 0.06266903309661376,
+    "4": 0.05239014854084955,
+    "7": 0.04997002605995683,
+    "1": 0.03689064884469053,
+    "0": 0.024453751924981827,
+    "3": 0.0041706590228661276,
+    "6": 0.00241924171994288,
+    "5": 0.002176492470943685,
+    "2": 0.0
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 12,
+  "sample_count": 3976,
+  "selector_seconds": 0.019036054611206055,
+  "status": "ok selected=4 candidates=12 samples=3976",
+  "dataset_name": "rl"
+}

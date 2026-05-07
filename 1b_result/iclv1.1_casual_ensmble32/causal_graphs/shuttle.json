@@ -1,0 +1,120 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.7430219751345533,
+      "selected": true
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.14452110446888547,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.4427382204251531,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.6070613746026511,
+      "selected": true
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.5181326969803632,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.7430219751345533
+    },
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.14452110446888547
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4427382204251531
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.6070613746026511
+    },
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.5181326969803632
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    2,
+    4,
+    6,
+    7
+  ],
+  "candidate_feature_indices": [
+    0,
+    8,
+    6,
+    7,
+    4,
+    2,
+    1,
+    5,
+    3
+  ],
+  "association_scores": {
+    "0": 0.7430219751345533,
+    "8": 0.7371983129869915,
+    "6": 0.6070613746026511,
+    "7": 0.5181326969803632,
+    "4": 0.4427382204251531,
+    "2": 0.14452110446888547,
+    "1": 0.04937496689645644,
+    "5": 0.009780078841624065,
+    "3": 0.0008380823388283669
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 9,
+  "sample_count": 5000,
+  "selector_seconds": 0.03326821327209473,
+  "status": "ok selected=5 candidates=9 samples=5000",
+  "dataset_name": "shuttle"
+}

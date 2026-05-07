@@ -1,0 +1,196 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.33455028576473556,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.06867779422305029,
+      "selected": true
+    },
+    {
+      "id": "feature_16",
+      "kind": "feature",
+      "feature_index": 16,
+      "association_score": 0.08077807119764925,
+      "selected": true
+    },
+    {
+      "id": "feature_22",
+      "kind": "feature",
+      "feature_index": 22,
+      "association_score": 0.44439388499954013,
+      "selected": true
+    },
+    {
+      "id": "feature_30",
+      "kind": "feature",
+      "feature_index": 30,
+      "association_score": 0.42310541823382297,
+      "selected": true
+    },
+    {
+      "id": "feature_39",
+      "kind": "feature",
+      "feature_index": 39,
+      "association_score": 0.2170344942475113,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.33455028576473556
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.06867779422305029
+    },
+    {
+      "source": "feature_16",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.08077807119764925
+    },
+    {
+      "source": "feature_22",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.44439388499954013
+    },
+    {
+      "source": "feature_30",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.42310541823382297
+    },
+    {
+      "source": "feature_39",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2170344942475113
+    }
+  ],
+  "selected_feature_indices": [
+    5,
+    14,
+    16,
+    22,
+    30,
+    39
+  ],
+  "candidate_feature_indices": [
+    22,
+    29,
+    0,
+    10,
+    20,
+    30,
+    35,
+    5,
+    3,
+    32,
+    15,
+    34,
+    33,
+    6,
+    27,
+    31,
+    37,
+    28,
+    8,
+    36,
+    24,
+    39,
+    1,
+    13,
+    38,
+    4,
+    21,
+    7,
+    23,
+    26,
+    25,
+    16,
+    12,
+    14,
+    17,
+    2,
+    19,
+    18,
+    11,
+    9
+  ],
+  "association_scores": {
+    "22": 0.44439388499954013,
+    "29": 0.4362175890552741,
+    "0": 0.42310541823382297,
+    "10": 0.42310541823382297,
+    "20": 0.42310541823382297,
+    "30": 0.42310541823382297,
+    "35": 0.3561575360196276,
+    "5": 0.33455028576473556,
+    "3": 0.3223687895811588,
+    "32": 0.30925009900954537,
+    "15": 0.29436350960247226,
+    "34": 0.2942192244889645,
+    "33": 0.2827690509734983,
+    "6": 0.25515720436042055,
+    "27": 0.2526744462713088,
+    "31": 0.25247929008165665,
+    "37": 0.24435545158835262,
+    "28": 0.24263639068300402,
+    "8": 0.23415541277922308,
+    "36": 0.2266600273669687,
+    "24": 0.22459273743170222,
+    "39": 0.2170344942475113,
+    "1": 0.21681763984658634,
+    "13": 0.2162323017196126,
+    "38": 0.2015418056592717,
+    "4": 0.19937259258462478,
+    "21": 0.1707460732457303,
+    "7": 0.15421496994285075,
+    "23": 0.1509326487838078,
+    "26": 0.1477242111302046,
+    "25": 0.11486742365838491,
+    "16": 0.08077807119764925,
+    "12": 0.07165065941932235,
+    "14": 0.06867779422305029,
+    "17": 0.040289141495080324,
+    "2": 0.03611428998315294,
+    "19": 0.032323186076810895,
+    "18": 0.030677797910598673,
+    "11": 0.020588525252266992,
+    "9": 0.011048832636125933
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 40,
+  "sample_count": 4400,
+  "selector_seconds": 0.1945638656616211,
+  "status": "ok selected=6 candidates=40 samples=4400",
+  "dataset_name": "texture"
+}

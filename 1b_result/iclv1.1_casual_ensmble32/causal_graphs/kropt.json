@@ -1,0 +1,86 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.032282758855389844,
+      "selected": true
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.028079005339865716,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.10018350622569185,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.032282758855389844
+    },
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.028079005339865716
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10018350622569185
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    1,
+    5
+  ],
+  "candidate_feature_indices": [
+    5,
+    0,
+    4,
+    1,
+    2,
+    3
+  ],
+  "association_scores": {
+    "5": 0.10018350622569185,
+    "0": 0.032282758855389844,
+    "4": 0.02986397918767783,
+    "1": 0.028079005339865716,
+    "2": 0.01955750378928162,
+    "3": 0.010566775080119887
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 6,
+  "sample_count": 5000,
+  "selector_seconds": 0.006304502487182617,
+  "status": "ok selected=3 candidates=6 samples=5000",
+  "dataset_name": "kropt"
+}

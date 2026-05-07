@@ -1,0 +1,166 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_24",
+      "kind": "feature",
+      "feature_index": 24,
+      "association_score": 0.3286842589588914,
+      "selected": true
+    },
+    {
+      "id": "feature_25",
+      "kind": "feature",
+      "feature_index": 25,
+      "association_score": 0.40937165064378583,
+      "selected": true
+    },
+    {
+      "id": "feature_27",
+      "kind": "feature",
+      "feature_index": 27,
+      "association_score": 0.4127126414578015,
+      "selected": true
+    },
+    {
+      "id": "feature_30",
+      "kind": "feature",
+      "feature_index": 30,
+      "association_score": 0.22993467553939126,
+      "selected": true
+    },
+    {
+      "id": "feature_31",
+      "kind": "feature",
+      "feature_index": 31,
+      "association_score": 0.28928965793310324,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_24",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3286842589588914
+    },
+    {
+      "source": "feature_25",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.40937165064378583
+    },
+    {
+      "source": "feature_27",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4127126414578015
+    },
+    {
+      "source": "feature_30",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.22993467553939126
+    },
+    {
+      "source": "feature_31",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.28928965793310324
+    }
+  ],
+  "selected_feature_indices": [
+    24,
+    25,
+    27,
+    30,
+    31
+  ],
+  "candidate_feature_indices": [
+    27,
+    25,
+    24,
+    26,
+    31,
+    29,
+    28,
+    30,
+    11,
+    17,
+    19,
+    7,
+    22,
+    1,
+    5,
+    6,
+    23,
+    16,
+    10,
+    4,
+    13,
+    8,
+    14,
+    12,
+    15,
+    9,
+    21,
+    2,
+    3,
+    0,
+    18,
+    20
+  ],
+  "association_scores": {
+    "27": 0.4127126414578015,
+    "25": 0.40937165064378583,
+    "24": 0.3286842589588914,
+    "26": 0.3160262141108941,
+    "31": 0.28928965793310324,
+    "29": 0.2573195813356072,
+    "28": 0.24276950277478954,
+    "30": 0.22993467553939126,
+    "11": 0.032523699987224895,
+    "17": 0.03208707824489609,
+    "19": 0.02791387817798768,
+    "7": 0.02581138093773759,
+    "22": 0.0251998136515304,
+    "1": 0.024265015026214795,
+    "5": 0.02321344083563105,
+    "6": 0.02309089730775173,
+    "23": 0.023035239308182427,
+    "16": 0.022045290221352917,
+    "10": 0.021054178235069495,
+    "4": 0.020342312109115017,
+    "13": 0.018469051159367113,
+    "8": 0.01656242846149188,
+    "14": 0.013223480251674425,
+    "12": 0.011327383097019304,
+    "15": 0.00799664018852825,
+    "9": 0.006913839481308653,
+    "21": 0.006605674802784488,
+    "2": 0.0065107519567924885,
+    "3": 0.004399327427693366,
+    "0": 0.003855691233299138,
+    "18": 0.0011475421551490892,
+    "20": 0.0010864956813435632
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 32,
+  "sample_count": 5000,
+  "selector_seconds": 0.0864715576171875,
+  "status": "ok selected=5 candidates=32 samples=5000",
+  "dataset_name": "GesturePhaseSegmentationProcessed"
+}

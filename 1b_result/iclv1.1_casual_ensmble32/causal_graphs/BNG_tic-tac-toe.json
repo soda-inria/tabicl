@@ -1,0 +1,134 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.09804830106537196,
+      "selected": true
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.0659338957280874,
+      "selected": true
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.07529614429206358,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.18709534454241936,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.046999900316772716,
+      "selected": true
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.0826080264698827,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.09804830106537196
+    },
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.0659338957280874
+    },
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07529614429206358
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.18709534454241936
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.046999900316772716
+    },
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.0826080264698827
+    }
+  ],
+  "selected_feature_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+  ],
+  "candidate_feature_indices": [
+    4,
+    1,
+    7,
+    3,
+    2,
+    8,
+    5,
+    6,
+    0
+  ],
+  "association_scores": {
+    "4": 0.18709534454241936,
+    "1": 0.09804830106537196,
+    "7": 0.0826080264698827,
+    "3": 0.07529614429206358,
+    "2": 0.0659338957280874,
+    "8": 0.0471721896797764,
+    "5": 0.046999900316772716,
+    "6": 0.043220110036076315,
+    "0": 0.019311915325838192
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 9,
+  "sample_count": 5000,
+  "selector_seconds": 0.05792093276977539,
+  "status": "ok selected=6 candidates=9 samples=5000",
+  "dataset_name": "BNG(tic-tac-toe)"
+}

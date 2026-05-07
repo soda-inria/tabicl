@@ -1,0 +1,202 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.14862650350721565,
+      "selected": true
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.6659702550562793,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.6663906747492645,
+      "selected": true
+    },
+    {
+      "id": "feature_14",
+      "kind": "feature",
+      "feature_index": 14,
+      "association_score": 0.6916236782104604,
+      "selected": true
+    },
+    {
+      "id": "feature_18",
+      "kind": "feature",
+      "feature_index": 18,
+      "association_score": 0.7008140994537359,
+      "selected": true
+    },
+    {
+      "id": "feature_22",
+      "kind": "feature",
+      "feature_index": 22,
+      "association_score": 0.6832626118060278,
+      "selected": true
+    },
+    {
+      "id": "feature_26",
+      "kind": "feature",
+      "feature_index": 26,
+      "association_score": 0.6699647638903299,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.14862650350721565
+    },
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.6659702550562793
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.6663906747492645
+    },
+    {
+      "source": "feature_14",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.6916236782104604
+    },
+    {
+      "source": "feature_18",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.7008140994537359
+    },
+    {
+      "source": "feature_22",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.6832626118060278
+    },
+    {
+      "source": "feature_26",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.6699647638903299
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    2,
+    10,
+    14,
+    18,
+    22,
+    26
+  ],
+  "candidate_feature_indices": [
+    18,
+    14,
+    22,
+    6,
+    30,
+    26,
+    10,
+    2,
+    34,
+    19,
+    15,
+    23,
+    7,
+    31,
+    27,
+    11,
+    3,
+    35,
+    17,
+    13,
+    1,
+    5,
+    29,
+    21,
+    25,
+    33,
+    9,
+    32,
+    8,
+    20,
+    24,
+    28,
+    4,
+    16,
+    12,
+    0
+  ],
+  "association_scores": {
+    "18": 0.7008140994537359,
+    "14": 0.6916236782104604,
+    "22": 0.6832626118060278,
+    "6": 0.6759165199383343,
+    "30": 0.6737593596946312,
+    "26": 0.6699647638903299,
+    "10": 0.6663906747492645,
+    "2": 0.6659702550562793,
+    "34": 0.660025032859166,
+    "19": 0.6523511658031904,
+    "15": 0.6450886260897661,
+    "23": 0.6343330474669133,
+    "7": 0.6289463894079896,
+    "31": 0.6236356757002168,
+    "27": 0.6215653732341906,
+    "11": 0.6173802926478744,
+    "3": 0.6168442268267501,
+    "35": 0.6084089588866782,
+    "17": 0.20729805633629608,
+    "13": 0.20564750761941117,
+    "1": 0.20276800584382293,
+    "5": 0.20094692899722927,
+    "29": 0.1975954868994904,
+    "21": 0.19602136995896802,
+    "25": 0.1952537728396404,
+    "33": 0.19005237335158529,
+    "9": 0.1891133671139278,
+    "32": 0.16656442778458028,
+    "8": 0.16572450364216515,
+    "20": 0.1622254257070722,
+    "24": 0.16069656197470922,
+    "28": 0.15952462756999225,
+    "4": 0.15380330421498417,
+    "16": 0.14999684467595176,
+    "12": 0.14988474736596907,
+    "0": 0.14862650350721565
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 36,
+  "sample_count": 5000,
+  "selector_seconds": 0.495011568069458,
+  "status": "ok selected=7 candidates=36 samples=5000",
+  "dataset_name": "satimage"
+}

@@ -1,0 +1,98 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.05282129346133927,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.054330350065962686,
+      "selected": true
+    },
+    {
+      "id": "feature_11",
+      "kind": "feature",
+      "feature_index": 11,
+      "association_score": 0.02646118487687081,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.05282129346133927
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.054330350065962686
+    },
+    {
+      "source": "feature_11",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.02646118487687081
+    }
+  ],
+  "selected_feature_indices": [
+    2,
+    9,
+    11
+  ],
+  "candidate_feature_indices": [
+    9,
+    2,
+    11,
+    3,
+    10,
+    6,
+    0,
+    1,
+    5,
+    8,
+    7,
+    4
+  ],
+  "association_scores": {
+    "9": 0.054330350065962686,
+    "2": 0.05282129346133927,
+    "11": 0.02646118487687081,
+    "3": 0.024545115296133086,
+    "10": 0.02187662304126125,
+    "6": 0.021713378412087037,
+    "0": 0.013260681437229185,
+    "1": 0.009968603542203651,
+    "5": 0.004996272195941119,
+    "8": 0.004481318513132547,
+    "7": 0.004284935247103016,
+    "4": 0.003233224429302757
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 12,
+  "sample_count": 1507,
+  "selector_seconds": 0.0021550655364990234,
+  "status": "ok selected=3 candidates=12 samples=1507",
+  "dataset_name": "drug_consumption"
+}

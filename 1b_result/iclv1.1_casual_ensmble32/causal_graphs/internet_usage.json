@@ -1,0 +1,368 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.23467713433883464,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.059048476166765486,
+      "selected": true
+    },
+    {
+      "id": "feature_19",
+      "kind": "feature",
+      "feature_index": 19,
+      "association_score": 0.10069823102459612,
+      "selected": true
+    },
+    {
+      "id": "feature_20",
+      "kind": "feature",
+      "feature_index": 20,
+      "association_score": 0.09716211016510452,
+      "selected": true
+    },
+    {
+      "id": "feature_21",
+      "kind": "feature",
+      "feature_index": 21,
+      "association_score": 0.05374664807052973,
+      "selected": true
+    },
+    {
+      "id": "feature_27",
+      "kind": "feature",
+      "feature_index": 27,
+      "association_score": 0.08321125537496958,
+      "selected": true
+    },
+    {
+      "id": "feature_32",
+      "kind": "feature",
+      "feature_index": 32,
+      "association_score": 0.1622143367675967,
+      "selected": true
+    },
+    {
+      "id": "feature_37",
+      "kind": "feature",
+      "feature_index": 37,
+      "association_score": 0.16866826497527587,
+      "selected": true
+    },
+    {
+      "id": "feature_38",
+      "kind": "feature",
+      "feature_index": 38,
+      "association_score": 0.05440638937357806,
+      "selected": true
+    },
+    {
+      "id": "feature_60",
+      "kind": "feature",
+      "feature_index": 60,
+      "association_score": 0.07269894694895018,
+      "selected": true
+    },
+    {
+      "id": "feature_64",
+      "kind": "feature",
+      "feature_index": 64,
+      "association_score": 0.11815748762824564,
+      "selected": true
+    },
+    {
+      "id": "feature_65",
+      "kind": "feature",
+      "feature_index": 65,
+      "association_score": 0.32643272454513217,
+      "selected": true
+    },
+    {
+      "id": "feature_66",
+      "kind": "feature",
+      "feature_index": 66,
+      "association_score": 0.20793189147686814,
+      "selected": true
+    },
+    {
+      "id": "feature_69",
+      "kind": "feature",
+      "feature_index": 69,
+      "association_score": 0.10442529778666534,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.23467713433883464
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.059048476166765486
+    },
+    {
+      "source": "feature_19",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10069823102459612
+    },
+    {
+      "source": "feature_20",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.09716211016510452
+    },
+    {
+      "source": "feature_21",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.05374664807052973
+    },
+    {
+      "source": "feature_27",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.08321125537496958
+    },
+    {
+      "source": "feature_32",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1622143367675967
+    },
+    {
+      "source": "feature_37",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.16866826497527587
+    },
+    {
+      "source": "feature_38",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.05440638937357806
+    },
+    {
+      "source": "feature_60",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07269894694895018
+    },
+    {
+      "source": "feature_64",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.11815748762824564
+    },
+    {
+      "source": "feature_65",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.32643272454513217
+    },
+    {
+      "source": "feature_66",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.20793189147686814
+    },
+    {
+      "source": "feature_69",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.10442529778666534
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    10,
+    19,
+    20,
+    21,
+    27,
+    32,
+    37,
+    38,
+    60,
+    64,
+    65,
+    66,
+    69
+  ],
+  "candidate_feature_indices": [
+    65,
+    0,
+    66,
+    37,
+    32,
+    64,
+    69,
+    19,
+    20,
+    35,
+    27,
+    60,
+    10,
+    67,
+    38,
+    21,
+    30,
+    13,
+    12,
+    14,
+    56,
+    53,
+    34,
+    68,
+    25,
+    17,
+    63,
+    2,
+    49,
+    43,
+    18,
+    51,
+    36,
+    54,
+    47,
+    40,
+    24,
+    33,
+    28,
+    62,
+    61,
+    8,
+    45,
+    15,
+    9,
+    1,
+    46,
+    42,
+    4,
+    59,
+    29,
+    16,
+    7,
+    52,
+    31,
+    5,
+    6,
+    11,
+    58,
+    57,
+    50,
+    55,
+    41,
+    23,
+    26,
+    44,
+    22,
+    3,
+    48,
+    39
+  ],
+  "association_scores": {
+    "65": 0.32643272454513217,
+    "0": 0.23467713433883464,
+    "66": 0.20793189147686814,
+    "37": 0.16866826497527587,
+    "32": 0.1622143367675967,
+    "64": 0.11815748762824564,
+    "69": 0.10442529778666534,
+    "19": 0.10069823102459612,
+    "20": 0.09716211016510452,
+    "35": 0.08411190348012548,
+    "27": 0.08321125537496958,
+    "60": 0.07269894694895018,
+    "10": 0.059048476166765486,
+    "67": 0.05539077010623022,
+    "38": 0.05440638937357806,
+    "21": 0.05374664807052973,
+    "30": 0.04918486410385298,
+    "13": 0.04894963537883649,
+    "12": 0.047677140837754484,
+    "14": 0.043378710866243994,
+    "56": 0.04273256588010987,
+    "53": 0.04255074123305,
+    "34": 0.0347149570018861,
+    "68": 0.03369959219549576,
+    "25": 0.03316512537488409,
+    "17": 0.03264968768928684,
+    "63": 0.032539296027860244,
+    "2": 0.032200809793622026,
+    "49": 0.03194607304847355,
+    "43": 0.03144868997064988,
+    "18": 0.027142723252075427,
+    "51": 0.027065657542344718,
+    "36": 0.025771557188132278,
+    "54": 0.023731348481911448,
+    "47": 0.02200634544194129,
+    "40": 0.02195572260650097,
+    "24": 0.021811099402991727,
+    "33": 0.021539650196505812,
+    "28": 0.02140371023279879,
+    "62": 0.02037197755458143,
+    "61": 0.018438876912280595,
+    "8": 0.01773570259281769,
+    "45": 0.01683791664631045,
+    "15": 0.016397107951177173,
+    "9": 0.014288654389234094,
+    "1": 0.013498751150059704,
+    "46": 0.013277418976906378,
+    "42": 0.013134378601576666,
+    "4": 0.012989229890853127,
+    "59": 0.012677757189642666,
+    "29": 0.012437109275767218,
+    "16": 0.011831888860962486,
+    "7": 0.011571930907306184,
+    "52": 0.011471644495815472,
+    "31": 0.009839288271968515,
+    "5": 0.008890264424779727,
+    "6": 0.008631644562995113,
+    "11": 0.00823782068543465,
+    "58": 0.007380988757818357,
+    "57": 0.006935110234168465,
+    "50": 0.006272583346156416,
+    "55": 0.0056878447731557496,
+    "41": 0.005461428471769007,
+    "23": 0.00391684856000159,
+    "26": 0.003388969032688182,
+    "44": 0.002547467944498715,
+    "22": 0.0025418333473507804,
+    "3": 0.002119070305461555,
+    "48": 0.001879401544363664,
+    "39": 0.0010081351192801572
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 70,
+  "sample_count": 5000,
+  "selector_seconds": 0.49292540550231934,
+  "status": "ok selected=14 candidates=70 samples=5000",
+  "dataset_name": "internet_usage"
+}

@@ -1,0 +1,194 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.1718307416785138,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.2990973008701845,
+      "selected": true
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.19010293921775298,
+      "selected": true
+    },
+    {
+      "id": "feature_9",
+      "kind": "feature",
+      "feature_index": 9,
+      "association_score": 0.28698667596234734,
+      "selected": true
+    },
+    {
+      "id": "feature_12",
+      "kind": "feature",
+      "feature_index": 12,
+      "association_score": 0.3943962760122796,
+      "selected": true
+    },
+    {
+      "id": "feature_13",
+      "kind": "feature",
+      "feature_index": 13,
+      "association_score": 0.20774702900682068,
+      "selected": true
+    },
+    {
+      "id": "feature_15",
+      "kind": "feature",
+      "feature_index": 15,
+      "association_score": 0.13732423745615632,
+      "selected": true
+    },
+    {
+      "id": "feature_16",
+      "kind": "feature",
+      "feature_index": 16,
+      "association_score": 0.33885201579464647,
+      "selected": true
+    },
+    {
+      "id": "feature_17",
+      "kind": "feature",
+      "feature_index": 17,
+      "association_score": 0.20395959085483062,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1718307416785138
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2990973008701845
+    },
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.19010293921775298
+    },
+    {
+      "source": "feature_9",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.28698667596234734
+    },
+    {
+      "source": "feature_12",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.3943962760122796
+    },
+    {
+      "source": "feature_13",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.20774702900682068
+    },
+    {
+      "source": "feature_15",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.13732423745615632
+    },
+    {
+      "source": "feature_16",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.33885201579464647
+    },
+    {
+      "source": "feature_17",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.20395959085483062
+    }
+  ],
+  "selected_feature_indices": [
+    2,
+    6,
+    7,
+    9,
+    12,
+    13,
+    15,
+    16,
+    17
+  ],
+  "candidate_feature_indices": [
+    12,
+    16,
+    6,
+    9,
+    13,
+    17,
+    7,
+    2,
+    8,
+    1,
+    15,
+    14,
+    5,
+    4,
+    11,
+    3,
+    10,
+    0
+  ],
+  "association_scores": {
+    "12": 0.3943962760122796,
+    "16": 0.33885201579464647,
+    "6": 0.2990973008701845,
+    "9": 0.28698667596234734,
+    "13": 0.20774702900682068,
+    "17": 0.20395959085483062,
+    "7": 0.19010293921775298,
+    "2": 0.1718307416785138,
+    "8": 0.16924542557532624,
+    "1": 0.15017572513788383,
+    "15": 0.13732423745615632,
+    "14": 0.10561095169102225,
+    "5": 0.048473434379612726,
+    "4": 0.03477202197753786,
+    "11": 0.034320981693631764,
+    "3": 0.02030224385043455,
+    "10": 0.015409796058725476,
+    "0": 0.00328230248333494
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 18,
+  "sample_count": 5000,
+  "selector_seconds": 0.18445181846618652,
+  "status": "ok selected=9 candidates=18 samples=5000",
+  "dataset_name": "telco-customer-churn"
+}

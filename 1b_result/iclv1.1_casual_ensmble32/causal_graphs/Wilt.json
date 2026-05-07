@@ -1,0 +1,84 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_1",
+      "kind": "feature",
+      "feature_index": 1,
+      "association_score": 0.09520864718083145,
+      "selected": true
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.12978241393893725,
+      "selected": true
+    },
+    {
+      "id": "feature_4",
+      "kind": "feature",
+      "feature_index": 4,
+      "association_score": 0.09627200338989172,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_1",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.09520864718083145
+    },
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.12978241393893725
+    },
+    {
+      "source": "feature_4",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.09627200338989172
+    }
+  ],
+  "selected_feature_indices": [
+    1,
+    3,
+    4
+  ],
+  "candidate_feature_indices": [
+    3,
+    4,
+    1,
+    0,
+    2
+  ],
+  "association_scores": {
+    "3": 0.12978241393893725,
+    "4": 0.09627200338989172,
+    "1": 0.09520864718083145,
+    "0": 0.015462926036037945,
+    "2": 0.003583930412927058
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 5,
+  "sample_count": 3856,
+  "selector_seconds": 0.0014891624450683594,
+  "status": "ok selected=3 candidates=5 samples=3856",
+  "dataset_name": "Wilt"
+}

@@ -1,0 +1,106 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_0",
+      "kind": "feature",
+      "feature_index": 0,
+      "association_score": 0.13942570258365306,
+      "selected": true
+    },
+    {
+      "id": "feature_6",
+      "kind": "feature",
+      "feature_index": 6,
+      "association_score": 0.11688118360997275,
+      "selected": true
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.16222111442076664,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.08829665247553435,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_0",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.13942570258365306
+    },
+    {
+      "source": "feature_6",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.11688118360997275
+    },
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.16222111442076664
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.08829665247553435
+    }
+  ],
+  "selected_feature_indices": [
+    0,
+    6,
+    7,
+    8
+  ],
+  "candidate_feature_indices": [
+    7,
+    0,
+    6,
+    1,
+    8,
+    5,
+    3,
+    2,
+    4
+  ],
+  "association_scores": {
+    "7": 0.16222111442076664,
+    "0": 0.13942570258365306,
+    "6": 0.11688118360997275,
+    "1": 0.09662281380881424,
+    "8": 0.08829665247553435,
+    "5": 0.078625821962666,
+    "3": 0.061898765392407996,
+    "2": 0.030596557841205095,
+    "4": 0.02223352005690953
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 9,
+  "sample_count": 1178,
+  "selector_seconds": 0.008883953094482422,
+  "status": "ok selected=4 candidates=9 samples=1178",
+  "dataset_name": "cmc"
+}

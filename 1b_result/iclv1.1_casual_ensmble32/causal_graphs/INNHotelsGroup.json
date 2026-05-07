@@ -1,0 +1,164 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.18407042122522427,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.13180632318008295,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.07426122570508971,
+      "selected": true
+    },
+    {
+      "id": "feature_10",
+      "kind": "feature",
+      "feature_index": 10,
+      "association_score": 0.08496819735676506,
+      "selected": true
+    },
+    {
+      "id": "feature_11",
+      "kind": "feature",
+      "feature_index": 11,
+      "association_score": 0.4250831268167687,
+      "selected": true
+    },
+    {
+      "id": "feature_15",
+      "kind": "feature",
+      "feature_index": 15,
+      "association_score": 0.1417133310059193,
+      "selected": true
+    },
+    {
+      "id": "feature_16",
+      "kind": "feature",
+      "feature_index": 16,
+      "association_score": 0.2542052123607095,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.18407042122522427
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.13180632318008295
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.07426122570508971
+    },
+    {
+      "source": "feature_10",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.08496819735676506
+    },
+    {
+      "source": "feature_11",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.4250831268167687
+    },
+    {
+      "source": "feature_15",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1417133310059193
+    },
+    {
+      "source": "feature_16",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.2542052123607095
+    }
+  ],
+  "selected_feature_indices": [
+    2,
+    5,
+    8,
+    10,
+    11,
+    15,
+    16
+  ],
+  "candidate_feature_indices": [
+    11,
+    16,
+    2,
+    15,
+    5,
+    12,
+    6,
+    3,
+    9,
+    10,
+    8,
+    14,
+    13,
+    1,
+    7,
+    0,
+    4
+  ],
+  "association_scores": {
+    "11": 0.4250831268167687,
+    "16": 0.2542052123607095,
+    "2": 0.18407042122522427,
+    "15": 0.1417133310059193,
+    "5": 0.13180632318008295,
+    "12": 0.10534770362154793,
+    "6": 0.10236059821407563,
+    "3": 0.09853067440310961,
+    "9": 0.0956053084911059,
+    "10": 0.08496819735676506,
+    "8": 0.07426122570508971,
+    "14": 0.06130186123369466,
+    "13": 0.043170235964309536,
+    "1": 0.027696881980275645,
+    "7": 0.0232406015928653,
+    "0": 0.021314118421810312,
+    "4": 0.018456553709693468
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 17,
+  "sample_count": 5000,
+  "selector_seconds": 0.16347241401672363,
+  "status": "ok selected=7 candidates=17 samples=5000",
+  "dataset_name": "INNHotelsGroup"
+}

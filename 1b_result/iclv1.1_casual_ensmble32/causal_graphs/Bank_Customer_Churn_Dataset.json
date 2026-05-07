@@ -1,0 +1,122 @@
+{
+  "graph_type": "target_adjacency_skeleton",
+  "target_node": "target",
+  "nodes": [
+    {
+      "id": "target",
+      "kind": "target"
+    },
+    {
+      "id": "feature_2",
+      "kind": "feature",
+      "feature_index": 2,
+      "association_score": 0.1679312663358598,
+      "selected": true
+    },
+    {
+      "id": "feature_3",
+      "kind": "feature",
+      "feature_index": 3,
+      "association_score": 0.09783814279638826,
+      "selected": true
+    },
+    {
+      "id": "feature_5",
+      "kind": "feature",
+      "feature_index": 5,
+      "association_score": 0.27483613740578156,
+      "selected": true
+    },
+    {
+      "id": "feature_7",
+      "kind": "feature",
+      "feature_index": 7,
+      "association_score": 0.1170148198215521,
+      "selected": true
+    },
+    {
+      "id": "feature_8",
+      "kind": "feature",
+      "feature_index": 8,
+      "association_score": 0.06930683771196504,
+      "selected": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "feature_2",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1679312663358598
+    },
+    {
+      "source": "feature_3",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.09783814279638826
+    },
+    {
+      "source": "feature_5",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.27483613740578156
+    },
+    {
+      "source": "feature_7",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.1170148198215521
+    },
+    {
+      "source": "feature_8",
+      "target": "target",
+      "kind": "target_adjacency",
+      "association_score": 0.06930683771196504
+    }
+  ],
+  "selected_feature_indices": [
+    2,
+    3,
+    5,
+    7,
+    8
+  ],
+  "candidate_feature_indices": [
+    5,
+    2,
+    7,
+    3,
+    8,
+    4,
+    0,
+    6,
+    1,
+    9
+  ],
+  "association_scores": {
+    "5": 0.27483613740578156,
+    "2": 0.1679312663358598,
+    "7": 0.1170148198215521,
+    "3": 0.09783814279638826,
+    "8": 0.06930683771196504,
+    "4": 0.02509518393557581,
+    "0": 0.021668973666298563,
+    "6": 0.009831257222323095,
+    "1": 0.00852725107513251,
+    "9": 0.004133933910720306
+  },
+  "parameters": {
+    "alpha": 0.05,
+    "max_samples": 5000,
+    "max_candidates": 128,
+    "max_cond_set": 2,
+    "min_features": 3,
+    "top_k": null,
+    "random_state": 42
+  },
+  "n_features": 10,
+  "sample_count": 5000,
+  "selector_seconds": 0.022476673126220703,
+  "status": "ok selected=5 candidates=10 samples=5000",
+  "dataset_name": "Bank_Customer_Churn_Dataset"
+}

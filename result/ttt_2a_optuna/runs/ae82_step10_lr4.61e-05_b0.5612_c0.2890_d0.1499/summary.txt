@@ -1,0 +1,14 @@
+discovered_datasets: 178
+processed_datasets: 178
+ok_count: 172
+failed_count: 6
+skipped_count: 0
+avg_accuracy_ok: 0.837719
+gate_pass_count: 59
+gate_reject_count: 101
+ttt_skipped_count: 12
+avg_gate_accuracy_delta_ok: -0.001580
+avg_gate_loss_delta_ok: 0.025433
+wall_seconds: 1919.758
+failed_datasets: accelerometer, customer_satisfaction_in_airline, Rain_in_Australia, dabetes_130-us_hospitals, Credit_c, SDSS17
+skipped_datasets: (none)
