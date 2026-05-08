@@ -41,7 +41,7 @@ class DatetimeEncoder(TimeTransform):
 
     Extracts calendar components (e.g., year) and encodes seasonal
     patterns (e.g., hour of day, day of week) as sin/cosine pairs using
-    ``gluonts.time_feature``.
+    ``pd.DatetimeIndex`` attributes.
 
     Parameters
     ----------
@@ -97,7 +97,7 @@ class DatetimeEncoder(TimeTransform):
                 feature_name_ = _SEASONAL_MAPPINGS.get(feature_name, feature_name)
                 feature = getattr(timestamps, feature_name_).astype(np.int32)
             else:
-                feature = timestamps.isocalendar().week.astype(np.int32)
+                feature = timestamps.isocalendar().week.values.astype(np.int32)
 
             if periods is not None:
                 for p in periods:
