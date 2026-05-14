@@ -24,8 +24,8 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 DEFAULT_DATA_ROOT = Path("data178")
-DEFAULT_MODEL_PATH = "tabicl-classifier-v1.1-20250506.ckpt"
-DEFAULT_CHECKPOINT_VERSION = "tabicl-classifier-v1.1-20250506.ckpt"
+DEFAULT_MODEL_PATH = "tabicl-classifier-v2-20260212.ckpt"
+DEFAULT_CHECKPOINT_VERSION = "tabicl-classifier-v2-20260212.ckpt"
 CLASSIFICATION_TASKS = {"binclass", "multiclass"}
 CATEGORICAL_MISSING_TOKEN = "__tabicl_missing__"
 
@@ -1648,7 +1648,7 @@ def write_model_pool_outputs(
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Run TabICLv1.1 classification benchmarks on data178 with "
+            "Run TabICLv2 classification benchmarks on data178 with "
             "AMD/ROCm multi-GPU workers."
         )
     )
@@ -1656,10 +1656,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--models-dir", default=None)
     parser.add_argument("--checkpoint-version", default=DEFAULT_CHECKPOINT_VERSION)
-    parser.add_argument("--out-dir", default="1b_result/ensmble_ttt_step15_lr5e-6")
+    parser.add_argument("--out-dir", default="1b_result/v2_ensmble_ttt_step6_lr1e-5")
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--gpus", default=None)
-    parser.add_argument("--gpu-groups", default="0,1,2")
+    parser.add_argument("--gpu-groups", default="1,2,3")
     parser.add_argument("--n-estimators", type=int, default=32)
     parser.add_argument("--batch-size", type=parse_optional_int, default=8)
     parser.add_argument("--kv-cache", type=parse_kv_cache, default=False)
@@ -1671,7 +1671,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-models", type=int, default=None)
     parser.add_argument("--prefetch-models", type=int, default=4)
     parser.add_argument("--ttt-holdout", default=True, action="store_true")
-    parser.add_argument("--ttt-lr", type=float, default=5e-6)
+    parser.add_argument("--ttt-lr", type=float, default=1e-5)
     parser.add_argument("--ttt-scheduler", choices=["constant"], default="constant")
     parser.add_argument("--ttt-grad-clip", type=float, default=1.0)
     parser.add_argument("--ttt-dtype", choices=["float32", "float16", "bfloat16"], default="float32")
@@ -1686,19 +1686,19 @@ def build_arg_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument("--ttt-weight-decay", type=float, default=0.0)
-    parser.add_argument("--ttt-steps", type=int, default=15)
+    parser.add_argument("--ttt-steps", type=int, default=6)
     parser.add_argument("--ttt-freeze-col", type=parse_bool, default=True)
     parser.add_argument("--ttt-freeze-row", type=parse_bool, default=True)
     parser.add_argument(
         "--ttt-save-ckpt",
         type=parse_bool,
-        default=True,
+        default=False,
         help="Whether to save intermediate TabICL checkpoints during the TTT update path.",
     )
     parser.add_argument(
         "--ttt-save-ckpt-every",
         type=int,
-        default=12,
+        default=6,
         help="Save a TTT checkpoint every N optimizer steps and always save the final step.",
     )
     parser.add_argument(
