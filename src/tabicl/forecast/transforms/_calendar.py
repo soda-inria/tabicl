@@ -34,6 +34,16 @@ _SEASONAL_MAPPINGS = {
     "day_of_month": "day",
     "month_of_year": "month",
 }
+_ZERO_INDEXED = {
+    "second",
+    "minute",
+    "hour",
+    "dayofweek",
+    "day_of_week",
+    "weekday",
+    "microsecond",
+    "nanosecond",
+}
 
 
 class DatetimeEncoder(TimeTransform):
@@ -96,8 +106,11 @@ class DatetimeEncoder(TimeTransform):
             if feature_name not in ["week_of_year", "week", "weekofyear"]:
                 feature_name_ = _SEASONAL_MAPPINGS.get(feature_name, feature_name)
                 feature = getattr(timestamps, feature_name_).astype(np.int32)
+                if feature_name_ not in _ZERO_INDEXED:
+                    feature -= 1  # Adjust for 0-based indexing
             else:
-                feature = timestamps.isocalendar().week.values.astype(np.int32)
+                feature = timestamps.isocalendar().week.to_numpy(dtype=np.int32)
+                feature -= 1  # Adjust for 0-based indexing
 
             if periods is not None:
                 for p in periods:
