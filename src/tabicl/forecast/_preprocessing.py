@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from tabicl.forecast.ts_dataframe import TimeSeriesDataFrame
+from tabicl.forecast._ts_dataframe import TimeSeriesDataFrame
 
 
 def build_horizon(train_tsdf: TimeSeriesDataFrame, prediction_length: int) -> TimeSeriesDataFrame:

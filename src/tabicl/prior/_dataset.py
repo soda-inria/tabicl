@@ -15,17 +15,19 @@ an infinite stream of synthetic datasets with diverse characteristics.
 
 from __future__ import annotations
 
+import functools
 import os
 
 import sys
 import math
 import warnings
-from typing import Dict, Tuple, Union, Optional, Any, List
+from typing import Dict, Tuple, Union, Optional, Any, List, Callable
 
 import numpy as np
+import psutil
 import threadpoolctl
 from scipy.stats import loguniform
-import joblib
+import multiprocessing as mp
 
 import torch
 import torch.nn.functional as F
@@ -35,18 +37,32 @@ from torch.nested import nested_tensor
 from torch.utils.data import IterableDataset
 
 from .graph_lib.config import PriorConfig
-from .mlp_scm import MLPSCM
-from .tree_scm import TreeSCM
-from .graph_scm import GraphSCM
+from ._mlp_scm import MLPSCM
+from ._tree_scm import TreeSCM
+from ._graph_scm import GraphSCM
 
-from .hp_sampling import HpSamplerList
-from .reg2cls import Reg2Cls
-from .prior_config import DEFAULT_FIXED_HP, DEFAULT_SAMPLED_HP
-from ..train.utils import run_parallel_with_single_thread_numpy_torch, run_parallel, LokyBatchPrefetcher
+from ._hp_sampling import HpSamplerList
+from ._reg2cls import Reg2Cls
+from ._prior_config import DEFAULT_FIXED_HP, DEFAULT_SAMPLED_HP
 
 warnings.filterwarnings(
     "ignore", message=".*The PyTorch API of nested tensors is in prototype stage.*", category=UserWarning
 )
+
+
+def run_parallel(func: Callable, args: List[Any], n_jobs: int = -1) -> List[Any]:
+    """
+    Uses a multiprocessing.Pool to evaluate func on all values in args, with n_jobs processes running in parallel.
+
+    :param func: Function to be called.
+    :param args: List of arguments to call the function with.
+    :param n_jobs: Number of jobs (if -1, set to the number of physical cores).
+    :return: Returns the list of values returned by the function evaluated on different values from args.
+    """
+    ctx = mp.get_context(method='fork')  # not sure if this is necessary
+    with ctx.Pool(processes=n_jobs if n_jobs >= 1 else psutil.cpu_count(logical=False),
+                 initializer=functools.partial(torch.set_num_threads, 1)) as pool:
+        return pool.map(func, args)
 
 
 class Prior:

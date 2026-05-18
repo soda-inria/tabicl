@@ -11,7 +11,7 @@
         <div class="col-md-8">
             <ul class="sk-landing-header-body">
             <li>Fully open</li>
-            <li>Excellent scikit-learn compatiblity</li>
+            <li>Scikit-learn compatible · pip-installable</li>
             <li>Easy-to-use and powerful</li>
             </ul>
         </div>
@@ -27,29 +27,62 @@
 
 
 
-TabICL is a tabular foundation model.
-It uses in-context learning (ICL) to learn from new data in a single
-forward pass through a Transformer model: ``predict(X_test)`` calls ``y_pred = model(X_train, y_train, X_test)``.
-It has acquired strong learning capabilities through
-pre-training on millions of synthetic datasets.
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   tutorials/index
+   api
 
 
 |test| |PyPI version| |Downloads|
 
-Installation
-------------
+If you usually rely on models like XGBoost or LightGBM, TabICL offers a
+simpler alternative: **no training, no hyperparameter tuning, strong
+performance out of the box.** Just provide your data, and get predictions from
+a pre-trained model.
+
+TabICL is an open tabular foundation model for regression and classification,
+and can also be extended to other tasks such as time-series forecasting. It is
+compatible with the scikit-learn ``fit`` / ``predict`` API.
+Calling fit just stores the data, learning happens during predict.
+
+
+What TabICL can do
+------------------
+
+**State-of-the-art accuracy — zero tuning required.** TabICLv2 is competitive
+with heavily tuned XGBoost, CatBoost, and LightGBM, and even outperforms them
+on ~80% of `TabArena <https://tabarena.ai>`__ datasets. It is state-of-the-art
+on the `TabArena <https://tabarena.ai>`__ and
+`TALENT <https://arxiv.org/abs/2407.00956>`__ benchmarks, among other
+hyperparameter-tuned gradient boosted trees, as well as concurrent tabular
+foundation models.
+
+.. **Easy to use:** TabICL is easy to install with `pip`. It is also fully
+.. scikit-learn compliant, by notably giving access to the classical `fit` and
+.. `predict` methods of the scikit-learn API. It is also **open source**
+.. (including pre-training for v1, and soon for v2), with a
+.. permissive license.
+
+**Scalability:** TabICL shows excellent performance on benchmarks with
+300 to 100,000 training samples and up to 2,000 features. It can scale
+to even larger datasets (e.g., 500K samples) through CPU and disk
+offloading, though its accuracy may degrade at some point.
+
+**Handles real-world data.** Pass pandas DataFrames or NumPy arrays.
+Missing values, categorical columns, and outliers
+are handled automatically. For richer string preprocessing, which is desirable
+when strings in a column are diverse and semantically meaningful, TabICL
+integrates seamlessly with `skrub <https://skrub-data.org>`__.
+
+
+Quick start
+-----------
 
 .. code:: bash
 
    pip install tabicl
-
-Optional dependencies can be installed as needed:
-
-.. code:: bash
-
-   pip install tabicl[forecast]   # time series forecasting
-   pip install tabicl[pretrain]   # pre-training
-   pip install tabicl[all]        # everything
 
 On Intel Macs, installing PyTorch via ``pip`` may fail. In that case,
 install it first with:
@@ -60,138 +93,164 @@ install it first with:
 
 Then install ``tabicl`` as above.
 
-Tutorials and functionality
----------------------------
+TabICL follows the standard scikit-learn ``fit`` / ``predict`` API:
 
-- **Basic usage**: :doc:`tutorial <tutorials/getting_started>`.
-- **Model parameters**: See :class:`tabicl.TabICLClassifier` and :class:`tabicl.TabICLRegressor`.
-- **Probabilistic classification**: :doc:`tutorial <tutorials/classification_2D_proba>`.
-- **Quantile regression**: :doc:`tutorial <tutorials/regression_heteroscedastic_1D>`.
-- **Preprocessing**: TabICL will automatically use simple preprocessing to handle missing values and categorical features.
-  To handle string and date columns, see the :doc:`tutorial on using skrub <tutorials/string_handling>`.
-- **Time-series forecasting**: See our
-  :doc:`tutorial on time-series forecasting with TabICL <tutorials/time_series_forecasting>`.
-- **Minimal architecture implementation**: `NanoTabICL <https://github.com/soda-inria/nanotabicl>`__
-  provides a minimal implementation of the TabICLv2 architecture for educational and experimental purposes.
+.. code:: python
+
+   from tabicl import TabICLClassifier, TabICLRegressor
+
+   # Classification
+   clf = TabICLClassifier()
+   clf.fit(X_train, y_train)   # checkpoint downloaded once on first run
+   clf.predict(X_test)         # in-context learning happens here
+
+   # Regression
+   reg = TabICLRegressor()
+   reg.fit(X_train, y_train)
+   reg.predict(X_test)
+
+It also plugs directly into scikit-learn pipelines:
+
+.. code:: python
+
+   from sklearn.pipeline import make_pipeline
+   from skrub import TableVectorizer
+   from tabicl import TabICLClassifier
+
+   pipeline = make_pipeline(TableVectorizer(), TabICLClassifier())
+   pipeline.fit(X_train, y_train)
+   pipeline.predict(X_test)
+
+For **time-series forecasting**, install the extra dependencies and use
+:class:`tabicl.TabICLForecaster`:
+
+.. code:: bash
+
+   pip install tabicl[forecast]
+
+.. code:: python
+
+   from tabicl import TabICLForecaster
+
+   forecaster = TabICLForecaster()
+   pred_df = forecaster.predict_df(context_df, prediction_length=96)
+
+
+Explore the docs
+----------------
+
+:doc:`Tutorials <tutorials/index>` provides runnable examples on a
+laptop. Learn by task:
+
+- :doc:`Classification tutorial <tutorials/classification_2D_proba>`,
+  with probability estimates.
+- :doc:`Regression tutorial <tutorials/regression_heteroscedastic_1D>`,
+  with quantile estimates.
+- :doc:`Time-series forecasting tutorial <tutorials/time_series_forecasting>`.
+
+See the :doc:`API reference <api>` for estimator and parameter details.
+
 
 Available models
 ----------------
 
-
 .. list-table::
    :header-rows: 1
+   :widths: 20 40 40
 
    * - Model
      - Classification checkpoint
      - Regression checkpoint
-   * - **TabICLv2** (`arXiv <https://arxiv.org/abs/2602.11139>`__)
-     - ``tabicl-classifier-v2-20260212.ckpt``
-     - ``tabicl-regressor-v2-20260212.ckpt``
-   * - **TabICL v1.1** (May 2025, no paper)
+   * - | **TabICLv2**
+       | (`arXiv <https://arxiv.org/abs/2602.11139>`__)
+     - ``tabicl-classifier-v2-20260212.ckpt`` *(default)*
+     - ``tabicl-regressor-v2-20260212.ckpt`` *(default)*
+   * - | **TabICLv1.1**
+       | (May 2025)
      - ``tabicl-classifier-v1.1-20250506.ckpt``
      - —
-   * - **TabICLv1** (`ICML 2025 <https://arxiv.org/abs/2502.05564>`__)
+   * - | **TabICLv1**
+       | (`ICML 2025 <https://arxiv.org/abs/2502.05564>`__)
      - ``tabicl-classifier-v1-20250208.ckpt``
      - —
 
-
-- **TabICLv2**: Our state-of-the-art model, supporting both
-  classification and regression. Strongly improved accuracy over v1
-  through better synthetic pre-training data, architectural
-  improvements, and better pre-training, with comparable runtime.
-- **TabICLv1.1**: TabICLv1 post-trained on an early version of the v2
-  prior. Classification only.
-- **TabICLv1**: Original model. Classification only. TabICLv1 and v1.1
-  originally used ``n_estimators=32``; we reduced the default to 8
-  afterwards.
-
-Pre-training
-------------
-
-Pre-training code (including synthetic data generation) is currently
-available for the v1 model. The scripts folder provides the commands for
-`stage 1 <https://github.com/soda-inria/tabicl/blob/main/scripts/train_stage1.sh>`__,
-`stage 2 <https://github.com/soda-inria/tabicl/blob/main/scripts/train_stage2.sh>`__,
-and `stage 3 <https://github.com/soda-inria/tabicl/blob/main/scripts/train_stage3.sh>`__
-of curriculum learning. Pre-training code for v2 will be released upon publication.
+- **TabICLv2** — state-of-the-art, supports classification and
+  regression. Improved accuracy through better synthetic pre-training
+  data, architectural improvements, and better pre-training, with
+  comparable runtime to v1.
+- **TabICLv1.1** — TabICLv1 post-trained on an early v2 prior.
+  Classification only.
+- **TabICLv1** — original model. Classification only.
 
 FAQ
 ---
 
-**How fast is TabICL?** On datasets with :math:`n` training rows and
-:math:`m` columns, the runtime complexity of TabICL (v1 and v2) is
-:math:`O(n^2 + nm^2)`. On datasets with many rows and columns, it can be
-10x faster than TabPFN-2.5. On modern GPUs, TabICL can handle a million
-samples in a few minutes without RAM overflow thanks to CPU and disk
-offloading.
+.. **Who is TabICL for?**
 
-.. image:: ./figures/runtime_tabpfnv25_tabiclv2.png
-   :width: 70%
-   :alt: Runtimes for different hardware and sample sizes
-   :align: center
+.. - Applied researchers, data scientits and ML teams who need high
+..   tabular performance without expansive model training and selection.
+.. - AI researchers interested in tabular learning, who want to build on top of a
+..   strong open foundation model.
+.. - Curious minds who want to explore the capabilities of tabular foundation models!
 
-**What dataset sizes work well?** TabICLv2 is pre-trained on datasets
-between 300 and 48K training samples. However, it can generalize to
-larger datasets to some extent, and we see good results even on some
-datasets with 600K samples. We have not tested if TabICL generalizes to
-datasets smaller than 300 samples.
+**How does TabICL work?**
 
-.. image:: ./figures/tabiclv2_perf_vs_n_samples.png
-   :width: 50%
-   :alt: Average rank vs. number of samples
-   :align: center
+TabICL is a transformer-based tabular foundation model that relies on in-context learning
+to learn the underlying mapping between features and target from a given training set, and
+then predict on the test set, all in a single forward pass. In practice, you provide training
+data in ``fit`` and get predictions with ``predict_proba`` or ``predict``. During ``fit``, we preprocess
+the training data, create multiple transformed dataset views (e.g., by shuffling features),
+load the pre-trained TabICL model, and optionally pre-compute KV caches for the training data
+to speed up inference (controlled by the ``kv_cache`` init parameter). During ``predict_proba`` or 
+``predict``, we process the test data, forward each dataset view through the TabICL model via 
+in-context learning, and average predictions across all ensemble members. TabICL's learning 
+capabilities come from pre-training on millions of synthetic datasets.
 
-**What about the number of columns?** TabICLv2 is pre-trained on
-datasets between 2 and 100 columns. We see good generalization to more
-columns and don’t know where the limit is.
+**What is the architecture of TabICL?**
 
-.. image:: ./figures/tabiclv2_perf_vs_n_features.png
-   :width: 50%
-   :alt: Average rank vs. number of features
-   :align: center
+TabICL is based on the Transformer architecture, with several improvements to better handle
+tabular data. It processes input through three stages: a column-wise Transformer that embeds
+each feature, a row-wise Transformer that aggregates features into row representations, and
+a dataset-wise Transformer that performs in-context learning over training and test samples
+to produce predictions. Detailed architecture diagrams and descriptions can be found in our
+`TabICLv1 <https://arxiv.org/abs/2502.05564>`__ and `TabICLv2 <https://arxiv.org/abs/2602.11139>`__
+papers. If code is more your thing, `NanoTabICL <https://github.com/soda-inria/nanotabicl>`__
+provides a minimal implementation of the TabICLv2 architecture for educational and experimental purposes.
 
-Results from state-of-the-art research
-----------------------------------------
+**Do I need GPUs to use TabICL?**
 
-This repository is the official implementation of **TabICLv2**
-(`arXiv <https://arxiv.org/abs/2602.11139>`__) and **TabICL** (`ICML
-2025 <https://arxiv.org/abs/2502.05564>`__).
+TabICL works on both CPU and GPU, and performs well on a GPU-free laptop for medium-sized
+datasets within a reasonable time. However, a GPU is recommended when datasets get larger
+or when you need faster predictions. Thanks to architectural
+efficiency and engineering efforts, TabICL can scale to very large datasets of up
+to a million samples, though you need to enable CPU/disk offloading to ease GPU memory
+requirements. On an H100 GPU, TabICLv2 handles a dataset with 50K samples and 100 features
+within 10 seconds.
 
-**State-of-the-art accuracy even without hyperparameter tuning:**
-TabICLv2 is the new state-of-the-art model for tabular classification
-and regression on the `TabArena <https://tabarena.ai>`__ and
-`TALENT <https://arxiv.org/abs/2407.00956>`__ benchmarks. It does not
-require hyperparameter tuning and still outperforms heavily tuned
-XGBoost, CatBoost, or LightGBM on TabArena on ~80% of datasets.
+**What dataset sizes work well?**
 
-**Easy to use:** TabICL is pip-installable and scikit-learn compliant.
-It is also **open source** (including `pre-training <#pre-training>`__
-for v1), with a permissive license.
+TabICLv2 is pre-trained on datasets with 300 to 60K training samples.
+However, it can generalize beyond this range and we have observed good
+performance on datasets with 600K samples. Generalization to datasets
+smaller than 300 samples has not yet been tested.
 
-**Speed:** TabICL performs ``fit`` and ``predict`` jointly via a single
-forward pass through a pre-trained transformer model. For larger
-datasets, we recommend a GPU. On an H100 GPU, TabIClv2 can ``fit`` and
-``predict`` a dataset with 50,000 samples and 100 features in under 10
-seconds, which is 10x faster than TabPFN-2.5. Through KV caching, TabICL
-supports faster repeated inference on the same training data.
+**What about the number of columns?**
 
-**Scalability:** TabICL shows excellent performance on benchmarks with
-300 to 100,000 training samples and up to 2,000 features. It can scale
-to even larger datasets (e.g., 500K samples) through CPU and disk
-offloading, though its accuracy may degrade at some point.
+TabICLv2 is pre-trained on datasets with 2 to 100 columns. In practice,
+it generalizes well beyond this range, though the exact upper limit remains unknown.
 
-.. image:: ./figures/pareto_front_improvability_tabarena.png
-   :width: 50%
-   :alt: Model comparison on TabArena
-   :align: center
+**Where can I find the source code?**
+
+The `TabICL repository <https://github.com/soda-inria/tabicl>`__ contains the
+official implementation of `TabICLv2 <https://arxiv.org/abs/2602.11139>`__
+(current default) and the original
+`TabICL <https://arxiv.org/abs/2502.05564>`__ (ICML 2025).
 
 
 Citation
 --------
 
-If you use TabICL for research purposes, please cite our papers for
-`TabICL <https://arxiv.org/abs/2502.05564>`__ and
-`TabICLv2 <https://arxiv.org/abs/2602.11139>`__:
+If you use TabICL for research purposes, please cite our papers:
 
 .. code:: bibtex
 
@@ -209,17 +268,6 @@ If you use TabICL for research purposes, please cite our papers for
      year={2026}
    }
 
-Contributors
-------------
-
-- `Jingang Qu <https://github.com/jingangQu>`__
-- `David Holzmüller <https://github.com/dholzmueller>`__
-- `Marine Le Morvan <https://github.com/marineLM>`__
-
-Star history
-------------
-
-|Star History Chart|
 
 .. |test| image:: https://github.com/soda-inria/tabicl/actions/workflows/testing.yml/badge.svg
    :target: https://github.com/soda-inria/tabicl/actions/workflows/testing.yml
@@ -227,17 +275,3 @@ Star history
    :target: https://badge.fury.io/py/tabicl
 .. |Downloads| image:: https://img.shields.io/pypi/dm/tabicl
    :target: https://pypistats.org/packages/tabicl
-.. |Star History Chart| image:: https://api.star-history.com/svg?repos=soda-inria/tabicl&type=date&legend=top-left
-   :target: https://www.star-history.com/#soda-inria/tabicl&type=date&legend=top-left
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-
-   api
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-
-   tutorials/index

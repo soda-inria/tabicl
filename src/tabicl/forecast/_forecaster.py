@@ -7,21 +7,43 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 
-from tabicl.forecast.ts_dataframe import TimeSeriesDataFrame
-from tabicl.forecast.preprocessing import build_horizon
-from tabicl.forecast.transforms.base import TimeTransform
-from tabicl.forecast.transforms import AutoPeriodicEncoder, DatetimeEncoder, IndexEncoder, TimeTransformChain
-from tabicl.forecast.engine import ForecastEngine
-
-
-_DEFAULT_TRANSFORMS: tuple[TimeTransform, ...] = (
-    IndexEncoder(),
-    DatetimeEncoder(),
-    AutoPeriodicEncoder(),
+from tabicl.forecast._ts_dataframe import TimeSeriesDataFrame
+from tabicl.forecast._preprocessing import build_horizon
+from tabicl.forecast.transforms._base import TimeTransform
+from tabicl.forecast.transforms import (
+    AutoPeriodicEncoder,
+    DatetimeEncoder,
+    FourierEncoder,
+    IndexEncoder,
+    TimeTransformChain,
 )
-
+from tabicl.forecast._engine import ForecastEngine
 
 logger = logging.getLogger(__name__)
+
+_TRANSFORM_REGISTRY: dict[str, type[TimeTransform]] = {
+    "index": IndexEncoder,
+    "datetime": DatetimeEncoder,
+    "fourier": FourierEncoder,
+    "periodic": AutoPeriodicEncoder,
+}
+
+_DEFAULT_TEMPORAL_FEATURES: list[str] = ["index", "datetime", "periodic"]
+
+
+def _resolve_transforms(features: list[str | TimeTransform]) -> list[TimeTransform]:
+    """Resolve a mixed list of string names and TimeTransform instances."""
+    resolved = []
+    for f in features:
+        if isinstance(f, str):
+            if f not in _TRANSFORM_REGISTRY:
+                raise ValueError(f"Unknown temporal feature {f!r}. Available: {sorted(_TRANSFORM_REGISTRY)}")
+            resolved.append(_TRANSFORM_REGISTRY[f]())
+        elif isinstance(f, TimeTransform):
+            resolved.append(f)
+        else:
+            raise TypeError(f"Each temporal feature must be a string or TimeTransform instance, got {type(f).__name__}")
+    return resolved
 
 
 class TabICLForecaster:
@@ -41,9 +63,25 @@ class TabICLForecaster:
         automatically slices to the last ``max_context_length`` timesteps if the
         historical data is longer.
 
-    temporal_features : list[TimeTransform] | None, default=None
-        Feature transforms to apply to the time series. If ``None``, uses
-        ``(IndexEncoder(), DatetimeEncoder(), AutoPeriodicEncoder())``.
+    temporal_features : list[str | TimeTransform] | None, default=None
+        Feature transforms to apply to the time series. Each element can be a
+        string name or a :class:`~tabicl.forecast.transforms.TimeTransform`
+        instance. If ``None``, defaults to ``["index", "datetime", "periodic"]``.
+
+        Available string names:
+
+        - ``"index"`` — :class:`IndexEncoder`: sequential position features.
+        - ``"datetime"`` — :class:`DatetimeEncoder`: calendar features
+          (day-of-week, month, etc.).
+        - ``"fourier"`` — :class:`FourierEncoder`: Fourier basis features for
+          periodicity.
+        - ``"periodic"`` — :class:`AutoPeriodicEncoder`: automatically detected
+          seasonal features via FFT.
+
+        Strings and ``TimeTransform`` instances can be mixed freely, which is
+        useful when a built-in transform needs non-default parameters::
+
+            temporal_features=["index", FourierEncoder(period=7)]
 
     point_estimate : {"mean", "median"}, default="mean"
         Method to select the point prediction from TabICL output.
@@ -55,24 +93,24 @@ class TabICLForecaster:
     Notes
     -----
     - For time series with irregular timestamps, consider opting out of
-      ``AutoPeriodicEncoder``.
+      ``"periodic"`` (``AutoPeriodicEncoder``).
     """
 
     def __init__(
         self,
         max_context_length: int = 4096,
-        temporal_features: list[TimeTransform] | None = None,
+        temporal_features: list[str | TimeTransform] | None = None,
         point_estimate: Literal["mean", "median"] = "mean",
         tabicl_config: dict | None = None,
     ):
         if tabicl_config is None:
             tabicl_config = {}
         if temporal_features is None:
-            temporal_features = list(_DEFAULT_TRANSFORMS)
+            temporal_features = list(_DEFAULT_TEMPORAL_FEATURES)
 
         self.max_context_length = max_context_length
         self.predictor = ForecastEngine(tabicl_config=tabicl_config, point_estimate=point_estimate)
-        self.feature_transformer = TimeTransformChain(temporal_features)
+        self.feature_transformer = TimeTransformChain(_resolve_transforms(temporal_features))
 
     @staticmethod
     def _impute_missing_targets(tsdf: TimeSeriesDataFrame) -> TimeSeriesDataFrame:

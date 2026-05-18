@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from tabicl.forecast.ts_dataframe import TimeSeriesDataFrame
+from tabicl.forecast._ts_dataframe import TimeSeriesDataFrame
 
 
 _COLORS = {

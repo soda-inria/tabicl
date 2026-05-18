@@ -16,6 +16,8 @@ Example::
 """
 
 from __future__ import annotations
+
+import warnings
 from typing import Any, Callable
 
 import matplotlib.pyplot as plt
@@ -46,11 +48,13 @@ def get_shap_values(estimator: Any, X_test: np.ndarray, attribute_names: list[st
     """
     if hasattr(X_test, "columns") and attribute_names is None:
         attribute_names = list(X_test.columns)
-    X_np = np.asarray(X_test)
+    X_np = np.asarray(X_test, dtype=np.float64)
 
     predict_fn = "predict_proba" if hasattr(estimator, "predict_proba") else "predict"
     explainer = get_shap_explainer(estimator, X_np, predict_fn=predict_fn, **kwargs)
-    sv = explainer(X_np)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message=".*does not have valid feature names.*")
+        sv = explainer(X_np)
 
     if attribute_names is not None and hasattr(sv, "feature_names"):
         sv.feature_names = list(attribute_names)
@@ -89,27 +93,40 @@ def get_shap_explainer(
 # ── visualisation helpers ───────────────────────────────────────────────
 
 
-def plot_shap(shap_values: Any) -> None:
-    """Bar plot + beeswarm + top-feature interaction scatter.
+def plot_shap(shap_values: Any, kind: str | tuple[str, ...] = "bar") -> None:
+    """Plot SHAP explanations.
 
     Parameters
     ----------
     shap_values : shap.Explanation
         Typically returned by :func:`get_shap_values`.
+
+    kind : str or tuple of str, default="bar"
+        Which plots to show. Any combination of ``"bar"``, ``"beeswarm"``,
+        and ``"scatter"``.
     """
+    if isinstance(kind, str):
+        kind = (kind,)
+
     # For multi-output (e.g. multi-class), take the first output slice.
     if len(shap_values.shape) == 3:
         shap_values = shap_values[:, :, 0]
 
-    shap.plots.bar(shap_values=shap_values, show=False)
-    plt.title("Aggregate feature importances across the test examples")
-    plt.show()
+    if "bar" in kind:
+        shap.plots.bar(shap_values=shap_values, show=False)
+        plt.title("Aggregate feature importances across the test examples")
+        plt.tight_layout()
+        plt.show()
 
-    shap.summary_plot(shap_values=shap_values, show=False)
-    plt.title("Feature importances for each feature for each test example " "(a dot is one feature for one example)")
-    plt.show()
+    if "beeswarm" in kind:
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message=".*NumPy global RNG.*", category=FutureWarning)
+            shap.summary_plot(shap_values=shap_values, show=False)
+        plt.title("Per-sample feature importances")
+        plt.tight_layout()
+        plt.show()
 
-    if len(shap_values) > 1:
+    if "scatter" in kind and len(shap_values) > 1:
         top = shap_values.abs.mean(0).values.argsort()[-1]
         plot_shap_feature(shap_values, top)
 
@@ -135,3 +152,4 @@ def plot_shap_feature(shap_values: Any, feature: int | str, n_plots: int = 1) ->
             show=False,
         )
         plt.title(f"Feature {feature} coloured by feature {inds[i]}")
+        plt.tight_layout()

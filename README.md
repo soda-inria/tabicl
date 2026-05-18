@@ -4,7 +4,7 @@
 
 # TabICLv2: A state-of-the-art tabular foundation model
 
-This repository is the official implementation of **TabICLv2** ([arXiv](https://arxiv.org/abs/2602.11139)) 
+This repository is the official implementation of **TabICLv2** ([ICML 2026](https://arxiv.org/abs/2602.11139)) 
 and **TabICL** ([ICML 2025](https://arxiv.org/abs/2502.05564)).
 
 **State-of-the-art accuracy even without hyperparameter tuning:** 
@@ -41,6 +41,8 @@ pip install tabicl
 Optional dependencies can be installed as needed:
 ```bash
 pip install tabicl[forecast]   # time series forecasting
+pip install tabicl[shap]       # SHAP-based explainability
+pip install tabicl[finetune]   # fine-tuning on a single dataset
 pip install tabicl[pretrain]   # pre-training
 pip install tabicl[all]        # everything
 ```
@@ -138,6 +140,68 @@ clf = TabICLClassifier(
 - **TabICLv1.1**: TabICLv1 post-trained on an early version of the v2 prior. Classification only.
 - **TabICLv1**: Original model. Classification only.
   TabICLv1 and v1.1 originally used `n_estimators=32`; we reduced the default to 8 afterwards.
+
+## Fine-tuning
+
+Zero-shot in-context learning is TabICL's default, but when a single downstream
+dataset is important enough to spend a few minutes adapting to,
+`FinetunedTabICLClassifier` and `FinetunedTabICLRegressor` specialize the
+pretrained checkpoint with a full PyTorch training loop, including AdamW with a
+cosine-with-warmup schedule, gradient clipping, early stopping
+against a held-out split, and multi-GPU runs.
+
+Install the fine-tune dependencies first:
+
+```bash
+pip install tabicl[finetune]
+```
+
+### Usage
+
+```python
+from tabicl import FinetunedTabICLClassifier
+
+clf = FinetunedTabICLClassifier(
+    epochs=50,                    # max passes over training data; early stopping may cut it short
+    learning_rate=1e-5,           # AdamW LR
+    n_estimators_finetune=2,      # ensemble members per training meta-batch
+    n_estimators_validation=2,    # ensemble size for end-of-epoch validation
+    n_estimators_inference=8,     # ensemble size of the fitted estimator used in predict()
+    early_stopping=True,          # stop when val metric plateaus for `patience` epochs
+    patience=10,                  # non-improving epochs tolerated before stopping
+    eval_metric="roc_auc",        # classifier: "roc_auc" | "log_loss" | "accuracy"
+    random_state=0,               # random seed
+    verbose=True,                 # tqdm progress bar
+)
+
+clf.fit(X_train, y_train, X_val=X_val, y_val=y_val, output_dir="./ckpts")
+y_pred = clf.predict(X_test)
+```
+
+`FinetunedTabICLRegressor` takes the same parameters (with `eval_metric` one of
+`"mse" | "mae" | "r2"`). See each class's docstring for the full surface.
+
+The checkpoint file written to `output_dir` follows the pretraining checkpoint
+schema, so it loads directly back into the zero-shot estimators:
+
+```python
+from tabicl import TabICLClassifier
+clf = TabICLClassifier(model_path="ckpts/best.ckpt")
+clf.fit(X_train, y_train)
+clf.predict(X_test)
+```
+
+Multi-GPU fine-tuning is auto-detected under `torchrun`:
+
+```bash
+torchrun --nproc-per-node=2 finetune_script.py
+```
+
+The tutorial [`tutorials/finetune_classifier.py`](tutorials/finetune_classifier.py)
+walks through the fine-tuning for a binary classification task.
+
+<img src="./docs/figures/finetune_decision_boundaries.png" width="85%" alt="Decision boundaries before and after fine-tuning" style="display: block; margin: auto;">
+
 ## Time series forecasting
 
 TabICL can be used for zero-shot time series forecasting via `TabICLForecaster`.
@@ -154,7 +218,7 @@ from tabicl import TabICLForecaster
 
 forecaster = TabICLForecaster(
     max_context_length=4096,  # max historical timesteps to use as context
-    temporal_features=None,  # timestep index, calendar patterns, and seasonality
+    temporal_features=None,  # None = ["index", "datetime", "periodic"]; also accepts a list mixing string names and TimeTransform instances
     point_estimate="mean",  # point prediction method: "mean" or "median"
     tabicl_config=None,  # passed to TabICLRegressor; None uses default settings
 )
@@ -191,6 +255,35 @@ fig, axes = plot_forecast(context_df=context_df, pred_df=pred_df, test_df=test_d
 <img src="./docs/figures/tabiclv2_time_series.png" width="60%" alt="Runtimes for different hardware and sample sizes" style="display: block; margin: auto;">
 
 `TabICLForecaster` is heavily inspired by [TabPFN-TS](https://arxiv.org/abs/2501.02945v3). We may later improve it to enhance the ability of TabICL for time series forecasting.
+
+## Explainability
+
+TabICL integrates with [SHAP](https://github.com/shap/shap) via `tabicl.shap`. It uses a single all-NaN row as the SHAP background, exploiting TabICL's native NaN handling so that masked features are genuinely removed from the model's perspective instead of being replaced by a reference value.
+
+### SHAP values
+
+```python
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from tabicl import TabICLClassifier
+from tabicl.shap import get_shap_values, plot_shap
+
+X, y = load_breast_cancer(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.8, random_state=42)
+
+clf = TabICLClassifier()
+clf.fit(X_train, y_train)
+
+shap_values = get_shap_values(
+    estimator=clf,                                       # fitted TabICLClassifier or TabICLRegressor
+    X_test=X_test[:10],                                  # samples to explain
+    attribute_names=load_breast_cancer().feature_names,  # feature names
+)
+
+plot_shap(shap_values)
+```
+
+`get_shap_values` also accepts any extra keyword arguments and forwards them to the underlying `shap.Explainer`.
 
 ## Pre-training
 
@@ -287,36 +380,6 @@ pipeline.fit(X_train, y_train)  # X should be a DataFrame
 predictions = pipeline.predict(X_test)
 ```
 
-## Explainability
-
-Install the optional dependencies:
-```bash
-pip install tabicl[shap]
-```
-
-### SHAP values
-
-```python
-from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import train_test_split
-from tabicl import TabICLClassifier
-from tabicl.shap import get_shap_values, plot_shap
-
-X, y = load_breast_cancer(return_X_y=True)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.8, random_state=42)
-
-clf = TabICLClassifier()
-clf.fit(X_train, y_train)
-
-shap_values = get_shap_values(
-    estimator=clf,
-    X_test=X_test[:10],
-    attribute_names=load_breast_cancer().feature_names,
-)
-
-plot_shap(shap_values)
-```
-
 ## Citation
 If you use TabICL for research purposes, 
 please cite our papers for **[TabICL](https://arxiv.org/abs/2502.05564)** and **[TabICLv2](https://arxiv.org/abs/2602.11139)**:
@@ -331,7 +394,7 @@ please cite our papers for **[TabICL](https://arxiv.org/abs/2502.05564)** and **
 @article{qu2026tabiclv2,
   title={{TabICLv2}: {A} better, faster, scalable, and open tabular foundation model},
   author={Qu, Jingang and Holzm{\"u}ller, David and Varoquaux, Ga{\"e}l and Le Morvan, Marine},
-  journal={arXiv preprint arXiv:2602.11139},
+  booktitle={International Conference on Machine Learning},
   year={2026}
 }
 ```

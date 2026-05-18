@@ -21,8 +21,9 @@ from .base import TabICLBaseEstimator
 from .preprocessing import TransformToNumerical, EnsembleGenerator
 from .sklearn_utils import validate_data, _num_samples
 
-from tabicl import TabICLCache, InferenceConfig
-from tabicl.model.tabicl import TabICL
+from tabicl import InferenceConfig
+from tabicl._model.tabicl import TabICL
+from tabicl._model.kv_cache import TabICLCache
 
 
 class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
