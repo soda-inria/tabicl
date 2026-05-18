@@ -5,10 +5,10 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 
-from .graph_lib.base import Context, DatasetProperties
-from .graph_lib.config import PriorConfig
-from .graph_lib.properties import sample_categorical_sizes
-from .graph_lib.dataset import RandomDataset
+from .graph_lib._base import Context, DatasetProperties
+from .graph_lib._config import PriorConfig
+from .graph_lib._properties import sample_categorical_sizes
+from .graph_lib._dataset import RandomDataset
 
 from .reg2cls import standard_scaling, outlier_removing
 

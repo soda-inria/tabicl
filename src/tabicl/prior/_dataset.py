@@ -36,7 +36,7 @@ from torch import Tensor
 from torch.nested import nested_tensor
 from torch.utils.data import IterableDataset
 
-from .graph_lib.config import PriorConfig
+from .graph_lib._config import PriorConfig
 from ._mlp_scm import MLPSCM
 from ._tree_scm import TreeSCM
 from ._graph_scm import GraphSCM
