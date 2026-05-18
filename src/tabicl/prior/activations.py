@@ -11,8 +11,8 @@ class StdScaleLayer(nn.Module):
     """Standard scaling layer that normalizes input features.
 
     Computes mean and standard deviation on the first batch and uses these
-    statistics to normalize subsequent inputs using
-    :math:`(x - \mu) / \sigma`. The statistics are computed along dimension 0.
+    statistics to normalize subsequent inputs using (x - mean) / std.
+    The statistics are computed along dimension 0.
     """
 
     def __init__(self):
@@ -54,7 +54,7 @@ class Heaviside(nn.Module):
 class RBFActivation(nn.Module):
     """Radial Basis Function (RBF) activation layer.
 
-    Implements the Gaussian RBF: :math:`f(x) = \exp(-x^2)`.
+    Implements the Gaussian RBF: f(x) = exp(-x^2)
     Useful for localized feature representations.
     """
 
@@ -65,20 +65,15 @@ class RBFActivation(nn.Module):
 class RandomFreqSineActivation(nn.Module):
     """Random frequency sine activation with fixed random scale and bias.
 
-    Applies sine activation with randomly initialized (but fixed) frequency
-    scaling and phase shift:
-    :math:`f(x) = \sin(\text{scale} \cdot \text{standardize}(x) + \text{bias})`.
+    Applies sine activation with randomly initialized (but fixed) frequency scaling and phase shift:
+    f(x) = sin(scale * standardize(x) + bias)
 
-    The scale and bias parameters are initialized randomly but remain constant
-    during training (requires_grad=False).
+    The scale and bias parameters are initialized randomly but remain constant during training
+    (requires_grad=False).
 
-    Parameters
-    ----------
-    min_scale : float, default=0.1
-        Minimum value for random frequency scaling.
-
-    max_scale : float, default=100
-        Maximum value for random frequency scaling.
+    Args:
+        min_scale (float): Minimum value for random frequency scaling (default: 0.1)
+        max_scale (float): Maximum value for random frequency scaling (default: 100)
     """
 
     def __init__(self, min_scale=0.1, max_scale=100):
@@ -101,10 +96,8 @@ class RandomFunctionActivation(nn.Module):
     Generates a random periodic function by combining multiple sine waves with
     different frequencies, phases and weights. The input is first standardized.
 
-    Parameters
-    ----------
-    n_frequencies : int, default=256
-        Number of frequency components to use.
+    Args:
+        n_frequencies (int): Number of frequency components to use (default: 256)
     """
 
     def __init__(self, n_frequencies: int = 256):
@@ -139,13 +132,11 @@ class FunctionActivation(nn.Module):
 class RandomScaleLayer(nn.Module):
     """Random scaling layer with optional per-feature parameters.
 
-    Applies random scaling and bias:
-    :math:`f(x) = \text{scale} \cdot (x + \text{bias})`.
+    Applies random scaling and bias: f(x) = scale * (x + bias)
 
-    Parameters
-    ----------
-    individual : bool, default=False
-        If True, uses different parameters for each input feature.
+    Args:
+        individual (bool, optional): If True, uses different parameters for each
+            input feature. Defaults to False.
     """
 
     def __init__(self, individual: bool = False):
@@ -209,15 +200,11 @@ class StdRandomScaleFactory:
 class RandomChoiceActivation(nn.Module):
     """Randomly selects and instantiates one activation function from a list.
 
-    Parameters
-    ----------
-    act_list : list of nn.Module
-        List of activation function constructors to choose from.
+    Args:
+        act_list: List of activation function constructors to choose from.
 
-    Attributes
-    ----------
-    act : nn.Module
-        The randomly selected activation function instance.
+    Attributes:
+        act: The randomly selected activation function instance
     """
 
     def __init__(self, act_list: List[nn.Module]):
@@ -244,19 +231,15 @@ def get_activations(random: bool = True, scale: bool = True, diverse: bool = Tru
     This function creates a list of activation functions by combining simple activations
     with optional random functions, scaling, and diversity options.
 
-    Parameters
-    ----------
-    random : bool, default=True
-        If True, adds RandomFunctionActivation to the list and samples it multiple
-        times to increase probability of selection.
+    Args:
+        random: If True, adds RandomFunctionActivation to the list and samples it multiple
+            times to increase probability of selection. Defaults to True.
 
-    scale : bool, default=True
-        If True, wraps activations with StdRandomScaleFactory to add standardization
-        and random scaling.
+        scale: If True, wraps activations with StdRandomScaleFactory to add standardization
+            and random scaling. Defaults to True.
 
-    diverse : bool, default=True
-        If True, adds RandomChoiceFactory instances to allow different activation
-        functions in each layer.
+        diverse: If True, adds RandomChoiceFactory instances to allow different activation
+            functions in each layer. Defaults to True.
     """
     # Start with a set of simple activations
     simple_activations = [

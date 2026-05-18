@@ -16,6 +16,7 @@ DEFAULT_FIXED_HP = {
     "scale_by_max_features": False,
     "permute_features": True,
     "permute_labels": True,
+    "is_causal": False,
 }
 
 DEFAULT_SAMPLED_HP = {
@@ -29,7 +30,7 @@ DEFAULT_SAMPLED_HP = {
     "block_wise_dropout": {"distribution": "meta_choice", "choice_values": [True, False]},
     "mlp_dropout_prob": {"distribution": "meta_beta", "scale": 0.9, "min": 0.1, "max": 5.0},
     # MLPSCM and TreeSCM
-    "is_causal": {"distribution": "meta_choice", "choice_values": [True, False]},
+    # "is_causal": {"distribution": "meta_choice", "choice_values": [True, False]},
     "num_causes": {
         "distribution": "meta_trunc_norm_log_scaled",
         "max_mean": 12,
