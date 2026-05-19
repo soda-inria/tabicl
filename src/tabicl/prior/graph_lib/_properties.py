@@ -5,7 +5,7 @@ import numpy as np
 from tabicl.prior.graph_lib._base import Context
 
 
-def sample_categorical_sizes(n_features: int, context: Context, max_cat_size: int = 200) -> List[int]:
+def sample_categorical_sizes(n_features: int, context: Context, max_cat_size: int = 100) -> List[int]:
     """Sample categorical sizes for features."""
 
     cat_fraction = np.clip(np.random.uniform(-0.5, 1.2), 0.0, 1.0)
