@@ -4,7 +4,7 @@ from typing import Any, Union, Dict, Optional, Literal, List, Tuple
 import torch
 import numpy as np
 
-from tabiclv2.prior.graph_lib.config import PriorConfig
+from tabicl.prior.graph_lib._config import PriorConfig
 
 
 class GlobalSampler:
@@ -105,7 +105,7 @@ class GlobalSampler:
             # backward compatibility because this used to be wrong in TabICLv2
             query_name = ext_name if self.config.use_corrected_cat_meta_sampling else name
             if query_name not in self.globals:
-                from tabiclv2.prior.graph_lib.weights import SimpleRandomWeights
+                from tabicl.prior.graph_lib._weights import SimpleRandomWeights
 
                 self.globals[ext_name] = SimpleRandomWeights(Context()).sample(1, n_categories).squeeze(0)
                 # self.globals[ext_name] = torch.ones(n_categories) / n_categories

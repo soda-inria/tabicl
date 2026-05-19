@@ -29,7 +29,7 @@ import json
 import warnings
 import argparse
 
-import psutil
+import random
 from tqdm import tqdm
 from pathlib import Path
 from typing import Optional, List
@@ -38,14 +38,21 @@ import torch
 import numpy as np
 from torch.utils.data import IterableDataset, DataLoader
 
-from tabiclv2.prior._dataset import PriorDataset
-from tabiclv2.prior.graph_lib.config import PriorConfig
-from tabiclv2.prior._prior_config import DEFAULT_FIXED_HP, DEFAULT_SAMPLED_HP
-from tabiclv2.train._utils import seed_worker
+from tabicl.prior._dataset import PriorDataset
+from tabicl.prior.graph_lib._config import PriorConfig
+from tabicl.prior._prior_config import DEFAULT_FIXED_HP, DEFAULT_SAMPLED_HP
 
 warnings.filterwarnings(
     "ignore", message=".*The PyTorch API of nested tensors is in prototype stage.*", category=UserWarning
 )
+
+
+def seed_worker(worker_id: int):
+    # Ensure Python & NumPy match the worker’s torch seed.
+    s = torch.initial_seed() % (2**32)
+    print(f'Initializing worker {worker_id} with seed {s}', flush=True)
+    random.seed(s)
+    np.random.seed(s)
 
 
 def dense2sparse(

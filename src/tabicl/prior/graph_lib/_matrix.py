@@ -1,9 +1,9 @@
 import torch
 
-from tabiclv2.prior.graph_lib.base import PriorComponent
-from tabiclv2.prior.graph_lib.activation import RandomActivationPlain
-from tabiclv2.prior.graph_lib.weights import RandomWeights
-from tabiclv2.prior.graph_lib.points import RandomGaussianMixturePoints
+from tabicl.prior.graph_lib._base import PriorComponent
+from tabicl.prior.graph_lib._activation import RandomActivationPlain
+from tabicl.prior.graph_lib._weights import RandomWeights
+from tabicl.prior.graph_lib._points import RandomGaussianMixturePoints
 
 
 def row_normalize(matrix: torch.Tensor) -> torch.Tensor:

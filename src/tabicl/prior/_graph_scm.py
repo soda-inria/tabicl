@@ -1,16 +1,15 @@
 from __future__ import annotations
-from typing import Optional, List, Union
+from typing import Optional
 
 import torch
 import torch.nn.functional as F
-import numpy as np
 
 from .graph_lib._base import Context, DatasetProperties
 from .graph_lib._config import PriorConfig
 from .graph_lib._properties import sample_categorical_sizes
 from .graph_lib._dataset import RandomDataset
 
-from .reg2cls import standard_scaling, outlier_removing
+from ._reg2cls import standard_scaling, outlier_removing
 
 
 class GraphSCM:

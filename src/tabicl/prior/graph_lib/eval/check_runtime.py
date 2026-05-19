@@ -4,9 +4,10 @@ import numpy as np
 import threadpoolctl
 import torch
 
-from tabiclv2.prior.graph_lib.base import Context
-from tabiclv2.prior.graph_lib.dataset import RandomDataset, DatasetProperties, sample_categorical_sizes
-from tabiclv2.prior.graph_lib.function import (
+from tabicl.prior.graph_lib._base import Context, DatasetProperties
+from tabicl.prior.graph_lib._properties import sample_categorical_sizes
+from tabicl.prior.graph_lib._dataset import RandomDataset
+from tabicl.prior.graph_lib._function import (
     RandomMLPFunction,
     RandomTreeFunction,
     RandomDiscretizationFunction,
@@ -14,7 +15,7 @@ from tabiclv2.prior.graph_lib.function import (
     RandomLinearFunction,
     RandomGPFunction, RandomQuadraticFunction, RandomProductFunction, RandomEMAssignmentFunction,
 )
-from tabiclv2.prior.graph_lib.matrix import (
+from tabicl.prior.graph_lib._matrix import (
     RandomGaussianMatrix,
     RandomWeightsMatrix,
     RandomKernelMatrix,
@@ -22,8 +23,8 @@ from tabiclv2.prior.graph_lib.matrix import (
     RandomMatrix,
     RandomSingularValuesMatrix,
 )
-from tabiclv2.prior.graph_lib.points import RandomGaussianPoints
-from tabiclv2.prior.graph_lib.weights import SimpleRandomWeights
+from tabicl.prior.graph_lib._points import RandomGaussianPoints
+from tabicl.prior.graph_lib._weights import SimpleRandomWeights
 
 
 # could have multiple settings: RandomFunction / full dataset generation

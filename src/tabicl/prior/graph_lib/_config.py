@@ -1,6 +1,6 @@
 import argparse
 from dataclasses import dataclass
-from typing import Union, List, Literal
+from typing import Literal
 
 
 def str2bool(value):

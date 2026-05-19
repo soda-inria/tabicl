@@ -3,7 +3,7 @@ import functools
 import torch
 import torch.nn.functional as F
 
-from tabiclv2.prior.graph_lib.base import RandomTensorTransformer, RandomTensorSequential
+from tabicl.prior.graph_lib._base import RandomTensorTransformer, RandomTensorSequential
 
 
 class RandomActivation(RandomTensorTransformer):

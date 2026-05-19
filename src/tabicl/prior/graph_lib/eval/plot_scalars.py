@@ -1,6 +1,7 @@
-from tabiclv2.prior.graph_lib.base import Context
 import numpy as np
 import matplotlib.pyplot as plt
+
+from tabicl.prior.graph_lib._base import Context
 
 
 def plot_histograms(data):

@@ -1,14 +1,13 @@
 import torch
 
-from tabiclv2.prior.graph_lib.base import PriorComponent, RandomTensorSequential
-from tabiclv2.prior.graph_lib.activation import Standardize
-from tabiclv2.prior.graph_lib.weights import RandomWeights
+from tabicl.prior.graph_lib._base import PriorComponent
+from tabicl.prior.graph_lib._weights import RandomWeights
 
 
 class RandomPoints(PriorComponent):
     def sample(self, n_batch: int, n: int) -> torch.Tensor:
         # local import to avoid circular imports
-        from tabiclv2.prior.graph_lib.function import RandomFunction
+        from tabicl.prior.graph_lib._function import RandomFunction
 
         base_points = self.sampler.choice(
             "random_base_points",

@@ -1,8 +1,8 @@
-from tabiclv2.prior.graph_lib.base import Context
 import matplotlib.pyplot as plt
 import torch
 
-from tabiclv2.prior.graph_lib.weights import SimpleRandomWeights
+from tabicl.prior.graph_lib._base import Context
+from tabicl.prior.graph_lib._weights import SimpleRandomWeights
 
 
 def plot_random_weights_ax(ax: plt.Axes, weights_class, n_weights: int, n_repeats: int = 20):

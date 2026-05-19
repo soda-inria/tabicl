@@ -1,11 +1,8 @@
 from typing import List
-
-import numpy as np
 import torch
 
-from tabiclv2.prior.graph_lib.base import RandomTensorTransformer, RandomTransformer, Context
-from tabiclv2.prior.graph_lib.function import RandomFunction
-from tabiclv2.prior.graph_lib.weights import RandomWeights
+from tabicl.prior.graph_lib._base import RandomTransformer, Context
+from tabicl.prior.graph_lib._function import RandomFunction
 
 
 class RandomMultiFunction(RandomTransformer):

@@ -1,12 +1,12 @@
-from typing import List, Any, Dict, Tuple
+from typing import List, Dict, Tuple
 import torch
 
-from tabiclv2.prior.graph_lib.base import RandomTransformer, Context, FeatureSpec
-from tabiclv2.prior.graph_lib.activation import Standardize, L2Normalize
-from tabiclv2.prior.graph_lib.converter import CategoricalConverter, NumericalConverter
-from tabiclv2.prior.graph_lib.multi_function import RandomMultiFunction
-from tabiclv2.prior.graph_lib.points import RandomPoints
-from tabiclv2.prior.graph_lib.weights import RandomWeights
+from tabicl.prior.graph_lib._base import RandomTransformer, Context, FeatureSpec
+from tabicl.prior.graph_lib._activation import Standardize, L2Normalize
+from tabicl.prior.graph_lib._converter import CategoricalConverter, NumericalConverter
+from tabicl.prior.graph_lib._multi_function import RandomMultiFunction
+from tabicl.prior.graph_lib._points import RandomPoints
+from tabicl.prior.graph_lib._weights import RandomWeights
 
 
 class RandomNodeFunction(RandomTransformer):

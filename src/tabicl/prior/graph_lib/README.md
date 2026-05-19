@@ -9,8 +9,8 @@ and then the subclass implements a specific mechanism for sampling.
 
 One can sample a dataset as follows:
 ```python
-from tabiclv2.prior.graph_lib.dataset import RandomDataset
-from tabiclv2.prior.graph_lib.base import Context, DatasetProperties
+from tabicl.prior.graph_lib.dataset import RandomDataset
+from tabicl.prior.graph_lib.base import Context, DatasetProperties
 
 # sample dataset with 1000 total samples 
 # (only n_train + n_test matters, there is no split currently)

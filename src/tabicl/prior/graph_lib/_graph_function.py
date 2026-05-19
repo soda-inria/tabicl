@@ -2,8 +2,8 @@ from typing import List, Dict
 
 import torch
 
-from tabiclv2.prior.graph_lib.base import RandomTransformer, Context, FeatureSpec
-from tabiclv2.prior.graph_lib.node_function import RandomNodeFunction
+from tabicl.prior.graph_lib._base import RandomTransformer, Context, FeatureSpec
+from tabicl.prior.graph_lib._node_function import RandomNodeFunction
 
 
 class RandomGraphFunction(RandomTransformer):

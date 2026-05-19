@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import torch
 import numpy as np
 
-from tabiclv2.prior.graph_lib.base import Context
-from tabiclv2.prior.graph_lib.matrix import (
+from tabicl.prior.graph_lib._base import Context
+from tabicl.prior.graph_lib._matrix import (
     RandomMatrix,
     RandomGaussianMatrix,
     RandomWeightsMatrix,
@@ -55,3 +55,4 @@ if __name__ == "__main__":
     plot_random_matrices(RandomWeightsMatrix, n, m)
     plot_random_matrices(RandomKernelMatrix, n, m)
     plot_random_matrices(RandomActivationMatrix, n, m)
+    plot_random_matrices(RandomSingularValuesMatrix, n, m)

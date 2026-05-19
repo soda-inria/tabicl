@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from tabiclv2.prior.graph_lib.base import Context
-from tabiclv2.prior.graph_lib.graph import RandomCauchyDAG
+from tabicl.prior.graph_lib._base import Context
+from tabicl.prior.graph_lib._graph import RandomCauchyDAG
 
 
 def plot_graph_ax(ax: plt.Axes, graph: List[List[int]]):

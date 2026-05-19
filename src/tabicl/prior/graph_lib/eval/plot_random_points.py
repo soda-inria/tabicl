@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import torch
 import numpy as np
 
-from tabiclv2.prior.graph_lib.base import Context
-from tabiclv2.prior.graph_lib.points import (
+from tabicl.prior.graph_lib._base import Context
+from tabicl.prior.graph_lib._points import (
     RandomPoints,
     RandomGaussianPoints,
     RandomGaussianMixturePoints, RandomCovariancePoints,

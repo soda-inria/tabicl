@@ -1,17 +1,10 @@
-import copy
-from typing import Dict, Union, List
+from typing import Dict, List
 
 import numpy as np
-import torch
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OneHotEncoder, QuantileTransformer
 
-from tabiclv2.prior.graph_lib.base import PriorComponent, Context, Dataset, DatasetProperties, FeatureSpec
-from tabiclv2.prior.graph_lib.function import RandomFunction
-from tabiclv2.prior.graph_lib.graph import RandomDAG
-from tabiclv2.prior.graph_lib.graph_function import RandomGraphFunction
-from tabiclv2.prior.graph_lib.properties import sample_categorical_sizes
-from tabiclv2.prior.graph_lib.weights import RandomWeights
+from tabicl.prior.graph_lib._base import PriorComponent, Dataset, DatasetProperties, FeatureSpec
+from tabicl.prior.graph_lib._graph import RandomDAG
+from tabicl.prior.graph_lib._graph_function import RandomGraphFunction
 
 
 def check_x_y_ancestors_overlap(graph: List[List[int]], node_feature_specs: List[Dict[str, FeatureSpec]]) -> bool:

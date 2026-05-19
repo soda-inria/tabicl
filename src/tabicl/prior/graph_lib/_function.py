@@ -1,13 +1,12 @@
 from typing import Optional, List
-import math
 
 import torch
 import numpy as np
 
-from tabiclv2.prior.graph_lib.base import RandomTensorTransformer, Context
-from tabiclv2.prior.graph_lib.activation import RandomActivation
-from tabiclv2.prior.graph_lib.matrix import RandomMatrix, RandomGaussianMatrix
-from tabiclv2.prior.graph_lib.weights import RandomWeights
+from tabicl.prior.graph_lib._base import RandomTensorTransformer, Context
+from tabicl.prior.graph_lib._activation import RandomActivation
+from tabicl.prior.graph_lib._matrix import RandomMatrix, RandomGaussianMatrix
+from tabicl.prior.graph_lib._weights import RandomWeights
 
 
 class RandomFunction(RandomTensorTransformer):
@@ -117,7 +116,7 @@ class RandomTreeFunction(RandomFunction):
     An ensemble of oblivious (=symmetric) decision trees (as in CatBoost) with random leaf values.
     """
     def _fit(self, x: torch.Tensor):
-        from tabiclv2.prior.graph_lib.points import RandomGaussianPoints
+        from tabicl.prior.graph_lib._points import RandomGaussianPoints
 
         self.feature_imp_ = torch.clamp(x.std(dim=0, correction=0), 1e-8)
         self.feature_imp_[~torch.isfinite(self.feature_imp_)] = 1e-8

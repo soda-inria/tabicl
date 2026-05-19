@@ -2,7 +2,7 @@ from typing import List
 
 import numpy as np
 
-from tabiclv2.prior.graph_lib.base import Context
+from tabicl.prior.graph_lib._base import Context
 
 
 def sample_categorical_sizes(n_features: int, context: Context, max_cat_size: int = 200) -> List[int]:

@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import torch
 import numpy as np
 
-from tabiclv2.prior.graph_lib.base import Context
-from tabiclv2.prior.graph_lib.dataset import RandomDataset, Dataset, DatasetProperties
+from tabicl.prior.graph_lib._base import Context, DatasetProperties
+from tabicl.prior.graph_lib._dataset import RandomDataset
 
 
 def plot_random_dataset_ax(ax: plt.Axes, ds_tensors: Dict[str, torch.Tensor]):

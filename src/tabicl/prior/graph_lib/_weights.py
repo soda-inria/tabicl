@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from tabiclv2.prior.graph_lib.base import PriorComponent
+from tabicl.prior.graph_lib._base import PriorComponent
 
 
 class RandomWeights(PriorComponent):

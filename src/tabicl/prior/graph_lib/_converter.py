@@ -1,13 +1,12 @@
-from typing import Tuple, Any
+from typing import Tuple
 
 import torch
-import numpy as np
 
-from tabiclv2.prior.graph_lib.base import PriorComponent, Context, RandomTensorTransformer, RandomTransformer
-from tabiclv2.prior.graph_lib.activation import Standardize, RandomActivation, KumaraswamyWarping
-from tabiclv2.prior.graph_lib.function import CheapRandomFunction
-from tabiclv2.prior.graph_lib.points import RandomPoints
-from tabiclv2.prior.graph_lib.weights import RandomWeights
+from tabicl.prior.graph_lib._base import Context, RandomTransformer
+from tabicl.prior.graph_lib._activation import Standardize, RandomActivation, KumaraswamyWarping
+from tabicl.prior.graph_lib._function import CheapRandomFunction
+from tabicl.prior.graph_lib._points import RandomPoints
+from tabicl.prior.graph_lib._weights import RandomWeights
 
 
 class Converter(RandomTransformer):

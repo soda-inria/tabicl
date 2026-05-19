@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from tabiclv2.prior.graph_lib.base import Context
-from tabiclv2.prior.graph_lib.function import (
+from tabicl.prior.graph_lib._base import Context
+from tabicl.prior.graph_lib._function import (
     RandomMLPFunction,
     RandomFunction,
     RandomTreeFunction,
