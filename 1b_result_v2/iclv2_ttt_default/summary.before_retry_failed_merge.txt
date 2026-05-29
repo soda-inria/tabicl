@@ -1,0 +1,15 @@
+discovered_datasets: 178
+processed_datasets: 178
+ok_count: 178
+failed_count: 0
+skipped_count: 0
+ttt_oom_fallback_count: 4
+avg_accuracy_ok: 0.850293
+avg_f1_ok: 0.841998
+avg_balanced_accuracy_ok: 0.783393
+avg_roc_auc_ok: 0.910836
+avg_log_loss_ok: 0.344694
+wall_seconds: 9807.105
+failed_datasets: (none)
+skipped_datasets: (none)
+ttt_oom_fallback_datasets: Indian_pines, gas-drift, gina_agnostic, naticusdroid+android+permissions+dataset

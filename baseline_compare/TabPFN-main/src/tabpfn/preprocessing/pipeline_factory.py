@@ -1,0 +1,143 @@
+#  Copyright (c) Prior Labs GmbH 2026.
+
+"""Methods to generate a preprocessing pipeline from ensemble configurations."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Literal
+
+from tabpfn.preprocessing.datamodel import GPUTransformType
+from tabpfn.preprocessing.pipeline_interface import (
+    PreprocessingPipeline,
+    PreprocessingStep,
+    StepWithModalities,
+)
+from tabpfn.preprocessing.steps import (
+    AddFingerprintFeaturesStep,
+    AddSVDFeaturesStep,
+    DifferentiableZNormStep,
+    EncodeCategoricalFeaturesStep,
+    NanHandlingPolynomialFeaturesStep,
+    RemoveConstantFeaturesStep,
+    ReshapeFeatureDistributionsStep,
+    ShuffleFeaturesStep,
+)
+from tabpfn.preprocessing.torch.gpu_preprocessing_metadata import (
+    is_gpu_quantile_eligible,
+    is_gpu_squashing_scaler_eligible,
+)
+
+if TYPE_CHECKING:
+    import numpy as np
+
+    from tabpfn.preprocessing.configs import EnsembleConfig
+
+
+def _polynomial_feature_settings(
+    polynomial_features: Literal["no", "all"] | int,
+) -> tuple[bool, int | None]:
+    if isinstance(polynomial_features, int):
+        assert polynomial_features > 0, "Poly. features to add must be >0!"
+        return True, polynomial_features
+    if polynomial_features == "all":
+        return True, None
+    if polynomial_features == "no":
+        return False, None
+    raise ValueError(f"Invalid polynomial_features value: {polynomial_features}")
+
+
+def create_preprocessing_pipeline(
+    config: EnsembleConfig,
+    *,
+    random_state: int | np.random.Generator | None,
+    enable_gpu_preprocessing: bool = False,
+) -> PreprocessingPipeline:
+    """Convert the ensemble configuration to a preprocessing pipeline.
+
+    Args:
+        config: Ensemble configuration.
+        random_state: Random state for reproducibility.
+        enable_gpu_preprocessing: When True, the quantile transform (if GPU-
+            eligible), SVD, and shuffle steps are omitted from the CPU pipeline
+            because they will run on GPU instead.
+    """
+    steps: list[PreprocessingStep | StepWithModalities] = []
+
+    pconfig = config.preprocess_config
+    use_poly_features, max_poly_features = _polynomial_feature_settings(
+        config.polynomial_features
+    )
+    if use_poly_features:
+        steps.append(
+            NanHandlingPolynomialFeaturesStep(
+                max_features=max_poly_features,
+                random_state=random_state,
+            ),
+        )
+
+    steps.append(RemoveConstantFeaturesStep())
+
+    # Decide whether the reshape transform moves to GPU. The reshape step
+    # still runs on CPU (handling categorical reclassification,
+    # append_to_original) but uses "none" (identity) as the transform so the
+    # actual work happens on GPU.
+    schedule_gpu_transform: GPUTransformType | None = None
+    if enable_gpu_preprocessing:
+        if is_gpu_quantile_eligible(pconfig.name):
+            schedule_gpu_transform = GPUTransformType.QUANTILE
+        elif is_gpu_squashing_scaler_eligible(pconfig.name):
+            schedule_gpu_transform = GPUTransformType.SQUASHING_SCALER
+
+    if pconfig.differentiable:
+        steps.append(DifferentiableZNormStep())
+    else:
+        reshape_transform_name = (
+            "none" if schedule_gpu_transform is not None else pconfig.name
+        )
+        steps.append(
+            ReshapeFeatureDistributionsStep(
+                transform_name=reshape_transform_name,
+                append_to_original=pconfig.append_original,
+                max_features_per_estimator=pconfig.max_features_per_estimator,
+                apply_to_categorical=(pconfig.categorical_name == "numeric"),
+                random_state=random_state,
+                schedule_gpu_transform=schedule_gpu_transform,
+            )
+        )
+
+        steps.append(
+            EncodeCategoricalFeaturesStep(
+                pconfig.categorical_name,
+                random_state=random_state,
+                max_onehot_cardinality=pconfig.max_onehot_cardinality,
+            )
+        )
+
+        if not enable_gpu_preprocessing:
+            use_global_transformer = (
+                pconfig.global_transformer_name is not None
+                and pconfig.global_transformer_name != "None"
+            )
+            if use_global_transformer:
+                steps.append(
+                    AddSVDFeaturesStep(
+                        global_transformer_name=pconfig.global_transformer_name,  # type: ignore
+                        random_state=random_state,
+                    )
+                )
+
+    # Fingerprint moves to the GPU pipeline when GPU preprocessing is enabled
+    # (quantile and/or SVD will run on GPU and change the data the hash sees).
+    if config.add_fingerprint_feature and not enable_gpu_preprocessing:
+        steps.append(AddFingerprintFeaturesStep())
+
+    # Shuffle moves to GPU when enable_gpu_preprocessing is on.
+    if not enable_gpu_preprocessing:
+        steps.append(
+            ShuffleFeaturesStep(
+                shuffle_method=config.feature_shift_decoder,
+                shuffle_index=config.feature_shift_count,
+                random_state=random_state,
+            ),
+        )
+    return PreprocessingPipeline(steps)

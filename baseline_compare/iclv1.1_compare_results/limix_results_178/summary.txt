@@ -1,0 +1,9 @@
+discovered_datasets: 178
+processed_datasets: 178
+ok_count: 168
+failed_count: 10
+skipped_count: 0
+avg_accuracy_ok: 0.840413
+wall_seconds: 1315.221
+failed_datasets: SDSS17, customer_satisfaction_in_airline, volkert, Cardiovascular-Disease-dataset, Credit_c, Rain_in_Australia, accelerometer, dabetes_130-us_hospitals, gina_agnostic, walking-activity
+skipped_datasets: (none)

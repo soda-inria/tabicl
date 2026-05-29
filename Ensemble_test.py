@@ -23,9 +23,13 @@ import TTT_1B_ensmble as ens
 
 
 DEFAULT_DATA_ROOT = Path("data178")
-DEFAULT_CKPT_ROOT = Path("1b_result/ensmble_ttt_step15_lr5e-6/ttt_ckpts")
-DEFAULT_OUT_DIR = Path("1b_result/ensmble_ttt_step15_lr5e-6/ckpt_test")
+DEFAULT_CKPT_ROOT = Path("1b_result/v2_ensmble_ttt_step8_lr5e-6/ttt_ckpts")
+DEFAULT_OUT_DIR = Path("1b_result/v2_ensmble_ttt_step8_lr5e-6/step8_ckpt_test")
 DEFAULT_CHECKPOINT_VERSION = ens.DEFAULT_CHECKPOINT_VERSION
+FALLBACK_CHECKPOINTS = {
+    "v2": "tabicl-classifier-v2-20260212.ckpt",
+    "v1.1": "tabicl-classifier-v1.1-20250506.ckpt",
+}
 
 
 @dataclass
@@ -39,6 +43,10 @@ class EnsembleTestResultRow:
     n_features: int
     n_classes: int
     accuracy: Optional[float]
+    f1: Optional[float]
+    balanced_accuracy: Optional[float]
+    roc_auc: Optional[float]
+    log_loss: Optional[float]
     fit_seconds: float
     predict_seconds: float
     status: str
@@ -57,6 +65,9 @@ class EnsembleTestResultRow:
     ckpt_path: Optional[str] = None
     ckpt_step: int = 20
     ckpt_layout: Optional[str] = None
+    ckpt_fallback_used: bool = False
+    ckpt_fallback_version: Optional[str] = None
+    ckpt_missing_reason: Optional[str] = None
 
 
 def format_dataset_result_log(worker_label: str, row: EnsembleTestResultRow) -> str:
@@ -65,14 +76,115 @@ def format_dataset_result_log(worker_label: str, row: EnsembleTestResultRow) -> 
         return (
             f"{prefix} [ok] {row.dataset_name} "
             f"accuracy={ens.format_optional_float(row.accuracy)} "
+            f"f1={ens.format_optional_float(row.f1)} "
+            f"balanced_accuracy={ens.format_optional_float(row.balanced_accuracy)} "
+            f"roc_auc={ens.format_optional_float(row.roc_auc)} "
+            f"log_loss={ens.format_optional_float(row.log_loss)} "
             f"fit={row.fit_seconds:.3f}s "
             f"predict={row.predict_seconds:.3f}s "
             f"ckpt_step={row.ckpt_step} "
-            f"ckpt_layout={row.ckpt_layout}"
+            f"ckpt_layout={row.ckpt_layout} "
+            f"ckpt_fallback={row.ckpt_fallback_used}"
         )
     if row.status == "skip":
         return f"{prefix} [skip] {row.dataset_name} reason={row.error}"
     return f"{prefix} [fail] {row.dataset_name} error={row.error}"
+
+
+def compute_weighted_f1(y_true: Any, y_pred: Any) -> Optional[float]:
+    ens.ensure_runtime_deps()
+    try:
+        from sklearn.metrics import f1_score
+
+        return float(
+            f1_score(
+                ens.np.asarray(y_true),
+                ens.np.asarray(y_pred),
+                average="weighted",
+                zero_division=0,
+            )
+        )
+    except Exception:
+        return None
+
+
+def compute_balanced_accuracy(y_true: Any, y_pred: Any) -> Optional[float]:
+    ens.ensure_runtime_deps()
+    try:
+        from sklearn.metrics import balanced_accuracy_score
+
+        return float(balanced_accuracy_score(ens.np.asarray(y_true), ens.np.asarray(y_pred)))
+    except Exception:
+        return None
+
+
+def compute_roc_auc(
+    y_true: Any,
+    y_proba: Any,
+    classes: Any | None = None,
+) -> Optional[float]:
+    ens.ensure_runtime_deps()
+    try:
+        from sklearn.metrics import roc_auc_score
+
+        y_true_arr = ens.np.asarray(y_true)
+        proba_arr = ens.np.asarray(y_proba)
+        if proba_arr.ndim != 2 or proba_arr.shape[0] != y_true_arr.shape[0] or proba_arr.shape[1] < 2:
+            return None
+        if len(ens.np.unique(y_true_arr)) < 2:
+            return None
+        class_arr = None if classes is None else ens.np.asarray(classes)
+        if class_arr is not None and (
+            class_arr.ndim != 1 or len(class_arr) != proba_arr.shape[1]
+        ):
+            class_arr = None
+        if proba_arr.shape[1] == 2:
+            if class_arr is not None:
+                y_binary = (y_true_arr == class_arr[1]).astype(int)
+                if len(ens.np.unique(y_binary)) < 2:
+                    return None
+                return float(roc_auc_score(y_binary, proba_arr[:, 1]))
+            return float(roc_auc_score(y_true_arr, proba_arr[:, 1]))
+        if class_arr is not None:
+            return float(
+                roc_auc_score(
+                    y_true_arr,
+                    proba_arr,
+                    labels=list(class_arr),
+                    multi_class="ovr",
+                )
+            )
+        return float(roc_auc_score(y_true_arr, proba_arr, multi_class="ovr"))
+    except (ValueError, RuntimeError, AttributeError, TypeError):
+        return None
+
+
+def compute_log_loss(
+    y_true: Any,
+    y_proba: Any | None,
+    classes: Any | None,
+) -> Optional[float]:
+    if y_proba is None:
+        return None
+    ens.ensure_runtime_deps()
+    try:
+        from sklearn.metrics import log_loss
+
+        y_true_arr = ens.np.asarray(y_true)
+        proba_arr = ens.np.asarray(y_proba)
+        if proba_arr.ndim != 2 or proba_arr.shape[0] != len(y_true_arr):
+            return None
+
+        class_arr = None if classes is None else ens.np.asarray(classes)
+        if class_arr is not None and (
+            class_arr.ndim != 1 or len(class_arr) != proba_arr.shape[1]
+        ):
+            class_arr = None
+        if class_arr is not None:
+            return float(log_loss(y_true_arr, proba_arr, labels=list(class_arr)))
+        return float(log_loss(y_true_arr, proba_arr))
+    except Exception:
+        return None
 
 
 def _step_filename(step: int) -> str:
@@ -127,6 +239,30 @@ def resolve_dataset_ckpt(
     )
 
 
+def resolve_fallback_ckpt_path(
+    fallback_version: str,
+    fallback_model_path: str | None,
+) -> Path | None:
+    if fallback_version == "none":
+        return None
+
+    if fallback_model_path:
+        raw_path = Path(fallback_model_path).expanduser()
+    else:
+        raw_path = Path(FALLBACK_CHECKPOINTS[fallback_version])
+
+    candidates = [raw_path] if raw_path.is_absolute() else [Path.cwd() / raw_path, REPO_ROOT / raw_path]
+    for candidate in candidates:
+        if candidate.exists() and candidate.is_file():
+            return candidate.resolve()
+
+    checked = ", ".join(str(candidate) for candidate in candidates)
+    raise FileNotFoundError(
+        f"Fallback checkpoint for --missing-ckpt-fallback={fallback_version!r} "
+        f"was not found. Checked: {checked}"
+    )
+
+
 def count_available_ckpts(
     dataset_dirs: List[Path],
     ckpt_root: Path,
@@ -153,6 +289,10 @@ def count_available_ckpts(
         "missing_ckpt_datasets": missing,
         "ambiguous_ckpt_datasets": ambiguous,
     }
+
+
+def _truthy_series(series) -> Any:
+    return series.astype(str).str.lower().isin({"1", "true", "yes", "y"})
 
 
 def build_model_kwargs(args: argparse.Namespace) -> dict[str, object]:
@@ -189,6 +329,10 @@ def _empty_row(
         n_features=0,
         n_classes=0,
         accuracy=None,
+        f1=None,
+        balanced_accuracy=None,
+        roc_auc=None,
+        log_loss=None,
         fit_seconds=0.0,
         predict_seconds=0.0,
         status=status,
@@ -205,6 +349,8 @@ def evaluate_one_dataset(
     ckpt_root: Path,
     ckpt_step: int,
     ckpt_model_name: str | None,
+    fallback_ckpt_path: Path | None,
+    fallback_checkpoint_version: str | None,
     model_kwargs: dict[str, object],
     device_str: str,
 ) -> EnsembleTestResultRow:
@@ -213,6 +359,9 @@ def evaluate_one_dataset(
     classifier = None
     ckpt_path: Path | None = None
     ckpt_layout: str | None = None
+    ckpt_fallback_used = False
+    ckpt_fallback_version: str | None = None
+    ckpt_missing_reason: str | None = None
     n_train = 0
     n_val = 0
     n_test = 0
@@ -268,18 +417,29 @@ def evaluate_one_dataset(
         n_features = int(X_train.shape[1])
         n_classes = int(len(classes))
 
-        ckpt_path, ckpt_layout = resolve_dataset_ckpt(
-            ckpt_root,
-            dataset_dir.name,
-            ckpt_step,
-            ckpt_model_name,
-        )
+        try:
+            ckpt_path, ckpt_layout = resolve_dataset_ckpt(
+                ckpt_root,
+                dataset_dir.name,
+                ckpt_step,
+                ckpt_model_name,
+            )
+        except FileNotFoundError as exc:
+            if fallback_ckpt_path is None:
+                raise
+            ckpt_path = fallback_ckpt_path
+            ckpt_layout = "missing_dataset_fallback"
+            ckpt_fallback_used = True
+            ckpt_fallback_version = fallback_checkpoint_version
+            ckpt_missing_reason = str(exc)
 
         from tabicl import TabICLClassifier
 
         worker_kwargs = dict(model_kwargs)
         worker_kwargs["device"] = device_str
         worker_kwargs["model_path"] = str(ckpt_path)
+        if ckpt_fallback_used and fallback_checkpoint_version is not None:
+            worker_kwargs["checkpoint_version"] = fallback_checkpoint_version
         classifier = TabICLClassifier(**worker_kwargs)
 
         t0 = time.time()
@@ -287,10 +447,23 @@ def evaluate_one_dataset(
         fit_seconds = time.time() - t0
 
         t1 = time.time()
-        y_pred = classifier.predict(X_test)
+        y_proba = classifier.predict_proba(X_test)
+        y_pred_encoded = ens.np.argmax(ens.np.asarray(y_proba), axis=1)
+        y_encoder = getattr(classifier, "y_encoder_", None)
+        proba_classes = getattr(y_encoder, "classes_", None)
+        if y_encoder is not None:
+            y_pred = y_encoder.inverse_transform(y_pred_encoded)
+        elif proba_classes is not None:
+            y_pred = ens.np.asarray(proba_classes)[y_pred_encoded]
+        else:
+            y_pred = y_pred_encoded
+        roc_auc = compute_roc_auc(y_test, y_proba, proba_classes)
+        log_loss_score = compute_log_loss(y_test, y_proba, proba_classes)
         predict_seconds = time.time() - t1
 
         accuracy = float(ens.np.mean(ens.np.asarray(y_pred) == ens.np.asarray(y_test)))
+        f1 = compute_weighted_f1(y_test, y_pred)
+        balanced_accuracy = compute_balanced_accuracy(y_test, y_pred)
 
         return EnsembleTestResultRow(
             dataset_name=dataset_dir.name,
@@ -302,16 +475,27 @@ def evaluate_one_dataset(
             n_features=n_features,
             n_classes=n_classes,
             accuracy=accuracy,
+            f1=f1,
+            balanced_accuracy=balanced_accuracy,
+            roc_auc=roc_auc,
+            log_loss=log_loss_score,
             fit_seconds=float(fit_seconds),
             predict_seconds=float(predict_seconds),
             status="ok",
             error=None,
             n_train_a=n_train,
             n_test_d=n_test,
-            ttt_split_reason="Loaded per-dataset TTT checkpoint; no TTT update run.",
+            ttt_split_reason=(
+                "Missing per-dataset TTT checkpoint; used fallback base checkpoint for inference."
+                if ckpt_fallback_used
+                else "Loaded per-dataset TTT checkpoint; no TTT update run."
+            ),
             ckpt_path=ckpt_path.as_posix(),
             ckpt_step=int(ckpt_step),
             ckpt_layout=ckpt_layout,
+            ckpt_fallback_used=ckpt_fallback_used,
+            ckpt_fallback_version=ckpt_fallback_version,
+            ckpt_missing_reason=ckpt_missing_reason,
         )
     except Exception as exc:
         return EnsembleTestResultRow(
@@ -324,6 +508,10 @@ def evaluate_one_dataset(
             n_features=n_features,
             n_classes=n_classes,
             accuracy=None,
+            f1=None,
+            balanced_accuracy=None,
+            roc_auc=None,
+            log_loss=None,
             fit_seconds=0.0,
             predict_seconds=0.0,
             status="fail",
@@ -333,6 +521,9 @@ def evaluate_one_dataset(
             ckpt_path=ckpt_path.as_posix() if ckpt_path is not None else None,
             ckpt_step=int(ckpt_step),
             ckpt_layout=ckpt_layout,
+            ckpt_fallback_used=ckpt_fallback_used,
+            ckpt_fallback_version=ckpt_fallback_version,
+            ckpt_missing_reason=ckpt_missing_reason,
         )
     finally:
         ens.release_classifier_resources(classifier)
@@ -351,6 +542,8 @@ def worker_main(
     ckpt_root: str,
     ckpt_step: int,
     ckpt_model_name: str | None,
+    fallback_ckpt_path: str | None,
+    fallback_checkpoint_version: str | None,
 ) -> None:
     try:
         ens.ensure_runtime_deps()
@@ -384,6 +577,8 @@ def worker_main(
                 ckpt_root=Path(ckpt_root),
                 ckpt_step=ckpt_step,
                 ckpt_model_name=ckpt_model_name,
+                fallback_ckpt_path=Path(fallback_ckpt_path) if fallback_ckpt_path else None,
+                fallback_checkpoint_version=fallback_checkpoint_version,
                 model_kwargs=model_kwargs,
                 device_str=device_str,
             )
@@ -423,6 +618,10 @@ def worker_main(
                         n_features=0,
                         n_classes=0,
                         accuracy=None,
+                        f1=None,
+                        balanced_accuracy=None,
+                        roc_auc=None,
+                        log_loss=None,
                         fit_seconds=0.0,
                         predict_seconds=0.0,
                         status="fail",
@@ -444,9 +643,24 @@ def write_summary(
 ) -> None:
     ens.ensure_runtime_deps()
 
+    result_df = result_df.copy()
+    for metric_column in ("accuracy", "f1", "balanced_accuracy", "roc_auc", "log_loss"):
+        if metric_column in result_df.columns:
+            result_df[metric_column] = ens.pd.to_numeric(result_df[metric_column], errors="coerce")
+
     ok_df = result_df[result_df["status"] == "ok"].copy() if len(result_df) else ens.pd.DataFrame()
     failed_df = result_df[result_df["status"] == "fail"].copy() if len(result_df) else ens.pd.DataFrame()
     skipped_df = result_df[result_df["status"] == "skip"].copy() if len(result_df) else ens.pd.DataFrame()
+    if len(result_df) and "ckpt_fallback_used" in result_df.columns:
+        fallback_mask = _truthy_series(result_df["ckpt_fallback_used"])
+        fallback_df = result_df[fallback_mask].copy()
+    else:
+        fallback_df = ens.pd.DataFrame()
+
+    def mean_line(label: str, column: str) -> str:
+        if len(ok_df) and column in ok_df.columns and ok_df[column].notna().any():
+            return f"{label}: {ok_df[column].mean():.6f}"
+        return f"{label}: (none)"
 
     lines = [
         f"discovered_datasets: {len(dataset_dirs)}",
@@ -454,15 +668,18 @@ def write_summary(
         f"ok_count: {len(ok_df)}",
         f"failed_count: {len(failed_df)}",
         f"skipped_count: {len(skipped_df)}",
-        (
-            f"avg_accuracy_ok: {ok_df['accuracy'].mean():.6f}"
-            if len(ok_df)
-            else "avg_accuracy_ok: (none)"
-        ),
+        mean_line("avg_accuracy_ok", "accuracy"),
+        mean_line("avg_f1_ok", "f1"),
+        mean_line("avg_balanced_accuracy_ok", "balanced_accuracy"),
+        mean_line("avg_roc_auc_ok", "roc_auc"),
+        mean_line("avg_log_loss_ok", "log_loss"),
         f"ckpt_step: {coverage.get('ckpt_step')}",
         f"step_ckpts_found: {coverage.get('step_ckpts_found')}",
         f"missing_ckpts: {coverage.get('missing_ckpts')}",
         f"ambiguous_ckpts: {coverage.get('ambiguous_ckpts')}",
+        f"missing_ckpt_fallback: {coverage.get('missing_ckpt_fallback')}",
+        f"missing_ckpt_fallback_checkpoint: {coverage.get('missing_ckpt_fallback_checkpoint')}",
+        f"missing_ckpt_fallback_count: {len(fallback_df)}",
         f"wall_seconds: {wall_seconds:.3f}",
     ]
 
@@ -470,12 +687,14 @@ def write_summary(
     skipped_names = ", ".join(skipped_df["dataset_name"].astype(str).tolist()) if len(skipped_df) else "(none)"
     missing_names = ", ".join(coverage.get("missing_ckpt_datasets", [])) or "(none)"
     ambiguous_names = ", ".join(coverage.get("ambiguous_ckpt_datasets", [])) or "(none)"
+    fallback_names = ", ".join(fallback_df["dataset_name"].astype(str).tolist()) if len(fallback_df) else "(none)"
     lines.extend(
         [
             f"failed_datasets: {failed_names}",
             f"skipped_datasets: {skipped_names}",
             f"missing_ckpt_datasets: {missing_names}",
             f"ambiguous_ckpt_datasets: {ambiguous_names}",
+            f"missing_ckpt_fallback_datasets: {fallback_names}",
         ]
     )
 
@@ -514,11 +733,25 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--data-root", default=str(DEFAULT_DATA_ROOT))
     parser.add_argument("--ckpt-root", default=str(DEFAULT_CKPT_ROOT))
-    parser.add_argument("--ckpt-step", type=int, default=15)
+    parser.add_argument("--ckpt-step", type=int, default=8)
     parser.add_argument("--ckpt-model-name", default=None)
+    parser.add_argument(
+        "--missing-ckpt-fallback",
+        choices=["none", "v2", "v1.1"],
+        default="v2",
+        help=(
+            "Checkpoint to use when a per-dataset step checkpoint is missing. "
+            "Use 'none' to keep the old fail-on-missing behavior."
+        ),
+    )
+    parser.add_argument(
+        "--missing-ckpt-fallback-model-path",
+        default=None,
+        help="Optional explicit checkpoint path for the missing-ckpt fallback.",
+    )
     parser.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
-    parser.add_argument("--workers", type=int, default=None)
-    parser.add_argument("--gpus", default=None)
+    parser.add_argument("--workers", type=int, default=2)
+    parser.add_argument("--gpus", default="1,2")
     parser.add_argument("--gpu-groups", default=None)
     parser.add_argument("--n-estimators", type=int, default=32)
     parser.add_argument("--batch-size", type=ens.parse_optional_int, default=8)
@@ -578,10 +811,24 @@ def main() -> None:
     if not data_root.is_dir():
         raise NotADirectoryError(f"Data root is not a directory: {data_root}")
 
+    fallback_ckpt_path = resolve_fallback_ckpt_path(
+        args.missing_ckpt_fallback,
+        args.missing_ckpt_fallback_model_path,
+    )
+    fallback_checkpoint_version = (
+        fallback_ckpt_path.name if fallback_ckpt_path is not None else None
+    )
+
     ckpt_root = Path(args.ckpt_root)
     if not ckpt_root.exists():
-        raise FileNotFoundError(f"Checkpoint root does not exist: {ckpt_root}")
-    if not ckpt_root.is_dir():
+        if fallback_ckpt_path is None:
+            raise FileNotFoundError(f"Checkpoint root does not exist: {ckpt_root}")
+        print(
+            f"checkpoint_root_missing: {ckpt_root}; "
+            f"all missing dataset checkpoints will use fallback={fallback_ckpt_path}",
+            flush=True,
+        )
+    elif not ckpt_root.is_dir():
         raise NotADirectoryError(f"Checkpoint root is not a directory: {ckpt_root}")
 
     dataset_dirs = ens.find_dataset_dirs(data_root)
@@ -596,6 +843,10 @@ def main() -> None:
         ckpt_root,
         args.ckpt_step,
         args.ckpt_model_name,
+    )
+    coverage["missing_ckpt_fallback"] = args.missing_ckpt_fallback
+    coverage["missing_ckpt_fallback_checkpoint"] = (
+        fallback_ckpt_path.as_posix() if fallback_ckpt_path is not None else None
     )
     print("checkpoint_coverage:")
     print(json.dumps(coverage, indent=2, ensure_ascii=False))
@@ -639,6 +890,8 @@ def main() -> None:
                 str(ckpt_root),
                 int(args.ckpt_step),
                 args.ckpt_model_name,
+                fallback_ckpt_path.as_posix() if fallback_ckpt_path is not None else None,
+                fallback_checkpoint_version,
             ),
             daemon=False,
         )

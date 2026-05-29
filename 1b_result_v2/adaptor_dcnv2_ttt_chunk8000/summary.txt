@@ -1,0 +1,19 @@
+discovered_datasets: 40
+processed_datasets: 40
+ok_count: 36
+failed_count: 4
+skipped_count: 0
+ttt_oom_fallback_count: 0
+ttt_adaptor_enabled_count: 35
+ttt_adaptor_block_counts: dcnv2=35
+avg_accuracy_ok: 0.781908
+avg_f1_ok: 0.776321
+avg_balanced_accuracy_ok: 0.734812
+avg_roc_auc_ok: 0.845605
+avg_log_loss_ok: 0.471601
+avg_ttt_adaptor_trainable_params_ok: 65271.111111
+wall_seconds: 2942.147
+failed_datasets: Bank_Customer_Churn_Dataset, E-CommereShippingData, JapaneseVowels, MIC
+skipped_datasets: (none)
+ttt_oom_fallback_datasets: (none)
+ttt_adaptor_enabled_datasets: Amazon_employee_access, BLE_RSSI_dataset_for_Indoor_localization, BNG(breast-w), BNG(cmc), BNG(tic-tac-toe), Basketball_c, California-Housing-Classification, Cardiovascular-Disease-dataset, Click_prediction_small, Credit_c, Customer_Personality_Analysis, Diabetic_Retinopathy_Debrecen, Employee, FICO-HELOC-cleaned, FOREX_audcad-day-High, FOREX_audcad-hour-High, FOREX_audchf-day-High, FOREX_audjpy-day-High, FOREX_audjpy-hour-High, FOREX_audsgd-hour-High, FOREX_audusd-hour-High, FOREX_cadjpy-day-High, FOREX_cadjpy-hour-High, Firm-Teacher_Clave-Direction_Classification, Fitness_Club_c, GAMETES_Epistasis_2-Way_20atts_0.1H_EDM-1_1, GAMETES_Heterogeneity_20atts_1600_Het_0.4_0.2_50_EDM-2_001, Gender_Gap_in_Spanish_WP, GesturePhaseSegmentationProcessed, HR_Analytics_Job_Change_of_Data_Scientists, IBM_HR_Analytics_Employee_Attrition_and_Performance, INNHotelsGroup, Indian_pines, KDDCup09_upselling, MagicTelescope

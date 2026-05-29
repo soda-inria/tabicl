@@ -24,8 +24,8 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 DEFAULT_DATA_ROOT = Path("data178")
-DEFAULT_MODEL_PATH = "tabicl-classifier-v1.1-20250506.ckpt"
-DEFAULT_CHECKPOINT_VERSION = "tabicl-classifier-v1.1-20250506.ckpt"
+DEFAULT_MODEL_PATH = "tabicl-classifier-v2-20260212.ckpt"
+DEFAULT_CHECKPOINT_VERSION = "tabicl-classifier-v2-20260212.ckpt"
 CLASSIFICATION_TASKS = {"binclass", "multiclass"}
 CATEGORICAL_MISSING_TOKEN = "__tabicl_missing__"
 
@@ -67,7 +67,7 @@ class ResultRow:
 @dataclass
 class TTTConfig:
     enabled: bool = False
-    lr: float = 2e-6
+    lr: float = 5e-6
     scheduler: str = "constant"
     grad_clip: float = 1.0
     dtype: str = "float32"
@@ -84,8 +84,8 @@ class TTTConfig:
     save_ckpt_every: int = 2
     save_ckpt_start_step: Optional[int] = None
     ckpt_root: Optional[str] = None
-    resume_ckpt_root: str = "1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts"
-    resume_step: int = 9
+    resume_ckpt_root: str = "1b_result/ensmble_ttt_step16_lr5e-6/ttt_ckpts"
+    resume_step: int = 16
     resume_model_name: Optional[str] = None
 
 
@@ -1792,10 +1792,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--models-dir", default=None)
     parser.add_argument("--checkpoint-version", default=DEFAULT_CHECKPOINT_VERSION)
-    parser.add_argument("--out-dir", default="1b_result/ensmble_ttt_step15_lr5e-6")
+    parser.add_argument("--out-dir", default="1b_result/ensmble_ttt_step16_lr5e-6")
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--gpus", default=None)
-    parser.add_argument("--gpu-groups", default="0,1,2")
+    parser.add_argument("--gpu-groups", default="1,2,3")
     parser.add_argument("--n-estimators", type=int, default=32)
     parser.add_argument("--batch-size", type=parse_optional_int, default=8)
     parser.add_argument("--kv-cache", type=parse_kv_cache, default=False)
@@ -1822,7 +1822,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument("--ttt-weight-decay", type=float, default=0.0)
-    parser.add_argument("--ttt-steps", type=int, default=15)
+    parser.add_argument("--ttt-steps", type=int, default=16)
     parser.add_argument("--ttt-freeze-col", type=parse_bool, default=True)
     parser.add_argument("--ttt-freeze-row", type=parse_bool, default=True)
     parser.add_argument(
@@ -1834,13 +1834,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--ttt-save-ckpt-every",
         type=int,
-        default=1,
+        default=2,
         help="Save a TTT checkpoint every N optimizer steps and always save the final step.",
     )
     parser.add_argument(
         "--ttt-save-ckpt-start-step",
         type=parse_optional_int,
-        default=11,
+        default=10,
         help=(
             "First optimizer step to save a TTT checkpoint. Use None to keep the legacy "
             "multiple-of --ttt-save-ckpt-every schedule."
@@ -1848,13 +1848,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--ttt-resume-ckpt-root",
-        default="1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts",
+        default="1b_result/v2_ensmble_ttt_step8_lr5e-6/ttt_ckpts",
         help="Root directory containing dataset-matched TTT resume checkpoints.",
     )
     parser.add_argument(
         "--ttt-resume-step",
         type=int,
-        default=9,
+        default=8,
         help="Global TTT step to resume from, matching step_<N>.ckpt under the resume root.",
     )
     parser.add_argument(

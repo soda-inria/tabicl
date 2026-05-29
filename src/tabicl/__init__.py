@@ -1,14 +1,21 @@
-from .model.kv_cache import TabICLCache
-from .model.inference_config import InferenceConfig
+from ._model import InferenceConfig
+from ._sklearn import TabICLClassifier, TabICLRegressor
 
-from .sklearn.classifier import TabICLClassifier
-from .sklearn.regressor import TabICLRegressor
+__all__ = [
+    "TabICLClassifier",
+    "TabICLRegressor",
+    "TabICLForecaster",
+    "TabICLUnsupervised",
+    "FinetunedTabICLClassifier",
+    "FinetunedTabICLRegressor",
+    "InferenceConfig",
+]
 
 
 def __getattr__(name):
     if name == "TabICLForecaster":
         try:
-            from .forecast.forecaster import TabICLForecaster
+            from .forecast import TabICLForecaster
 
             return TabICLForecaster
         except ImportError:
@@ -17,8 +24,13 @@ def __getattr__(name):
             ) from None
 
     if name == "TabICLUnsupervised":
-        from .unsupervised import TabICLUnsupervised
+        from ._unsupervised import TabICLUnsupervised
 
         return TabICLUnsupervised
+
+    if name in {"FinetunedTabICLClassifier", "FinetunedTabICLRegressor"}:
+        from . import _finetune
+
+        return getattr(_finetune, name)
 
     raise AttributeError(f"module 'tabicl' has no attribute {name}")

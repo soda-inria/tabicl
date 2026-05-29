@@ -1,0 +1,13 @@
+discovered_datasets: 178
+processed_datasets: 178
+ok_count: 177
+failed_count: 1
+skipped_count: 0
+ttt_oom_fallback_count: 1
+avg_accuracy_ok: 0.841175
+avg_f1_ok: 0.829780
+avg_roc_auc_ok: 0.903880
+wall_seconds: 30843.221
+failed_datasets: accelerometer
+skipped_datasets: (none)
+ttt_oom_fallback_datasets: volkert

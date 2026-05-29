@@ -1,0 +1,15 @@
+discovered_datasets: 40
+processed_datasets: 40
+ok_count: 40
+failed_count: 0
+skipped_count: 0
+ttt_oom_fallback_count: 0
+avg_accuracy_ok: 0.787587
+avg_f1_ok: 0.783867
+avg_balanced_accuracy_ok: 0.743199
+avg_roc_auc_ok: 0.848695
+avg_log_loss_ok: 0.452473
+wall_seconds: 1968.939
+failed_datasets: (none)
+skipped_datasets: (none)
+ttt_oom_fallback_datasets: (none)

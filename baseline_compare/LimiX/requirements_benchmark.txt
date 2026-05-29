@@ -1,0 +1,18 @@
+# Dependencies for baseline_compare/LimiX/benchmark_infer.py.
+# This is the minimal inference set for the no-retrieval default config.
+torch==2.7.1
+numpy>=2.3.2
+pandas>=2.3.2
+scikit-learn>=1.7.1
+scipy>=1.16.1
+einops==0.8.1
+huggingface-hub>=0.34.4
+hf-xet>=1.1.8
+socksio>=1.0.0
+kditransform==1.1.0
+hyperopt==0.2.7
+tqdm==4.67.1
+requests>=2.32.5
+pyyaml>=6.0.2
+# Optional for configs/model variants that explicitly use flash attention:
+# flash-attn==2.8.0.post2

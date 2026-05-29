@@ -1,0 +1,13 @@
+*.pyc
+*__pycache__*
+*.ckpt
+*.cpkt
+.vscode
+*.png
+*.jpg
+*.gml
+*.pckl
+*.csv
+my_cache/
+result/
+.DS_Store

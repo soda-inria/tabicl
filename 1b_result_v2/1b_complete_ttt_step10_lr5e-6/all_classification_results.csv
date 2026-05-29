@@ -1,0 +1,1384 @@
+dataset_name,dataset_dir,task_type,n_train,n_val,n_test,n_features,n_classes,accuracy,f1,fit_seconds,predict_seconds,status,error,aoc,aoc_metric,aoc_error,n_train_a,n_train_b,n_holdout_c,n_test_d,ttt_loss,ttt_steps,ttt_lr,ttt_applied,ttt_update_seconds,ttt_split_strategy,ttt_split_reason,ttt_val_baseline_accuracy,ttt_val_best_accuracy,ttt_best_step,ttt_fallback_applied,ttt_fallback_reason
+ASP-POTASSCO-classification,/home/crc00006699/zh/tabiclv2/data178/ASP-POTASSCO-classification,multiclass,1035,207,259,141,11,0.4903474903474903,0.4709621259507563,1.4911885261535645,4.051558971405029,ok,,1.503941898782927,log_loss,,1035,621,207,259,,0,5e-06,False,0.8571953773498535,stratified,stratified split | validation=dataset_val_split | TTT training skipped because n_classes=11 exceeds model max_classes=10,,,0,False,
+Amazon_employee_access,/home/crc00006699/zh/tabiclv2/data178/Amazon_employee_access,binclass,26215,5243,6554,7,2,0.9447665547757096,0.9302484636824632,517.1000747680664,12.815906524658203,ok,,0.1650700223259589,1_minus_roc_auc,,26215,15729,5243,6554,0.1680791983380913,10,5e-06,True,516.8559532165527,stratified,stratified split | validation=dataset_val_split,0.9488842265878314,0.949074957085638,1,False,
+BLE_RSSI_dataset_for_Indoor_localization,/home/crc00006699/zh/tabiclv2/data178/BLE_RSSI_dataset_for_Indoor_localization,multiclass,7987,1598,1997,3,3,0.7401101652478718,0.7397162887167176,49.704674243927,1.4205172061920166,ok,,0.5722697342102743,log_loss,,7987,4791,1598,1997,0.5783083513379097,10,5e-06,True,49.66637134552002,stratified,stratified split | validation=dataset_val_split,0.7509386733416771,0.7609511889862328,9,False,
+BNG(breast-w),/home/crc00006699/zh/tabiclv2/data178/BNG(breast-w),binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 345, in _train_forward
+    return self.icl_predictor(representations, y_train=y_train)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 537, in forward
+    out = self._icl_predictions(R, y_train)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 270, in _icl_predictions
+    src = self.tf_icl(R, train_size=train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 143, in forward
+    out = block(q=out, train_size=train_size, rope=self.rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 293, in multi_head_attention_forward
+    attn_output = F.linear(attn_output, out_proj_weight, out_proj_bias)  # (batch_shape, tgt_len, E)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 50.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 48.00 MiB is free. Process 54622 has 23.52 GiB memory in use. Of the allocated memory 22.60 GiB is allocated by PyTorch, and 514.55 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+BNG(cmc),/home/crc00006699/zh/tabiclv2/data178/BNG(cmc),multiclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 345, in _train_forward
+    return self.icl_predictor(representations, y_train=y_train)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 537, in forward
+    out = self._icl_predictions(R, y_train)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 270, in _icl_predictions
+    src = self.tf_icl(R, train_size=train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 143, in forward
+    out = block(q=out, train_size=train_size, rope=self.rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 96, in sdpa_with_flattened_batch
+    q = ssmax_layer(q, src_len)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/ssmax.py"", line 197, in forward
+    return q * scales
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 70.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 2.00 MiB is free. Process 54622 has 23.56 GiB memory in use. Of the allocated memory 22.68 GiB is allocated by PyTorch, and 481.52 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+BNG(tic-tac-toe),/home/crc00006699/zh/tabiclv2/data178/BNG(tic-tac-toe),binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 345, in _train_forward
+    return self.icl_predictor(representations, y_train=y_train)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 537, in forward
+    out = self._icl_predictions(R, y_train)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 270, in _icl_predictions
+    src = self.tf_icl(R, train_size=train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 143, in forward
+    out = block(q=out, train_size=train_size, rope=self.rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 293, in multi_head_attention_forward
+    attn_output = F.linear(attn_output, out_proj_weight, out_proj_bias)  # (batch_shape, tgt_len, E)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 50.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 48.00 MiB is free. Process 54622 has 23.52 GiB memory in use. Of the allocated memory 22.60 GiB is allocated by PyTorch, and 514.55 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+Bank_Customer_Churn_Dataset,/home/crc00006699/zh/tabiclv2/data178/Bank_Customer_Churn_Dataset,binclass,8000,1600,2000,10,2,0.8745,0.8645747452614437,99.6754195690155,2.821082592010498,ok,,0.1132496132496133,1_minus_roc_auc,,8000,4800,1600,2000,0.3227718137204647,10,5e-06,True,99.58312702178956,stratified,stratified split | validation=dataset_val_split,0.865,0.86875,8,False,
+Basketball_c,/home/crc00006699/zh/tabiclv2/data178/Basketball_c,binclass,1072,215,268,11,2,0.7164179104477612,0.7139667807421477,21.43557620048523,0.3618049621582031,ok,,0.2585931963146705,1_minus_roc_auc,,1072,642,215,268,0.5856941603124142,10,5e-06,True,21.4011971950531,stratified,stratified split | validation=dataset_val_split,0.7534883720930232,0.7674418604651163,7,False,
+California-Housing-Classification,/home/crc00006699/zh/tabiclv2/data178/California-Housing-Classification,binclass,16512,3303,4128,8,2,0.9241763565891472,0.9241757202855286,282.7756006717682,7.208560228347778,ok,,0.0200781907445726,1_minus_roc_auc,,16512,9906,3303,4128,0.1925074127502739,10,5e-06,True,282.6341760158539,stratified,stratified split | validation=dataset_val_split,0.916439600363306,0.9212836815016652,10,False,
+Cardiovascular-Disease-dataset,/home/crc00006699/zh/tabiclv2/data178/Cardiovascular-Disease-dataset,binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 334, in _train_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 269, in forward
+    representations = self._train_forward(embeddings, d)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 204, in _train_forward
+    representations = self._aggregate_embeddings(embeddings, key_mask)  # (B, T, C*E)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 147, in _aggregate_embeddings
+    embeddings = block(embeddings, key_padding_mask=key_mask, rope=rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 470, in forward
+    x = x + self._ff_block(self.norm2(x))
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/normalization.py"", line 217, in forward
+    return F.layer_norm(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/functional.py"", line 2910, in layer_norm
+    return torch.layer_norm(
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 330.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 128.00 MiB is free. Process 54622 has 23.44 GiB memory in use. Of the allocated memory 21.92 GiB is allocated by PyTorch, and 1.04 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+Click_prediction_small,/home/crc00006699/zh/tabiclv2/data178/Click_prediction_small,binclass,31958,6392,7990,3,2,0.8332916145181477,0.7619843438193797,306.87432384490967,7.224851846694946,ok,,0.3828639029460939,1_minus_roc_auc,,31958,19174,6392,7990,0.4380472674965858,10,5e-06,True,306.7766683101654,stratified,stratified split | validation=dataset_val_split,0.8322903629536921,0.833072590738423,7,False,
+Credit_c,/home/crc00006699/zh/tabiclv2/data178/Credit_c,multiclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 335, in _train_forward
+    self.col_embedder(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 728, in forward
+    embeddings = self._train_forward(X, y_train, d, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 458, in _train_forward
+    return self._train_forward_with_feature_group(X, y_train, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 474, in _train_forward_with_feature_group
+    embeddings = self._compute_embeddings(features, train_size, y_train, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 388, in _compute_embeddings
+    src = self.tf_col(src, train_size=None if embed_with_test else train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 331, in forward
+    out = block(out, train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 679, in forward
+    out = self.induced_attention(src, train_size)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 647, in induced_attention
+    out = self.multihead_attn2(src, hidden, hidden)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 470, in forward
+    x = x + self._ff_block(self.norm2(x))
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 522, in _ff_block
+    x = self.linear2(self.dropout(self.activation(self.linear1(x))))
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/linear.py"", line 125, in forward
+    return F.linear(input, self.weight, self.bias)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 814.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 4.00 MiB is free. Process 54622 has 23.56 GiB memory in use. Of the allocated memory 22.52 GiB is allocated by PyTorch, and 571.47 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+Customer_Personality_Analysis,/home/crc00006699/zh/tabiclv2/data178/Customer_Personality_Analysis,binclass,1792,359,448,24,2,0.890625,0.8819285508425728,28.3414044380188,0.7635424137115479,ok,,0.0867512829553022,1_minus_roc_auc,,1792,1074,359,448,0.1949501154012978,10,5e-06,True,28.275015592575077,stratified,stratified split | validation=dataset_val_split,0.8885793871866295,0.8885793871866295,0,True,validation_best_is_step0_original_weights
+Diabetic_Retinopathy_Debrecen,/home/crc00006699/zh/tabiclv2/data178/Diabetic_Retinopathy_Debrecen,binclass,920,184,231,19,2,0.7402597402597403,0.739887282528792,21.985068321228027,0.8708634376525879,ok,,0.161547726588377,1_minus_roc_auc,,920,552,184,231,0.4236112255603075,10,5e-06,True,21.939886808395386,stratified,stratified split | validation=dataset_val_split,0.75,0.75,0,True,validation_best_is_step0_original_weights
+E-CommereShippingData,/home/crc00006699/zh/tabiclv2/data178/E-CommereShippingData,binclass,8799,1760,2200,10,2,0.6772727272727272,0.6650804852197916,112.34588694572447,3.177142143249512,ok,,0.2790480418261235,1_minus_roc_auc,,8799,5279,1760,2200,0.4932798976078629,10,5e-06,True,112.2509241104126,stratified,stratified split | validation=dataset_val_split,0.6840909090909091,0.6863636363636364,2,False,
+Employee,/home/crc00006699/zh/tabiclv2/data178/Employee,binclass,3722,745,931,8,2,0.8592910848549946,0.8536558726848849,38.72046995162964,1.094207763671875,ok,,0.1215885842880523,1_minus_roc_auc,,3722,2232,745,931,0.3302483391016722,10,5e-06,True,38.67008566856384,stratified,stratified split | validation=dataset_val_split,0.8523489932885906,0.8577181208053691,3,False,
+FICO-HELOC-cleaned,/home/crc00006699/zh/tabiclv2/data178/FICO-HELOC-cleaned,binclass,7896,1580,1975,23,2,0.7498734177215189,0.7497588595791768,119.0690667629242,3.507084608078003,ok,,0.1750803273906128,1_minus_roc_auc,,7896,4737,1579,1975,0.5108415577560663,10,5e-06,True,118.898047208786,stratified,stratified split | validation=dataset_val_split,0.7493670886075949,0.7518987341772152,9,False,
+FOREX_audcad-day-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audcad-day-High,binclass,1467,294,367,10,2,0.7574931880108992,0.7572659950840508,21.377569437026978,0.4796168804168701,ok,,0.1685825461890335,1_minus_roc_auc,,1467,879,294,367,0.519667474552989,10,5e-06,True,21.343448162078857,stratified,stratified split | validation=dataset_val_split,0.7142857142857143,0.7278911564625851,8,False,
+FOREX_audcad-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audcad-hour-High,binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 345, in _train_forward
+    return self.icl_predictor(representations, y_train=y_train)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 537, in forward
+    out = self._icl_predictions(R, y_train)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 270, in _icl_predictions
+    src = self.tf_icl(R, train_size=train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 143, in forward
+    out = block(q=out, train_size=train_size, rope=self.rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 470, in forward
+    x = x + self._ff_block(self.norm2(x))
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 56.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 30.00 MiB is free. Process 54622 has 23.53 GiB memory in use. Of the allocated memory 22.55 GiB is allocated by PyTorch, and 519.70 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+FOREX_audchf-day-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audchf-day-High,binclass,1466,294,367,10,2,0.7493188010899182,0.7493076338946711,22.16935634613037,0.4735527038574219,ok,,0.1661765579516426,1_minus_roc_auc,,1466,879,293,367,0.5241667423397303,10,5e-06,True,22.1324679851532,stratified,stratified split | validation=dataset_val_split,0.7142857142857143,0.7244897959183674,6,False,
+FOREX_audjpy-day-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audjpy-day-High,binclass,1465,293,367,10,2,0.7874659400544959,0.7871334795888758,21.187605142593384,0.4627218246459961,ok,,0.1440312704357648,1_minus_roc_auc,,1465,879,293,367,0.4960989877581596,10,5e-06,True,21.155580520629883,stratified,stratified split | validation=dataset_val_split,0.7542662116040956,0.7542662116040956,0,True,validation_best_is_step0_original_weights
+FOREX_audjpy-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audjpy-hour-High,binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 345, in _train_forward
+    return self.icl_predictor(representations, y_train=y_train)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 537, in forward
+    out = self._icl_predictions(R, y_train)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 270, in _icl_predictions
+    src = self.tf_icl(R, train_size=train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 143, in forward
+    out = block(q=out, train_size=train_size, rope=self.rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 470, in forward
+    x = x + self._ff_block(self.norm2(x))
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 56.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 30.00 MiB is free. Process 54622 has 23.53 GiB memory in use. Of the allocated memory 22.55 GiB is allocated by PyTorch, and 519.70 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+FOREX_audsgd-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audsgd-hour-High,binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 345, in _train_forward
+    return self.icl_predictor(representations, y_train=y_train)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 537, in forward
+    out = self._icl_predictions(R, y_train)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 270, in _icl_predictions
+    src = self.tf_icl(R, train_size=train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 143, in forward
+    out = block(q=out, train_size=train_size, rope=self.rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 470, in forward
+    x = x + self._ff_block(self.norm2(x))
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 56.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 30.00 MiB is free. Process 54622 has 23.53 GiB memory in use. Of the allocated memory 22.55 GiB is allocated by PyTorch, and 519.70 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+FOREX_audusd-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audusd-hour-High,binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 345, in _train_forward
+    return self.icl_predictor(representations, y_train=y_train)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 537, in forward
+    out = self._icl_predictions(R, y_train)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 270, in _icl_predictions
+    src = self.tf_icl(R, train_size=train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 143, in forward
+    out = block(q=out, train_size=train_size, rope=self.rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 470, in forward
+    x = x + self._ff_block(self.norm2(x))
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 56.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 30.00 MiB is free. Process 54622 has 23.53 GiB memory in use. Of the allocated memory 22.55 GiB is allocated by PyTorch, and 519.70 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+FOREX_cadjpy-day-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_cadjpy-day-High,binclass,1467,294,367,10,2,0.7220708446866485,0.7220089285497493,22.431259393692017,0.4966707229614258,ok,,0.2096400570206699,1_minus_roc_auc,,1467,879,294,367,0.5413305275142193,10,5e-06,True,22.397505283355716,stratified,stratified split | validation=dataset_val_split,0.7006802721088435,0.7278911564625851,5,False,
+FOREX_cadjpy-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_cadjpy-hour-High,binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 345, in _train_forward
+    return self.icl_predictor(representations, y_train=y_train)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 537, in forward
+    out = self._icl_predictions(R, y_train)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 270, in _icl_predictions
+    src = self.tf_icl(R, train_size=train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 143, in forward
+    out = block(q=out, train_size=train_size, rope=self.rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 470, in forward
+    x = x + self._ff_block(self.norm2(x))
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 56.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 30.00 MiB is free. Process 54622 has 23.53 GiB memory in use. Of the allocated memory 22.55 GiB is allocated by PyTorch, and 519.70 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+Firm-Teacher_Clave-Direction_Classification,/home/crc00006699/zh/tabiclv2/data178/Firm-Teacher_Clave-Direction_Classification,multiclass,8640,1728,2160,16,4,0.8782407407407408,0.8773972018797156,120.23644089698792,3.516226530075073,ok,,0.3127719664453889,log_loss,,8640,5184,1728,2160,0.3250333601608872,10,5e-06,True,120.0655529499054,stratified,stratified split | validation=dataset_val_split,0.8663194444444444,0.8680555555555556,3,False,
+Fitness_Club_c,/home/crc00006699/zh/tabiclv2/data178/Fitness_Club_c,binclass,1200,240,300,6,2,0.8033333333333333,0.7961465279630122,16.197181701660156,0.2862107753753662,ok,,0.1772438088227562,1_minus_roc_auc,,1200,720,240,300,0.4924165345728397,10,5e-06,True,16.166110277175903,stratified,stratified split | validation=dataset_val_split,0.7666666666666667,0.775,3,False,
+GAMETES_Epistasis_2-Way_20atts_0.1H_EDM-1_1,/home/crc00006699/zh/tabiclv2/data178/GAMETES_Epistasis_2-Way_20atts_0.1H_EDM-1_1,binclass,1280,256,320,20,2,0.675,0.6693032314479908,22.98759698867798,0.5411131381988525,ok,,0.2618359375,1_minus_roc_auc,,1280,768,256,320,0.5958060938864946,10,5e-06,True,22.925137758255005,stratified,stratified split | validation=dataset_val_split,0.6484375,0.65625,3,False,
+GAMETES_Heterogeneity_20atts_1600_Het_0.4_0.2_50_EDM-2_001,/home/crc00006699/zh/tabiclv2/data178/GAMETES_Heterogeneity_20atts_1600_Het_0.4_0.2_50_EDM-2_001,binclass,1280,256,320,20,2,0.68125,0.6810506566604128,23.046791553497314,0.5788073539733887,ok,,0.2394140625,1_minus_roc_auc,,1280,768,256,320,0.4411876415833831,10,5e-06,True,22.9855432510376,stratified,stratified split | validation=dataset_val_split,0.66796875,0.671875,1,False,
+Gender_Gap_in_Spanish_WP,/home/crc00006699/zh/tabiclv2/data178/Gender_Gap_in_Spanish_WP,multiclass,3796,760,950,13,3,0.6094736842105263,0.5709963187859807,42.96813678741455,1.2790861129760742,ok,,0.7911411428612779,log_loss,,3796,2277,759,950,0.7914032433182001,10,5e-06,True,42.91449022293091,stratified,stratified split | validation=dataset_val_split,0.6157894736842106,0.6223684210526316,10,False,
+GesturePhaseSegmentationProcessed,/home/crc00006699/zh/tabiclv2/data178/GesturePhaseSegmentationProcessed,multiclass,7898,1580,1975,32,5,0.8379746835443038,0.8372980914360075,135.52913188934326,4.056602954864502,ok,,0.4422491597266621,log_loss,,7898,4738,1580,1975,0.6139635052531958,10,5e-06,True,135.31205296516418,stratified,stratified split | validation=dataset_val_split,0.790506329113924,0.8050632911392405,9,False,
+HR_Analytics_Job_Change_of_Data_Scientists,/home/crc00006699/zh/tabiclv2/data178/HR_Analytics_Job_Change_of_Data_Scientists,binclass,15326,3066,3832,13,2,0.7995824634655533,0.8018910995658529,267.3041763305664,7.003350734710693,ok,,0.1883934144605983,1_minus_roc_auc,,15326,9195,3065,3832,0.4240371957421303,10,5e-06,True,267.08015298843384,stratified,stratified split | validation=dataset_val_split,0.8062622309197651,0.806914546640574,1,False,
+IBM_HR_Analytics_Employee_Attrition_and_Performance,/home/crc00006699/zh/tabiclv2/data178/IBM_HR_Analytics_Employee_Attrition_and_Performance,binclass,1176,236,294,31,2,0.8809523809523809,0.869791004820359,26.42425775527954,0.6051294803619385,ok,,0.1656473425790334,1_minus_roc_auc,,1176,705,235,294,0.303083635866642,10,5e-06,True,26.352722883224487,stratified,stratified split | validation=dataset_val_split,0.9110169491525424,0.9194915254237288,3,False,
+INNHotelsGroup,/home/crc00006699/zh/tabiclv2/data178/INNHotelsGroup,binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 345, in _train_forward
+    return self.icl_predictor(representations, y_train=y_train)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 537, in forward
+    out = self._icl_predictions(R, y_train)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 270, in _icl_predictions
+    src = self.tf_icl(R, train_size=train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 143, in forward
+    out = block(q=out, train_size=train_size, rope=self.rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 293, in multi_head_attention_forward
+    attn_output = F.linear(attn_output, out_proj_weight, out_proj_bias)  # (batch_shape, tgt_len, E)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 46.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 16.00 MiB is free. Process 54622 has 23.55 GiB memory in use. Of the allocated memory 22.77 GiB is allocated by PyTorch, and 309.01 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+Indian_pines,/home/crc00006699/zh/tabiclv2/data178/Indian_pines,multiclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 335, in _train_forward
+    self.col_embedder(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 728, in forward
+    embeddings = self._train_forward(X, y_train, d, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 458, in _train_forward
+    return self._train_forward_with_feature_group(X, y_train, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 474, in _train_forward_with_feature_group
+    embeddings = self._compute_embeddings(features, train_size, y_train, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 388, in _compute_embeddings
+    src = self.tf_col(src, train_size=None if embed_with_test else train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 331, in forward
+    out = block(out, train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 679, in forward
+    out = self.induced_attention(src, train_size)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 647, in induced_attention
+    out = self.multihead_attn2(src, hidden, hidden)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 293, in multi_head_attention_forward
+    attn_output = F.linear(attn_output, out_proj_weight, out_proj_bias)  # (batch_shape, tgt_len, E)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 642.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 400.00 MiB is free. Process 54622 has 23.17 GiB memory in use. Of the allocated memory 22.59 GiB is allocated by PyTorch, and 105.83 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+JapaneseVowels,/home/crc00006699/zh/tabiclv2/data178/JapaneseVowels,multiclass,7968,1594,1993,14,9,0.9994982438534872,0.999498083906782,104.69596934318542,3.047635555267334,ok,,0.0009732406068493,log_loss,,7968,4780,1594,1993,0.002544951501477,10,5e-06,True,104.59066557884216,stratified,stratified split | validation=dataset_val_split,0.9968632371392724,0.9968632371392724,0,True,validation_best_is_step0_original_weights
+KDDCup09_upselling,/home/crc00006699/zh/tabiclv2/data178/KDDCup09_upselling,binclass,4102,821,1026,49,2,0.8109161793372319,0.8091752055466928,77.22496247291565,2.547783374786377,ok,,0.088640759359955,1_minus_roc_auc,,4102,2460,821,1026,0.3510177424177527,10,5e-06,True,77.01468467712402,stratified,stratified split | validation=dataset_val_split,0.8136419001218027,0.8136419001218027,0,True,validation_best_is_step0_original_weights
+MIC,/home/crc00006699/zh/tabiclv2/data178/MIC,binclass,1319,264,330,104,2,0.906060606060606,0.8968551692194965,48.82031464576721,1.5201921463012695,ok,,0.1172956637852273,1_minus_roc_auc,,1319,791,264,330,0.2345912051387131,10,5e-06,True,48.55235743522644,stratified,stratified split | validation=dataset_val_split,0.8712121212121212,0.875,5,False,
+MagicTelescope,/home/crc00006699/zh/tabiclv2/data178/MagicTelescope,binclass,15216,3044,3804,9,2,0.8945846477392219,0.8928274323940918,246.53601264953613,6.5200605392456055,ok,,0.0518637930261117,1_minus_roc_auc,,15216,9129,3043,3804,0.2611319730058312,10,5e-06,True,246.40102982521057,stratified,stratified split | validation=dataset_val_split,0.8827201051248358,0.8860052562417872,9,False,
+Marketing_Campaign,/home/crc00006699/zh/tabiclv2/data178/Marketing_Campaign,binclass,1792,359,448,27,2,0.8816964285714286,0.8722900651970686,28.275306940078732,0.7809100151062012,ok,,0.0754103498256748,1_minus_roc_auc,,1792,1074,359,448,0.2161616715602576,10,5e-06,True,28.201640129089355,stratified,stratified split | validation=dataset_val_split,0.9108635097493036,0.913649025069638,3,False,
+Mobile_Price_Classification,/home/crc00006699/zh/tabiclv2/data178/Mobile_Price_Classification,multiclass,1600,320,400,20,4,0.9725,0.9725189988796162,24.78985357284546,0.6501109600067139,ok,,0.0655293362784976,log_loss,,1600,960,320,400,0.0690359089057892,10,5e-06,True,24.733837842941284,stratified,stratified split | validation=dataset_val_split,0.965625,0.975,8,False,
+National_Health_and_Nutrition_Health_Survey,/home/crc00006699/zh/tabiclv2/data178/National_Health_and_Nutrition_Health_Survey,binclass,1822,365,456,7,2,0.8355263157894737,0.7939819565456238,19.504937171936035,0.477867841720581,ok,,0.2262241138810401,1_minus_roc_auc,,1822,1092,365,456,0.3435844164341688,10,5e-06,True,19.470759630203247,stratified,stratified split | validation=dataset_val_split,0.8547945205479452,0.8575342465753425,5,False,
+PhishingWebsites,/home/crc00006699/zh/tabiclv2/data178/PhishingWebsites,binclass,8844,1769,2211,30,2,0.9796472184531886,0.9796279672375264,154.38703203201294,4.5331642627716064,ok,,0.0012309554203484,1_minus_roc_auc,,8844,5306,1769,2211,0.0502673191949725,10,5e-06,True,154.09714794158936,stratified,stratified split | validation=dataset_val_split,0.9768230638778972,0.9790842283776144,2,False,
+PieChart3,/home/crc00006699/zh/tabiclv2/data178/PieChart3,binclass,861,173,216,37,2,0.8842592592592593,0.8504784688995214,24.667295932769772,1.1408016681671145,ok,,0.1254164217127179,1_minus_roc_auc,,861,516,172,216,0.2727717543020844,10,5e-06,True,24.59846305847168,stratified,stratified split | validation=dataset_val_split,0.8728323699421965,0.8728323699421965,0,True,validation_best_is_step0_original_weights
+Pima_Indians_Diabetes_Database,/home/crc00006699/zh/tabiclv2/data178/Pima_Indians_Diabetes_Database,binclass,614,123,154,8,2,0.7337662337662337,0.7236747438378277,19.486200094223022,0.429328441619873,ok,,0.1418518518518519,1_minus_roc_auc,,614,368,123,154,0.4677376383915543,10,5e-06,True,19.45960640907288,stratified,stratified split | validation=dataset_val_split,0.7723577235772358,0.7886178861788617,5,False,
+PizzaCutter3,/home/crc00006699/zh/tabiclv2/data178/PizzaCutter3,binclass,834,167,209,37,2,0.8851674641148325,0.8432935485567066,24.080169916152958,1.1428327560424805,ok,,0.106304347826087,1_minus_roc_auc,,834,500,167,209,0.307454764842987,10,5e-06,True,24.010347604751587,stratified,stratified split | validation=dataset_val_split,0.8922155688622755,0.8922155688622755,0,True,validation_best_is_step0_original_weights
+Pumpkin_Seeds,/home/crc00006699/zh/tabiclv2/data178/Pumpkin_Seeds,binclass,2000,400,500,12,2,0.882,0.8818763921833047,24.65966296195984,0.692166805267334,ok,,0.0519711538461538,1_minus_roc_auc,,2000,1200,400,500,0.2304377378895878,10,5e-06,True,24.61998057365417,stratified,stratified split | validation=dataset_val_split,0.87,0.87,0,True,validation_best_is_step0_original_weights
+QSAR_biodegradation,/home/crc00006699/zh/tabiclv2/data178/QSAR_biodegradation,binclass,843,169,211,41,2,0.8815165876777251,0.8787814704760882,25.84818315505981,1.1886956691741943,ok,,0.0529175050301811,1_minus_roc_auc,,843,505,169,211,0.2246825089678168,10,5e-06,True,25.732534408569336,stratified,stratified split | validation=dataset_val_split,0.863905325443787,0.8698224852071006,9,False,
+Rain_in_Australia,/home/crc00006699/zh/tabiclv2/data178/Rain_in_Australia,multiclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 335, in _train_forward
+    self.col_embedder(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 728, in forward
+    embeddings = self._train_forward(X, y_train, d, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 458, in _train_forward
+    return self._train_forward_with_feature_group(X, y_train, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 474, in _train_forward_with_feature_group
+    embeddings = self._compute_embeddings(features, train_size, y_train, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 388, in _compute_embeddings
+    src = self.tf_col(src, train_size=None if embed_with_test else train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 331, in forward
+    out = block(out, train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 679, in forward
+    out = self.induced_attention(src, train_size)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 647, in induced_attention
+    out = self.multihead_attn2(src, hidden, hidden)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 293, in multi_head_attention_forward
+    attn_output = F.linear(attn_output, out_proj_weight, out_proj_bias)  # (batch_shape, tgt_len, E)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 1002.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 586.00 MiB is free. Process 54622 has 22.99 GiB memory in use. Of the allocated memory 20.81 GiB is allocated by PyTorch, and 1.70 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+SDSS17,/home/crc00006699/zh/tabiclv2/data178/SDSS17,multiclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 334, in _train_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 269, in forward
+    representations = self._train_forward(embeddings, d)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 204, in _train_forward
+    representations = self._aggregate_embeddings(embeddings, key_mask)  # (B, T, C*E)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 147, in _aggregate_embeddings
+    embeddings = block(embeddings, key_padding_mask=key_mask, rope=rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 233, in multi_head_attention_forward
+    q, k, v = F._in_projection_packed(query, key, value, in_proj_weight, in_proj_bias)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/functional.py"", line 5621, in _in_projection_packed
+    .contiguous()
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 1.38 GiB. GPU 0 has a total capacity of 23.57 GiB of which 584.00 MiB is free. Process 54622 has 22.99 GiB memory in use. Of the allocated memory 20.56 GiB is allocated by PyTorch, and 1.95 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+Satellite,/home/crc00006699/zh/tabiclv2/data178/Satellite,binclass,4080,816,1020,36,2,0.9931372549019608,0.9921048327071554,65.31079483032227,2.0944583415985107,ok,,0.0059701492537314,1_minus_roc_auc,,4080,2448,816,1020,0.0134603442857041,10,5e-06,True,65.17520952224731,stratified,stratified split | validation=dataset_val_split,0.9963235294117648,0.9975490196078431,9,False,
+Telecom_Churn_Dataset,/home/crc00006699/zh/tabiclv2/data178/Telecom_Churn_Dataset,binclass,2666,534,667,17,2,0.9610194902548724,0.9601297177498206,33.289182901382446,0.9916417598724364,ok,,0.0689274733224816,1_minus_roc_auc,,2666,1599,533,667,0.1320376419462263,10,5e-06,True,33.22659087181091,stratified,stratified split | validation=dataset_val_split,0.9644194756554308,0.9644194756554308,0,True,validation_best_is_step0_original_weights
+UJI_Pen_Characters,/home/crc00006699/zh/tabiclv2/data178/UJI_Pen_Characters,multiclass,1091,219,273,80,35,0.5384615384615384,0.5267602845208057,0.9042279720306396,3.5656726360321045,ok,,1.3751577156336197,log_loss,,1091,654,218,273,,0,5e-06,False,0.4479873180389404,stratified,stratified split | validation=dataset_val_split | TTT training skipped because n_classes=35 exceeds model max_classes=10,,,0,False,
+Water_Quality_and_Potability,/home/crc00006699/zh/tabiclv2/data178/Water_Quality_and_Potability,binclass,2620,524,656,8,2,0.6585365853658537,0.6115815532655821,28.388862133026123,0.7871842384338379,ok,,0.329345703125,1_minus_roc_auc,,2620,1572,524,656,0.6301038283854723,10,5e-06,True,28.35033130645752,stratified,stratified split | validation=dataset_val_split,0.6412213740458015,0.6469465648854962,6,False,
+Wilt,/home/crc00006699/zh/tabiclv2/data178/Wilt,binclass,3856,772,965,5,2,0.9927461139896372,0.9926443320683423,26.52010464668274,0.7103376388549805,ok,,0.0080988288819614,1_minus_roc_auc,,3856,2313,771,965,0.0218456700677052,10,5e-06,True,26.4840030670166,stratified,stratified split | validation=dataset_val_split,0.9870466321243524,0.9870466321243524,0,True,validation_best_is_step0_original_weights
+abalone,/home/crc00006699/zh/tabiclv2/data178/abalone,multiclass,3341,669,836,8,3,0.6399521531100478,0.6434301523934186,35.754658937454224,0.9695329666137696,ok,,0.7394075433806286,log_loss,,3341,2004,668,836,0.6397890169173479,10,5e-06,True,35.708327293396,stratified,stratified split | validation=dataset_val_split,0.6875934230194319,0.6875934230194319,0,True,validation_best_is_step0_original_weights
+accelerometer,/home/crc00006699/zh/tabiclv2/data178/accelerometer,multiclass,0,0,0,0,0,,,0.0,0.0,fail,"RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 334, in _train_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 269, in forward
+    representations = self._train_forward(embeddings, d)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 204, in _train_forward
+    representations = self._aggregate_embeddings(embeddings, key_mask)  # (B, T, C*E)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 147, in _aggregate_embeddings
+    embeddings = block(embeddings, key_padding_mask=key_mask, rope=rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 118, in sdpa_with_flattened_batch
+    out = F.scaled_dot_product_attention(q, k, v, attn_mask, dropout_p)
+RuntimeError: CUDA error: invalid configuration argument
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+ada,/home/crc00006699/zh/tabiclv2/data178/ada,binclass,3317,664,830,48,2,0.8626506024096385,0.858294838965102,60.80477499961853,2.0001535415649414,ok,,0.0812406646751308,1_minus_roc_auc,,3317,1989,664,830,0.2990019991993904,10,5e-06,True,60.6657989025116,stratified,stratified split | validation=dataset_val_split,0.8689759036144579,0.8704819277108434,1,False,
+ada_agnostic,/home/crc00006699/zh/tabiclv2/data178/ada_agnostic,binclass,3649,730,913,48,2,0.8422782037239869,0.8425089594574294,65.62723636627197,2.197108507156372,ok,,0.0915156496834102,1_minus_roc_auc,,3649,2189,730,913,0.3189274240285158,10,5e-06,True,65.48374271392822,stratified,stratified split | validation=dataset_val_split,0.8356164383561644,0.8547945205479452,2,False,
+ada_prior,/home/crc00006699/zh/tabiclv2/data178/ada_prior,binclass,3649,730,913,14,2,0.864184008762322,0.856379508454635,42.38741326332092,1.2490229606628418,ok,,0.0974493006768473,1_minus_roc_auc,,3649,2189,730,913,0.3091089883819222,10,5e-06,True,42.3149471282959,stratified,stratified split | validation=dataset_val_split,0.8342465753424657,0.8410958904109589,8,False,
+airlines_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True,/home/crc00006699/zh/tabiclv2/data178/airlines_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True,binclass,1600,320,400,7,2,0.6175,0.6001427792475311,19.012511014938354,0.4080426692962646,ok,,0.3224137058406722,1_minus_roc_auc,,1600,960,320,400,0.6481237970292568,10,5e-06,True,18.975080966949463,stratified,stratified split | validation=dataset_val_split,0.659375,0.671875,7,False,
+allbp,/home/crc00006699/zh/tabiclv2/data178/allbp,multiclass,3017,604,755,29,3,0.9774834437086092,0.9755789187451128,42.54162907600403,1.3406007289886477,ok,,0.058255023382215,log_loss,,3017,1809,604,755,0.0723626585677266,10,5e-06,True,42.430312156677246,stratified,stratified split | validation=dataset_val_split,0.9817880794701986,0.9850993377483444,7,False,
+allrep,/home/crc00006699/zh/tabiclv2/data178/allrep,multiclass,3017,604,755,29,4,0.9854304635761588,0.9849641051995724,43.37359023094177,1.323441743850708,ok,,0.0368722805252814,log_loss,,3017,1809,604,755,0.0354146969038993,10,5e-06,True,43.26362490653992,stratified,stratified split | validation=dataset_val_split,0.9867549668874172,0.98841059602649,3,False,
+analcatdata_authorship,/home/crc00006699/zh/tabiclv2/data178/analcatdata_authorship,multiclass,672,135,169,69,4,0.9940828402366864,0.9940804879569156,26.99903702735901,0.6959595680236816,ok,,0.0105286731713866,log_loss,,672,402,135,169,4.776865523581364e-05,10,5e-06,True,26.888880968093872,stratified,stratified split | validation=dataset_val_split,1.0,1.0,0,True,validation_best_is_step0_original_weights
+artificial-characters,/home/crc00006699/zh/tabiclv2/data178/artificial-characters,multiclass,8174,1635,2044,7,10,0.9584148727984344,0.9584348834630292,96.51636672019958,2.693509101867676,ok,,0.0922854301788049,log_loss,,8174,4904,1635,2044,0.2887245286256075,10,5e-06,True,96.44225215911864,stratified,stratified split | validation=dataset_val_split,0.8880733944954129,0.9314984709480122,10,False,
+autoUniv-au4-2500,/home/crc00006699/zh/tabiclv2/data178/autoUniv-au4-2500,multiclass,2000,400,500,100,3,0.722,0.692106209107847,63.96297907829285,2.0669867992401123,ok,,0.6610408388281187,log_loss,,2000,1200,400,500,0.703411165624857,10,5e-06,True,63.70314955711365,stratified,stratified split | validation=dataset_val_split,0.7075,0.735,9,False,
+autoUniv-au7-1100,/home/crc00006699/zh/tabiclv2/data178/autoUniv-au7-1100,multiclass,880,176,220,12,5,0.4090909090909091,0.3888925460387546,20.086060047149655,0.7054769992828369,ok,,1.3402214112576587,log_loss,,880,528,176,220,1.2157363072037697,10,5e-06,True,20.048077821731567,stratified,stratified split | validation=dataset_val_split,0.5227272727272727,0.5227272727272727,0,True,validation_best_is_step0_original_weights
+bank,/home/crc00006699/zh/tabiclv2/data178/bank,binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 345, in _train_forward
+    return self.icl_predictor(representations, y_train=y_train)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 537, in forward
+    out = self._icl_predictions(R, y_train)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 270, in _icl_predictions
+    src = self.tf_icl(R, train_size=train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 143, in forward
+    out = block(q=out, train_size=train_size, rope=self.rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 96, in sdpa_with_flattened_batch
+    q = ssmax_layer(q, src_len)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/ssmax.py"", line 190, in forward
+    modulation = 1 + torch.tanh(self.query_mlp(q))  # (bs, n_heads, seq_len, head_dim)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/container.py"", line 250, in forward
+    input = module(input)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/linear.py"", line 125, in forward
+    return F.linear(input, self.weight, self.bias)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 58.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 44.00 MiB is free. Process 54622 has 23.52 GiB memory in use. Of the allocated memory 22.84 GiB is allocated by PyTorch, and 207.83 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+banknote_authentication,/home/crc00006699/zh/tabiclv2/data178/banknote_authentication,binclass,1097,220,275,4,2,0.5454545454545454,0.4318360838867062,12.47539472579956,0.1448345184326172,ok,,0.4658469945355191,1_minus_roc_auc,,1097,657,220,275,0.6801325380802155,10,5e-06,True,12.452295064926147,stratified,stratified split | validation=dataset_val_split,0.5772727272727273,0.5863636363636363,1,False,
+baseball,/home/crc00006699/zh/tabiclv2/data178/baseball,multiclass,1072,215,268,16,3,0.9514925373134328,0.944561466859252,22.10545039176941,0.4327955245971679,ok,,0.1312495864440936,log_loss,,1072,642,215,268,0.15128373214975,10,5e-06,True,22.05961275100708,stratified,stratified split | validation=dataset_val_split,0.9534883720930232,0.958139534883721,6,False,
+car-evaluation,/home/crc00006699/zh/tabiclv2/data178/car-evaluation,multiclass,1382,277,346,21,4,0.9855491329479767,0.985510846572902,23.874670028686523,0.5899209976196289,ok,,0.0207231748063843,log_loss,,1382,828,277,346,0.0148959573416505,10,5e-06,True,23.80808997154236,stratified,stratified split | validation=dataset_val_split,0.9855595667870036,0.9891696750902528,2,False,
+churn,/home/crc00006699/zh/tabiclv2/data178/churn,binclass,4000,800,1000,20,2,0.967,0.9656316025636732,50.73047518730164,1.5357372760772705,ok,,0.0682386743615783,1_minus_roc_auc,,4000,2400,800,1000,0.1395988832227885,10,5e-06,True,50.64044880867005,stratified,stratified split | validation=dataset_val_split,0.975,0.97625,5,False,
+cmc,/home/crc00006699/zh/tabiclv2/data178/cmc,multiclass,1178,236,295,9,3,0.6033898305084746,0.603394360896538,21.0962438583374,0.3993277549743652,ok,,0.8665615793431031,log_loss,,1178,706,236,295,0.886894503608346,10,5e-06,True,21.060028076171875,stratified,stratified split | validation=dataset_val_split,0.5466101694915254,0.5466101694915254,0,True,validation_best_is_step0_original_weights
+company_bankruptcy_prediction,/home/crc00006699/zh/tabiclv2/data178/company_bankruptcy_prediction,binclass,5455,1091,1364,95,2,0.969208211143695,0.9653535279982522,164.1858184337616,6.22628664970398,ok,,0.0348398760330578,1_minus_roc_auc,,5455,3273,1091,1364,0.0776608367450535,10,5e-06,True,163.75353813171387,stratified,stratified split | validation=dataset_val_split,0.9697525206232814,0.9706691109074244,1,False,
+compass,/home/crc00006699/zh/tabiclv2/data178/compass,binclass,13315,2663,3329,17,2,0.8756383298287774,0.8756304516716756,224.59931206703183,6.068325519561768,ok,,0.0550399558212059,1_minus_roc_auc,,13315,7989,2663,3329,0.3839358165860176,10,5e-06,True,224.38079380989075,stratified,stratified split | validation=dataset_val_split,0.8062335711603454,0.8516710476905746,10,False,
+contraceptive_method_choice,/home/crc00006699/zh/tabiclv2/data178/contraceptive_method_choice,multiclass,1178,236,295,9,3,0.6237288135593221,0.6217411695708778,21.60992693901062,0.4047379493713379,ok,,0.8223963543796975,log_loss,,1178,706,236,295,0.8704236689954996,10,5e-06,True,21.574673414230347,stratified,stratified split | validation=dataset_val_split,0.538135593220339,0.5423728813559322,3,False,
+credit,/home/crc00006699/zh/tabiclv2/data178/credit,binclass,13371,2675,3343,10,2,0.7858211187556088,0.7858190106067197,207.20197439193728,5.504409313201904,ok,,0.1348646628812932,1_minus_roc_auc,,13371,8022,2674,3343,0.4562304336577654,10,5e-06,True,207.0716733932495,stratified,stratified split | validation=dataset_val_split,0.7794392523364486,0.782429906542056,9,False,
+customer_satisfaction_in_airline,/home/crc00006699/zh/tabiclv2/data178/customer_satisfaction_in_airline,binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 335, in _train_forward
+    self.col_embedder(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 728, in forward
+    embeddings = self._train_forward(X, y_train, d, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 458, in _train_forward
+    return self._train_forward_with_feature_group(X, y_train, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 474, in _train_forward_with_feature_group
+    embeddings = self._compute_embeddings(features, train_size, y_train, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 388, in _compute_embeddings
+    src = self.tf_col(src, train_size=None if embed_with_test else train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 331, in forward
+    out = block(out, train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 679, in forward
+    out = self.induced_attention(src, train_size)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 647, in induced_attention
+    out = self.multihead_attn2(src, hidden, hidden)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 469, in forward
+    x = q + attn
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 1016.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 70.00 MiB is free. Process 54622 has 23.49 GiB memory in use. Of the allocated memory 22.11 GiB is allocated by PyTorch, and 929.21 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+dabetes_130-us_hospitals,/home/crc00006699/zh/tabiclv2/data178/dabetes_130-us_hospitals,binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 335, in _train_forward
+    self.col_embedder(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 728, in forward
+    embeddings = self._train_forward(X, y_train, d, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 458, in _train_forward
+    return self._train_forward_with_feature_group(X, y_train, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 474, in _train_forward_with_feature_group
+    embeddings = self._compute_embeddings(features, train_size, y_train, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 388, in _compute_embeddings
+    src = self.tf_col(src, train_size=None if embed_with_test else train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 331, in forward
+    out = block(out, train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 679, in forward
+    out = self.induced_attention(src, train_size)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 647, in induced_attention
+    out = self.multihead_attn2(src, hidden, hidden)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 470, in forward
+    x = x + self._ff_block(self.norm2(x))
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 764.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 546.00 MiB is free. Process 54622 has 23.03 GiB memory in use. Of the allocated memory 21.92 GiB is allocated by PyTorch, and 650.78 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+default_of_credit_card_clients,/home/crc00006699/zh/tabiclv2/data178/default_of_credit_card_clients,binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 345, in _train_forward
+    return self.icl_predictor(representations, y_train=y_train)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 537, in forward
+    out = self._icl_predictions(R, y_train)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 270, in _icl_predictions
+    src = self.tf_icl(R, train_size=train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 143, in forward
+    out = block(q=out, train_size=train_size, rope=self.rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 233, in multi_head_attention_forward
+    q, k, v = F._in_projection_packed(query, key, value, in_proj_weight, in_proj_bias)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/functional.py"", line 5639, in _in_projection_packed
+    .contiguous()
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 58.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 6.00 MiB is free. Process 54622 has 23.56 GiB memory in use. Of the allocated memory 22.88 GiB is allocated by PyTorch, and 202.23 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+delta_ailerons,/home/crc00006699/zh/tabiclv2/data178/delta_ailerons,binclass,5703,1141,1426,5,2,0.953015427769986,0.953028571020914,41.676798820495605,1.0694611072540283,ok,,0.0176370813118419,1_minus_roc_auc,,5703,3421,1141,1426,0.1467281687073409,10,5e-06,True,41.63297176361084,stratified,stratified split | validation=dataset_val_split,0.9430324276950044,0.9430324276950044,0,True,validation_best_is_step0_original_weights
+dis,/home/crc00006699/zh/tabiclv2/data178/dis,binclass,3017,604,755,29,2,0.9894039735099338,0.9883585937152762,43.44247102737427,1.3248279094696045,ok,,0.0076267384477343,1_minus_roc_auc,,3017,1809,604,755,0.0236429384676739,10,5e-06,True,43.33046340942383,stratified,stratified split | validation=dataset_val_split,0.9850993377483444,0.9900662251655628,10,False,
+dna,/home/crc00006699/zh/tabiclv2/data178/dna,multiclass,2548,510,638,180,3,0.9717868338557992,0.9719225529564052,128.69599056243896,5.539326190948486,ok,,0.078726645084531,log_loss,,2548,1528,510,638,0.0779931105207651,10,5e-06,True,128.07763743400574,stratified,stratified split | validation=dataset_val_split,0.976470588235294,0.976470588235294,0,True,validation_best_is_step0_original_weights
+drug_consumption,/home/crc00006699/zh/tabiclv2/data178/drug_consumption,multiclass,1507,302,377,12,7,0.403183023872679,0.2316968605998004,22.17985725402832,0.5287513732910156,ok,,1.5125163592279736,log_loss,,1507,903,302,377,1.503239955753088,10,5e-06,True,22.13970637321472,stratified,stratified split | validation=dataset_val_split,0.4039735099337748,0.4039735099337748,0,True,validation_best_is_step0_original_weights
+dry_bean_dataset,/home/crc00006699/zh/tabiclv2/data178/dry_bean_dataset,multiclass,10888,2178,2723,16,7,0.9287550495776716,0.928732548177597,167.04167127609253,4.660054683685303,ok,,0.1859349155547139,log_loss,,10888,6532,2178,2723,0.1593136615119874,10,5e-06,True,166.86233806610107,stratified,stratified split | validation=dataset_val_split,0.9325068870523416,0.9325068870523416,0,True,validation_best_is_step0_original_weights
+eeg-eye-state,/home/crc00006699/zh/tabiclv2/data178/eeg-eye-state,binclass,11984,2397,2996,14,2,0.9946595460614152,0.9946588003152972,185.79228734970093,5.078320503234863,ok,,7.74567176815566e-05,1_minus_roc_auc,,11984,7190,2397,2996,0.0163670786714646,10,5e-06,True,185.64034938812256,stratified,stratified split | validation=dataset_val_split,0.9929078014184396,0.9937421777221528,6,False,
+electricity,/home/crc00006699/zh/tabiclv2/data178/electricity,binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 345, in _train_forward
+    return self.icl_predictor(representations, y_train=y_train)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 537, in forward
+    out = self._icl_predictions(R, y_train)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 270, in _icl_predictions
+    src = self.tf_icl(R, train_size=train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 143, in forward
+    out = block(q=out, train_size=train_size, rope=self.rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 96, in sdpa_with_flattened_batch
+    q = ssmax_layer(q, src_len)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/ssmax.py"", line 190, in forward
+    modulation = 1 + torch.tanh(self.query_mlp(q))  # (bs, n_heads, seq_len, head_dim)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 58.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 2.00 MiB is free. Process 54622 has 23.56 GiB memory in use. Of the allocated memory 22.53 GiB is allocated by PyTorch, and 562.23 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+estimation_of_obesity_levels,/home/crc00006699/zh/tabiclv2/data178/estimation_of_obesity_levels,multiclass,1688,338,423,16,7,0.9881796690307328,0.9882174106878872,25.39497399330139,0.6488299369812012,ok,,0.0276745539459149,log_loss,,1688,1012,338,423,0.0119469024939462,10,5e-06,True,25.342400789260864,stratified,stratified split | validation=dataset_val_split,0.9822485207100592,0.985207100591716,7,False,
+eye_movements,/home/crc00006699/zh/tabiclv2/data178/eye_movements,multiclass,8748,1750,2188,27,3,0.8784277879341865,0.8783187420708592,142.84548783302307,4.247186899185181,ok,,0.3036030803992772,log_loss,,8748,5248,1750,2188,0.4568103896453976,10,5e-06,True,142.6041247844696,stratified,stratified split | validation=dataset_val_split,0.8154285714285714,0.856,10,False,
+eye_movements_bin,/home/crc00006699/zh/tabiclv2/data178/eye_movements_bin,binclass,6086,1218,1522,20,2,0.6944809461235217,0.6944776488597467,82.27353191375732,2.4904909133911133,ok,,0.2116233049742627,1_minus_roc_auc,,6086,3651,1217,1522,0.6008466985076666,10,5e-06,True,82.14418339729309,stratified,stratified split | validation=dataset_val_split,0.645320197044335,0.6855500821018062,7,False,
+first-order-theorem-proving,/home/crc00006699/zh/tabiclv2/data178/first-order-theorem-proving,multiclass,4894,979,1224,51,6,0.6462418300653595,0.6310820797391572,95.26109957695007,3.5619821548461914,ok,,1.0165624675481997,log_loss,,4894,2936,979,1224,1.0701869428157806,10,5e-06,True,95.03991150856018,stratified,stratified split | validation=dataset_val_split,0.6302349336057201,0.6332992849846782,6,False,
+gas-drift,/home/crc00006699/zh/tabiclv2/data178/gas-drift,multiclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 335, in _train_forward
+    self.col_embedder(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 728, in forward
+    embeddings = self._train_forward(X, y_train, d, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 458, in _train_forward
+    return self._train_forward_with_feature_group(X, y_train, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 474, in _train_forward_with_feature_group
+    embeddings = self._compute_embeddings(features, train_size, y_train, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 388, in _compute_embeddings
+    src = self.tf_col(src, train_size=None if embed_with_test else train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 331, in forward
+    out = block(out, train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 679, in forward
+    out = self.induced_attention(src, train_size)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 647, in induced_attention
+    out = self.multihead_attn2(src, hidden, hidden)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 470, in forward
+    x = x + self._ff_block(self.norm2(x))
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 522, in _ff_block
+    x = self.linear2(self.dropout(self.activation(self.linear1(x))))
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/linear.py"", line 125, in forward
+    return F.linear(input, self.weight, self.bias)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 1.12 GiB. GPU 0 has a total capacity of 23.57 GiB of which 830.00 MiB is free. Process 54622 has 22.75 GiB memory in use. Of the allocated memory 21.63 GiB is allocated by PyTorch, and 659.18 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+gina_agnostic,/home/crc00006699/zh/tabiclv2/data178/gina_agnostic,binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 335, in _train_forward
+    self.col_embedder(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 728, in forward
+    embeddings = self._train_forward(X, y_train, d, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 458, in _train_forward
+    return self._train_forward_with_feature_group(X, y_train, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 474, in _train_forward_with_feature_group
+    embeddings = self._compute_embeddings(features, train_size, y_train, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 388, in _compute_embeddings
+    src = self.tf_col(src, train_size=None if embed_with_test else train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 331, in forward
+    out = block(out, train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 679, in forward
+    out = self.induced_attention(src, train_size)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 647, in induced_attention
+    out = self.multihead_attn2(src, hidden, hidden)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 233, in multi_head_attention_forward
+    q, k, v = F._in_projection_packed(query, key, value, in_proj_weight, in_proj_bias)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/functional.py"", line 5631, in _in_projection_packed
+    q_proj = linear(q, w_q, b_q)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 1.03 GiB. GPU 0 has a total capacity of 23.57 GiB of which 224.00 MiB is free. Process 54622 has 23.34 GiB memory in use. Of the allocated memory 22.75 GiB is allocated by PyTorch, and 122.84 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+golf_play_dataset_extended,/home/crc00006699/zh/tabiclv2/data178/golf_play_dataset_extended,binclass,876,176,219,9,2,0.9452054794520548,0.9452054794520548,20.241681575775143,0.6522352695465088,ok,,0.0194772555918572,1_minus_roc_auc,,876,525,175,219,0.1096593600232154,10,5e-06,True,20.20835876464844,stratified,stratified split | validation=dataset_val_split,0.9204545454545454,0.9204545454545454,0,True,validation_best_is_step0_original_weights
+heloc,/home/crc00006699/zh/tabiclv2/data178/heloc,binclass,8000,1600,2000,22,2,0.733,0.732653518960573,118.76738214492798,3.531225204467773,ok,,0.1965974999999998,1_minus_roc_auc,,8000,4800,1600,2000,0.5194178596138954,10,5e-06,True,118.61176037788393,stratified,stratified split | validation=dataset_val_split,0.72375,0.72375,0,True,validation_best_is_step0_original_weights
+hill-valley,/home/crc00006699/zh/tabiclv2/data178/hill-valley,binclass,969,194,243,100,2,0.9794238683127572,0.9794231713483508,38.754196882247925,1.149123191833496,ok,,0.0008128979813033,1_minus_roc_auc,,969,581,194,243,0.0739527997211553,10,5e-06,True,38.610275983810425,stratified,stratified split | validation=dataset_val_split,0.9381443298969072,0.9690721649484536,4,False,
+house_16H,/home/crc00006699/zh/tabiclv2/data178/house_16H,binclass,10790,2158,2698,16,2,0.8947368421052632,0.8947366107318562,162.9800157546997,4.587658882141113,ok,,0.0419092527149946,1_minus_roc_auc,,10790,6474,2158,2698,0.2292604949325323,10,5e-06,True,162.8192491531372,stratified,stratified split | validation=dataset_val_split,0.8822984244670992,0.8860055607043559,8,False,
+htru,/home/crc00006699/zh/tabiclv2/data178/htru,binclass,14318,2864,3580,8,2,0.9807262569832402,0.9805781782399,223.27735257148743,5.8295300006866455,ok,,0.0126948144481444,1_minus_roc_auc,,14318,8590,2864,3580,0.0533197375480085,10,5e-06,True,223.17027521133423,stratified,stratified split | validation=dataset_val_split,0.9793994413407822,0.9793994413407822,0,True,validation_best_is_step0_original_weights
+ibm-employee-performance,/home/crc00006699/zh/tabiclv2/data178/ibm-employee-performance,binclass,1176,236,294,30,2,1.0,1.0,26.549293279647827,0.6155915260314941,ok,,0.0,1_minus_roc_auc,,1176,705,235,294,2.0603366124305467e-06,10,5e-06,True,26.476141214370728,stratified,stratified split | validation=dataset_val_split,1.0,1.0,0,True,validation_best_is_step0_original_weights
+in_vehicle_coupon_recommendation,/home/crc00006699/zh/tabiclv2/data178/in_vehicle_coupon_recommendation,binclass,10147,2030,2537,21,2,0.7863618446984627,0.7853660574459284,161.08385586738586,4.566728830337524,ok,,0.1379217094471782,1_minus_roc_auc,,10147,6087,2030,2537,0.4894773485139012,10,5e-06,True,160.83045554161072,stratified,stratified split | validation=dataset_val_split,0.7640394088669951,0.767487684729064,10,False,
+internet_firewall,/home/crc00006699/zh/tabiclv2/data178/internet_firewall,multiclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 345, in _train_forward
+    return self.icl_predictor(representations, y_train=y_train)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 537, in forward
+    out = self._icl_predictions(R, y_train)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 270, in _icl_predictions
+    src = self.tf_icl(R, train_size=train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 143, in forward
+    out = block(q=out, train_size=train_size, rope=self.rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 470, in forward
+    x = x + self._ff_block(self.norm2(x))
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/normalization.py"", line 217, in forward
+    return F.layer_norm(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/functional.py"", line 2910, in layer_norm
+    return torch.layer_norm(
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 82.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 60.00 MiB is free. Process 54622 has 23.50 GiB memory in use. Of the allocated memory 22.53 GiB is allocated by PyTorch, and 503.13 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+internet_usage,/home/crc00006699/zh/tabiclv2/data178/internet_usage,multiclass,8086,1618,2022,70,46,0.5499505440158259,0.4736042321329964,1.6099202632904053,15.671359777450562,ok,,1.3632963379808478,log_loss,,8086,4851,1617,2022,,0,5e-06,False,0.7054753303527832,stratified,stratified split | validation=dataset_val_split | TTT training skipped because n_classes=46 exceeds model max_classes=10,,,0,False,
+jm1,/home/crc00006699/zh/tabiclv2/data178/jm1,binclass,8708,1742,2177,21,2,0.8194763435920992,0.7875513646923059,129.52659940719604,3.830176830291748,ok,,0.2366835931370692,1_minus_roc_auc,,8708,5224,1742,2177,0.4066829793155193,10,5e-06,True,129.3642828464508,stratified,stratified split | validation=dataset_val_split,0.8214695752009185,0.8300803673938002,9,False,
+jungle_chess_2pcs_raw_endgame_complete,/home/crc00006699/zh/tabiclv2/data178/jungle_chess_2pcs_raw_endgame_complete,multiclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 345, in _train_forward
+    return self.icl_predictor(representations, y_train=y_train)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 537, in forward
+    out = self._icl_predictions(R, y_train)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 270, in _icl_predictions
+    src = self.tf_icl(R, train_size=train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 143, in forward
+    out = block(q=out, train_size=train_size, rope=self.rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 96, in sdpa_with_flattened_batch
+    q = ssmax_layer(q, src_len)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/ssmax.py"", line 190, in forward
+    modulation = 1 + torch.tanh(self.query_mlp(q))  # (bs, n_heads, seq_len, head_dim)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 58.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 32.00 MiB is free. Process 54622 has 23.53 GiB memory in use. Of the allocated memory 22.19 GiB is allocated by PyTorch, and 885.88 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+kc1,/home/crc00006699/zh/tabiclv2/data178/kc1,binclass,1687,338,422,21,2,0.8767772511848341,0.8621892824016847,26.875736236572266,0.6933820247650146,ok,,0.1385046326222796,1_minus_roc_auc,,1687,1011,338,422,0.2833926947787404,10,5e-06,True,26.818443298339844,stratified,stratified split | validation=dataset_val_split,0.878698224852071,0.8846153846153846,2,False,
+kdd_ipums_la_97-small,/home/crc00006699/zh/tabiclv2/data178/kdd_ipums_la_97-small,binclass,4150,830,1038,20,2,0.8853564547206165,0.8849051311987581,52.45058059692383,1.5986676216125488,ok,,0.0514699603877325,1_minus_roc_auc,,4150,2490,830,1038,0.2426775791682303,10,5e-06,True,52.36446452140808,stratified,stratified split | validation=dataset_val_split,0.8795180722891566,0.8819277108433735,4,False,
+kr-vs-k,/home/crc00006699/zh/tabiclv2/data178/kr-vs-k,multiclass,22444,4489,5612,6,18,0.9196364932287956,0.9195808375758182,0.9253382682800292,25.2796733379364,ok,,0.2340716765726374,log_loss,,22444,13466,4489,5612,,0,5e-06,False,0.425633430480957,stratified,stratified split | validation=dataset_val_split | TTT training skipped because n_classes=18 exceeds model max_classes=10,,,0,False,
+kropt,/home/crc00006699/zh/tabiclv2/data178/kropt,multiclass,22444,4489,5612,6,18,0.9164290805416964,0.916335241288993,0.9426305294036864,25.289177417755127,ok,,0.2397020323865644,log_loss,,22444,13466,4489,5612,,0,5e-06,False,0.438831090927124,stratified,stratified split | validation=dataset_val_split | TTT training skipped because n_classes=18 exceeds model max_classes=10,,,0,False,
+led24,/home/crc00006699/zh/tabiclv2/data178/led24,multiclass,2560,512,640,24,10,0.7265625,0.7216491871009287,36.27972984313965,1.066389799118042,ok,,0.7797177519188816,log_loss,,2560,1536,512,640,0.7550315111875534,10,5e-06,True,36.12128400802612,stratified,stratified split | validation=dataset_val_split,0.71484375,0.734375,10,False,
+led7,/home/crc00006699/zh/tabiclv2/data178/led7,multiclass,2560,512,640,7,10,0.7390625,0.7348809865674293,27.20014595985413,0.7627589702606201,ok,,0.7794003607523192,log_loss,,2560,1536,512,640,0.8007453233003616,10,5e-06,True,27.157641887664795,stratified,stratified split | validation=dataset_val_split,0.73046875,0.73046875,0,True,validation_best_is_step0_original_weights
+letter,/home/crc00006699/zh/tabiclv2/data178/letter,multiclass,16000,3200,4000,15,26,0.99,0.9899971395278518,1.0086681842803955,17.36909317970276,ok,,0.0263592691246219,log_loss,,16000,9600,3200,4000,,0,5e-06,False,0.4581067562103271,stratified,stratified split | validation=dataset_val_split | TTT training skipped because n_classes=26 exceeds model max_classes=10,,,0,False,
+madeline,/home/crc00006699/zh/tabiclv2/data178/madeline,binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: CUDA out of memory. Tried to allocate 252.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 136.00 MiB is free. Process 54622 has 23.43 GiB memory in use. Of the allocated memory 21.72 GiB is allocated by PyTorch, and 1.24 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+mammography,/home/crc00006699/zh/tabiclv2/data178/mammography,binclass,8946,1790,2237,6,2,0.9888243182834152,0.9881774210571131,76.07952046394348,2.2659504413604736,ok,,0.0119037141348353,1_minus_roc_auc,,8946,5367,1789,2237,0.0265811926219612,10,5e-06,True,76.00366353988647,stratified,stratified split | validation=dataset_val_split,0.987709497206704,0.988826815642458,5,False,
+maternal_health_risk,/home/crc00006699/zh/tabiclv2/data178/maternal_health_risk,multiclass,811,163,203,6,3,0.8768472906403941,0.8753393761968375,19.97199440002441,0.5445756912231445,ok,,0.3572724832166156,log_loss,,811,486,162,203,0.3341691447421908,10,5e-06,True,19.94517731666565,stratified,stratified split | validation=dataset_val_split,0.8282208588957055,0.8466257668711656,9,False,
+mfeat-factors,/home/crc00006699/zh/tabiclv2/data178/mfeat-factors,multiclass,1600,320,400,216,10,0.9825,0.9824984372558212,98.34386539459229,4.131571054458618,ok,,0.0781556331686045,log_loss,,1600,960,320,400,0.0236701106186956,10,5e-06,True,97.96277785301208,stratified,stratified split | validation=dataset_val_split,0.984375,0.9875,1,False,
+mfeat-fourier,/home/crc00006699/zh/tabiclv2/data178/mfeat-fourier,multiclass,1600,320,400,76,10,0.9225,0.9218915524806744,45.100648641586304,1.4491991996765137,ok,,0.2061025649873424,log_loss,,1600,960,320,400,0.1794760464690625,10,5e-06,True,44.95251154899597,stratified,stratified split | validation=dataset_val_split,0.903125,0.903125,0,True,validation_best_is_step0_original_weights
+mfeat-karhunen,/home/crc00006699/zh/tabiclv2/data178/mfeat-karhunen,multiclass,1600,320,400,64,10,0.975,0.975015727207024,41.216020345687866,1.2836060523986816,ok,,0.0938088105698825,log_loss,,1600,960,320,400,0.013738925641519,10,5e-06,True,41.09201502799988,stratified,stratified split | validation=dataset_val_split,0.978125,0.98125,1,False,
+mfeat-morphological,/home/crc00006699/zh/tabiclv2/data178/mfeat-morphological,multiclass,1600,320,400,6,10,0.78,0.7731678448806757,20.990612745285038,0.4626541137695312,ok,,0.4920874450640815,log_loss,,1600,960,320,400,0.4676176263019442,10,5e-06,True,20.96157121658325,stratified,stratified split | validation=dataset_val_split,0.753125,0.759375,6,False,
+mfeat-pixel,/home/crc00006699/zh/tabiclv2/data178/mfeat-pixel,multiclass,1600,320,400,240,10,0.975,0.97494801061037,112.68966555595398,4.93129563331604,ok,,0.1173850811137224,log_loss,,1600,960,320,400,0.0116839722177246,10,5e-06,True,112.02841281890868,stratified,stratified split | validation=dataset_val_split,0.98125,0.98125,0,True,validation_best_is_step0_original_weights
+mfeat-zernike,/home/crc00006699/zh/tabiclv2/data178/mfeat-zernike,multiclass,1600,320,400,47,10,0.9,0.8988440795686801,33.610538721084595,1.035085916519165,ok,,0.2210097409812633,log_loss,,1600,960,320,400,0.1920793354511261,10,5e-06,True,33.50677943229675,stratified,stratified split | validation=dataset_val_split,0.9,0.909375,1,False,
+mice_protein_expression,/home/crc00006699/zh/tabiclv2/data178/mice_protein_expression,multiclass,864,173,216,75,8,1.0,1.0,30.98252868652344,0.8671896457672119,ok,,1.6068522330736386e-06,log_loss,,864,518,173,216,4.553619859848368e-06,10,5e-06,True,30.86673641204834,stratified,stratified split | validation=dataset_val_split,1.0,1.0,0,True,validation_best_is_step0_original_weights
+microaggregation2,/home/crc00006699/zh/tabiclv2/data178/microaggregation2,multiclass,16000,3200,4000,20,5,0.643,0.6070241990074601,308.619131565094,8.41369915008545,ok,,0.8560163430900009,log_loss,,16000,9600,3200,4000,0.8421905674040318,10,5e-06,True,308.3687376976013,stratified,stratified split | validation=dataset_val_split,0.631875,0.6496875,1,False,
+mobile_c36_oversampling,/home/crc00006699/zh/tabiclv2/data178/mobile_c36_oversampling,binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 345, in _train_forward
+    return self.icl_predictor(representations, y_train=y_train)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 537, in forward
+    out = self._icl_predictions(R, y_train)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 270, in _icl_predictions
+    src = self.tf_icl(R, train_size=train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 143, in forward
+    out = block(q=out, train_size=train_size, rope=self.rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 469, in forward
+    x = q + attn
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 66.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 62.00 MiB is free. Process 54622 has 23.50 GiB memory in use. Of the allocated memory 22.42 GiB is allocated by PyTorch, and 622.63 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+mozilla4,/home/crc00006699/zh/tabiclv2/data178/mozilla4,binclass,12436,2488,3109,4,2,0.9466066259247348,0.9460845983709056,93.88486909866332,2.2309834957122803,ok,,0.0222552339194173,1_minus_roc_auc,,12436,7461,2487,3109,0.1614924483001232,10,5e-06,True,93.81148886680604,stratified,stratified split | validation=dataset_val_split,0.9409163987138264,0.9437299035369776,6,False,
+naticusdroid+android+permissions+dataset,/home/crc00006699/zh/tabiclv2/data178/naticusdroid+android+permissions+dataset,binclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 335, in _train_forward
+    self.col_embedder(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 728, in forward
+    embeddings = self._train_forward(X, y_train, d, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 458, in _train_forward
+    return self._train_forward_with_feature_group(X, y_train, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 474, in _train_forward_with_feature_group
+    embeddings = self._compute_embeddings(features, train_size, y_train, embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/embedding.py"", line 388, in _compute_embeddings
+    src = self.tf_col(src, train_size=None if embed_with_test else train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 331, in forward
+    out = block(out, train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 679, in forward
+    out = self.induced_attention(src, train_size)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 647, in induced_attention
+    out = self.multihead_attn2(src, hidden, hidden)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 470, in forward
+    x = x + self._ff_block(self.norm2(x))
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 522, in _ff_block
+    x = self.linear2(self.dropout(self.activation(self.linear1(x))))
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 1.61 GiB. GPU 0 has a total capacity of 23.57 GiB of which 1.06 GiB is free. Process 54622 has 22.50 GiB memory in use. Of the allocated memory 21.46 GiB is allocated by PyTorch, and 571.75 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+national-longitudinal-survey-binary,/home/crc00006699/zh/tabiclv2/data178/national-longitudinal-survey-binary,binclass,3926,786,982,16,2,1.0,1.0,47.08456802368164,1.4196674823760986,ok,,0.0,1_minus_roc_auc,,3926,2355,785,982,2.463759653892339e-05,10,5e-06,True,47.001949310302734,stratified,stratified split | validation=dataset_val_split,1.0,1.0,0,True,validation_best_is_step0_original_weights
+okcupid_stem,/home/crc00006699/zh/tabiclv2/data178/okcupid_stem,multiclass,21341,4269,5336,13,3,0.7507496251874063,0.6983015047903786,458.5440266132355,11.457300424575806,ok,,0.5882662242944257,log_loss,,21341,12804,4268,5336,0.5875418223440647,10,5e-06,True,458.2341601848602,stratified,stratified split | validation=dataset_val_split,0.7519325368938862,0.7535722651674865,1,False,
+one-hundred-plants-margin,/home/crc00006699/zh/tabiclv2/data178/one-hundred-plants-margin,multiclass,1280,256,320,64,100,0.903125,0.9008283730158728,0.9313762187957764,5.75428032875061,ok,,0.3318854545008676,log_loss,,1280,768,256,320,,0,5e-06,False,0.4498581886291504,stratified,stratified split | validation=dataset_val_split | TTT training skipped because n_classes=100 exceeds model max_classes=10,,,0,False,
+one-hundred-plants-shape,/home/crc00006699/zh/tabiclv2/data178/one-hundred-plants-shape,multiclass,1280,256,320,64,100,0.840625,0.8301463293650793,0.9944744110107422,5.741230010986328,ok,,0.5680515309917483,log_loss,,1280,768,256,320,,0,5e-06,False,0.5337777137756348,stratified,stratified split | validation=dataset_val_split | TTT training skipped because n_classes=100 exceeds model max_classes=10,,,0,False,
+one-hundred-plants-texture,/home/crc00006699/zh/tabiclv2/data178/one-hundred-plants-texture,multiclass,1279,256,320,64,100,0.928125,0.9280704365079364,0.8984708786010742,5.723457336425781,ok,,0.2260649364695971,log_loss,,1279,767,256,320,,0,5e-06,False,0.4386100769042969,stratified,stratified split | validation=dataset_val_split | TTT training skipped because n_classes=100 exceeds model max_classes=10,,,0,False,
+online_shoppers,/home/crc00006699/zh/tabiclv2/data178/online_shoppers,binclass,9864,1973,2466,14,2,0.9071370640713706,0.9023845817937254,142.17914009094238,3.983317613601685,ok,,0.0705612947312357,1_minus_roc_auc,,9864,5918,1973,2466,0.2239850219339132,10,5e-06,True,142.02791166305542,stratified,stratified split | validation=dataset_val_split,0.9011657374556512,0.9031931069437404,10,False,
+optdigits,/home/crc00006699/zh/tabiclv2/data178/optdigits,multiclass,4496,900,1124,64,10,0.9973309608540926,0.997330908588654,102.78860521316528,3.782055139541626,ok,,0.0088089655195254,log_loss,,4496,2697,899,1124,0.0165284217509906,10,5e-06,True,102.54127740859984,stratified,stratified split | validation=dataset_val_split,0.99,0.9911111111111112,2,False,
+ozone-level-8hr,/home/crc00006699/zh/tabiclv2/data178/ozone-level-8hr,binclass,2027,406,507,72,2,0.960552268244576,0.9543043355752386,51.792622566223145,1.6664700508117676,ok,,0.0509210526315789,1_minus_roc_auc,,2027,1215,406,507,0.1216987997759133,10,5e-06,True,51.63062930107117,stratified,stratified split | validation=dataset_val_split,0.9458128078817734,0.955665024630542,8,False,
+page-blocks,/home/crc00006699/zh/tabiclv2/data178/page-blocks,multiclass,4378,876,1095,10,5,0.9789954337899544,0.978774974105482,48.49656820297241,1.4221289157867432,ok,,0.0856112427682017,log_loss,,4378,2626,876,1095,0.0683791879564523,10,5e-06,True,48.43859553337097,stratified,stratified split | validation=dataset_val_split,0.9691780821917808,0.9726027397260274,2,False,
+pc1,/home/crc00006699/zh/tabiclv2/data178/pc1,binclass,887,178,222,21,2,0.945945945945946,0.9366302968198704,21.788826942443848,0.859652042388916,ok,,0.1025764895330112,1_minus_roc_auc,,887,531,178,222,0.1582575887441635,10,5e-06,True,21.74166893959045,stratified,stratified split | validation=dataset_val_split,0.9325842696629212,0.9325842696629212,0,True,validation_best_is_step0_original_weights
+pc3,/home/crc00006699/zh/tabiclv2/data178/pc3,binclass,1250,250,313,37,2,0.9009584664536742,0.8713234468060816,28.327013731002808,0.7088611125946045,ok,,0.1609208185053381,1_minus_roc_auc,,1250,750,250,313,0.2744248546659946,10,5e-06,True,28.252550840377808,stratified,stratified split | validation=dataset_val_split,0.892,0.892,0,True,validation_best_is_step0_original_weights
+pc4,/home/crc00006699/zh/tabiclv2/data178/pc4,binclass,1166,234,292,37,2,0.910958904109589,0.9074272635916472,27.595529794692997,0.6972606182098389,ok,,0.0380859375,1_minus_roc_auc,,1166,699,233,292,0.1419584536924958,10,5e-06,True,27.52139353752136,stratified,stratified split | validation=dataset_val_split,0.9230769230769232,0.9273504273504274,3,False,
+pendigits,/home/crc00006699/zh/tabiclv2/data178/pendigits,multiclass,8793,1759,2199,16,10,0.9972714870395636,0.9972742335430836,123.0766031742096,3.572052240371704,ok,,0.0120298719253893,log_loss,,8793,5275,1759,2199,0.0069157675898168,10,5e-06,True,122.94021582603456,stratified,stratified split | validation=dataset_val_split,0.9982944855031268,0.9982944855031268,0,True,validation_best_is_step0_original_weights
+phoneme,/home/crc00006699/zh/tabiclv2/data178/phoneme,binclass,4323,865,1081,5,2,0.904717853839038,0.9044945340702172,30.307810068130493,0.8406538963317871,ok,,0.0340768328736353,1_minus_roc_auc,,4323,2593,865,1081,0.1925577204674482,10,5e-06,True,30.26865100860596,stratified,stratified split | validation=dataset_val_split,0.9283236994219654,0.9317919075144508,1,False,
+pol,/home/crc00006699/zh/tabiclv2/data178/pol,binclass,8065,1613,2017,26,2,0.9940505701536936,0.9940505672289106,125.93920636177064,3.800915241241455,ok,,0.0002448204256926,1_minus_roc_auc,,8065,4839,1613,2017,0.024265386571642,10,5e-06,True,125.78090977668762,stratified,stratified split | validation=dataset_val_split,0.9919404835709856,0.9919404835709856,0,True,validation_best_is_step0_original_weights
+predict_students_dropout_and_academic_success,/home/crc00006699/zh/tabiclv2/data178/predict_students_dropout_and_academic_success,multiclass,3539,708,885,34,3,0.7819209039548023,0.7764956984499578,57.05847477912903,1.7856290340423584,ok,,0.5525436439298528,log_loss,,3539,2123,708,885,0.5456954538822174,10,5e-06,True,56.90073275566101,stratified,stratified split | validation=dataset_val_split,0.8022598870056498,0.807909604519774,10,False,
+qsar,/home/crc00006699/zh/tabiclv2/data178/qsar,binclass,844,169,211,40,2,0.9004739336492891,0.8995308002250411,24.838308572769165,1.1833157539367676,ok,,0.045271629778672,1_minus_roc_auc,,844,506,169,211,0.2317017395980656,10,5e-06,True,24.758729696273804,stratified,stratified split | validation=dataset_val_split,0.8875739644970414,0.8875739644970414,0,True,validation_best_is_step0_original_weights
+rice_cammeo_and_osmancik,/home/crc00006699/zh/tabiclv2/data178/rice_cammeo_and_osmancik,binclass,3048,610,762,7,2,0.931758530183727,0.9314798849732624,26.56322956085205,0.8129525184631348,ok,,0.0217291889457984,1_minus_roc_auc,,3048,1828,610,762,0.1776370424777269,10,5e-06,True,26.52737593650818,stratified,stratified split | validation=dataset_val_split,0.9327868852459016,0.9327868852459016,0,True,validation_best_is_step0_original_weights
+ringnorm,/home/crc00006699/zh/tabiclv2/data178/ringnorm,binclass,5920,1184,1480,20,2,0.9797297297297296,0.9797268415464132,78.89509224891663,2.423664093017578,ok,,0.0027412971577076,1_minus_roc_auc,,5920,3552,1184,1480,0.0385494490619748,10,5e-06,True,78.78297185897827,stratified,stratified split | validation=dataset_val_split,0.981418918918919,0.981418918918919,0,True,validation_best_is_step0_original_weights
+rl,/home/crc00006699/zh/tabiclv2/data178/rl,binclass,3976,796,994,12,2,0.909456740442656,0.9094534412955466,43.92048645019531,1.314840316772461,ok,,0.0415875534899538,1_minus_roc_auc,,3976,2385,795,994,0.3331200396642089,10,5e-06,True,43.85340833663941,stratified,stratified split | validation=dataset_val_split,0.8793969849246231,0.8907035175879398,6,False,
+satimage,/home/crc00006699/zh/tabiclv2/data178/satimage,multiclass,5144,1029,1286,36,6,0.9471228615863142,0.9463428508553192,84.70511507987976,2.705146551132202,ok,,0.1276353506256851,log_loss,,5144,3086,1029,1286,0.1412579603493213,10,5e-06,True,84.53955864906311,stratified,stratified split | validation=dataset_val_split,0.9319727891156464,0.9436345966958212,9,False,
+segment,/home/crc00006699/zh/tabiclv2/data178/segment,multiclass,1848,370,462,17,7,0.9545454545454546,0.9545478826122294,25.32212829589844,0.6966540813446045,ok,,0.1388621803736443,log_loss,,1848,1108,370,462,0.1022621265146881,10,5e-06,True,25.272204637527462,stratified,stratified split | validation=dataset_val_split,0.9432432432432432,0.9513513513513514,2,False,
+seismic+bumps,/home/crc00006699/zh/tabiclv2/data178/seismic+bumps,binclass,2067,414,517,18,2,0.9342359767891684,0.9024719535783364,26.633728981018063,0.7777159214019775,ok,,0.2908293752283523,1_minus_roc_auc,,2067,1239,414,517,0.1956320106983184,10,5e-06,True,26.57824301719665,stratified,stratified split | validation=dataset_val_split,0.9347826086956522,0.9371980676328504,10,False,
+semeion,/home/crc00006699/zh/tabiclv2/data178/semeion,multiclass,1274,255,319,256,10,0.9686520376175548,0.9686948325435536,99.67299103736876,3.8447980880737305,ok,,0.0887594000148521,log_loss,,1274,764,255,319,0.0662390945944935,10,5e-06,True,99.21788883209229,stratified,stratified split | validation=dataset_val_split,0.9568627450980391,0.9647058823529412,8,False,
+shuttle,/home/crc00006699/zh/tabiclv2/data178/shuttle,multiclass,0,0,0,0,0,,,0.0,0.0,fail,"OutOfMemoryError: Caught OutOfMemoryError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 345, in _train_forward
+    return self.icl_predictor(representations, y_train=y_train)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 537, in forward
+    out = self._icl_predictions(R, y_train)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/learning.py"", line 270, in _icl_predictions
+    src = self.tf_icl(R, train_size=train_size)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/encoders.py"", line 143, in forward
+    out = block(q=out, train_size=train_size, rope=self.rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 293, in multi_head_attention_forward
+    attn_output = F.linear(attn_output, out_proj_weight, out_proj_bias)  # (batch_shape, tgt_len, E)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 74.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 42.00 MiB is free. Process 54622 has 23.52 GiB memory in use. Of the allocated memory 22.58 GiB is allocated by PyTorch, and 471.32 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+",,,,0,0,0,0,,0,,False,0.0,,,,,0,False,
+spambase,/home/crc00006699/zh/tabiclv2/data178/spambase,binclass,3680,736,921,57,2,0.9565689467969598,0.9565896182543064,75.09388542175293,2.505681276321411,ok,,0.0080768585167412,1_minus_roc_auc,,3680,2208,736,921,0.0893556654918938,10,5e-06,True,74.91589951515198,stratified,stratified split | validation=dataset_val_split,0.9633152173913044,0.9646739130434784,2,False,
+splice,/home/crc00006699/zh/tabiclv2/data178/splice,multiclass,2552,511,638,60,3,0.9608150470219436,0.9607765132232094,55.47061085700989,1.854448318481445,ok,,0.098821805136266,log_loss,,2552,1530,511,638,0.0708786719478666,10,5e-06,True,55.25028610229492,stratified,stratified split | validation=dataset_val_split,0.9686888454011742,0.9706457925636008,3,False,
+sports_articles_for_objectivity_analysis,/home/crc00006699/zh/tabiclv2/data178/sports_articles_for_objectivity_analysis,binclass,800,160,200,59,2,0.845,0.8419021663172606,27.42727780342102,1.3922693729400637,ok,,0.1049509222306116,1_minus_roc_auc,,800,480,160,200,0.4159395853057503,10,5e-06,True,27.320194721221924,stratified,stratified split | validation=dataset_val_split,0.8375,0.84375,5,False,
+statlog,/home/crc00006699/zh/tabiclv2/data178/statlog,binclass,800,160,200,20,2,0.735,0.7207152430453401,21.34485411643982,0.7769498825073242,ok,,0.2633333333333333,1_minus_roc_auc,,800,480,160,200,0.4359604911878705,10,5e-06,True,21.290486574172974,stratified,stratified split | validation=dataset_val_split,0.76875,0.78125,9,False,
+steel_plates_faults,/home/crc00006699/zh/tabiclv2/data178/steel_plates_faults,multiclass,1552,311,389,27,7,0.8380462724935732,0.8383496575728374,26.6927969455719,0.7276439666748047,ok,,0.3634844781941737,log_loss,,1552,930,311,389,0.5014935052022338,10,5e-06,True,26.626477241516117,stratified,stratified split | validation=dataset_val_split,0.8038585209003215,0.8392282958199357,10,False,
+sylvine,/home/crc00006699/zh/tabiclv2/data178/sylvine,binclass,4099,820,1025,20,2,0.977560975609756,0.9775608474625496,52.27887153625488,1.6039636135101318,ok,,0.0014657955653021,1_minus_roc_auc,,4099,2459,820,1025,0.0569104148307815,10,5e-06,True,52.18726825714111,stratified,stratified split | validation=dataset_val_split,0.9792682926829268,0.9792682926829268,0,True,validation_best_is_step0_original_weights
+taiwanese_bankruptcy_prediction,/home/crc00006699/zh/tabiclv2/data178/taiwanese_bankruptcy_prediction,binclass,5455,1091,1364,95,2,0.9714076246334312,0.965224534664526,164.14752531051636,6.083617925643921,ok,,0.0675705922865014,1_minus_roc_auc,,5455,3273,1091,1364,0.0711092625278979,10,5e-06,True,163.723858833313,stratified,stratified split | validation=dataset_val_split,0.9679193400549956,0.9706691109074244,8,False,
+telco-customer-churn,/home/crc00006699/zh/tabiclv2/data178/telco-customer-churn,binclass,5634,1127,1409,18,2,0.8055358410220014,0.7975092184456082,73.29449915885925,2.2277798652648926,ok,,0.1484163889534733,1_minus_roc_auc,,5634,3380,1127,1409,0.4232815960422158,10,5e-06,True,73.16061186790466,stratified,stratified split | validation=dataset_val_split,0.8163265306122449,0.8163265306122449,0,True,validation_best_is_step0_original_weights
+texture,/home/crc00006699/zh/tabiclv2/data178/texture,multiclass,4400,880,1100,40,11,1.0,1.0,0.9489567279815674,5.458858013153076,ok,,4.266947737078856e-05,log_loss,,4400,2640,880,1100,,0,5e-06,False,0.4543476104736328,stratified,stratified split | validation=dataset_val_split | TTT training skipped because n_classes=11 exceeds model max_classes=10,,,0,False,
+thyroid,/home/crc00006699/zh/tabiclv2/data178/thyroid,multiclass,5760,1152,1440,21,3,0.9958333333333332,0.995835174762004,77.48942589759827,2.380626916885376,ok,,0.0113334622103812,log_loss,,5760,3456,1152,1440,0.0043920902098761,10,5e-06,True,77.3961672782898,stratified,stratified split | validation=dataset_val_split,0.9939236111111112,0.9939236111111112,0,True,validation_best_is_step0_original_weights
+thyroid-ann,/home/crc00006699/zh/tabiclv2/data178/thyroid-ann,multiclass,3017,604,755,21,3,0.9933774834437086,0.9933902864131448,38.67440986633301,1.1683764457702637,ok,,0.0134772514794209,log_loss,,3017,1809,604,755,0.007830675545847,10,5e-06,True,38.60349726676941,stratified,stratified split | validation=dataset_val_split,0.9950331125827816,0.9966887417218544,10,False,
+thyroid-dis,/home/crc00006699/zh/tabiclv2/data178/thyroid-dis,multiclass,2240,448,560,26,5,0.6964285714285714,0.6772689833761619,33.66418409347534,0.9864010810852052,ok,,0.6934191946048062,log_loss,,2240,1344,448,560,0.6881956681609154,10,5e-06,True,33.57083439826965,stratified,stratified split | validation=dataset_val_split,0.7388392857142857,0.7410714285714286,2,False,
+turiye_student_evaluation,/home/crc00006699/zh/tabiclv2/data178/turiye_student_evaluation,multiclass,4656,932,1164,32,5,0.520618556701031,0.4933168776450196,72.45281100273132,2.259262084960937,ok,,1.1807725347836624,log_loss,,4656,2793,931,1164,1.2006523236632347,10,5e-06,True,72.31248092651367,stratified,stratified split | validation=dataset_val_split,0.5118025751072961,0.5150214592274678,3,False,
+twonorm,/home/crc00006699/zh/tabiclv2/data178/twonorm,binclass,5920,1184,1480,20,2,0.9777027027027028,0.9777023464142108,78.88173770904541,2.429931163787842,ok,,0.001557709199615,1_minus_roc_auc,,5920,3552,1184,1480,0.0553254296537488,10,5e-06,True,78.7746205329895,stratified,stratified split | validation=dataset_val_split,0.977195945945946,0.977195945945946,0,True,validation_best_is_step0_original_weights
+vehicle,/home/crc00006699/zh/tabiclv2/data178/vehicle,multiclass,676,136,170,18,4,0.8823529411764706,0.8804062165406703,20.22931861877441,0.6430964469909668,ok,,0.2391761539301911,log_loss,,676,405,135,170,0.2247519823722541,10,5e-06,True,20.19114375114441,stratified,stratified split | validation=dataset_val_split,0.9044117647058824,0.9191176470588236,10,False,
+volkert,/home/crc00006699/zh/tabiclv2/data178/volkert,multiclass,46648,9330,11662,180,10,0.7511576058995026,0.7464453240897367,5.769606351852417,179.40177941322327,ok,,0.7120076977564387,log_loss,,46648,0,0,11662,,0,5e-06,False,0.0,,TTT skipped for dataset=volkert to avoid OOM,,,0,False,
+walking-activity,/home/crc00006699/zh/tabiclv2/data178/walking-activity,multiclass,119465,23893,29867,4,22,0.6750929119094653,0.6743677865423084,1.7198028564453125,363.1866548061371,ok,,0.916165406886618,log_loss,,119465,71679,23893,29867,,0,5e-06,False,0.8915815353393555,stratified,stratified split | validation=dataset_val_split | TTT training skipped because n_classes=22 exceeds model max_classes=10,,,0,False,
+wall-robot-navigation,/home/crc00006699/zh/tabiclv2/data178/wall-robot-navigation,multiclass,4364,873,1092,24,4,0.9954212454212454,0.9954319765070996,59.31678915023804,1.8565568923950195,ok,,0.0127301335990053,log_loss,,4364,2618,873,1092,0.0134978143614716,10,5e-06,True,59.206778049468994,stratified,stratified split | validation=dataset_val_split,0.983963344788087,0.9873997709049256,6,False,
+water_quality,/home/crc00006699/zh/tabiclv2/data178/water_quality,binclass,6396,1280,1600,20,2,0.905,0.8856935021860395,79.31564164161682,2.4728970527648926,ok,,0.0893283373889861,1_minus_roc_auc,,6396,3837,1279,1600,0.2460296554490924,10,5e-06,True,79.22826766967773,stratified,stratified split | validation=dataset_val_split,0.89609375,0.8984375,10,False,
+waveform-5000,/home/crc00006699/zh/tabiclv2/data178/waveform-5000,multiclass,4000,800,1000,40,3,0.866,0.8659641652207442,67.46336960792542,2.1898081302642822,ok,,0.2586694031540139,log_loss,,4000,2400,800,1000,0.2547749932855367,10,5e-06,True,67.31605267524719,stratified,stratified split | validation=dataset_val_split,0.87375,0.87625,2,False,
+waveform_database_generator,/home/crc00006699/zh/tabiclv2/data178/waveform_database_generator,multiclass,3999,800,1000,21,3,0.316,0.2960855087510732,51.637049436569214,1.5948271751403809,ok,,1.0998299676553824,log_loss,,3999,2399,800,1000,1.0940223559737206,10,5e-06,True,51.55070233345032,stratified,stratified split | validation=dataset_val_split,0.33125,0.33375,10,False,
+waveform_database_generator_version_1,/home/crc00006699/zh/tabiclv2/data178/waveform_database_generator_version_1,multiclass,4000,800,1000,21,3,0.871,0.8705334846679682,51.576826095581055,1.5982110500335691,ok,,0.2924655678617887,log_loss,,4000,2400,800,1000,0.2623236197978258,10,5e-06,True,51.49198579788208,stratified,stratified split | validation=dataset_val_split,0.85875,0.86125,2,False,
+website_phishing,/home/crc00006699/zh/tabiclv2/data178/website_phishing,multiclass,1082,217,271,9,3,0.92619926199262,0.9264532281561662,20.878241777420044,0.3496525287628174,ok,,0.2389640126715413,log_loss,,1082,648,217,271,0.1592967137694358,10,5e-06,True,20.84285068511963,stratified,stratified split | validation=dataset_val_split,0.9216589861751152,0.9216589861751152,0,True,validation_best_is_step0_original_weights
+wine,/home/crc00006699/zh/tabiclv2/data178/wine,binclass,2043,409,511,4,2,0.786692759295499,0.7858267268299804,13.017515182495115,0.2619295120239258,ok,,0.1180147058823529,1_minus_roc_auc,,2043,1225,409,511,0.4662508480250835,10,5e-06,True,12.989449977874756,stratified,stratified split | validation=dataset_val_split,0.8312958435207825,0.8312958435207825,0,True,validation_best_is_step0_original_weights
+wine-quality-red,/home/crc00006699/zh/tabiclv2/data178/wine-quality-red,multiclass,1279,256,320,4,6,0.671875,0.6565580990732063,20.376872301101685,0.3410482406616211,ok,,0.8164734062077101,log_loss,,1279,767,256,320,0.8111612070351839,10,5e-06,True,20.35306143760681,stratified,stratified split | validation=dataset_val_split,0.65625,0.6640625,6,False,
+wine-quality-white,/home/crc00006699/zh/tabiclv2/data178/wine-quality-white,multiclass,3918,784,980,11,7,0.6806122448979591,0.6718037465017274,42.71692752838135,1.272796630859375,ok,,0.748066656216861,log_loss,,3918,2350,784,980,0.793709522113204,10,5e-06,True,42.65824460983277,stratified,stratified split | validation=dataset_val_split,0.6875,0.6900510204081632,4,False,
+yeast,/home/crc00006699/zh/tabiclv2/data178/yeast,multiclass,1187,238,297,8,10,0.632996632996633,0.6261907061966472,20.84090065956116,0.387953519821167,ok,,0.9728973699651364,log_loss,,1187,711,238,297,1.0501574277877808,10,5e-06,True,20.810789108276367,stratified,stratified split | validation=dataset_val_split,0.5546218487394958,0.5630252100840336,1,False,

@@ -1,0 +1,187 @@
+# v2.5_results vs tabpfnv2.5_1c_ttt_epoch8_chunk 成功交集对比
+
+口径：只比较两边 `status == "ok"` 的数据集交集；acc 变化为 `TTT - baseline`；特征数和样本数来自 `data178/<dataset>/info.json`。
+
+## 总体
+
+- baseline ok: 169
+- TTT ok: 163
+- 成功交集: 159
+- baseline 平均 acc: 0.840167427
+- TTT 平均 acc: 0.838606465
+- 平均 acc 变化: -0.001560962
+- 上升/下降/持平: 58/82/19
+
+## 分组规模
+
+- 上升: n=58, mean_delta=+0.005436533, mean_features=23.91, median_features=16.0, mean_samples=10602.6, median_samples=3978.5
+- 下降: n=82, mean_delta=-0.006872095, mean_features=32.59, median_features=20.0, mean_samples=10248.6, median_samples=5050.0
+- 持平: n=19, mean_delta=+0.000000000, mean_features=24.53, median_features=17.0, mean_samples=3681.4, median_samples=1834.0
+
+## 上升数据集
+
+- eye_movements_bin: 0.667543 -> 0.699737 (+0.032194), features=20, samples=7608
+- pc4: 0.900685 -> 0.917808 (+0.017123), features=37, samples=1458
+- compass: 0.834785 -> 0.851006 (+0.016221), features=17, samples=16644
+- one-hundred-plants-margin: 0.896875 -> 0.912500 (+0.015625), features=64, samples=1600
+- Basketball_c: 0.697761 -> 0.712687 (+0.014925), features=11, samples=1340
+- wine-quality-red: 0.587500 -> 0.600000 (+0.012500), features=4, samples=1599
+- mfeat-zernike: 0.832500 -> 0.845000 (+0.012500), features=47, samples=2000
+- wine: 0.745597 -> 0.757339 (+0.011742), features=4, samples=2554
+- jungle_chess_2pcs_raw_endgame_complete: 0.868585 -> 0.878737 (+0.010152), features=6, samples=44819
+- sports_articles_for_objectivity_analysis: 0.845000 -> 0.855000 (+0.010000), features=59, samples=1000
+- one-hundred-plants-texture: 0.912500 -> 0.921875 (+0.009375), features=64, samples=1599
+- waveform_database_generator: 0.335000 -> 0.344000 (+0.009000), features=21, samples=4999
+- hill-valley: 0.950617 -> 0.958848 (+0.008230), features=100, samples=1212
+- ASP-POTASSCO-classification: 0.455598 -> 0.463320 (+0.007722), features=141, samples=1294
+- baseball: 0.940299 -> 0.947761 (+0.007463), features=16, samples=1340
+- IBM_HR_Analytics_Employee_Attrition_and_Performance: 0.867347 -> 0.874150 (+0.006803), features=31, samples=1470
+- Customer_Personality_Analysis: 0.890625 -> 0.897321 (+0.006696), features=24, samples=2240
+- GAMETES_Epistasis_2-Way_20atts_0.1H_EDM-1_1: 0.681250 -> 0.687500 (+0.006250), features=20, samples=1600
+- Pumpkin_Seeds: 0.882000 -> 0.888000 (+0.006000), features=12, samples=2500
+- analcatdata_authorship: 0.994083 -> 1.000000 (+0.005917), features=69, samples=841
+- KDDCup09_upselling: 0.807992 -> 0.813840 (+0.005848), features=49, samples=5128
+- FOREX_audjpy-day-High: 0.773842 -> 0.779292 (+0.005450), features=10, samples=1832
+- mfeat-morphological: 0.767500 -> 0.772500 (+0.005000), features=6, samples=2000
+- Mobile_Price_Classification: 0.977500 -> 0.982500 (+0.005000), features=20, samples=2000
+- kropt: 0.883820 -> 0.888632 (+0.004811), features=6, samples=28056
+- estimation_of_obesity_levels: 0.988180 -> 0.992908 (+0.004728), features=16, samples=2111
+- Water_Quality_and_Potability: 0.652439 -> 0.657012 (+0.004573), features=8, samples=3276
+- National_Health_and_Nutrition_Health_Survey: 0.833333 -> 0.837719 (+0.004386), features=7, samples=2278
+- wall-robot-navigation: 0.986264 -> 0.989927 (+0.003663), features=24, samples=5456
+- banknote_authentication: 0.556364 -> 0.560000 (+0.003636), features=4, samples=1372
+- ada_prior: 0.853231 -> 0.856517 (+0.003286), features=14, samples=4562
+- Employee: 0.857143 -> 0.860365 (+0.003222), features=8, samples=4653
+- GAMETES_Heterogeneity_20atts_1600_Het_0.4_0.2_50_EDM-2_001: 0.687500 -> 0.690625 (+0.003125), features=20, samples=1600
+- dis: 0.988079 -> 0.990728 (+0.002649), features=29, samples=3772
+- rice_cammeo_and_osmancik: 0.927822 -> 0.930446 (+0.002625), features=7, samples=3810
+- BLE_RSSI_dataset_for_Indoor_localization: 0.737106 -> 0.739609 (+0.002504), features=3, samples=9984
+- jm1: 0.818098 -> 0.820395 (+0.002297), features=21, samples=10885
+- delta_ailerons: 0.949509 -> 0.951613 (+0.002104), features=5, samples=7129
+- online_shoppers: 0.904298 -> 0.906326 (+0.002028), features=14, samples=12330
+- splice: 0.963950 -> 0.965517 (+0.001567), features=60, samples=3190
+- led7: 0.731250 -> 0.732812 (+0.001563), features=7, samples=3200
+- FOREX_cadjpy-hour-High: 0.713520 -> 0.714889 (+0.001369), features=10, samples=43825
+- ringnorm: 0.979730 -> 0.981081 (+0.001351), features=20, samples=7400
+- allbp: 0.976159 -> 0.977483 (+0.001325), features=29, samples=3772
+- FOREX_audcad-hour-High: 0.714090 -> 0.715345 (+0.001255), features=10, samples=43825
+- microaggregation2: 0.637500 -> 0.638750 (+0.001250), features=20, samples=20000
+- Amazon_employee_access: 0.945682 -> 0.946903 (+0.001221), features=7, samples=32769
+- ada: 0.859036 -> 0.860241 (+0.001205), features=48, samples=4147
+- churn: 0.967000 -> 0.968000 (+0.001000), features=20, samples=5000
+- electricity: 0.897826 -> 0.898709 (+0.000883), features=8, samples=45312
+- dry_bean_dataset: 0.926552 -> 0.927286 (+0.000734), features=16, samples=13611
+- twonorm: 0.978378 -> 0.979054 (+0.000676), features=20, samples=7400
+- FOREX_audusd-hour-High: 0.710667 -> 0.711238 (+0.000570), features=10, samples=43825
+- bank: 0.908990 -> 0.909543 (+0.000553), features=16, samples=45211
+- pendigits: 0.997271 -> 0.997726 (+0.000455), features=16, samples=10992
+- E-CommereShippingData: 0.677273 -> 0.677727 (+0.000455), features=10, samples=10999
+- HR_Analytics_Job_Change_of_Data_Scientists: 0.801409 -> 0.801670 (+0.000261), features=13, samples=19158
+- BNG(breast-w): 0.987808 -> 0.988062 (+0.000254), features=9, samples=39366
+
+## 下降数据集
+
+- statlog: 0.745000 -> 0.710000 (-0.035000), features=20, samples=1000
+- maternal_health_risk: 0.866995 -> 0.832512 (-0.034483), features=6, samples=1014
+- wine-quality-white: 0.666327 -> 0.639796 (-0.026531), features=11, samples=4898
+- one-hundred-plants-shape: 0.812500 -> 0.787500 (-0.025000), features=64, samples=1600
+- mfeat-fourier: 0.920000 -> 0.897500 (-0.022500), features=76, samples=2000
+- GesturePhaseSegmentationProcessed: 0.803544 -> 0.782278 (-0.021266), features=32, samples=9873
+- steel_plates_faults: 0.874036 -> 0.853470 (-0.020566), features=27, samples=1941
+- artificial-characters: 0.843444 -> 0.824853 (-0.018591), features=7, samples=10218
+- autoUniv-au7-1100: 0.422727 -> 0.404545 (-0.018182), features=12, samples=1100
+- contraceptive_method_choice: 0.620339 -> 0.603390 (-0.016949), features=9, samples=1473
+- kc1: 0.876777 -> 0.860190 (-0.016588), features=21, samples=2109
+- abalone: 0.644737 -> 0.629187 (-0.015550), features=8, samples=4177
+- first-order-theorem-proving: 0.638889 -> 0.624183 (-0.014706), features=51, samples=6118
+- autoUniv-au4-2500: 0.710000 -> 0.696000 (-0.014000), features=100, samples=2500
+- rl: 0.877264 -> 0.865191 (-0.012072), features=12, samples=4970
+- vehicle: 0.894118 -> 0.882353 (-0.011765), features=18, samples=846
+- thyroid-dis: 0.696429 -> 0.685714 (-0.010714), features=26, samples=2800
+- PizzaCutter3: 0.885167 -> 0.875598 (-0.009569), features=37, samples=1043
+- Marketing_Campaign: 0.890625 -> 0.881696 (-0.008929), features=27, samples=2240
+- heloc: 0.731500 -> 0.723500 (-0.008000), features=22, samples=10000
+- phoneme: 0.895467 -> 0.888067 (-0.007401), features=5, samples=5404
+- turiye_student_evaluation: 0.525773 -> 0.518900 (-0.006873), features=32, samples=5820
+- cmc: 0.593220 -> 0.586441 (-0.006780), features=9, samples=1473
+- Pima_Indians_Diabetes_Database: 0.759740 -> 0.753247 (-0.006494), features=8, samples=768
+- pc3: 0.897764 -> 0.891374 (-0.006390), features=37, samples=1563
+- Gender_Gap_in_Spanish_WP: 0.606316 -> 0.600000 (-0.006316), features=13, samples=4746
+- semeion: 0.949843 -> 0.943574 (-0.006270), features=256, samples=1593
+- MIC: 0.909091 -> 0.903030 (-0.006061), features=104, samples=1649
+- waveform-5000: 0.865000 -> 0.859000 (-0.006000), features=40, samples=5000
+- in_vehicle_coupon_recommendation: 0.781238 -> 0.775325 (-0.005912), features=21, samples=12684
+- car-evaluation: 0.994220 -> 0.988439 (-0.005780), features=21, samples=1728
+- FOREX_cadjpy-day-High: 0.727520 -> 0.722071 (-0.005450), features=10, samples=1834
+- satimage: 0.933126 -> 0.927683 (-0.005443), features=36, samples=6430
+- kr-vs-k: 0.896472 -> 0.891304 (-0.005167), features=6, samples=28056
+- mfeat-factors: 0.980000 -> 0.975000 (-0.005000), features=216, samples=2000
+- led24: 0.734375 -> 0.729688 (-0.004687), features=24, samples=3200
+- FICO-HELOC-cleaned: 0.746835 -> 0.742278 (-0.004557), features=23, samples=9871
+- pc1: 0.945946 -> 0.941441 (-0.004505), features=21, samples=1109
+- California-Housing-Classification: 0.914971 -> 0.910610 (-0.004360), features=8, samples=20640
+- segment: 0.945887 -> 0.941558 (-0.004329), features=17, samples=2310
+- Diabetic_Retinopathy_Debrecen: 0.757576 -> 0.753247 (-0.004329), features=19, samples=1151
+- INNHotelsGroup: 0.901034 -> 0.896761 (-0.004273), features=17, samples=36275
+- telco-customer-churn: 0.809084 -> 0.804826 (-0.004258), features=18, samples=7043
+- PhishingWebsites: 0.977386 -> 0.973315 (-0.004071), features=30, samples=11055
+- thyroid-ann: 0.996026 -> 0.992053 (-0.003974), features=21, samples=3772
+- sylvine: 0.977561 -> 0.973659 (-0.003902), features=20, samples=5124
+- water_quality: 0.910625 -> 0.906875 (-0.003750), features=20, samples=7996
+- Firm-Teacher_Clave-Direction_Classification: 0.874074 -> 0.870370 (-0.003704), features=16, samples=10800
+- website_phishing: 0.922509 -> 0.918819 (-0.003690), features=9, samples=1353
+- UJI_Pen_Characters: 0.575092 -> 0.571429 (-0.003663), features=80, samples=1364
+- mozilla4: 0.931811 -> 0.928273 (-0.003538), features=4, samples=15545
+- Bank_Customer_Churn_Dataset: 0.878000 -> 0.874500 (-0.003500), features=10, samples=10000
+- predict_students_dropout_and_academic_success: 0.783051 -> 0.779661 (-0.003390), features=34, samples=4424
+- FOREX_audjpy-hour-High: 0.724244 -> 0.721392 (-0.002852), features=10, samples=43825
+- optdigits: 0.991993 -> 0.989324 (-0.002669), features=64, samples=5620
+- airlines_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True: 0.625000 -> 0.622500 (-0.002500), features=7, samples=2000
+- mfeat-karhunen: 0.975000 -> 0.972500 (-0.002500), features=64, samples=2000
+- mfeat-pixel: 0.965000 -> 0.962500 (-0.002500), features=240, samples=2000
+- okcupid_stem: 0.750750 -> 0.748313 (-0.002436), features=13, samples=26677
+- ada_agnostic: 0.844469 -> 0.842278 (-0.002191), features=48, samples=4562
+- ozone-level-8hr: 0.952663 -> 0.950690 (-0.001972), features=72, samples=2534
+- kdd_ipums_la_97-small: 0.888247 -> 0.886320 (-0.001927), features=20, samples=5188
+- MagicTelescope: 0.890116 -> 0.888538 (-0.001577), features=9, samples=19020
+- JapaneseVowels: 0.998996 -> 0.997491 (-0.001505), features=14, samples=9961
+- eeg-eye-state: 0.993658 -> 0.992323 (-0.001335), features=14, samples=14980
+- allrep: 0.988079 -> 0.986755 (-0.001325), features=29, samples=3772
+- letter: 0.989500 -> 0.988250 (-0.001250), features=15, samples=20000
+- house_16H: 0.892884 -> 0.891772 (-0.001112), features=16, samples=13488
+- waveform_database_generator_version_1: 0.871000 -> 0.870000 (-0.001000), features=21, samples=5000
+- pol: 0.991572 -> 0.990580 (-0.000992), features=26, samples=10082
+- internet_usage: 0.549951 -> 0.548961 (-0.000989), features=70, samples=10108
+- Satellite: 0.994118 -> 0.993137 (-0.000980), features=36, samples=5100
+- mobile_c36_oversampling: 0.992465 -> 0.991499 (-0.000966), features=6, samples=51760
+- page-blocks: 0.979909 -> 0.978995 (-0.000913), features=10, samples=5473
+- credit: 0.784026 -> 0.783129 (-0.000897), features=10, samples=16714
+- thyroid: 0.995833 -> 0.995139 (-0.000694), features=21, samples=7200
+- mammography: 0.988824 -> 0.988377 (-0.000447), features=6, samples=11183
+- BNG(tic-tac-toe): 0.812167 -> 0.811786 (-0.000381), features=9, samples=39366
+- FOREX_audsgd-hour-High: 0.714204 -> 0.713862 (-0.000342), features=10, samples=43825
+- BNG(cmc): 0.587161 -> 0.586890 (-0.000271), features=9, samples=55296
+- Click_prediction_small: 0.833542 -> 0.833417 (-0.000125), features=3, samples=39948
+- shuttle: 0.999655 -> 0.999569 (-0.000086), features=9, samples=58000
+
+## 持平数据集
+
+- FOREX_audcad-day-High: 0.746594 -> 0.746594 (+0.000000), features=10, samples=1834
+- FOREX_audchf-day-High: 0.752044 -> 0.752044 (+0.000000), features=10, samples=1833
+- Fitness_Club_c: 0.796667 -> 0.796667 (+0.000000), features=6, samples=1500
+- PieChart3: 0.875000 -> 0.875000 (+0.000000), features=37, samples=1077
+- QSAR_biodegradation: 0.895735 -> 0.895735 (+0.000000), features=41, samples=1054
+- Telecom_Churn_Dataset: 0.967016 -> 0.967016 (+0.000000), features=17, samples=3333
+- Wilt: 0.992746 -> 0.992746 (+0.000000), features=5, samples=4821
+- drug_consumption: 0.403183 -> 0.403183 (+0.000000), features=12, samples=1884
+- eye_movements: 0.859689 -> 0.859689 (+0.000000), features=27, samples=10936
+- golf_play_dataset_extended: 0.931507 -> 0.931507 (+0.000000), features=9, samples=1095
+- htru: 0.979330 -> 0.979330 (+0.000000), features=8, samples=17898
+- ibm-employee-performance: 1.000000 -> 1.000000 (+0.000000), features=30, samples=1470
+- mice_protein_expression: 1.000000 -> 1.000000 (+0.000000), features=75, samples=1080
+- national-longitudinal-survey-binary: 1.000000 -> 1.000000 (+0.000000), features=16, samples=4908
+- qsar: 0.895735 -> 0.895735 (+0.000000), features=40, samples=1055
+- seismic+bumps: 0.934236 -> 0.934236 (+0.000000), features=18, samples=2584
+- spambase: 0.958740 -> 0.958740 (+0.000000), features=57, samples=4601
+- texture: 1.000000 -> 1.000000 (+0.000000), features=40, samples=5500
+- yeast: 0.606061 -> 0.606061 (+0.000000), features=8, samples=1484

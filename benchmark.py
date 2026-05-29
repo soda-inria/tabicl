@@ -10,6 +10,7 @@ import multiprocessing as mp
 import os
 import queue
 import re
+import subprocess
 import sys
 import threading
 import time
@@ -44,6 +45,10 @@ class ResultRow:
     n_features: int
     n_classes: int
     accuracy: Optional[float]
+    f1: Optional[float]
+    balanced_accuracy: Optional[float]
+    roc_auc: Optional[float]
+    log_loss: Optional[float]
     fit_seconds: float
     predict_seconds: float
     status: str
@@ -60,6 +65,10 @@ class ModelSummaryRow:
     failed_count: int
     skipped_count: int
     avg_accuracy_ok: Optional[float]
+    avg_f1_ok: Optional[float]
+    avg_balanced_accuracy_ok: Optional[float]
+    avg_roc_auc_ok: Optional[float]
+    avg_log_loss_ok: Optional[float]
     avg_fit_seconds_ok: Optional[float]
     avg_predict_seconds_ok: Optional[float]
     avg_dataset_seconds_ok: Optional[float]
@@ -80,6 +89,155 @@ def ensure_runtime_deps() -> None:
 
         np = _np
         pd = _pd
+
+
+def format_optional_float(value: Optional[float], precision: int = 6) -> str:
+    if value is None:
+        return "None"
+    try:
+        if pd is not None and pd.isna(value):
+            return "None"
+    except Exception:
+        pass
+    return f"{float(value):.{precision}f}"
+
+
+def get_estimator_classes(estimator: Any) -> np.ndarray | None:
+    for attr_owner in (estimator, getattr(estimator, "estimator", None)):
+        if attr_owner is None:
+            continue
+        classes = getattr(attr_owner, "classes_", None)
+        if classes is not None:
+            return np.asarray(classes)
+    y_encoder = getattr(estimator, "y_encoder_", None)
+    classes = getattr(y_encoder, "classes_", None)
+    if classes is not None:
+        return np.asarray(classes)
+    return None
+
+
+def predict_from_proba_or_model(
+    estimator: Any,
+    X_test: Any,
+) -> tuple[np.ndarray, np.ndarray | None, np.ndarray | None]:
+    y_proba = None
+    try:
+        y_proba = np.asarray(estimator.predict_proba(X_test))
+    except Exception:
+        y_pred = np.asarray(estimator.predict(X_test))
+        return y_pred, None, get_estimator_classes(estimator)
+
+    classes = get_estimator_classes(estimator)
+    if y_proba.ndim != 2 or y_proba.shape[0] != len(X_test) or y_proba.shape[1] < 1:
+        y_pred = np.asarray(estimator.predict(X_test))
+        return y_pred, y_proba, classes
+
+    encoded = np.argmax(y_proba, axis=1)
+    if classes is not None and len(classes) == y_proba.shape[1]:
+        y_pred = classes[encoded]
+    else:
+        try:
+            y_pred = np.asarray(estimator.predict(X_test))
+        except Exception:
+            y_pred = encoded
+    return np.asarray(y_pred), y_proba, classes
+
+
+def compute_weighted_f1(y_true: Any, y_pred: Any) -> Optional[float]:
+    try:
+        from sklearn.metrics import f1_score
+
+        return float(
+            f1_score(
+                np.asarray(y_true),
+                np.asarray(y_pred),
+                average="weighted",
+                zero_division=0,
+            )
+        )
+    except Exception:
+        return None
+
+
+def compute_balanced_accuracy(y_true: Any, y_pred: Any) -> Optional[float]:
+    try:
+        from sklearn.metrics import balanced_accuracy_score
+
+        return float(balanced_accuracy_score(np.asarray(y_true), np.asarray(y_pred)))
+    except Exception:
+        return None
+
+
+def compute_roc_auc(
+    y_true: Any,
+    y_proba: Any | None,
+    classes: Any | None,
+) -> Optional[float]:
+    if y_proba is None:
+        return None
+    try:
+        from sklearn.metrics import roc_auc_score
+
+        y_true_arr = np.asarray(y_true)
+        proba_arr = np.asarray(y_proba)
+        if proba_arr.ndim != 2 or proba_arr.shape[0] != len(y_true_arr):
+            return None
+        if proba_arr.shape[1] < 2 or len(np.unique(y_true_arr)) < 2:
+            return None
+
+        class_arr = None if classes is None else np.asarray(classes)
+        if class_arr is not None and (
+            class_arr.ndim != 1 or len(class_arr) != proba_arr.shape[1]
+        ):
+            class_arr = None
+
+        if proba_arr.shape[1] == 2:
+            if class_arr is not None:
+                y_binary = (y_true_arr == class_arr[1]).astype(int)
+                if len(np.unique(y_binary)) < 2:
+                    return None
+                return float(roc_auc_score(y_binary, proba_arr[:, 1]))
+            return float(roc_auc_score(y_true_arr, proba_arr[:, 1]))
+
+        if class_arr is not None:
+            return float(
+                roc_auc_score(
+                    y_true_arr,
+                    proba_arr,
+                    labels=list(class_arr),
+                    multi_class="ovr",
+                )
+            )
+        return float(roc_auc_score(y_true_arr, proba_arr, multi_class="ovr"))
+    except Exception:
+        return None
+
+
+def compute_log_loss(
+    y_true: Any,
+    y_proba: Any | None,
+    classes: Any | None,
+) -> Optional[float]:
+    if y_proba is None:
+        return None
+    try:
+        from sklearn.metrics import log_loss
+
+        y_true_arr = np.asarray(y_true)
+        proba_arr = np.asarray(y_proba)
+        if proba_arr.ndim != 2 or proba_arr.shape[0] != len(y_true_arr):
+            return None
+
+        class_arr = None if classes is None else np.asarray(classes)
+        if class_arr is not None and (
+            class_arr.ndim != 1 or len(class_arr) != proba_arr.shape[1]
+        ):
+            class_arr = None
+        if class_arr is not None:
+            return float(log_loss(y_true_arr, proba_arr, labels=list(class_arr)))
+        return float(log_loss(y_true_arr, proba_arr))
+    except Exception:
+        return None
 
 
 def parse_optional_int(value: str) -> int | None:
@@ -453,6 +611,10 @@ def build_model_summary_row(
             failed_count=len(dataset_dirs),
             skipped_count=0,
             avg_accuracy_ok=None,
+            avg_f1_ok=None,
+            avg_balanced_accuracy_ok=None,
+            avg_roc_auc_ok=None,
+            avg_log_loss_ok=None,
             avg_fit_seconds_ok=None,
             avg_predict_seconds_ok=None,
             avg_dataset_seconds_ok=None,
@@ -472,6 +634,22 @@ def build_model_summary_row(
         failed_count=int(len(failed_df)),
         skipped_count=int(len(skipped_df)),
         avg_accuracy_ok=(float(ok_df["accuracy"].mean()) if len(ok_df) else None),
+        avg_f1_ok=(float(ok_df["f1"].mean()) if len(ok_df) else None),
+        avg_balanced_accuracy_ok=(
+            float(ok_df["balanced_accuracy"].mean())
+            if len(ok_df) and ok_df["balanced_accuracy"].notna().any()
+            else None
+        ),
+        avg_roc_auc_ok=(
+            float(ok_df["roc_auc"].mean())
+            if len(ok_df) and ok_df["roc_auc"].notna().any()
+            else None
+        ),
+        avg_log_loss_ok=(
+            float(ok_df["log_loss"].mean())
+            if len(ok_df) and ok_df["log_loss"].notna().any()
+            else None
+        ),
         avg_fit_seconds_ok=avg_fit_seconds_ok,
         avg_predict_seconds_ok=avg_predict_seconds_ok,
         avg_dataset_seconds_ok=avg_dataset_seconds_ok,
@@ -547,6 +725,10 @@ def evaluate_one_dataset(classifier, dataset_dir: Path) -> ResultRow:
                 n_features=0,
                 n_classes=0,
                 accuracy=None,
+                f1=None,
+                balanced_accuracy=None,
+                roc_auc=None,
+                log_loss=None,
                 fit_seconds=0.0,
                 predict_seconds=0.0,
                 status="skip",
@@ -589,10 +771,14 @@ def evaluate_one_dataset(classifier, dataset_dir: Path) -> ResultRow:
         fit_seconds = time.time() - t0
 
         t1 = time.time()
-        y_pred = classifier.predict(X_test)
+        y_pred, y_proba, proba_classes = predict_from_proba_or_model(classifier, X_test)
         predict_seconds = time.time() - t1
 
         accuracy = float(np.mean(np.asarray(y_pred) == np.asarray(y_test)))
+        f1 = compute_weighted_f1(y_test, y_pred)
+        balanced_accuracy = compute_balanced_accuracy(y_test, y_pred)
+        roc_auc = compute_roc_auc(y_test, y_proba, proba_classes)
+        log_loss_score = compute_log_loss(y_test, y_proba, proba_classes)
 
         return ResultRow(
             dataset_name=dataset_dir.name,
@@ -604,6 +790,10 @@ def evaluate_one_dataset(classifier, dataset_dir: Path) -> ResultRow:
             n_features=int(X_train.shape[1]),
             n_classes=int(len(classes)),
             accuracy=accuracy,
+            f1=f1,
+            balanced_accuracy=balanced_accuracy,
+            roc_auc=roc_auc,
+            log_loss=log_loss_score,
             fit_seconds=float(fit_seconds),
             predict_seconds=float(predict_seconds),
             status="ok",
@@ -620,6 +810,10 @@ def evaluate_one_dataset(classifier, dataset_dir: Path) -> ResultRow:
             n_features=0,
             n_classes=0,
             accuracy=None,
+            f1=None,
+            balanced_accuracy=None,
+            roc_auc=None,
+            log_loss=None,
             fit_seconds=0.0,
             predict_seconds=0.0,
             status="fail",
@@ -683,7 +877,12 @@ def worker_main(
                 if row.status == "ok":
                     print(
                         f"[worker {worker_id} | gpu {gpu_id}] "
-                        f"[ok] {row.dataset_name} accuracy={row.accuracy:.6f}"
+                        f"[ok] {row.dataset_name} "
+                        f"accuracy={format_optional_float(row.accuracy)} "
+                        f"f1={format_optional_float(row.f1)} "
+                        f"balanced_accuracy={format_optional_float(row.balanced_accuracy)} "
+                        f"roc_auc={format_optional_float(row.roc_auc)} "
+                        f"log_loss={format_optional_float(row.log_loss)}"
                     )
                 elif row.status == "skip":
                     print(
@@ -723,6 +922,10 @@ def worker_main(
                     "n_features": 0,
                     "n_classes": 0,
                     "accuracy": None,
+                    "f1": None,
+                    "balanced_accuracy": None,
+                    "roc_auc": None,
+                    "log_loss": None,
                     "fit_seconds": 0.0,
                     "predict_seconds": 0.0,
                     "status": "fail",
@@ -800,7 +1003,12 @@ def model_pool_worker_main(
                         if row.status == "ok":
                             print(
                                 f"[{worker_label}] [{model_path.stem}] "
-                                f"[ok] {row.dataset_name} accuracy={row.accuracy:.6f}",
+                                f"[ok] {row.dataset_name} "
+                                f"accuracy={format_optional_float(row.accuracy)} "
+                                f"f1={format_optional_float(row.f1)} "
+                                f"balanced_accuracy={format_optional_float(row.balanced_accuracy)} "
+                                f"roc_auc={format_optional_float(row.roc_auc)} "
+                                f"log_loss={format_optional_float(row.log_loss)}",
                                 flush=True,
                             )
                         elif row.status == "skip":
@@ -885,9 +1093,19 @@ def write_summary(
 ) -> None:
     ensure_runtime_deps()
 
+    result_df = result_df.copy()
+    for metric_column in ("accuracy", "f1", "balanced_accuracy", "roc_auc", "log_loss"):
+        if metric_column in result_df.columns:
+            result_df[metric_column] = pd.to_numeric(result_df[metric_column], errors="coerce")
+
     ok_df = result_df[result_df["status"] == "ok"].copy() if len(result_df) else pd.DataFrame()
     failed_df = result_df[result_df["status"] == "fail"].copy() if len(result_df) else pd.DataFrame()
     skipped_df = result_df[result_df["status"] == "skip"].copy() if len(result_df) else pd.DataFrame()
+
+    def mean_line(label: str, column: str) -> str:
+        if len(ok_df) and column in ok_df.columns and ok_df[column].notna().any():
+            return f"{label}: {ok_df[column].mean():.6f}"
+        return f"{label}: (none)"
 
     lines = [
         f"discovered_datasets: {len(dataset_dirs)}",
@@ -895,11 +1113,11 @@ def write_summary(
         f"ok_count: {len(ok_df)}",
         f"failed_count: {len(failed_df)}",
         f"skipped_count: {len(skipped_df)}",
-        (
-            f"avg_accuracy_ok: {ok_df['accuracy'].mean():.6f}"
-            if len(ok_df)
-            else "avg_accuracy_ok: (none)"
-        ),
+        mean_line("avg_accuracy_ok", "accuracy"),
+        mean_line("avg_f1_ok", "f1"),
+        mean_line("avg_balanced_accuracy_ok", "balanced_accuracy"),
+        mean_line("avg_roc_auc_ok", "roc_auc"),
+        mean_line("avg_log_loss_ok", "log_loss"),
         f"wall_seconds: {wall_seconds:.3f}",
     ]
 
@@ -932,6 +1150,10 @@ def write_model_pool_outputs(
     )
     for column in (
         "avg_accuracy_ok",
+        "avg_f1_ok",
+        "avg_balanced_accuracy_ok",
+        "avg_roc_auc_ok",
+        "avg_log_loss_ok",
         "avg_fit_seconds_ok",
         "avg_predict_seconds_ok",
         "avg_dataset_seconds_ok",
@@ -947,20 +1169,21 @@ def write_model_pool_outputs(
     ok_df = summary_df[summary_df["status"] == "ok"].copy() if len(summary_df) else pd.DataFrame()
     failed_df = summary_df[summary_df["status"] == "fail"].copy() if len(summary_df) else pd.DataFrame()
 
+    def mean_line(label: str, column: str) -> str:
+        if len(ok_df) and column in ok_df.columns and ok_df[column].notna().any():
+            return f"{label}: {ok_df[column].mean():.6f}"
+        return f"{label}: (none)"
+
     lines = [
         f"total_models: {len(summary_df)}",
         f"successful_models: {len(ok_df)}",
         f"failed_models: {len(failed_df)}",
-        (
-            f"average_avg_dataset_seconds_ok: {ok_df['avg_dataset_seconds_ok'].mean():.6f}"
-            if len(ok_df)
-            else "average_avg_dataset_seconds_ok: (none)"
-        ),
-        (
-            f"average_avg_accuracy_ok: {ok_df['avg_accuracy_ok'].mean():.6f}"
-            if len(ok_df)
-            else "average_avg_accuracy_ok: (none)"
-        ),
+        mean_line("average_avg_dataset_seconds_ok", "avg_dataset_seconds_ok"),
+        mean_line("average_avg_accuracy_ok", "avg_accuracy_ok"),
+        mean_line("average_avg_f1_ok", "avg_f1_ok"),
+        mean_line("average_avg_balanced_accuracy_ok", "avg_balanced_accuracy_ok"),
+        mean_line("average_avg_roc_auc_ok", "avg_roc_auc_ok"),
+        mean_line("average_avg_log_loss_ok", "avg_log_loss_ok"),
         f"global_wall_seconds: {wall_seconds:.3f}",
     ]
 
@@ -978,7 +1201,7 @@ def write_model_pool_outputs(
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Run TabICLv1.1 classification benchmarks on data181 with "
+            "Run TabICLv2 classification benchmarks on data181 with "
             "AMD/ROCm multi-GPU workers."
         )
     )
@@ -986,16 +1209,16 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-path", default=None)
     parser.add_argument("--models-dir", default=None)
     parser.add_argument("--checkpoint-version", default=DEFAULT_CHECKPOINT_VERSION)
-    parser.add_argument("--out-dir", default="baseline/iclv1.1_ensmble64")
-    parser.add_argument("--workers", type=int, default=1)
-    parser.add_argument("--gpus", default="0")
+    parser.add_argument("--out-dir", default="baseline/iclv1.1_ensemble32")
+    parser.add_argument("--workers", type=int, default=2)
+    parser.add_argument("--gpus", default="2,3")
     parser.add_argument(
         "--n-estimators",
         "--ensemble",
         "--ensmble",
         dest="n_estimators",
         type=int,
-        default=64,
+        default=32,
         help="Number of TabICL ensemble estimators. --ensemble/--ensmble are aliases for this value.",
     )
     parser.add_argument("--batch-size", type=parse_optional_int, default=8)
@@ -1011,10 +1234,187 @@ def build_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def parse_gpu_id_list(value: str) -> List[int]:
+    return [int(x.strip()) for x in value.split(",") if x.strip()]
+
+
+def detect_env_gpu_ids() -> List[int]:
+    for env_name in ("CUDA_VISIBLE_DEVICES", "ROCR_VISIBLE_DEVICES", "HIP_VISIBLE_DEVICES"):
+        raw_value = os.environ.get(env_name, "").strip()
+        if not raw_value:
+            continue
+        try:
+            gpu_ids = parse_gpu_id_list(raw_value)
+        except ValueError:
+            gpu_ids = []
+        if gpu_ids:
+            return gpu_ids
+    return []
+
+
+def detect_torch_gpu_count() -> int:
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            return int(torch.cuda.device_count())
+    except Exception:
+        pass
+    return 0
+
+
+def detect_nvidia_gpu_ids() -> List[int]:
+    try:
+        completed = subprocess.run(
+            ["nvidia-smi", "--query-gpu=index", "--format=csv,noheader,nounits"],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+    except FileNotFoundError:
+        return []
+    except Exception:
+        return []
+
+    if completed.returncode != 0:
+        return []
+
+    gpu_ids: List[int] = []
+    for line in completed.stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            gpu_ids.append(int(line.split(",")[0].strip()))
+        except ValueError:
+            continue
+    return gpu_ids
+
+
+def detect_candidate_gpu_ids() -> List[int]:
+    env_gpu_ids = detect_env_gpu_ids()
+    if env_gpu_ids:
+        return env_gpu_ids
+
+    nvidia_gpu_ids = detect_nvidia_gpu_ids()
+    if nvidia_gpu_ids:
+        return nvidia_gpu_ids
+
+    device_count = detect_torch_gpu_count()
+    if device_count > 0:
+        return list(range(device_count))
+
+    raise RuntimeError(
+        "No visible GPU detected. Pass --gpus explicitly if GPUs are hidden by the environment."
+    )
+
+
+def query_nvidia_gpu_stats(candidate_gpu_ids: List[int]) -> Dict[int, Dict[str, float]]:
+    try:
+        completed = subprocess.run(
+            [
+                "nvidia-smi",
+                "--query-gpu=index,memory.free,memory.total,utilization.gpu",
+                "--format=csv,noheader,nounits",
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+    except FileNotFoundError:
+        return {}
+    except Exception:
+        return {}
+
+    if completed.returncode != 0:
+        return {}
+
+    candidate_set = set(candidate_gpu_ids)
+    stats: Dict[int, Dict[str, float]] = {}
+    for line in completed.stdout.splitlines():
+        parts = [part.strip() for part in line.split(",")]
+        if len(parts) < 4:
+            continue
+        try:
+            gpu_id = int(parts[0])
+            if gpu_id not in candidate_set:
+                continue
+            stats[gpu_id] = {
+                "free_mb": float(parts[1]),
+                "total_mb": float(parts[2]),
+                "utilization": float(parts[3]),
+            }
+        except ValueError:
+            continue
+    return stats
+
+
+def query_torch_gpu_stats(candidate_gpu_ids: List[int]) -> Dict[int, Dict[str, float]]:
+    try:
+        import torch
+
+        if not torch.cuda.is_available():
+            return {}
+        device_count = int(torch.cuda.device_count())
+    except Exception:
+        return {}
+
+    stats: Dict[int, Dict[str, float]] = {}
+    for logical_idx, gpu_id in enumerate(candidate_gpu_ids):
+        if logical_idx >= device_count:
+            break
+        try:
+            free_bytes, total_bytes = torch.cuda.mem_get_info(logical_idx)
+            stats[gpu_id] = {
+                "free_mb": float(free_bytes) / (1024 * 1024),
+                "total_mb": float(total_bytes) / (1024 * 1024),
+            }
+        except Exception:
+            continue
+    return stats
+
+
+def rank_gpu_ids_by_availability(candidate_gpu_ids: List[int]) -> List[int]:
+    stats = query_nvidia_gpu_stats(candidate_gpu_ids)
+    if not stats:
+        stats = query_torch_gpu_stats(candidate_gpu_ids)
+
+    def sort_key(gpu_id: int) -> tuple[float, float, int]:
+        gpu_stats = stats.get(gpu_id, {})
+        free_mb = float(gpu_stats.get("free_mb", -1.0))
+        utilization = float(gpu_stats.get("utilization", 100.0))
+        return (-free_mb, utilization, gpu_id)
+
+    return sorted(candidate_gpu_ids, key=sort_key)
+
+
 def resolve_gpu_ids(args: argparse.Namespace) -> List[int]:
-    gpu_ids = [int(x.strip()) for x in args.gpus.split(",") if x.strip()]
-    if len(gpu_ids) != args.workers:
-        raise ValueError(f"--gpus must contain exactly {args.workers} ids")
+    if args.gpus is None or str(args.gpus).strip().lower() == "auto":
+        candidate_gpu_ids = detect_candidate_gpu_ids()
+        ranked_gpu_ids = rank_gpu_ids_by_availability(candidate_gpu_ids)
+        worker_count = len(ranked_gpu_ids) if args.workers is None else int(args.workers)
+        if worker_count <= 0:
+            raise ValueError("--workers must be positive")
+        if worker_count > len(ranked_gpu_ids):
+            raise ValueError(
+                f"--workers={worker_count} requested but only {len(ranked_gpu_ids)} GPUs are visible"
+            )
+        gpu_ids = ranked_gpu_ids[:worker_count]
+        args.workers = worker_count
+    else:
+        gpu_ids = parse_gpu_id_list(str(args.gpus))
+        if not gpu_ids:
+            raise ValueError("--gpus must contain at least one GPU id or use 'auto'")
+        if args.workers is None:
+            args.workers = len(gpu_ids)
+        if len(gpu_ids) != int(args.workers):
+            raise ValueError(f"--gpus must contain exactly {args.workers} ids")
+
+    if args.verbose:
+        print(f"resolved_workers: {args.workers}", flush=True)
+        print(f"resolved_gpus: {','.join(str(gpu_id) for gpu_id in gpu_ids)}", flush=True)
     return gpu_ids
 
 

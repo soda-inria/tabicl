@@ -1,0 +1,860 @@
+dataset_name,dataset_dir,task_type,n_train,n_val,n_test,n_features,n_classes,accuracy,f1,balanced_accuracy,roc_auc,log_loss,fit_seconds,predict_seconds,status,error,n_train_a,n_train_b,n_holdout_c,n_test_d,ttt_loss,ttt_steps,ttt_lr,ttt_applied,ttt_update_seconds,ttt_split_strategy,ttt_split_reason,ttt_epochs,ttt_chunks_per_epoch,ttt_batch_mode,ttt_val_eval_metric,ttt_val_baseline_metric,ttt_val_best_metric,ttt_val_baseline_accuracy,ttt_val_best_accuracy,ttt_best_epoch,ttt_stopped_early,ttt_oom_fallback,ttt_fallback_reason,ttt_context_selector,ttt_taar_score_source,ttt_taar_selected_context_mean,ttt_taar_selected_context_min,ttt_taar_selected_context_max,ttt_taar_fallback_count,ttt_taar_skip_count,ttt_taar_feature_enabled,ttt_taar_feature_score_source,ttt_taar_selected_feature_mean,ttt_taar_selected_feature_min,ttt_taar_selected_feature_max,ttt_taar_feature_fallback_count
+ASP-POTASSCO-classification,/home/crc00006699/zh/tabiclv2/data178/ASP-POTASSCO-classification,multiclass,1035,207,259,141,11,0.4903474903474903,0.4709621259507563,0.4015997490329041,0.8512095632231967,1.503941898782927,1.4155840873718262,4.019190788269043,ok,,1035,828,0,259,,0,1e-05,False,0.8378250598907471,full_train_epoch_chunks,full train set chunked per epoch | validation=dataset_val_split | TTT training skipped because n_classes=11 exceeds model max_classes=10,0,0,epoch_chunk,,,,,,0,False,False,,taar_sample,,,,,0,0,False,,,,,0
+Amazon_employee_access,/home/crc00006699/zh/tabiclv2/data178/Amazon_employee_access,binclass,26215,5243,6554,7,2,0.9441562404638388,0.9294777284745342,0.5778265839146273,0.8343142512257914,0.1663157519817883,40.39951181411743,12.763047456741331,ok,,26215,20972,0,6554,,0,1e-05,False,39.78058671951294,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=24x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,3,epoch_chunk,roc_auc,0.8550393751132234,0.8550393751132234,0.949074957085638,0.949074957085638,0,True,False,,taar_sample,taar_sample,,,,0,24,False,,,,,0
+BLE_RSSI_dataset_for_Indoor_localization,/home/crc00006699/zh/tabiclv2/data178/BLE_RSSI_dataset_for_Indoor_localization,multiclass,7987,1598,1997,3,3,0.7336004006009014,0.7330988191192322,0.7326163567434275,0.9027895681284224,0.5860072345642322,8.34555196762085,1.4333107471466064,ok,,7987,6389,0,1997,,0,1e-05,False,7.899748802185059,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.9016391855752374,0.9016391855752374,0.7509386733416771,0.7509386733416771,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+BNG(breast-w),/home/crc00006699/zh/tabiclv2/data178/BNG(breast-w),binclass,31492,6299,7874,9,2,0.9880619761239524,0.9880774596607574,0.9880918254272,0.9990907651773496,0.0343236415690793,51.25494861602783,20.220986127853397,ok,,31492,25193,0,7874,,0,1e-05,False,50.49980974197388,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=24x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,3,epoch_chunk,roc_auc,0.9988056620762288,0.9988056620762288,0.98666454992856,0.98666454992856,0,True,False,,taar_sample,taar_sample,,,,0,24,False,,,,,0
+BNG(cmc),/home/crc00006699/zh/tabiclv2/data178/BNG(cmc),multiclass,44236,8848,11060,9,3,0.5874321880650994,0.5861486167429909,0.5695522496274562,0.7647013047461507,0.8750451390694162,74.74273729324341,35.98321461677551,ok,,44236,35388,0,11060,,0,1e-05,False,73.84717988967896,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=32x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,4,epoch_chunk,roc_auc,0.7589704602393859,0.7589704602393859,0.5762884267631103,0.5762884267631103,0,True,False,,taar_sample,taar_sample,,,,0,32,False,,,,,0
+BNG(tic-tac-toe),/home/crc00006699/zh/tabiclv2/data178/BNG(tic-tac-toe),binclass,31492,6299,7874,9,2,0.8148336296672594,0.8127924569695848,0.7858749171640029,0.8827866104146994,0.4067285411439342,52.13352966308594,20.266871452331543,ok,,31492,25193,0,7874,,0,1e-05,False,51.19993424415589,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=24x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,3,epoch_chunk,roc_auc,0.8779035922294894,0.8779035922294894,0.8096523257659946,0.8096523257659946,0,True,False,,taar_sample,taar_sample,,,,0,24,False,,,,,0
+Bank_Customer_Churn_Dataset,/home/crc00006699/zh/tabiclv2/data178/Bank_Customer_Churn_Dataset,binclass,8000,1600,2000,10,2,0.875,0.8648358896033153,0.7440938627379305,0.8819736531600938,0.313754796589385,14.39004921913147,2.799808979034424,ok,,8000,6400,0,2000,,0,1e-05,False,13.772897243499756,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.8777604954204428,0.8777604954204428,0.861875,0.861875,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+Basketball_c,/home/crc00006699/zh/tabiclv2/data178/Basketball_c,binclass,1072,215,268,11,2,0.7014925373134329,0.6996191714905836,0.6777699031419797,0.7436806047720291,0.578142398832161,3.827768564224243,0.4392211437225342,ok,,1072,857,0,268,,0,1e-05,False,3.428332567214966,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.8182193288098295,0.8182193288098295,0.7581395348837209,0.7581395348837209,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+California-Housing-Classification,/home/crc00006699/zh/tabiclv2/data178/California-Housing-Classification,binclass,16512,3303,4128,8,2,0.9217538759689924,0.9217535866844322,0.9217549139162388,0.979632613826687,0.1835720778675608,25.28715682029724,7.202274799346924,ok,,16512,13209,0,4128,,0,1e-05,False,24.73399901390076,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=16x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,2,epoch_chunk,roc_auc,0.9770747569526432,0.9770747569526432,0.9182561307901907,0.9182561307901907,0,True,False,,taar_sample,taar_sample,,,,0,16,False,,,,,0
+Cardiovascular-Disease-dataset,/home/crc00006699/zh/tabiclv2/data178/Cardiovascular-Disease-dataset,binclass,56000,11200,14000,11,2,0.7322142857142857,0.7317897470574969,0.7321916268380823,0.800756373716367,0.5431197788010976,107.53532814979552,55.64356184005737,ok,,56000,44800,0,14000,,0,1e-05,False,106.68323945999146,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=40x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,5,epoch_chunk,roc_auc,0.8000135905651249,0.8000135905651249,0.7323214285714286,0.7323214285714286,0,True,False,,taar_sample,taar_sample,,,,0,40,False,,,,,0
+Click_prediction_small,/home/crc00006699/zh/tabiclv2/data178/Click_prediction_small,binclass,31958,6392,7990,3,2,0.7178973717146433,0.7328824852598665,0.5617061232559201,0.6068707714699518,0.485295541678156,32.2542622089386,7.25619649887085,ok,,31958,25566,0,7990,,0,1e-05,False,31.755311727523804,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=24x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,3,epoch_chunk,roc_auc,0.6253027089434714,0.6253027089434714,0.8322903629536921,0.8322903629536921,0,True,False,,taar_sample,taar_sample,,,,0,24,False,,,,,0
+Credit_c,/home/crc00006699/zh/tabiclv2/data178/Credit_c,multiclass,80000,16000,20000,22,3,0.81865,0.8186470082745152,0.8265399238222978,0.9311157153828116,0.4245029028015258,250.26197385787964,115.77321243286131,ok,,80000,64000,0,20000,,0,1e-05,False,248.07604551315308,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=56x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,7,epoch_chunk,roc_auc,0.9259133161803352,0.9259133161803352,0.812875,0.812875,0,True,False,,taar_sample,taar_sample,,,,0,56,False,,,,,0
+Customer_Personality_Analysis,/home/crc00006699/zh/tabiclv2/data178/Customer_Personality_Analysis,binclass,1792,359,448,24,2,0.890625,0.8819285508425728,0.7204332667371802,0.9132487170446978,0.2436533436666687,7.912757396697998,0.8017685413360596,ok,,1792,1433,0,448,,0,1e-05,False,7.44258713722229,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.8795474164508571,0.8795474164508571,0.8913649025069638,0.8913649025069638,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+Diabetic_Retinopathy_Debrecen,/home/crc00006699/zh/tabiclv2/data178/Diabetic_Retinopathy_Debrecen,binclass,920,184,231,19,2,0.7402597402597403,0.739887282528792,0.7380307136404698,0.838452273411623,0.4882865703294186,4.497014999389648,0.9128947257995604,ok,,920,736,0,231,,0,1e-05,False,4.094579458236694,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.8179876601803513,0.8179876601803513,0.7445652173913043,0.7445652173913043,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+E-CommereShippingData,/home/crc00006699/zh/tabiclv2/data178/E-CommereShippingData,binclass,8799,1760,2200,10,2,0.6763636363636364,0.6643989307797264,0.7263047265614603,0.7302141193219139,0.5037008522350079,15.583451747894289,3.169954299926758,ok,,8799,7039,0,2200,,0,1e-05,False,14.949676513671877,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.7443400402414486,0.7443400402414486,0.6823863636363636,0.6823863636363636,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+Employee,/home/crc00006699/zh/tabiclv2/data178/Employee,binclass,3722,745,931,8,2,0.8603651987110634,0.8533323103677561,0.8102700490998364,0.8782886661211129,0.3551362759250647,7.07149863243103,1.1382339000701904,ok,,3722,2977,0,931,,0,1e-05,False,6.697934865951538,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.8829083588957055,0.8829083588957055,0.8523489932885906,0.8523489932885906,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+FICO-HELOC-cleaned,/home/crc00006699/zh/tabiclv2/data178/FICO-HELOC-cleaned,binclass,7896,1580,1975,23,2,0.7549367088607595,0.7546711509554379,0.7537749764770173,0.8263690581356651,0.5123915568377126,24.636606216430664,3.529418706893921,ok,,7896,6316,0,1975,,0,1e-05,False,23.805449962615967,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.8069288497711355,0.8069288497711355,0.7487341772151899,0.7487341772151899,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+FOREX_audcad-day-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audcad-day-High,binclass,1467,294,367,10,2,0.7465940054495913,0.7464998647714711,0.7463613140854275,0.8321748945523673,0.5061551590364243,4.200838088989258,0.5749874114990234,ok,,1467,1173,0,367,,0,1e-05,False,3.812847375869751,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.7950011571395511,0.7950011571395511,0.7108843537414966,0.7108843537414966,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+FOREX_audcad-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audcad-hour-High,binclass,35060,7012,8765,10,2,0.7176269252709641,0.7174473325377901,0.716958738587814,0.7893863269194031,0.5530698642590808,60.16431951522827,24.37210440635681,ok,,35060,28048,0,8765,,0,1e-05,False,59.29778909683228,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=24x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,3,epoch_chunk,roc_auc,0.7929345262565985,0.7929345262565985,0.7154877353108956,0.7154877353108956,0,True,False,,taar_sample,taar_sample,,,,0,24,False,,,,,0
+FOREX_audchf-day-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audchf-day-High,binclass,1466,294,367,10,2,0.7493188010899182,0.749274129655601,0.7495692984019486,0.8399275233172934,0.4963897907589739,4.4894773960113525,0.5598177909851074,ok,,1466,1172,0,367,,0,1e-05,False,4.063665866851807,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.7934968757232121,0.7934968757232121,0.7108843537414966,0.7108843537414966,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+FOREX_audjpy-day-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audjpy-day-High,binclass,1465,293,367,10,2,0.7874659400544959,0.7871334795888758,0.7864574044349325,0.8559687295642352,0.4746308477656318,4.335626840591431,0.544015645980835,ok,,1465,1172,0,367,,0,1e-05,False,3.946398258209229,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.8309090909090909,0.8309090909090909,0.7508532423208191,0.7508532423208191,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+FOREX_audjpy-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audjpy-hour-High,binclass,35060,7012,8765,10,2,0.7220764403879064,0.7220514955581413,0.7217437540042443,0.800008640360573,0.5412186533393606,60.10826754570007,24.362656831741333,ok,,35060,28048,0,8765,,0,1e-05,False,59.2627694606781,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=24x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,3,epoch_chunk,roc_auc,0.7906073856623042,0.7906073856623042,0.7183399885909869,0.7183399885909869,0,True,False,,taar_sample,taar_sample,,,,0,24,False,,,,,0
+FOREX_audsgd-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audsgd-hour-High,binclass,35060,7012,8765,10,2,0.7105533371363377,0.7105705302797058,0.7103644923983572,0.7861951951313466,0.5550260114033174,62.04048204421997,24.35664367675781,ok,,35060,28048,0,8765,,0,1e-05,False,61.132715702056885,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=24x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,3,epoch_chunk,roc_auc,0.7774450395707273,0.7774450395707273,0.7007986309184255,0.7007986309184255,0,True,False,,taar_sample,taar_sample,,,,0,24,False,,,,,0
+FOREX_audusd-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audusd-hour-High,binclass,35060,7012,8765,10,2,0.7070165430690245,0.7070125551699793,0.7059721251398847,0.7858340152754335,0.5549286913186079,61.24934458732605,24.41008186340332,ok,,35060,28048,0,8765,,0,1e-05,False,60.34458255767822,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=24x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,3,epoch_chunk,roc_auc,0.7781984185843283,0.7781984185843283,0.7102110667427267,0.7102110667427267,0,True,False,,taar_sample,taar_sample,,,,0,24,False,,,,,0
+FOREX_cadjpy-day-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_cadjpy-day-High,binclass,1467,294,367,10,2,0.7275204359673024,0.7272531562094675,0.727607507721549,0.7930921834164885,0.553130949246042,4.428996562957764,0.5713517665863037,ok,,1467,1173,0,367,,0,1e-05,False,4.032472372055054,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.7791095890410958,0.7791095890410958,0.7006802721088435,0.7006802721088435,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+FOREX_cadjpy-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_cadjpy-hour-High,binclass,35060,7012,8765,10,2,0.7159155733029093,0.7158882806377188,0.7154630943663618,0.7900355774485146,0.5537973846450552,60.21288657188416,24.340384006500244,ok,,35060,28048,0,8765,,0,1e-05,False,59.35917377471924,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=24x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,3,epoch_chunk,roc_auc,0.7883437594261059,0.7883437594261059,0.7139189960068454,0.7139189960068454,0,True,False,,taar_sample,taar_sample,,,,0,24,False,,,,,0
+Firm-Teacher_Clave-Direction_Classification,/home/crc00006699/zh/tabiclv2/data178/Firm-Teacher_Clave-Direction_Classification,multiclass,8640,1728,2160,16,4,0.8791666666666667,0.8773704055474667,0.7965378040041882,0.9704543789116464,0.3156933918031613,21.43996787071228,3.5467464923858643,ok,,8640,6912,0,2160,,0,1e-05,False,20.44915533065796,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.9649145982054098,0.9649145982054098,0.8674768518518519,0.8674768518518519,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+Fitness_Club_c,/home/crc00006699/zh/tabiclv2/data178/Fitness_Club_c,binclass,1200,240,300,6,2,0.8033333333333333,0.7961465279630122,0.7378673957621326,0.8231505336768494,0.4538117058789082,3.255119800567627,0.3629229068756103,ok,,1200,960,0,300,,0,1e-05,False,2.890397310256958,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.8249528340579115,0.8249528340579115,0.7666666666666667,0.7666666666666667,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+GAMETES_Epistasis_2-Way_20atts_0.1H_EDM-1_1,/home/crc00006699/zh/tabiclv2/data178/GAMETES_Epistasis_2-Way_20atts_0.1H_EDM-1_1,binclass,1280,256,320,20,2,0.678125,0.6727529066015349,0.6781250000000001,0.7283203125000001,0.6026621843575768,5.597253322601318,0.6676108837127686,ok,,1280,1024,0,320,,0,1e-05,False,5.211604356765747,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.67071533203125,0.67071533203125,0.65234375,0.65234375,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+GAMETES_Heterogeneity_20atts_1600_Het_0.4_0.2_50_EDM-2_001,/home/crc00006699/zh/tabiclv2/data178/GAMETES_Heterogeneity_20atts_1600_Het_0.4_0.2_50_EDM-2_001,binclass,1280,256,320,20,2,0.684375,0.6842238962003302,0.684375,0.7597265625,0.5670224624765797,5.574782371520996,0.5891528129577637,ok,,1280,1024,0,320,,0,1e-05,False,5.19034743309021,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.71820068359375,0.71820068359375,0.671875,0.671875,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+Gender_Gap_in_Spanish_WP,/home/crc00006699/zh/tabiclv2/data178/Gender_Gap_in_Spanish_WP,multiclass,3796,760,950,13,3,0.6147368421052631,0.5695262646275574,0.4311806850344764,0.7084044059764215,0.7903143501520962,9.138428211212158,1.307844877243042,ok,,3796,3036,0,950,,0,1e-05,False,8.664649724960327,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.6748721072245575,0.6748721072245575,0.6092105263157894,0.6092105263157894,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+GesturePhaseSegmentationProcessed,/home/crc00006699/zh/tabiclv2/data178/GesturePhaseSegmentationProcessed,multiclass,7898,1580,1975,32,5,0.8273417721518987,0.8260853739124627,0.802370869395916,0.9674377739901914,0.4795279464544412,31.806800365448,4.063527584075928,ok,,7898,6318,0,1975,,0,1e-05,False,30.59495759010315,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.948143365819948,0.948143365819948,0.7879746835443038,0.7879746835443038,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+HR_Analytics_Job_Change_of_Data_Scientists,/home/crc00006699/zh/tabiclv2/data178/HR_Analytics_Job_Change_of_Data_Scientists,binclass,15326,3066,3832,13,2,0.8006263048016702,0.8031068007088733,0.7469025872281881,0.8109226998018223,0.4296132969888336,31.32718014717102,7.022984266281128,ok,,15326,12260,0,3832,,0,1e-05,False,30.669525861740112,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=16x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,2,epoch_chunk,roc_auc,0.8086660247178692,0.8086660247178692,0.8036529680365296,0.8036529680365296,0,True,False,,taar_sample,taar_sample,,,,0,16,False,,,,,0
+IBM_HR_Analytics_Employee_Attrition_and_Performance,/home/crc00006699/zh/tabiclv2/data178/IBM_HR_Analytics_Employee_Attrition_and_Performance,binclass,1176,236,294,31,2,0.8775510204081632,0.865202906820623,0.6945473339650271,0.8369368593332758,0.328281731374454,7.150128126144409,0.6406149864196777,ok,,1176,940,0,294,,0,1e-05,False,6.687689781188965,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.8616427432216905,0.8616427432216905,0.8940677966101694,0.8940677966101694,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+INNHotelsGroup,/home/crc00006699/zh/tabiclv2/data178/INNHotelsGroup,binclass,29020,5804,7255,17,2,0.9046175051688492,0.9040424831745656,0.8860378769963552,0.9627339994476932,0.2235627536735876,69.56017804145813,19.3770534992218,ok,,29020,23216,0,7255,,0,1e-05,False,68.61793851852417,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=24x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,3,epoch_chunk,roc_auc,0.9610815263115629,0.9610815263115629,0.9016195727084768,0.9016195727084768,0,True,False,,taar_sample,taar_sample,,,,0,24,False,,,,,0
+Indian_pines,/home/crc00006699/zh/tabiclv2/data178/Indian_pines,multiclass,7315,1463,1829,220,8,0.9879715691634772,0.9879578467409422,0.993097442680776,0.9998888550784032,0.0299785469077627,161.8864176273346,15.48579478263855,ok,,7315,5852,0,1829,,0,1e-05,False,160.34149646759033,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.9995761048393008,0.9995761048393008,0.9822282980177716,0.9822282980177716,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+JapaneseVowels,/home/crc00006699/zh/tabiclv2/data178/JapaneseVowels,multiclass,7968,1594,1993,14,9,0.9994982438534872,0.999498083906782,0.9993540051679586,1.0,0.0009732406068493,17.406644105911255,3.0530922412872314,ok,,7968,6374,0,1993,,0,1e-05,False,16.735032558441162,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.9999138240003982,0.9999138240003982,0.9968632371392724,0.9968632371392724,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+KDDCup09_upselling,/home/crc00006699/zh/tabiclv2/data178/KDDCup09_upselling,binclass,4102,821,1026,49,2,0.8109161793372319,0.8091752055466928,0.8109161793372319,0.9113592406400448,0.3571993028980876,24.99190139770508,2.580991268157959,ok,,4102,3281,0,1026,,0,1e-05,False,24.41898083686829,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.9113999169188772,0.9113999169188772,0.8148599269183922,0.8148599269183922,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+MIC,/home/crc00006699/zh/tabiclv2/data178/MIC,binclass,1319,264,330,104,2,0.9090909090909092,0.8995772562318263,0.7459413873076113,0.8833719867875466,0.2644560252864975,19.40345668792725,1.5405645370483398,ok,,1319,1055,0,330,,0,1e-05,False,18.778292894363403,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=8x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,1,epoch_chunk,roc_auc,0.8825877720660615,0.8825877720660615,0.8674242424242424,0.8674242424242424,0,True,False,,taar_sample,taar_sample,,,,0,8,False,,,,,0
+MagicTelescope,/home/crc00006699/zh/tabiclv2/data178/MagicTelescope,binclass,15216,3044,3804,9,2,0.8940588853838065,0.8925848685388427,0.8717945220923846,0.9469727001722682,0.2635466749027036,24.634262800216675,6.508591175079346,ok,,15216,12172,0,3804,,0,1e-05,False,23.940024375915527,full_train_epoch_chunks,"full train set chunked per epoch | validation=dataset_val_split | No valid epoch chunks produced an optimizer update; skipped=16x taar_sample selector failed after stratified split: RuntimeError: TAAR sample attention scorer failed: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 498, in forward
+    out = self._inference_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 408, in _inference_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 271, in forward
+    representations = self._inference_forward(embeddings, mgr_config)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 236, in _inference_forward
+    embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
+RuntimeError: Inplace update to inference tensor outside InferenceMode is not allowed.You can make a clone to get a normal tensor before doing inplace update.See https://github.com/pytorch/rfcs/pull/17 for more details.
+",30,2,epoch_chunk,roc_auc,0.9361896239903796,0.9361896239903796,0.8814060446780552,0.8814060446780552,0,True,False,,taar_sample,taar_sample,,,,0,16,False,,,,,0

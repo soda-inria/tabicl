@@ -1,0 +1,54 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+    # Restrict review to actual code changes; skip docs / generated files /
+    # config-only PRs to bound Anthropic API spend on each PR event.
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "uv.lock"
+
+jobs:
+  claude-review:
+    # Skip fork PRs entirely. Fork-origin runs cannot access the
+    # ANTHROPIC_API_KEY secret (GitHub policy), so the review would no-op
+    # anyway — gating here avoids wasting Actions minutes and produces a
+    # cleaner workflow-run history.
+    if: github.event.pull_request.head.repo.fork == false
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      # Required by claude-code-action to mint a short-lived OIDC token that attests
+      # that this is a real GitHub action run to Anthropic's backend. Despite being
+      # called "write", does not grant any additional access to GitHub itself. See
+      # https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws#adding-permissions-settings
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        # Pinned to v4 commit SHA to mitigate moving-tag supply-chain risk.
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Run Claude Code Review
+        id: claude-review
+        # Pinned to v1 commit SHA to mitigate moving-tag supply-chain risk.
+        # When updating, resolve the new tag's underlying commit via
+        #   gh api /repos/anthropics/claude-code-action/git/refs/tags/<tag>
+        uses: anthropics/claude-code-action@476e359e6203e73dad705c8b322e333fabbd7416  # v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
+          plugins: 'code-review@claude-code-plugins'
+          prompt: '/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
+          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
+          # or https://code.claude.com/docs/en/cli-reference for available options

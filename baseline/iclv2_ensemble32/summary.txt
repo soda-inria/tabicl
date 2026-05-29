@@ -1,0 +1,13 @@
+discovered_datasets: 178
+processed_datasets: 178
+ok_count: 178
+failed_count: 0
+skipped_count: 0
+avg_accuracy_ok: 0.847164
+avg_f1_ok: 0.839508
+avg_balanced_accuracy_ok: 0.779720
+avg_roc_auc_ok: 0.909209
+avg_log_loss_ok: 0.350076
+wall_seconds: 1771.404
+failed_datasets: (none)
+skipped_datasets: (none)

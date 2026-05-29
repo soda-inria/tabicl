@@ -1,0 +1,11 @@
+discovered_datasets: 178
+processed_datasets: 178
+ok_count: 176
+failed_count: 2
+skipped_count: 0
+avg_accuracy_ok: 0.843562
+ttt_applied_ok_count: 0
+avg_ttt_loss_ok: (none)
+wall_seconds: 5282.751
+failed_datasets: Amazon_employee_access, in_vehicle_coupon_recommendation
+skipped_datasets: (none)

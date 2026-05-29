@@ -1,0 +1,18 @@
+discovered_datasets: 90
+processed_datasets: 90
+ok_count: 83
+failed_count: 7
+skipped_count: 0
+ttt_oom_fallback_count: 0
+ttt_adaptor_enabled_count: 81
+avg_accuracy_ok: 0.814751
+avg_f1_ok: 0.805565
+avg_balanced_accuracy_ok: 0.744634
+avg_roc_auc_ok: 0.876683
+avg_log_loss_ok: 0.403997
+avg_ttt_adaptor_trainable_params_ok: 65518.265060
+wall_seconds: 2944.778
+failed_datasets: Bank_Customer_Churn_Dataset, JapaneseVowels, Satellite, accelerometer, Click_prediction_small, E-CommereShippingData, artificial-characters
+skipped_datasets: (none)
+ttt_oom_fallback_datasets: (none)
+ttt_adaptor_enabled_datasets: BNG(breast-w), Cardiovascular-Disease-dataset, Customer_Personality_Analysis, Employee, FOREX_audcad-hour-High, FOREX_audjpy-hour-High, FOREX_cadjpy-day-High, Fitness_Club_c, Gender_Gap_in_Spanish_WP, IBM_HR_Analytics_Employee_Attrition_and_Performance, MagicTelescope, National_Health_and_Nutrition_Health_Survey, Pima_Indians_Diabetes_Database, QSAR_biodegradation, Water_Quality_and_Potability, ada_prior, allrep, autoUniv-au4-2500, banknote_authentication, churn, compass, customer_satisfaction_in_airline, delta_ailerons, drug_consumption, electricity, Amazon_employee_access, BNG(cmc), Basketball_c, Diabetic_Retinopathy_Debrecen, FICO-HELOC-cleaned, FOREX_audchf-day-High, FOREX_audsgd-hour-High, FOREX_cadjpy-hour-High, GAMETES_Epistasis_2-Way_20atts_0.1H_EDM-1_1, GesturePhaseSegmentationProcessed, INNHotelsGroup, KDDCup09_upselling, Marketing_Campaign, PhishingWebsites, PizzaCutter3, Rain_in_Australia, Telecom_Churn_Dataset, Wilt, ada, airlines_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True, analcatdata_authorship, autoUniv-au7-1100, baseball, cmc, contraceptive_method_choice, dabetes_130-us_hospitals, dis, dry_bean_dataset, estimation_of_obesity_levels, BLE_RSSI_dataset_for_Indoor_localization, BNG(tic-tac-toe), California-Housing-Classification, Credit_c, FOREX_audcad-day-High, FOREX_audjpy-day-High, FOREX_audusd-hour-High, Firm-Teacher_Clave-Direction_Classification, GAMETES_Heterogeneity_20atts_1600_Het_0.4_0.2_50_EDM-2_001, HR_Analytics_Job_Change_of_Data_Scientists, Indian_pines, MIC, Mobile_Price_Classification, PieChart3, Pumpkin_Seeds, SDSS17, abalone, ada_agnostic, allbp, bank, car-evaluation, company_bankruptcy_prediction, credit, default_of_credit_card_clients, dna, eeg-eye-state, eye_movements

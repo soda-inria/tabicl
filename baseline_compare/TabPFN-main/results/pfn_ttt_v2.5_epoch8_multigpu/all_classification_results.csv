@@ -1,0 +1,350 @@
+dataset_name,dataset_dir,task_type,n_train,n_val,n_test,n_features,n_classes,accuracy,f1,roc_auc,fit_seconds,predict_seconds,status,error,n_train_a,n_train_b,n_holdout_c,n_test_d,ttt_loss,ttt_steps,ttt_lr,ttt_applied,ttt_update_seconds,ttt_split_strategy,ttt_split_reason,ttt_epochs,ttt_chunks_per_epoch,ttt_batch_mode,ttt_val_baseline_accuracy,ttt_val_best_roc_auc,ttt_best_epoch,ttt_stopped_early,ttt_oom_fallback,ttt_fallback_reason
+ASP-POTASSCO-classification,/home/crc00006699/zh/tabiclv2/data178/ASP-POTASSCO-classification,multiclass,1035,207,259,141,11,0.4555984555984556,0.4331092425019514,0.8453974755559368,0.0190598964691162,20.356983184814453,ok,,1035,0,0,259,,0,5e-06,False,0.0,,TTT skipped because n_classes > 10 requires ManyClass baseline inference,0,0,,,,0,False,False,
+BLE_RSSI_dataset_for_Indoor_localization,/home/crc00006699/zh/tabiclv2/data178/BLE_RSSI_dataset_for_Indoor_localization,multiclass,7987,1598,1997,3,3,0.7396094141211818,0.7390358122295975,0.9031368168136296,38.634392976760864,1.0270676612854004,ok,,7987,6389,0,1997,,8,5e-06,True,38.62678265571594,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+BNG(cmc),/home/crc00006699/zh/tabiclv2/data178/BNG(cmc),multiclass,44236,8848,11060,9,3,0.5868896925858951,0.585301436286202,0.7640941533560642,504.33323073387146,21.150455236434937,ok,,44236,35388,0,11060,,16,5e-06,True,504.3329200744629,tabpfn_finetune_epoch_chunks,dataset_val_split,8,2,tabpfn_finetuning_api,,,0,False,False,
+Bank_Customer_Churn_Dataset,/home/crc00006699/zh/tabiclv2/data178/Bank_Customer_Churn_Dataset,binclass,8000,1600,2000,10,2,0.8745,0.8632437488022905,0.8829923914669676,56.10224485397339,1.5667946338653564,ok,,8000,6400,0,2000,,8,5e-06,True,56.101890325546265,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+California-Housing-Classification,/home/crc00006699/zh/tabiclv2/data178/California-Housing-Classification,binclass,16512,3303,4128,8,2,0.9108527131782944,0.9108504112395388,0.9743531540963288,130.39584493637085,3.807259321212769,ok,,16512,13209,0,4128,,8,5e-06,True,130.3955192565918,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+Click_prediction_small,/home/crc00006699/zh/tabiclv2/data178/Click_prediction_small,binclass,31958,6392,7990,3,2,0.8334167709637046,0.762720237122303,0.6269776191502819,130.04539251327515,7.849246263504028,ok,,31958,25566,0,7990,,16,5e-06,True,130.04504227638245,tabpfn_finetune_epoch_chunks,dataset_val_split,8,2,tabpfn_finetuning_api,,,0,False,False,
+Customer_Personality_Analysis,/home/crc00006699/zh/tabiclv2/data178/Customer_Personality_Analysis,binclass,1792,359,448,24,2,0.8995535714285714,0.8864011754201552,0.9022407646805344,16.734845638275146,0.4782114028930664,ok,,1792,1433,0,448,,8,5e-06,True,16.734555959701538,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+E-CommereShippingData,/home/crc00006699/zh/tabiclv2/data178/E-CommereShippingData,binclass,8799,1760,2200,10,2,0.6777272727272727,0.6657480172844104,0.7308422152595972,40.93672513961792,1.7782609462738037,ok,,8799,7039,0,2200,,8,5e-06,True,40.936468839645386,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+FICO-HELOC-cleaned,/home/crc00006699/zh/tabiclv2/data178/FICO-HELOC-cleaned,binclass,7896,1580,1975,23,2,0.7422784810126583,0.7421831122176172,0.8211698626422165,54.51248836517334,2.421436071395874,ok,,7896,6316,0,1975,,8,5e-06,True,54.51221346855164,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+FOREX_audcad-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audcad-hour-High,binclass,35060,7012,8765,10,2,0.7152310325156874,0.7152060087319014,0.7894634251936212,364.46703839302063,15.42823076248169,ok,,35060,28048,0,8765,,16,5e-06,True,364.46668815612793,tabpfn_finetune_epoch_chunks,dataset_val_split,8,2,tabpfn_finetuning_api,,,0,False,False,
+FOREX_audjpy-day-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audjpy-day-High,binclass,1465,293,367,10,2,0.779291553133515,0.7785069878020602,0.8505885500267523,20.10524344444275,0.351701021194458,ok,,1465,1172,0,367,,8,5e-06,True,20.10485076904297,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+FOREX_audsgd-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audsgd-hour-High,binclass,35060,7012,8765,10,2,0.7132915002852254,0.7132377617702716,0.7860545716165309,363.92878770828247,15.422019004821776,ok,,35060,28048,0,8765,,16,5e-06,True,363.9284789562225,tabpfn_finetune_epoch_chunks,dataset_val_split,8,2,tabpfn_finetuning_api,,,0,False,False,
+FOREX_cadjpy-day-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_cadjpy-day-High,binclass,1467,294,367,10,2,0.7193460490463215,0.7192585094746815,0.7922160845806605,12.626219749450684,0.3506667613983154,ok,,1467,1173,0,367,,8,5e-06,True,12.625884294509888,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+Firm-Teacher_Clave-Direction_Classification,/home/crc00006699/zh/tabiclv2/data178/Firm-Teacher_Clave-Direction_Classification,multiclass,8640,1728,2160,16,4,0.8708333333333333,0.8682695747051962,0.9675183190440292,78.0400767326355,2.192836284637451,ok,,8640,6912,0,2160,,8,5e-06,True,78.0398120880127,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+GAMETES_Epistasis_2-Way_20atts_0.1H_EDM-1_1,/home/crc00006699/zh/tabiclv2/data178/GAMETES_Epistasis_2-Way_20atts_0.1H_EDM-1_1,binclass,1280,256,320,20,2,0.6875,0.6834942237695838,0.74732421875,20.9817967414856,0.3738727569580078,ok,,1280,1024,0,320,,8,5e-06,True,20.981526136398315,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+Gender_Gap_in_Spanish_WP,/home/crc00006699/zh/tabiclv2/data178/Gender_Gap_in_Spanish_WP,multiclass,3796,760,950,13,3,0.6010526315789474,0.5288003364575038,0.6976796858737705,20.74133539199829,0.7117705345153809,ok,,3796,3036,0,950,,8,5e-06,True,20.741033792495728,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+HR_Analytics_Job_Change_of_Data_Scientists,/home/crc00006699/zh/tabiclv2/data178/HR_Analytics_Job_Change_of_Data_Scientists,binclass,15326,3066,3832,13,2,0.8014091858037579,0.8028477855805842,0.8089680386237117,100.27404737472534,4.515857219696045,ok,,15326,12260,0,3832,,8,5e-06,True,100.2737648487091,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+INNHotelsGroup,/home/crc00006699/zh/tabiclv2/data178/INNHotelsGroup,binclass,29020,5804,7255,17,2,0.8967608545830462,0.8958154462629352,0.9563620751899568,231.7973690032959,15.461052417755129,ok,,29020,23216,0,7255,,16,5e-06,True,231.7970290184021,tabpfn_finetune_epoch_chunks,dataset_val_split,8,2,tabpfn_finetuning_api,,,0,False,False,
+JapaneseVowels,/home/crc00006699/zh/tabiclv2/data178/JapaneseVowels,multiclass,7968,1594,1993,14,9,0.997491219267436,0.9974875580178892,0.999998317798974,39.653302907943726,1.77014422416687,ok,,7968,6374,0,1993,,8,5e-06,True,39.65290784835816,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+MIC,/home/crc00006699/zh/tabiclv2/data178/MIC,binclass,1319,264,330,104,2,0.9030303030303032,0.89153605015674,0.8926136762948907,24.390825986862183,0.9631731510162354,ok,,1319,1055,0,330,,8,5e-06,True,24.390551328659058,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+Marketing_Campaign,/home/crc00006699/zh/tabiclv2/data178/Marketing_Campaign,binclass,1792,359,448,27,2,0.8816964285714286,0.8662058288281828,0.9194970031731108,22.162506103515625,0.4808921813964844,ok,,1792,1433,0,448,,8,5e-06,True,22.162248373031616,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+National_Health_and_Nutrition_Health_Survey,/home/crc00006699/zh/tabiclv2/data178/National_Health_and_Nutrition_Health_Survey,binclass,1822,365,456,7,2,0.8377192982456141,0.7927597786030364,0.7685539540040773,17.682359218597412,0.3529577255249023,ok,,1822,1457,0,456,,8,5e-06,True,17.682053327560425,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+PieChart3,/home/crc00006699/zh/tabiclv2/data178/PieChart3,binclass,861,173,216,37,2,0.875,0.8249978608710533,0.8671369782480893,12.650743961334229,0.3456888198852539,ok,,861,688,0,216,,8,5e-06,True,12.650493383407593,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+PizzaCutter3,/home/crc00006699/zh/tabiclv2/data178/PizzaCutter3,binclass,834,167,209,37,2,0.8755980861244019,0.8219900400351527,0.8815217391304349,12.6246235370636,0.3451676368713379,ok,,834,667,0,209,,8,5e-06,True,12.624314308166504,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+QSAR_biodegradation,/home/crc00006699/zh/tabiclv2/data178/QSAR_biodegradation,binclass,843,169,211,41,2,0.8957345971563981,0.8949577677618703,0.9441649899396378,12.855807065963743,0.3553266525268554,ok,,843,674,0,211,,8,5e-06,True,12.855504274368286,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+SDSS17,/home/crc00006699/zh/tabiclv2/data178/SDSS17,multiclass,80000,16000,20000,12,3,0.97615,0.9760326411000776,0.9964241575117866,637.6724009513855,46.71541738510132,ok,,80000,64000,0,20000,,32,5e-06,True,637.672075510025,tabpfn_finetune_epoch_chunks,dataset_val_split,8,4,tabpfn_finetuning_api,,,0,False,False,
+Telecom_Churn_Dataset,/home/crc00006699/zh/tabiclv2/data178/Telecom_Churn_Dataset,binclass,2666,534,667,17,2,0.967016491754123,0.9662636073267716,0.9287303309820945,24.141415119171143,0.5587813854217529,ok,,2666,2132,0,667,,8,5e-06,True,24.140986680984497,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+Water_Quality_and_Potability,/home/crc00006699/zh/tabiclv2/data178/Water_Quality_and_Potability,binclass,2620,524,656,8,2,0.6570121951219512,0.5961836671620173,0.6682373046875001,13.041101217269896,0.399545669555664,ok,,2620,2096,0,656,,8,5e-06,True,13.040847778320312,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+abalone,/home/crc00006699/zh/tabiclv2/data178/abalone,multiclass,3341,669,836,8,3,0.6291866028708134,0.6333758280580857,0.8277005829349271,22.07036590576172,0.5190517902374268,ok,,3341,2672,0,836,,8,5e-06,True,22.070058584213257,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+ada,/home/crc00006699/zh/tabiclv2/data178/ada,binclass,3317,664,830,48,2,0.8602409638554217,0.8545838413364331,0.917627427184466,31.92422842979431,1.3606452941894531,ok,,3317,2653,0,830,,8,5e-06,True,31.92396759986877,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+ada_prior,/home/crc00006699/zh/tabiclv2/data178/ada_prior,binclass,3649,730,913,14,2,0.8565169769989047,0.8493928860071629,0.8907122949872208,17.267531871795654,0.6974489688873291,ok,,3649,2919,0,913,,8,5e-06,True,17.267236948013306,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+allbp,/home/crc00006699/zh/tabiclv2/data178/allbp,multiclass,3017,604,755,29,3,0.9774834437086092,0.9741554146906778,0.985619886674518,20.65826177597046,0.8654587268829346,ok,,3017,2413,0,755,,8,5e-06,True,20.657999753952023,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+analcatdata_authorship,/home/crc00006699/zh/tabiclv2/data178/analcatdata_authorship,multiclass,672,135,169,69,4,1.0,1.0,1.0,13.058107137680054,0.3795008659362793,ok,,672,537,0,169,,8,5e-06,True,13.057796478271484,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+autoUniv-au4-2500,/home/crc00006699/zh/tabiclv2/data178/autoUniv-au4-2500,multiclass,2000,400,500,100,3,0.696,0.6671143931908402,0.7656877788768304,55.14131689071655,1.401684284210205,ok,,2000,1600,0,500,,8,5e-06,True,55.1410436630249,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+bank,/home/crc00006699/zh/tabiclv2/data178/bank,binclass,36168,7234,9043,16,2,0.9099856242397436,0.9059368171332036,0.9439016089951268,523.8393187522888,21.58385324478149,ok,,36168,28934,0,9043,,16,5e-06,True,523.8390054702759,tabpfn_finetune_epoch_chunks,dataset_val_split,8,2,tabpfn_finetuning_api,,,0,False,False,
+baseball,/home/crc00006699/zh/tabiclv2/data178/baseball,multiclass,1072,215,268,16,3,0.9477611940298508,0.9393659426428472,0.967218912205142,17.736143350601196,0.3536136150360107,ok,,1072,857,0,268,,8,5e-06,True,17.735819101333618,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+churn,/home/crc00006699/zh/tabiclv2/data178/churn,binclass,4000,800,1000,20,2,0.968,0.966962745631989,0.9300729035081202,35.15270376205444,0.9369337558746338,ok,,4000,3200,0,1000,,8,5e-06,True,35.15244197845459,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+company_bankruptcy_prediction,/home/crc00006699/zh/tabiclv2/data178/company_bankruptcy_prediction,binclass,0,0,0,0,0,,,,0.0,0.0,fail,"TabPFNCUDAOutOfMemoryError: CUDA out of memory with 1,364 test samples.
+
+This is issue is usually caused by one of the following two reasons:
+
+1) Large test set — split into batches:
+
+    predictions = []
+    for i in range(0, len(X_test), 100):
+        pred = model.predict_proba(X_test[i:i + 100])
+        predictions.append(pred)
+    predictions = np.vstack(predictions)
+
+2) Large training set — batching won't help.
+   Subsample your training data; see https://docs.priorlabs.ai
+   for further guidance.
+
+Your sizes: 5,455 train / 1,364 test samples, 95 features.
+Not sure which? If model.predict_proba(X_test[:1]) also fails, it's (2).
+
+Original error: CUDA out of memory. Tried to allocate 100.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 22.00 MiB is free. Process 77065 has 23.54 GiB memory in use. Of the allocated memory 22.22 GiB is allocated by PyTorch, and 1.00 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",0,0,0,0,,0,,False,0.0,,,0,0,,,,0,False,False,
+contraceptive_method_choice,/home/crc00006699/zh/tabiclv2/data178/contraceptive_method_choice,multiclass,1178,236,295,9,3,0.6033898305084746,0.6056285263866551,0.792964617925294,15.398918151855469,0.3587682247161865,ok,,1178,942,0,295,,8,5e-06,True,15.39858341217041,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+customer_satisfaction_in_airline,/home/crc00006699/zh/tabiclv2/data178/customer_satisfaction_in_airline,binclass,0,0,0,0,0,,,,0.0,0.0,fail,"TabPFNCUDAOutOfMemoryError: CUDA out of memory with 25,976 test samples.
+
+This is issue is usually caused by one of the following two reasons:
+
+1) Large test set — split into batches:
+
+    predictions = []
+    for i in range(0, len(X_test), 100):
+        pred = model.predict_proba(X_test[i:i + 100])
+        predictions.append(pred)
+    predictions = np.vstack(predictions)
+
+2) Large training set — batching won't help.
+   Subsample your training data; see https://docs.priorlabs.ai
+   for further guidance.
+
+Your sizes: 103,904 train / 25,976 test samples, 21 features.
+Not sure which? If model.predict_proba(X_test[:1]) also fails, it's (2).
+
+Original error: CUDA out of memory. Tried to allocate 48.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 24.00 MiB is free. Process 77065 has 23.54 GiB memory in use. Of the allocated memory 22.88 GiB is allocated by PyTorch, and 352.23 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",0,0,0,0,,0,,False,0.0,,,0,0,,,,0,False,False,
+default_of_credit_card_clients,/home/crc00006699/zh/tabiclv2/data178/default_of_credit_card_clients,binclass,0,0,0,0,0,,,,0.0,0.0,fail,"OutOfMemoryError: CUDA out of memory. Tried to allocate 2.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 2.00 MiB is free. Process 77065 has 23.56 GiB memory in use. Of the allocated memory 22.83 GiB is allocated by PyTorch, and 422.37 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",0,0,0,0,,0,,False,0.0,,,0,0,,,,0,False,False,
+dis,/home/crc00006699/zh/tabiclv2/data178/dis,binclass,3017,604,755,29,2,0.990728476821192,0.989524085374335,0.983961417676088,32.75422191619873,0.8681879043579102,ok,,3017,2413,0,755,,8,5e-06,True,32.75387525558472,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+drug_consumption,/home/crc00006699/zh/tabiclv2/data178/drug_consumption,multiclass,1507,302,377,12,7,0.403183023872679,0.2316968605998004,0.512251337694034,13.735609292984009,0.3538475036621094,ok,,1507,1205,0,377,,8,5e-06,True,13.73526906967163,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+eeg-eye-state,/home/crc00006699/zh/tabiclv2/data178/eeg-eye-state,binclass,11984,2397,2996,14,2,0.9903204272363152,0.9903194168282764,0.9992722671175968,94.245436668396,3.118504762649536,ok,,11984,9587,0,2996,,8,5e-06,True,94.24512815475464,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+estimation_of_obesity_levels,/home/crc00006699/zh/tabiclv2/data178/estimation_of_obesity_levels,multiclass,1688,338,423,16,7,0.9929078014184396,0.9929048456536922,0.9998920305013834,13.16662883758545,0.3773548603057861,ok,,1688,1350,0,423,,8,5e-06,True,13.16636323928833,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+eye_movements_bin,/home/crc00006699/zh/tabiclv2/data178/eye_movements_bin,binclass,6086,1218,1522,20,2,0.6997371879106439,0.6994744776209041,0.7885562775309477,55.94007158279419,1.5544955730438232,ok,,6086,4868,0,1522,,8,5e-06,True,55.93982195854187,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+gas-drift,/home/crc00006699/zh/tabiclv2/data178/gas-drift,multiclass,0,0,0,0,0,,,,0.0,0.0,fail,"TabPFNCUDAOutOfMemoryError: CUDA out of memory with 2,782 test samples.
+
+This is issue is usually caused by one of the following two reasons:
+
+1) Large test set — split into batches:
+
+    predictions = []
+    for i in range(0, len(X_test), 100):
+        pred = model.predict_proba(X_test[i:i + 100])
+        predictions.append(pred)
+    predictions = np.vstack(predictions)
+
+2) Large training set — batching won't help.
+   Subsample your training data; see https://docs.priorlabs.ai
+   for further guidance.
+
+Your sizes: 11,128 train / 2,782 test samples, 128 features.
+Not sure which? If model.predict_proba(X_test[:1]) also fails, it's (2).
+
+Original error: CUDA out of memory. Tried to allocate 276.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 8.00 MiB is free. Process 77065 has 23.55 GiB memory in use. Of the allocated memory 22.78 GiB is allocated by PyTorch, and 471.45 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",0,0,0,0,,0,,False,0.0,,,0,0,,,,0,False,False,
+golf_play_dataset_extended,/home/crc00006699/zh/tabiclv2/data178/golf_play_dataset_extended,binclass,876,176,219,9,2,0.9315068493150684,0.9306468535400731,0.9766272932897712,19.92287302017212,0.3569915294647217,ok,,876,700,0,219,,8,5e-06,True,19.922576904296875,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+hill-valley,/home/crc00006699/zh/tabiclv2/data178/hill-valley,binclass,969,194,243,100,2,0.9629629629629628,0.9629629629629628,0.9871291152960304,26.77259635925293,0.6527702808380127,ok,,969,775,0,243,,8,5e-06,True,26.77233338356018,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+htru,/home/crc00006699/zh/tabiclv2/data178/htru,binclass,14318,2864,3580,8,2,0.9793296089385476,0.9792437326594832,0.9876070635706358,67.26216554641724,3.0453460216522217,ok,,14318,11454,0,3580,,8,5e-06,True,67.26190328598022,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+in_vehicle_coupon_recommendation,/home/crc00006699/zh/tabiclv2/data178/in_vehicle_coupon_recommendation,binclass,10147,2030,2537,21,2,0.7761135199054001,0.7742230286731445,0.8494898637736782,113.00824666023254,3.1591672897338867,ok,,10147,8117,0,2537,,8,5e-06,True,113.0079629421234,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+internet_usage,/home/crc00006699/zh/tabiclv2/data178/internet_usage,multiclass,8086,1618,2022,70,46,0.549455984174085,0.4735622545627541,0.9323181100117396,0.0248177051544189,188.69764184951785,ok,,8086,0,0,2022,,0,5e-06,False,0.0,,TTT skipped because n_classes > 10 requires ManyClass baseline inference,0,0,,,,0,False,False,
+jungle_chess_2pcs_raw_endgame_complete,/home/crc00006699/zh/tabiclv2/data178/jungle_chess_2pcs_raw_endgame_complete,multiclass,35855,7171,8964,6,3,0.8785140562248996,0.8778317757927739,0.9828078658249456,291.0121111869812,12.084322690963743,ok,,35855,28684,0,8964,,16,5e-06,True,291.01165556907654,tabpfn_finetune_epoch_chunks,dataset_val_split,8,2,tabpfn_finetuning_api,,,0,False,False,
+kdd_ipums_la_97-small,/home/crc00006699/zh/tabiclv2/data178/kdd_ipums_la_97-small,binclass,4150,830,1038,20,2,0.8872832369942196,0.8868926156932468,0.9478339477504168,23.409674167633057,0.9701104164123536,ok,,4150,3320,0,1038,,8,5e-06,True,23.409369945526123,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+kropt,/home/crc00006699/zh/tabiclv2/data178/kropt,multiclass,22444,4489,5612,6,18,0.8838203848895224,0.883471588217669,0.9954203885621544,0.0312623977661132,115.23060369491576,ok,,22444,0,0,5612,,0,5e-06,False,0.0,,TTT skipped because n_classes > 10 requires ManyClass baseline inference,0,0,,,,0,False,False,
+led7,/home/crc00006699/zh/tabiclv2/data178/led7,multiclass,2560,512,640,7,10,0.7328125,0.7314722236233884,0.9586577284056368,21.16831660270691,0.3793919086456299,ok,,2560,2048,0,640,,8,5e-06,True,21.167970418930054,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+madeline,/home/crc00006699/zh/tabiclv2/data178/madeline,binclass,0,0,0,0,0,,,,0.0,0.0,fail,"TabPFNCUDAOutOfMemoryError: CUDA out of memory with 628 test samples.
+
+This is issue is usually caused by one of the following two reasons:
+
+1) Large test set — split into batches:
+
+    predictions = []
+    for i in range(0, len(X_test), 100):
+        pred = model.predict_proba(X_test[i:i + 100])
+        predictions.append(pred)
+    predictions = np.vstack(predictions)
+
+2) Large training set — batching won't help.
+   Subsample your training data; see https://docs.priorlabs.ai
+   for further guidance.
+
+Your sizes: 2,512 train / 628 test samples, 259 features.
+Not sure which? If model.predict_proba(X_test[:1]) also fails, it's (2).
+
+Original error: CUDA out of memory. Tried to allocate 126.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 60.00 MiB is free. Process 77065 has 23.50 GiB memory in use. Of the allocated memory 22.52 GiB is allocated by PyTorch, and 681.54 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",0,0,0,0,,0,,False,0.0,,,0,0,,,,0,False,False,
+maternal_health_risk,/home/crc00006699/zh/tabiclv2/data178/maternal_health_risk,multiclass,811,163,203,6,3,0.8325123152709359,0.8292402292327382,0.9504951747094456,19.688862800598145,0.3471384048461914,ok,,811,648,0,203,,8,5e-06,True,19.6885769367218,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+mfeat-fourier,/home/crc00006699/zh/tabiclv2/data178/mfeat-fourier,multiclass,1600,320,400,76,10,0.8975,0.8960446447840096,0.9928472222222222,20.9602313041687,0.8580284118652344,ok,,1600,1280,0,400,,8,5e-06,True,20.95996856689453,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+mfeat-morphological,/home/crc00006699/zh/tabiclv2/data178/mfeat-morphological,multiclass,1600,320,400,6,10,0.7725,0.763897447328765,0.9738194444444443,19.941308975219727,0.3604183197021484,ok,,1600,1280,0,400,,8,5e-06,True,19.94100499153137,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+mfeat-zernike,/home/crc00006699/zh/tabiclv2/data178/mfeat-zernike,multiclass,1600,320,400,47,10,0.845,0.8407918821386248,0.9846875,24.7959897518158,0.6076400279998779,ok,,1600,1280,0,400,,8,5e-06,True,24.795687675476078,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+microaggregation2,/home/crc00006699/zh/tabiclv2/data178/microaggregation2,multiclass,16000,3200,4000,20,5,0.63925,0.5829889021596018,0.8256762216044493,214.962415933609,6.362445592880249,ok,,16000,12800,0,4000,,8,5e-06,True,214.96209716796875,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+mozilla4,/home/crc00006699/zh/tabiclv2/data178/mozilla4,binclass,12436,2488,3109,4,2,0.9282727565133484,0.9274324091708476,0.9679246326856122,42.01502585411072,1.8462929725646973,ok,,12436,9948,0,3109,,8,5e-06,True,42.01465153694153,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+national-longitudinal-survey-binary,/home/crc00006699/zh/tabiclv2/data178/national-longitudinal-survey-binary,binclass,3926,786,982,16,2,1.0,1.0,1.0,19.89322328567505,0.8269927501678467,ok,,3926,3140,0,982,,8,5e-06,True,19.892954111099243,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+one-hundred-plants-margin,/home/crc00006699/zh/tabiclv2/data178/one-hundred-plants-margin,multiclass,0,0,0,0,0,,,,0.0,0.0,fail,RuntimeError: Failed to generate a valid legacy codebook,0,0,0,0,,0,,False,0.0,,,0,0,,,,0,False,False,
+one-hundred-plants-texture,/home/crc00006699/zh/tabiclv2/data178/one-hundred-plants-texture,multiclass,0,0,0,0,0,,,,0.0,0.0,fail,RuntimeError: Failed to generate a valid legacy codebook,0,0,0,0,,0,,False,0.0,,,0,0,,,,0,False,False,
+optdigits,/home/crc00006699/zh/tabiclv2/data178/optdigits,multiclass,4496,900,1124,64,10,0.98932384341637,0.9893571959793104,0.9999523681665192,54.5669949054718,2.386366128921509,ok,,4496,3596,0,1124,,8,5e-06,True,54.566739559173584,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+page-blocks,/home/crc00006699/zh/tabiclv2/data178/page-blocks,multiclass,4378,876,1095,10,5,0.9789954337899544,0.9786887633636332,0.993522251127876,28.664294719696045,0.7427587509155273,ok,,4378,3502,0,1095,,8,5e-06,True,28.66394543647766,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+pc3,/home/crc00006699/zh/tabiclv2/data178/pc3,binclass,1250,250,313,37,2,0.8913738019169329,0.8566138074533663,0.8276245551601423,13.090049982070925,0.4234826564788818,ok,,1250,1000,0,313,,8,5e-06,True,13.089791774749756,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+pendigits,/home/crc00006699/zh/tabiclv2/data178/pendigits,multiclass,8793,1759,2199,16,10,0.9977262391996362,0.997728000634768,0.9996404518282996,50.01873445510864,2.2396647930145264,ok,,8793,7034,0,2199,,8,5e-06,True,50.01842260360718,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+pol,/home/crc00006699/zh/tabiclv2/data178/pol,binclass,8065,1613,2017,26,2,0.9900842835894892,0.9900840642264488,0.9997364984976482,59.08419132232666,2.6602208614349365,ok,,8065,6452,0,2017,,8,5e-06,True,59.08393907546997,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+qsar,/home/crc00006699/zh/tabiclv2/data178/qsar,binclass,844,169,211,40,2,0.8957345971563981,0.8940703276665646,0.9500503018108652,13.166351795196531,0.3631343841552734,ok,,844,675,0,211,,8,5e-06,True,13.16607117652893,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+ringnorm,/home/crc00006699/zh/tabiclv2/data178/ringnorm,binclass,5920,1184,1480,20,2,0.981081081081081,0.9810783854433192,0.9973847185011075,34.6536123752594,1.4990596771240234,ok,,5920,4736,0,1480,,8,5e-06,True,34.653313398361206,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+satimage,/home/crc00006699/zh/tabiclv2/data178/satimage,multiclass,5144,1029,1286,36,6,0.927682737169518,0.9253961708341392,0.9946480529910824,43.891862869262695,1.926481008529663,ok,,5144,4115,0,1286,,8,5e-06,True,43.89160227775574,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+seismic+bumps,/home/crc00006699/zh/tabiclv2/data178/seismic+bumps,binclass,2067,414,517,18,2,0.9342359767891684,0.9024719535783364,0.7129460479844111,18.70710611343384,0.436368465423584,ok,,2067,1653,0,517,,8,5e-06,True,18.70683526992798,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+shuttle,/home/crc00006699/zh/tabiclv2/data178/shuttle,multiclass,46400,9280,11600,9,7,0.9995689655172414,0.9995709767228834,0.999997033993842,355.1459412574768,23.224395036697388,ok,,46400,37120,0,11600,,16,5e-06,True,355.1456253528595,tabpfn_finetune_epoch_chunks,dataset_val_split,8,2,tabpfn_finetuning_api,,,0,False,False,
+splice,/home/crc00006699/zh/tabiclv2/data178/splice,multiclass,2552,511,638,60,3,0.9655172413793104,0.9654636282583152,0.9956698575388416,30.69856286048889,1.2566375732421875,ok,,2552,2041,0,638,,8,5e-06,True,30.698169708251957,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+statlog,/home/crc00006699/zh/tabiclv2/data178/statlog,binclass,800,160,200,20,2,0.71,0.6906666666666667,0.7557142857142858,17.240740060806274,0.3670804500579834,ok,,800,640,0,200,,8,5e-06,True,17.240418434143066,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+sylvine,/home/crc00006699/zh/tabiclv2/data178/sylvine,binclass,4099,820,1025,20,2,0.9746341463414634,0.9746338566159652,0.9974624604044836,31.28024458885193,0.9641783237457277,ok,,4099,3279,0,1025,,8,5e-06,True,31.279507398605347,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+telco-customer-churn,/home/crc00006699/zh/tabiclv2/data178/telco-customer-churn,binclass,5634,1127,1409,18,2,0.8048261178140526,0.7956695036647828,0.8507181792348032,51.07874631881714,1.376302719116211,ok,,5634,4507,0,1409,,8,5e-06,True,51.07846450805664,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+thyroid,/home/crc00006699/zh/tabiclv2/data178/thyroid,multiclass,5760,1152,1440,21,3,0.9951388888888888,0.9950708898627756,0.9998326371607246,34.856629848480225,1.516613483428955,ok,,5760,4608,0,1440,,8,5e-06,True,34.85631608963013,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+thyroid-dis,/home/crc00006699/zh/tabiclv2/data178/thyroid-dis,multiclass,2240,448,560,26,5,0.6857142857142857,0.6643819519032679,0.8848734975370393,19.24086809158325,0.5986719131469727,ok,,2240,1792,0,560,,8,5e-06,True,19.240604162216187,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+twonorm,/home/crc00006699/zh/tabiclv2/data178/twonorm,binclass,5920,1184,1480,20,2,0.979054054054054,0.979054025366204,0.9984605523384812,35.0432333946228,1.509906530380249,ok,,5920,4736,0,1480,,8,5e-06,True,35.04295086860657,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+volkert,/home/crc00006699/zh/tabiclv2/data178/volkert,multiclass,0,0,0,0,0,,,,0.0,0.0,fail,"TabPFNCUDAOutOfMemoryError: CUDA out of memory with 11,662 test samples.
+
+This is issue is usually caused by one of the following two reasons:
+
+1) Large test set — split into batches:
+
+    predictions = []
+    for i in range(0, len(X_test), 100):
+        pred = model.predict_proba(X_test[i:i + 100])
+        predictions.append(pred)
+    predictions = np.vstack(predictions)
+
+2) Large training set — batching won't help.
+   Subsample your training data; see https://docs.priorlabs.ai
+   for further guidance.
+
+Your sizes: 46,648 train / 11,662 test samples, 180 features.
+Not sure which? If model.predict_proba(X_test[:1]) also fails, it's (2).
+
+Original error: CUDA out of memory. Tried to allocate 34.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 16.00 MiB is free. Process 77065 has 23.55 GiB memory in use. Of the allocated memory 23.15 GiB is allocated by PyTorch, and 86.10 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",0,0,0,0,,0,,False,0.0,,,0,0,,,,0,False,False,
+wall-robot-navigation,/home/crc00006699/zh/tabiclv2/data178/wall-robot-navigation,multiclass,4364,873,1092,24,4,0.98992673992674,0.9899286225733178,0.9998305204975596,27.985389232635494,1.1904058456420898,ok,,4364,3491,0,1092,,8,5e-06,True,27.985005140304565,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+waveform-5000,/home/crc00006699/zh/tabiclv2/data178/waveform-5000,multiclass,4000,800,1000,40,3,0.859,0.8589893145634322,0.97797501309638,34.44551134109497,1.4856443405151367,ok,,4000,3200,0,1000,,8,5e-06,True,34.4452486038208,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+waveform_database_generator_version_1,/home/crc00006699/zh/tabiclv2/data178/waveform_database_generator_version_1,multiclass,4000,800,1000,21,3,0.87,0.8697775696531872,0.971492155387928,22.74952077865601,0.966038465499878,ok,,4000,3200,0,1000,,8,5e-06,True,22.749197244644165,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+wine,/home/crc00006699/zh/tabiclv2/data178/wine,binclass,2043,409,511,4,2,0.7573385518590998,0.7553998526987437,0.8277879901960785,20.01090741157532,0.3548924922943115,ok,,2043,1634,0,511,,8,5e-06,True,20.01052689552307,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+wine-quality-white,/home/crc00006699/zh/tabiclv2/data178/wine-quality-white,multiclass,3918,784,980,11,7,0.6408163265306123,0.6291213705009819,0.8888699620762907,25.99679470062256,0.6530356407165527,ok,,3918,3134,0,980,,8,5e-06,True,25.99647855758667,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+Amazon_employee_access,/home/crc00006699/zh/tabiclv2/data178/Amazon_employee_access,binclass,26215,5243,6554,7,2,0.9469026548672568,0.9308802168781608,0.823045303536902,254.0669701099396,7.370609521865845,ok,,26215,20972,0,6554,,16,5e-06,True,250.5905013084412,tabpfn_finetune_epoch_chunks,dataset_val_split,8,2,tabpfn_finetuning_api,,,0,False,False,
+BNG(breast-w),/home/crc00006699/zh/tabiclv2/data178/BNG(breast-w),binclass,31492,6299,7874,9,2,0.9880619761239524,0.9880764418412792,0.999166665773298,184.50386714935303,12.096455335617064,ok,,31492,25193,0,7874,,16,5e-06,True,184.50346326828003,tabpfn_finetune_epoch_chunks,dataset_val_split,8,2,tabpfn_finetuning_api,,,0,False,False,
+BNG(tic-tac-toe),/home/crc00006699/zh/tabiclv2/data178/BNG(tic-tac-toe),binclass,31492,6299,7874,9,2,0.8117856235712472,0.8078327569183582,0.8782452654392385,292.84055757522583,12.111876964569092,ok,,31492,25193,0,7874,,16,5e-06,True,292.84027647972107,tabpfn_finetune_epoch_chunks,dataset_val_split,8,2,tabpfn_finetuning_api,,,0,False,False,
+Basketball_c,/home/crc00006699/zh/tabiclv2/data178/Basketball_c,binclass,1072,215,268,11,2,0.7126865671641791,0.7118289151258632,0.7385719347980155,17.17915391921997,0.3524355888366699,ok,,1072,857,0,268,,8,5e-06,True,17.178875207901,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+Cardiovascular-Disease-dataset,/home/crc00006699/zh/tabiclv2/data178/Cardiovascular-Disease-dataset,binclass,56000,11200,14000,11,2,0.7340714285714286,0.7337827879469876,0.7995813529245235,465.5260853767395,36.62188625335693,ok,,56000,44800,0,14000,,24,5e-06,True,465.5257775783539,tabpfn_finetune_epoch_chunks,dataset_val_split,8,3,tabpfn_finetuning_api,,,0,False,False,
+Credit_c,/home/crc00006699/zh/tabiclv2/data178/Credit_c,multiclass,0,0,0,0,0,,,,0.0,0.0,fail,"TabPFNCUDAOutOfMemoryError: CUDA out of memory with 20,000 test samples.
+
+This is issue is usually caused by one of the following two reasons:
+
+1) Large test set — split into batches:
+
+    predictions = []
+    for i in range(0, len(X_test), 100):
+        pred = model.predict_proba(X_test[i:i + 100])
+        predictions.append(pred)
+    predictions = np.vstack(predictions)
+
+2) Large training set — batching won't help.
+   Subsample your training data; see https://docs.priorlabs.ai
+   for further guidance.
+
+Your sizes: 80,000 train / 20,000 test samples, 22 features.
+Not sure which? If model.predict_proba(X_test[:1]) also fails, it's (2).
+
+Original error: CUDA out of memory. Tried to allocate 368.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 124.00 MiB is free. Process 77067 has 23.44 GiB memory in use. Of the allocated memory 22.88 GiB is allocated by PyTorch, and 248.91 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",0,0,0,0,,0,,False,0.0,,,0,0,,,,0,False,False,
+Diabetic_Retinopathy_Debrecen,/home/crc00006699/zh/tabiclv2/data178/Diabetic_Retinopathy_Debrecen,binclass,920,184,231,19,2,0.7489177489177489,0.7487568958024189,0.8368714242697983,12.983683347702026,0.3598206043243408,ok,,920,736,0,231,,8,5e-06,True,12.983349561691284,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+Employee,/home/crc00006699/zh/tabiclv2/data178/Employee,binclass,3722,745,931,8,2,0.8603651987110634,0.852717245651169,0.8701079173486089,17.91351890563965,0.573458194732666,ok,,3722,2977,0,931,,8,5e-06,True,17.91326403617859,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+FOREX_audcad-day-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audcad-day-High,binclass,1467,294,367,10,2,0.7465940054495913,0.7465827139375766,0.8327838175013367,14.993485450744627,0.3493518829345703,ok,,1467,1173,0,367,,8,5e-06,True,14.99317717552185,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+FOREX_audchf-day-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audchf-day-High,binclass,1466,294,367,10,2,0.7520435967302452,0.7519773144723487,0.8390512683419473,19.857452392578125,0.3523857593536377,ok,,1466,1172,0,367,,8,5e-06,True,19.85720419883728,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+FOREX_audjpy-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audjpy-hour-High,binclass,35060,7012,8765,10,2,0.7221905305191101,0.7222135891722319,0.8005517115157663,237.882830619812,15.801989793777466,ok,,35060,28048,0,8765,,16,5e-06,True,237.88252806663516,tabpfn_finetune_epoch_chunks,dataset_val_split,8,2,tabpfn_finetuning_api,,,0,False,False,
+FOREX_audusd-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_audusd-hour-High,binclass,35060,7012,8765,10,2,0.7103251568739304,0.7104565529854844,0.7877968172366261,371.44894194602966,15.797642946243286,ok,,35060,28048,0,8765,,16,5e-06,True,371.44854950904846,tabpfn_finetune_epoch_chunks,dataset_val_split,8,2,tabpfn_finetuning_api,,,0,False,False,
+FOREX_cadjpy-hour-High,/home/crc00006699/zh/tabiclv2/data178/FOREX_cadjpy-hour-High,binclass,35060,7012,8765,10,2,0.7148887621220764,0.7148779926255752,0.7890857976206004,371.5401754379273,15.796740055084229,ok,,35060,28048,0,8765,,16,5e-06,True,371.5398268699646,tabpfn_finetune_epoch_chunks,dataset_val_split,8,2,tabpfn_finetuning_api,,,0,False,False,
+Fitness_Club_c,/home/crc00006699/zh/tabiclv2/data178/Fitness_Club_c,binclass,1200,240,300,6,2,0.7966666666666666,0.792733543259859,0.8240706661759294,14.99026608467102,0.3558344841003418,ok,,1200,960,0,300,,8,5e-06,True,14.989848375320436,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+GAMETES_Heterogeneity_20atts_1600_Het_0.4_0.2_50_EDM-2_001,/home/crc00006699/zh/tabiclv2/data178/GAMETES_Heterogeneity_20atts_1600_Het_0.4_0.2_50_EDM-2_001,binclass,1280,256,320,20,2,0.690625,0.6903800858100646,0.7649609374999999,20.904542684555054,0.371762752532959,ok,,1280,1024,0,320,,8,5e-06,True,20.90428757667541,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+GesturePhaseSegmentationProcessed,/home/crc00006699/zh/tabiclv2/data178/GesturePhaseSegmentationProcessed,multiclass,7898,1580,1975,32,5,0.7827848101265823,0.7799249182374408,0.9490503999180036,109.36908483505248,3.147850275039673,ok,,7898,6318,0,1975,,8,5e-06,True,109.3688280582428,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+IBM_HR_Analytics_Employee_Attrition_and_Performance,/home/crc00006699/zh/tabiclv2/data178/IBM_HR_Analytics_Employee_Attrition_and_Performance,binclass,1176,236,294,31,2,0.8741496598639455,0.8543817627578802,0.8509776897234904,20.98516201972961,0.3781688213348388,ok,,1176,940,0,294,,8,5e-06,True,20.98489260673523,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+Indian_pines,/home/crc00006699/zh/tabiclv2/data178/Indian_pines,multiclass,0,0,0,0,0,,,,0.0,0.0,fail,"TabPFNCUDAOutOfMemoryError: CUDA out of memory with 1,829 test samples.
+
+This is issue is usually caused by one of the following two reasons:
+
+1) Large test set — split into batches:
+
+    predictions = []
+    for i in range(0, len(X_test), 100):
+        pred = model.predict_proba(X_test[i:i + 100])
+        predictions.append(pred)
+    predictions = np.vstack(predictions)
+
+2) Large training set — batching won't help.
+   Subsample your training data; see https://docs.priorlabs.ai
+   for further guidance.
+
+Your sizes: 7,315 train / 1,829 test samples, 220 features.
+Not sure which? If model.predict_proba(X_test[:1]) also fails, it's (2).
+
+Original error: CUDA out of memory. Tried to allocate 310.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 96.00 MiB is free. Process 77067 has 23.47 GiB memory in use. Of the allocated memory 22.59 GiB is allocated by PyTorch, and 576.48 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",0,0,0,0,,0,,False,0.0,,,0,0,,,,0,False,False,
+KDDCup09_upselling,/home/crc00006699/zh/tabiclv2/data178/KDDCup09_upselling,binclass,4102,821,1026,49,2,0.8138401559454191,0.8117932016745628,0.9115359331836196,68.45841145515442,1.8697290420532229,ok,,4102,3281,0,1026,,8,5e-06,True,68.45812678337097,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+MagicTelescope,/home/crc00006699/zh/tabiclv2/data178/MagicTelescope,binclass,15216,3044,3804,9,2,0.8885383806519453,0.8869750158127937,0.9442378984988063,127.9735028743744,3.6761221885681152,ok,,15216,12172,0,3804,,8,5e-06,True,127.97318196296692,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+Mobile_Price_Classification,/home/crc00006699/zh/tabiclv2/data178/Mobile_Price_Classification,multiclass,1600,320,400,20,4,0.9825,0.982511816508284,0.9993583333333332,13.45261549949646,0.4176127910614013,ok,,1600,1280,0,400,,8,5e-06,True,13.45229458808899,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+PhishingWebsites,/home/crc00006699/zh/tabiclv2/data178/PhishingWebsites,binclass,8844,1769,2211,30,2,0.9733152419719584,0.9732931420595444,0.9979276844775278,82.44536662101746,3.6214678287506095,ok,,8844,7075,0,2211,,8,5e-06,True,82.44508767127991,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+Pima_Indians_Diabetes_Database,/home/crc00006699/zh/tabiclv2/data178/Pima_Indians_Diabetes_Database,binclass,614,123,154,8,2,0.7532467532467533,0.7465323791854404,0.8728703703703704,19.55881667137146,0.3435549736022949,ok,,614,491,0,154,,8,5e-06,True,19.558475255966187,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+Pumpkin_Seeds,/home/crc00006699/zh/tabiclv2/data178/Pumpkin_Seeds,binclass,2000,400,500,12,2,0.888,0.8878651144118828,0.9458253205128204,13.027215480804443,0.372455358505249,ok,,2000,1600,0,500,,8,5e-06,True,13.02696967124939,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+Rain_in_Australia,/home/crc00006699/zh/tabiclv2/data178/Rain_in_Australia,multiclass,0,0,0,0,0,,,,0.0,0.0,fail,"OutOfMemoryError: CUDA out of memory. Tried to allocate 2.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 2.00 MiB is free. Process 77067 has 23.56 GiB memory in use. Of the allocated memory 23.05 GiB is allocated by PyTorch, and 202.93 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",0,0,0,0,,0,,False,0.0,,,0,0,,,,0,False,False,
+Satellite,/home/crc00006699/zh/tabiclv2/data178/Satellite,binclass,4080,816,1020,36,2,0.9931372549019608,0.9924594949642388,0.9922388059701492,46.59074354171753,1.4534454345703125,ok,,4080,3264,0,1020,,8,5e-06,True,46.59040188789368,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+UJI_Pen_Characters,/home/crc00006699/zh/tabiclv2/data178/UJI_Pen_Characters,multiclass,1091,219,273,80,35,0.575091575091575,0.5542700054191707,0.9628741992361752,0.0210323333740234,12.0976140499115,ok,,1091,0,0,273,,0,5e-06,False,0.0,,TTT skipped because n_classes > 10 requires ManyClass baseline inference,0,0,,,,0,False,False,
+Wilt,/home/crc00006699/zh/tabiclv2/data178/Wilt,binclass,3856,772,965,5,2,0.9927461139896372,0.9926443320683423,0.9872356559103548,22.05515480041504,0.5086495876312256,ok,,3856,3084,0,965,,8,5e-06,True,22.05485272407532,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+accelerometer,/home/crc00006699/zh/tabiclv2/data178/accelerometer,multiclass,0,0,0,0,0,,,,0.0,0.0,fail,"ValueError: could not broadcast input array from shape (4,) into shape (3,)",0,0,0,0,,0,,False,0.0,,,0,0,,,,0,False,False,
+ada_agnostic,/home/crc00006699/zh/tabiclv2/data178/ada_agnostic,binclass,3649,730,913,48,2,0.8422782037239869,0.8375026858193976,0.9002709957488344,56.555134534835815,1.556513786315918,ok,,3649,2919,0,913,,8,5e-06,True,56.554850816726685,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+airlines_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True,/home/crc00006699/zh/tabiclv2/data178/airlines_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True,binclass,1600,320,400,7,2,0.62,0.604105534105534,0.6546968316631238,13.035791158676147,0.3730549812316894,ok,,1600,1280,0,400,,8,5e-06,True,13.035438537597656,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+allrep,/home/crc00006699/zh/tabiclv2/data178/allrep,multiclass,3017,604,755,29,4,0.9867549668874172,0.986860819055772,0.9968615029490344,21.4986834526062,0.8776097297668457,ok,,3017,2413,0,755,,8,5e-06,True,21.498395919799805,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+artificial-characters,/home/crc00006699/zh/tabiclv2/data178/artificial-characters,multiclass,8174,1635,2044,7,10,0.824853228962818,0.8244904506144258,0.9869046105764768,48.26988244056702,1.3193507194519043,ok,,8174,6539,0,2044,,8,5e-06,True,48.26957631111145,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+autoUniv-au7-1100,/home/crc00006699/zh/tabiclv2/data178/autoUniv-au7-1100,multiclass,880,176,220,12,5,0.4045454545454545,0.3877693748199367,0.725326814916073,15.584882259368896,0.362501859664917,ok,,880,704,0,220,,8,5e-06,True,15.584532260894775,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+banknote_authentication,/home/crc00006699/zh/tabiclv2/data178/banknote_authentication,binclass,1097,220,275,4,2,0.56,0.405919156147065,0.5015268402442945,19.487234830856323,0.3486831188201904,ok,,1097,877,0,275,,8,5e-06,True,19.486935138702396,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+car-evaluation,/home/crc00006699/zh/tabiclv2/data178/car-evaluation,multiclass,1382,277,346,21,4,0.9884393063583816,0.9886082025857558,0.9993573934505368,13.339329957962036,0.3725848197937011,ok,,1382,1105,0,346,,8,5e-06,True,13.339081525802612,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+cmc,/home/crc00006699/zh/tabiclv2/data178/cmc,multiclass,1178,236,295,9,3,0.5864406779661017,0.5850476984347505,0.7652232654493841,15.69625210762024,0.362717866897583,ok,,1178,942,0,295,,8,5e-06,True,15.69593596458435,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+compass,/home/crc00006699/zh/tabiclv2/data178/compass,binclass,13315,2663,3329,17,2,0.8510063082006608,0.8509796834931856,0.9201571162508664,145.07396817207336,4.17973518371582,ok,,13315,10652,0,3329,,8,5e-06,True,145.07367777824402,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+credit,/home/crc00006699/zh/tabiclv2/data178/credit,binclass,13371,2675,3343,10,2,0.7831289261142687,0.7831253942184746,0.8644921529382457,71.84559750556946,3.2649388313293457,ok,,13371,10696,0,3343,,8,5e-06,True,71.8452661037445,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+dabetes_130-us_hospitals,/home/crc00006699/zh/tabiclv2/data178/dabetes_130-us_hospitals,binclass,81412,16283,20354,20,2,0.6415446595263831,0.6367337025456477,0.6959428465250631,1618.988250732422,76.32185912132263,ok,,81412,65129,0,20354,,32,5e-06,True,1618.98787856102,tabpfn_finetune_epoch_chunks,dataset_val_split,8,4,tabpfn_finetuning_api,,,0,False,False,
+delta_ailerons,/home/crc00006699/zh/tabiclv2/data178/delta_ailerons,binclass,5703,1141,1426,5,2,0.9516129032258064,0.9516264388125828,0.9819196221415272,18.991225242614743,0.7902593612670898,ok,,5703,4562,0,1426,,8,5e-06,True,18.990827560424805,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+dna,/home/crc00006699/zh/tabiclv2/data178/dna,multiclass,2548,510,638,180,3,0.9655172413793104,0.9656739195311864,0.9977959351606892,83.78405785560608,3.2568700313568115,ok,,2548,2038,0,638,,8,5e-06,True,83.78378248214722,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+dry_bean_dataset,/home/crc00006699/zh/tabiclv2/data178/dry_bean_dataset,multiclass,10888,2178,2723,16,7,0.9272860815277268,0.927274765665828,0.9959007639359478,68.63104224205017,3.0933117866516118,ok,,10888,8710,0,2723,,8,5e-06,True,68.63076686859131,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+electricity,/home/crc00006699/zh/tabiclv2/data178/electricity,binclass,36249,7250,9063,8,2,0.8989297142226635,0.8988440509035586,0.9646383523061376,338.52064061164856,13.972423315048218,ok,,36249,28999,0,9063,,16,5e-06,True,338.5203423500061,tabpfn_finetune_epoch_chunks,dataset_val_split,8,2,tabpfn_finetuning_api,,,0,False,False,
+eye_movements,/home/crc00006699/zh/tabiclv2/data178/eye_movements,multiclass,8748,1750,2188,27,3,0.8596892138939671,0.8593346069131224,0.9657824378055808,117.3720405101776,3.3601338863372803,ok,,8748,6998,0,2188,,8,5e-06,True,117.37172603607178,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+first-order-theorem-proving,/home/crc00006699/zh/tabiclv2/data178/first-order-theorem-proving,multiclass,4894,979,1224,51,6,0.6241830065359477,0.6024136654432544,0.8443356529542251,54.52042055130005,2.4145078659057617,ok,,4894,3915,0,1224,,8,5e-06,True,54.52013731002808,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+gina_agnostic,/home/crc00006699/zh/tabiclv2/data178/gina_agnostic,binclass,0,0,0,0,0,,,,0.0,0.0,fail,"TabPFNCUDAOutOfMemoryError: CUDA out of memory with 694 test samples.
+
+This is issue is usually caused by one of the following two reasons:
+
+1) Large test set — split into batches:
+
+    predictions = []
+    for i in range(0, len(X_test), 100):
+        pred = model.predict_proba(X_test[i:i + 100])
+        predictions.append(pred)
+    predictions = np.vstack(predictions)
+
+2) Large training set — batching won't help.
+   Subsample your training data; see https://docs.priorlabs.ai
+   for further guidance.
+
+Your sizes: 2,774 train / 694 test samples, 970 features.
+Not sure which? If model.predict_proba(X_test[:1]) also fails, it's (2).
+
+Original error: CUDA out of memory. Tried to allocate 214.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 128.00 MiB is free. Process 77067 has 23.44 GiB memory in use. Of the allocated memory 22.58 GiB is allocated by PyTorch, and 556.65 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",0,0,0,0,,0,,False,0.0,,,0,0,,,,0,False,False,
+heloc,/home/crc00006699/zh/tabiclv2/data178/heloc,binclass,8000,1600,2000,22,2,0.7235,0.7231511011752562,0.7993199999999999,65.79000186920166,2.483356237411499,ok,,8000,6400,0,2000,,8,5e-06,True,65.78973317146301,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+house_16H,/home/crc00006699/zh/tabiclv2/data178/house_16H,binclass,10790,2158,2698,16,2,0.8925129725722758,0.8925091922623983,0.9559468315491638,106.5970892906189,3.0553174018859863,ok,,10790,8632,0,2698,,8,5e-06,True,106.59677171707152,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+ibm-employee-performance,/home/crc00006699/zh/tabiclv2/data178/ibm-employee-performance,binclass,1176,236,294,30,2,1.0,1.0,1.0,14.258008241653442,0.3858470916748047,ok,,1176,940,0,294,,8,5e-06,True,14.257682085037231,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+internet_firewall,/home/crc00006699/zh/tabiclv2/data178/internet_firewall,multiclass,52425,10485,13107,7,4,0.9309529259174488,0.9283238288422112,0.968345811204748,373.3983211517334,24.39461708068848,ok,,52425,41940,0,13107,,24,5e-06,True,373.39800786972046,tabpfn_finetune_epoch_chunks,dataset_val_split,8,3,tabpfn_finetuning_api,,,0,False,False,
+jm1,/home/crc00006699/zh/tabiclv2/data178/jm1,binclass,8708,1742,2177,21,2,0.8190169958658705,0.780174102958301,0.7435403015923687,95.62890696525574,2.7072625160217285,ok,,8708,6966,0,2177,,8,5e-06,True,95.62857055664062,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+kc1,/home/crc00006699/zh/tabiclv2/data178/kc1,binclass,1687,338,422,21,2,0.8625592417061612,0.844714110992203,0.8353587588881707,13.19981050491333,0.4141151905059814,ok,,1687,1349,0,422,,8,5e-06,True,13.199493408203123,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+kr-vs-k,/home/crc00006699/zh/tabiclv2/data178/kr-vs-k,multiclass,22444,4489,5612,6,18,0.8966500356379188,0.8962692067146324,0.99657268739104,0.0292627811431884,117.01199889183044,ok,,22444,0,0,5612,,0,5e-06,False,0.0,,TTT skipped because n_classes > 10 requires ManyClass baseline inference,0,0,,,,0,False,False,
+led24,/home/crc00006699/zh/tabiclv2/data178/led24,multiclass,2560,512,640,24,10,0.7296875,0.7243033176756593,0.9559022727590174,24.72506093978882,0.7083735466003418,ok,,2560,2048,0,640,,8,5e-06,True,24.724706888198853,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+letter,/home/crc00006699/zh/tabiclv2/data178/letter,multiclass,16000,3200,4000,15,26,0.9895,0.9894973824736878,0.9999694192870532,0.0257611274719238,112.887193441391,ok,,16000,0,0,4000,,0,5e-06,False,0.0,,TTT skipped because n_classes > 10 requires ManyClass baseline inference,0,0,,,,0,False,False,
+mammography,/home/crc00006699/zh/tabiclv2/data178/mammography,binclass,8946,1790,2237,6,2,0.988377291014752,0.987341880758594,0.9804831895792994,34.676888942718506,1.4836406707763672,ok,,8946,7156,0,2237,,8,5e-06,True,34.6765570640564,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+mfeat-factors,/home/crc00006699/zh/tabiclv2/data178/mfeat-factors,multiclass,1600,320,400,216,10,0.975,0.9749898377648712,0.9996041666666666,62.858134031295776,2.148059368133545,ok,,1600,1280,0,400,,8,5e-06,True,62.8578667640686,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+mfeat-karhunen,/home/crc00006699/zh/tabiclv2/data178/mfeat-karhunen,multiclass,1600,320,400,64,10,0.9725,0.9724205873703866,0.998951388888889,19.020042896270752,0.7748384475708008,ok,,1600,1280,0,400,,8,5e-06,True,19.019779920578003,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+mfeat-pixel,/home/crc00006699/zh/tabiclv2/data178/mfeat-pixel,multiclass,1600,320,400,240,10,0.9625,0.9626012984134944,0.9986111111111112,75.93448305130005,2.6992833614349365,ok,,1600,1280,0,400,,8,5e-06,True,75.93419575691223,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+mice_protein_expression,/home/crc00006699/zh/tabiclv2/data178/mice_protein_expression,multiclass,864,173,216,75,8,1.0,1.0,1.0,13.890045642852783,0.4848837852478027,ok,,864,691,0,216,,8,5e-06,True,13.889778137207031,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+mobile_c36_oversampling,/home/crc00006699/zh/tabiclv2/data178/mobile_c36_oversampling,binclass,41408,8282,10352,6,2,0.991499227202473,0.9914947532124438,0.9991279690206027,378.9778587818146,15.803309202194214,ok,,41408,33126,0,10352,,16,5e-06,True,378.977608203888,tabpfn_finetune_epoch_chunks,dataset_val_split,8,2,tabpfn_finetuning_api,,,0,False,False,
+naticusdroid+android+permissions+dataset,/home/crc00006699/zh/tabiclv2/data178/naticusdroid+android+permissions+dataset,binclass,0,0,0,0,0,,,,0.0,0.0,fail,"TabPFNCUDAOutOfMemoryError: CUDA out of memory with 5,867 test samples.
+
+This is issue is usually caused by one of the following two reasons:
+
+1) Large test set — split into batches:
+
+    predictions = []
+    for i in range(0, len(X_test), 100):
+        pred = model.predict_proba(X_test[i:i + 100])
+        predictions.append(pred)
+    predictions = np.vstack(predictions)
+
+2) Large training set — batching won't help.
+   Subsample your training data; see https://docs.priorlabs.ai
+   for further guidance.
+
+Your sizes: 23,465 train / 5,867 test samples, 86 features.
+Not sure which? If model.predict_proba(X_test[:1]) also fails, it's (2).
+
+Original error: CUDA out of memory. Tried to allocate 388.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 302.00 MiB is free. Process 77067 has 23.27 GiB memory in use. Of the allocated memory 22.84 GiB is allocated by PyTorch, and 114.07 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",0,0,0,0,,0,,False,0.0,,,0,0,,,,0,False,False,
+okcupid_stem,/home/crc00006699/zh/tabiclv2/data178/okcupid_stem,multiclass,21341,4269,5336,13,3,0.7483133433283359,0.6904749533654578,0.8082541947125231,263.33167243003845,7.792964458465576,ok,,21341,17072,0,5336,,8,5e-06,True,263.33138132095337,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+one-hundred-plants-shape,/home/crc00006699/zh/tabiclv2/data178/one-hundred-plants-shape,multiclass,0,0,0,0,0,,,,0.0,0.0,fail,RuntimeError: Failed to generate a valid legacy codebook,0,0,0,0,,0,,False,0.0,,,0,0,,,,0,False,False,
+online_shoppers,/home/crc00006699/zh/tabiclv2/data178/online_shoppers,binclass,9864,1973,2466,14,2,0.9063260340632604,0.9017956284585028,0.9290807046457176,63.71231007575989,2.410366535186768,ok,,9864,7891,0,2466,,8,5e-06,True,63.71203374862671,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+ozone-level-8hr,/home/crc00006699/zh/tabiclv2/data178/ozone-level-8hr,binclass,2027,406,507,72,2,0.95069033530572,0.943526173384398,0.9321381578947368,26.22429656982422,1.095653057098389,ok,,2027,1621,0,507,,8,5e-06,True,26.22403621673584,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+pc1,/home/crc00006699/zh/tabiclv2/data178/pc1,binclass,887,178,222,21,2,0.9414414414414416,0.9199428109746336,0.8719806763285025,14.89054822921753,0.3505549430847168,ok,,887,709,0,222,,8,5e-06,True,14.89024829864502,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+pc4,/home/crc00006699/zh/tabiclv2/data178/pc4,binclass,1166,234,292,37,2,0.9178082191780822,0.9089823284617914,0.9558919270833334,13.032983779907228,0.4068448543548584,ok,,1166,932,0,292,,8,5e-06,True,13.032679080963137,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+phoneme,/home/crc00006699/zh/tabiclv2/data178/phoneme,binclass,4323,865,1081,5,2,0.8880666049953746,0.8870249263418348,0.9485255256247213,23.43236017227173,0.575263261795044,ok,,4323,3458,0,1081,,8,5e-06,True,23.432049036026,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+predict_students_dropout_and_academic_success,/home/crc00006699/zh/tabiclv2/data178/predict_students_dropout_and_academic_success,multiclass,3539,708,885,34,3,0.7796610169491526,0.7718771132165337,0.8911225272637475,44.514220237731934,1.1822612285614014,ok,,3539,2831,0,885,,8,5e-06,True,44.51393938064575,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+rice_cammeo_and_osmancik,/home/crc00006699/zh/tabiclv2/data178/rice_cammeo_and_osmancik,binclass,3048,610,762,7,2,0.9304461942257218,0.930143932752019,0.9774898688579952,13.098801374435425,0.4144854545593261,ok,,3048,2438,0,762,,8,5e-06,True,13.098539590835571,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+rl,/home/crc00006699/zh/tabiclv2/data178/rl,binclass,3976,796,994,12,2,0.8651911468812877,0.8651365482829707,0.9370933852612656,26.7143976688385,0.6761164665222168,ok,,3976,3180,0,994,,8,5e-06,True,26.71414566040039,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+segment,/home/crc00006699/zh/tabiclv2/data178/segment,multiclass,1848,370,462,17,7,0.9415584415584416,0.9418745799278556,0.9956436660982116,12.74499535560608,0.3944971561431885,ok,,1848,1478,0,462,,8,5e-06,True,12.744690656661987,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+semeion,/home/crc00006699/zh/tabiclv2/data178/semeion,multiclass,1274,255,319,256,10,0.9435736677115988,0.9436635171585812,0.9983968925230726,97.08966064453124,2.151798725128174,ok,,1274,1019,0,319,,8,5e-06,True,97.08941292762756,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+spambase,/home/crc00006699/zh/tabiclv2/data178/spambase,binclass,3680,736,921,57,2,0.9587404994571118,0.958760137341591,0.991493626390987,64.39186549186707,1.793196678161621,ok,,3680,2944,0,921,,8,5e-06,True,64.3915901184082,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+sports_articles_for_objectivity_analysis,/home/crc00006699/zh/tabiclv2/data178/sports_articles_for_objectivity_analysis,binclass,800,160,200,59,2,0.855,0.8527182148705282,0.8989321540286916,18.81492567062378,0.3983018398284912,ok,,800,640,0,200,,8,5e-06,True,18.814651250839237,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+steel_plates_faults,/home/crc00006699/zh/tabiclv2/data178/steel_plates_faults,multiclass,1552,311,389,27,7,0.8508997429305912,0.8508853269174534,0.982284530523027,21.66119337081909,0.4485359191894531,ok,,1552,1241,0,389,,8,5e-06,True,21.660874605178837,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+taiwanese_bankruptcy_prediction,/home/crc00006699/zh/tabiclv2/data178/taiwanese_bankruptcy_prediction,binclass,0,0,0,0,0,,,,0.0,0.0,fail,"OutOfMemoryError: CUDA out of memory. Tried to allocate 2.00 MiB. GPU 0 has a total capacity of 23.57 GiB of which 2.00 MiB is free. Process 77067 has 23.56 GiB memory in use. Of the allocated memory 22.88 GiB is allocated by PyTorch, and 377.14 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",0,0,0,0,,0,,False,0.0,,,0,0,,,,0,False,False,
+texture,/home/crc00006699/zh/tabiclv2/data178/texture,multiclass,4400,880,1100,40,11,1.0,1.0,1.0,0.0194053649902343,32.26535964012146,ok,,4400,0,0,1100,,0,5e-06,False,0.0,,TTT skipped because n_classes > 10 requires ManyClass baseline inference,0,0,,,,0,False,False,
+thyroid-ann,/home/crc00006699/zh/tabiclv2/data178/thyroid-ann,multiclass,3017,604,755,21,3,0.9920529801324504,0.9919096028069112,0.9997771226720892,18.276121377944943,0.726050615310669,ok,,3017,2413,0,755,,8,5e-06,True,18.275760889053345,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+turiye_student_evaluation,/home/crc00006699/zh/tabiclv2/data178/turiye_student_evaluation,multiclass,4656,932,1164,32,5,0.5189003436426117,0.4882001192010846,0.7624116300858477,56.7421464920044,1.562030792236328,ok,,4656,3724,0,1164,,8,5e-06,True,56.74188303947449,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+vehicle,/home/crc00006699/zh/tabiclv2/data178/vehicle,multiclass,676,136,170,18,4,0.8823529411764706,0.8796836867650675,0.9719712232212232,12.47923183441162,0.3547306060791015,ok,,676,540,0,170,,8,5e-06,True,12.478930473327637,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+walking-activity,/home/crc00006699/zh/tabiclv2/data178/walking-activity,multiclass,119465,23893,29867,4,22,0.6568118659389962,0.6548186397345603,0.9714705599719629,0.0858421325683593,1789.8927369117737,ok,,119465,0,0,29867,,0,5e-06,False,0.0,,TTT skipped because n_classes > 10 requires ManyClass baseline inference,0,0,,,,0,False,False,
+water_quality,/home/crc00006699/zh/tabiclv2/data178/water_quality,binclass,6396,1280,1600,20,2,0.9075,0.8941455520529749,0.905525891597824,40.880417346954346,1.470869779586792,ok,,6396,5116,0,1600,,8,5e-06,True,40.88003206253052,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+waveform_database_generator,/home/crc00006699/zh/tabiclv2/data178/waveform_database_generator,multiclass,3999,800,1000,21,3,0.344,0.1994881061834472,0.52075967896799,35.86474895477295,0.9698989391326904,ok,,3999,3199,0,1000,,8,5e-06,True,35.864436864852905,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+website_phishing,/home/crc00006699/zh/tabiclv2/data178/website_phishing,multiclass,1082,217,271,9,3,0.918819188191882,0.919185422046047,0.9768777443009106,20.10149908065796,0.3591110706329345,ok,,1082,865,0,271,,8,5e-06,True,20.101184844970703,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+wine-quality-red,/home/crc00006699/zh/tabiclv2/data178/wine-quality-red,multiclass,1279,256,320,4,6,0.6,0.576566232998226,0.740148625002869,19.632730960845947,0.3443536758422851,ok,,1279,1023,0,320,,8,5e-06,True,19.63248300552368,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,
+yeast,/home/crc00006699/zh/tabiclv2/data178/yeast,multiclass,1187,238,297,8,10,0.6060606060606061,0.6002811617937558,0.870988533432228,12.507380247116089,0.353461742401123,ok,,1187,949,0,297,,8,5e-06,True,12.507131576538086,tabpfn_finetune_epoch_chunks,dataset_val_split,8,1,tabpfn_finetuning_api,,,0,False,False,

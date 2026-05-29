@@ -1,0 +1,12 @@
+discovered_datasets: 178
+processed_datasets: 178
+ok_count: 166
+failed_count: 12
+skipped_count: 0
+avg_accuracy_ok: 0.847650
+avg_f1_ok: 0.839207
+avg_binary_aoc_ok: 0.111594
+avg_multiclass_aoc_ok: 0.420287
+wall_seconds: 36789.045
+failed_datasets: customer_satisfaction_in_airline, gina_agnostic, INNHotelsGroup, Rain_in_Australia, dabetes_130-us_hospitals, madeline, Credit_c, Indian_pines, bank, default_of_credit_card_clients, gas-drift, naticusdroid+android+permissions+dataset
+skipped_datasets: (none)

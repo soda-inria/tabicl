@@ -1,0 +1,21 @@
+# Unified TFM environment add-ons.
+#
+# Recommended base:
+#   conda env create -f baseline_compare/environment_TFM.yml
+#   conda activate TFM
+#   pip install -r baseline_compare/TabPFN-main/requirements_benchmark.txt
+#   pip install -r baseline_compare/LimiX/requirements_benchmark.txt
+#   pip install --no-deps -e baseline_compare/TabPFN-main
+#   pip install --no-deps delu==0.0.15 rtdl==0.0.13
+#   pip install -r baseline_compare/requirements_pipeline.txt
+#
+# delu/rtdl are installed with --no-deps because their legacy metadata pins
+# torch<2 and numpy<2, which conflicts with TabPFN/LimiX. The TaBR smoke test
+# in this repo works with torch==2.7.1 after the local torch.load compatibility
+# patch in tabular-dl-tabr/lib/util.py.
+
+tomli==2.0.1
+tomli-w==1.0.0
+loguru==0.6.0
+tensorboard==2.12.0
+faiss-gpu-cu12==1.14.1.post1

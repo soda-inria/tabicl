@@ -1,0 +1,16 @@
+# Dependencies for baseline_compare/TabPFN-main/benchmark_infer.py.
+# The script imports TabPFN from this local checkout's src/ directory.
+# Pinned for 238's RTX 2080 Ti environment; still satisfies TabPFN's torch>=2.5 requirement.
+torch==2.7.1
+numpy>=1.21.6
+pandas>=1.4.0
+scikit-learn>=1.2.0
+scipy>=1.11.1
+einops>=0.4.0
+huggingface-hub>=0.19.0
+pydantic>=2.8.0
+pydantic-settings>=2.10.1
+tabpfn-common-utils[telemetry-interactive]>=0.2.13
+filelock>=3.11.0
+joblib>=1.2.0
+typing-extensions>=4.12.0

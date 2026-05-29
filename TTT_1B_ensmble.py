@@ -44,6 +44,7 @@ class ResultRow:
     n_features: int
     n_classes: int
     accuracy: Optional[float]
+    f1: Optional[float]
     fit_seconds: float
     predict_seconds: float
     status: str
@@ -110,6 +111,7 @@ class ModelSummaryRow:
     failed_count: int
     skipped_count: int
     avg_accuracy_ok: Optional[float]
+    avg_f1_ok: Optional[float]
     avg_fit_seconds_ok: Optional[float]
     avg_predict_seconds_ok: Optional[float]
     avg_dataset_seconds_ok: Optional[float]
@@ -135,6 +137,11 @@ def ensure_runtime_deps() -> None:
 def format_optional_float(value: Optional[float], precision: int = 6) -> str:
     if value is None:
         return "None"
+    try:
+        if pd is not None and pd.isna(value):
+            return "None"
+    except Exception:
+        pass
     return f"{float(value):.{precision}f}"
 
 
@@ -152,6 +159,7 @@ def format_dataset_result_log(
         return (
             f"{prefix} [ok] {row.dataset_name} "
             f"accuracy={format_optional_float(row.accuracy)} "
+            f"f1={format_optional_float(row.f1)} "
             f"fit={row.fit_seconds:.3f}s "
             f"predict={row.predict_seconds:.3f}s "
             f"ttt_applied={row.ttt_applied} "
@@ -1058,6 +1066,7 @@ def build_model_summary_row(
             failed_count=len(dataset_dirs),
             skipped_count=0,
             avg_accuracy_ok=None,
+            avg_f1_ok=None,
             avg_fit_seconds_ok=None,
             avg_predict_seconds_ok=None,
             avg_dataset_seconds_ok=None,
@@ -1077,6 +1086,7 @@ def build_model_summary_row(
         failed_count=int(len(failed_df)),
         skipped_count=int(len(skipped_df)),
         avg_accuracy_ok=(float(ok_df["accuracy"].mean()) if len(ok_df) else None),
+        avg_f1_ok=(float(ok_df["f1"].mean()) if len(ok_df) else None),
         avg_fit_seconds_ok=avg_fit_seconds_ok,
         avg_predict_seconds_ok=avg_predict_seconds_ok,
         avg_dataset_seconds_ok=avg_dataset_seconds_ok,
@@ -1160,6 +1170,7 @@ def evaluate_one_dataset(
                 n_features=0,
                 n_classes=0,
                 accuracy=None,
+                f1=None,
                 fit_seconds=0.0,
                 predict_seconds=0.0,
                 status="skip",
@@ -1260,7 +1271,10 @@ def evaluate_one_dataset(
         y_pred = classifier.predict(X_test)
         predict_seconds = time.time() - t1
 
+        from sklearn.metrics import f1_score
+
         accuracy = float(np.mean(np.asarray(y_pred) == np.asarray(y_test)))
+        f1 = float(f1_score(np.asarray(y_test), np.asarray(y_pred), average="weighted", zero_division=0))
 
         return ResultRow(
             dataset_name=dataset_dir.name,
@@ -1272,6 +1286,7 @@ def evaluate_one_dataset(
             n_features=int(X_train.shape[1]),
             n_classes=int(len(classes)),
             accuracy=accuracy,
+            f1=f1,
             fit_seconds=float(fit_seconds),
             predict_seconds=float(predict_seconds),
             status="ok",
@@ -1299,6 +1314,7 @@ def evaluate_one_dataset(
             n_features=0,
             n_classes=0,
             accuracy=None,
+            f1=None,
             fit_seconds=0.0,
             predict_seconds=0.0,
             status="fail",
@@ -1398,6 +1414,7 @@ def worker_main(
                         n_features=0,
                         n_classes=0,
                         accuracy=None,
+                        f1=None,
                         fit_seconds=0.0,
                         predict_seconds=0.0,
                         status="fail",
@@ -1570,6 +1587,11 @@ def write_summary(
             if len(ok_df)
             else "avg_accuracy_ok: (none)"
         ),
+        (
+            f"avg_f1_ok: {ok_df['f1'].mean():.6f}"
+            if len(ok_df)
+            else "avg_f1_ok: (none)"
+        ),
         f"wall_seconds: {wall_seconds:.3f}",
     ]
 
@@ -1602,6 +1624,7 @@ def write_model_pool_outputs(
     )
     for column in (
         "avg_accuracy_ok",
+        "avg_f1_ok",
         "avg_fit_seconds_ok",
         "avg_predict_seconds_ok",
         "avg_dataset_seconds_ok",
@@ -1630,6 +1653,11 @@ def write_model_pool_outputs(
             f"average_avg_accuracy_ok: {ok_df['avg_accuracy_ok'].mean():.6f}"
             if len(ok_df)
             else "average_avg_accuracy_ok: (none)"
+        ),
+        (
+            f"average_avg_f1_ok: {ok_df['avg_f1_ok'].mean():.6f}"
+            if len(ok_df)
+            else "average_avg_f1_ok: (none)"
         ),
         f"global_wall_seconds: {wall_seconds:.3f}",
     ]

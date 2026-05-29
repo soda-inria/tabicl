@@ -1,0 +1,23 @@
+discovered_datasets: 178
+processed_datasets: 178
+ok_count: 178
+failed_count: 0
+skipped_count: 0
+avg_accuracy_ok: 0.851702
+avg_f1_ok: 0.841040
+avg_binary_aoc_ok: 0.111388
+avg_multiclass_aoc_ok: 0.414245
+wall_seconds: 36451.775
+failed_datasets: (none)
+skipped_datasets: (none)
+baseline_fill_source: 1b_result_v2/iclv2_ensmble32
+baseline_fallback_count: 13
+baseline_fallback_datasets: customer_satisfaction_in_airline, gina_agnostic, BNG(cmc), INNHotelsGroup, Rain_in_Australia, dabetes_130-us_hospitals, madeline, Credit_c, Indian_pines, bank, default_of_credit_card_clients, gas-drift, naticusdroid+android+permissions+dataset
+original_ok_count_before_fill: 165
+original_avg_accuracy_ok_before_fill: 0.849903
+baseline_avg_accuracy_ok: 0.847162
+avg_accuracy_with_baseline_fill: 0.851702
+avg_accuracy_delta_vs_baseline_fill: +0.004541
+avg_accuracy_delta_pp_vs_baseline_fill: +0.4541
+win_loss_tie_vs_baseline_fill: 48/30/100
+avg_f1_ok_note: baseline-filled rows have no baseline f1 in iclv2_ensmble32, so f1/aoc means exclude NaN fallback rows

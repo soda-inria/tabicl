@@ -1,12 +1,12 @@
-from tabicl.forecast.transforms.base import TimeTransform
-from tabicl.forecast.transforms.calendar import (
+from tabicl.forecast.transforms._base import TimeTransform
+from tabicl.forecast.transforms._calendar import (
     IndexEncoder,
     DatetimeEncoder,
     ExtendedDatetimeEncoder,
     FourierEncoder,
 )
-from tabicl.forecast.transforms.seasonality import AutoPeriodicEncoder, PeriodicDetectionConfig
-from tabicl.forecast.transforms.pipeline import TimeTransformChain
+from tabicl.forecast.transforms._seasonality import AutoPeriodicEncoder, PeriodicDetectionConfig
+from tabicl.forecast.transforms._pipeline import TimeTransformChain
 
 __all__ = [
     "TimeTransform",

@@ -1,0 +1,60 @@
+# Unified TFM benchmark environment for TabPFN, LimiX, and TaBR classification scripts.
+#
+# Create on a target server with:
+#   conda env create -f baseline_compare/environment_TFM.yml
+#   conda activate TFM
+#
+# Required post-create steps:
+#   python -m pip install --no-deps delu==0.0.15 rtdl==0.0.13
+#   python -m pip install --no-deps -e baseline_compare/TabPFN-main
+#
+# Why post-create steps are needed:
+# - delu/rtdl have legacy pip metadata requiring torch<2 and numpy<2. The unified
+#   TFM environment intentionally uses torch==2.7.1 for TabPFN/LimiX, so
+#   install delu/rtdl with --no-deps after the YAML environment is created.
+# - The benchmark scripts can import local TabPFN from TabPFN-main/src directly,
+#   but editable installation keeps `import tabpfn` available in ad-hoc checks.
+#
+# If the target intranet server cannot reach PyPI/conda channels, prefer
+# transferring a conda-pack archive of the verified 238 environment instead.
+
+name: TFM
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - setuptools
+  - wheel
+  - pip:
+      # Core numeric / ML stack verified in 238's TFM/pipeline env.
+      - torch==2.7.1
+      - numpy==2.4.4
+      - pandas==3.0.2
+      - scikit-learn==1.8.0
+      - scipy==1.17.1
+      - einops==0.8.1
+      - joblib==1.5.3
+      - filelock==3.29.0
+      - typing_extensions==4.15.0
+
+      # TabPFN runtime dependencies. Local TabPFN source is installed post-create.
+      - pydantic==2.13.4
+      - pydantic-settings==2.14.1
+      - huggingface-hub==1.14.0
+      - tabpfn-common-utils[telemetry-interactive]==0.2.21
+
+      # LimiX inference dependencies.
+      - hf-xet==1.5.0
+      - kditransform==1.1.0
+      - hyperopt==0.2.7
+      - tqdm==4.67.1
+      - requests==2.33.1
+      - PyYAML==6.0.3
+
+      # TaBR runtime dependencies compatible with the unified torch 2.7.1 env.
+      - tomli==2.0.1
+      - tomli-w==1.0.0
+      - loguru==0.6.0
+      - tensorboard==2.12.0
+      - faiss-gpu-cu12==1.14.1.post1

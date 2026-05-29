@@ -1,0 +1,15 @@
+discovered_datasets: 178
+processed_datasets: 178
+ok_count: 172
+failed_count: 6
+skipped_count: 0
+ttt_oom_fallback_count: 1
+avg_accuracy_ok: 0.846196
+avg_f1_ok: 0.837425
+avg_balanced_accuracy_ok: 0.775193
+avg_roc_auc_ok: 0.905731
+avg_log_loss_ok: 0.355475
+wall_seconds: 18027.527
+failed_datasets: one-hundred-plants-margin, one-hundred-plants-texture, shuttle, accelerometer, internet_firewall, one-hundred-plants-shape
+skipped_datasets: (none)
+ttt_oom_fallback_datasets: gina_agnostic

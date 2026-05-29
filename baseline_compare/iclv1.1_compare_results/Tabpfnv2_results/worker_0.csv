@@ -1,0 +1,109 @@
+dataset_name,dataset_dir,task_type,n_train,n_val,n_test,n_features,n_classes,accuracy,fit_seconds,predict_seconds,status,error
+ASP-POTASSCO-classification,/data0/zhuhao2025/tabiclv2_test/data178/ASP-POTASSCO-classification,multiclass,1035,207,259,141,11,0.4826254826254826,0.05441164970397949,80.41746497154236,ok,
+BLE_RSSI_dataset_for_Indoor_localization,/data0/zhuhao2025/tabiclv2_test/data178/BLE_RSSI_dataset_for_Indoor_localization,multiclass,7987,1598,1997,3,3,0.7361041562343515,0.6550326347351074,2.0809381008148193,ok,
+BNG(cmc),/data0/zhuhao2025/tabiclv2_test/data178/BNG(cmc),multiclass,44236,8848,11060,9,3,0.579746835443038,6.572720766067505,85.57203459739685,ok,
+Bank_Customer_Churn_Dataset,/data0/zhuhao2025/tabiclv2_test/data178/Bank_Customer_Churn_Dataset,binclass,8000,1600,2000,10,2,0.878,1.0308170318603516,4.51617693901062,ok,
+California-Housing-Classification,/data0/zhuhao2025/tabiclv2_test/data178/California-Housing-Classification,binclass,16512,3303,4128,8,2,0.9190891472868217,2.146056652069092,16.746455907821655,ok,
+Click_prediction_small,/data0/zhuhao2025/tabiclv2_test/data178/Click_prediction_small,binclass,31958,6392,7990,3,2,0.8330413016270338,2.8511176109313965,23.10140633583069,ok,
+Customer_Personality_Analysis,/data0/zhuhao2025/tabiclv2_test/data178/Customer_Personality_Analysis,binclass,1792,359,448,24,2,0.8950892857142857,0.5791101455688477,1.078129529953003,ok,
+E-CommereShippingData,/data0/zhuhao2025/tabiclv2_test/data178/E-CommereShippingData,binclass,8799,1760,2200,10,2,0.6790909090909091,1.0692782402038574,5.289074420928955,ok,
+FICO-HELOC-cleaned,/data0/zhuhao2025/tabiclv2_test/data178/FICO-HELOC-cleaned,binclass,7896,1580,1975,23,2,0.7473417721518988,1.9661943912506104,9.586042642593384,ok,
+FOREX_audcad-hour-High,/data0/zhuhao2025/tabiclv2_test/data178/FOREX_audcad-hour-High,binclass,35060,7012,8765,10,2,0.7123787792355961,5.729720115661621,81.18965101242065,ok,
+FOREX_audjpy-day-High,/data0/zhuhao2025/tabiclv2_test/data178/FOREX_audjpy-day-High,binclass,1465,293,367,10,2,0.776566757493188,1.1626360416412354,0.6301798820495605,ok,
+FOREX_audsgd-hour-High,/data0/zhuhao2025/tabiclv2_test/data178/FOREX_audsgd-hour-High,binclass,35060,7012,8765,10,2,0.7094124358243012,9.056050300598145,81.03129243850708,ok,
+FOREX_cadjpy-day-High,/data0/zhuhao2025/tabiclv2_test/data178/FOREX_cadjpy-day-High,binclass,1467,294,367,10,2,0.7247956403269755,0.3273906707763672,0.5131678581237793,ok,
+Firm-Teacher_Clave-Direction_Classification,/data0/zhuhao2025/tabiclv2_test/data178/Firm-Teacher_Clave-Direction_Classification,multiclass,8640,1728,2160,16,4,0.8513888888888889,1.0222954750061035,5.8078343868255615,ok,
+GAMETES_Epistasis_2-Way_20atts_0.1H_EDM-1_1,/data0/zhuhao2025/tabiclv2_test/data178/GAMETES_Epistasis_2-Way_20atts_0.1H_EDM-1_1,binclass,1280,256,320,20,2,0.678125,0.38277673721313477,0.49964427947998047,ok,
+Gender_Gap_in_Spanish_WP,/data0/zhuhao2025/tabiclv2_test/data178/Gender_Gap_in_Spanish_WP,multiclass,3796,760,950,13,3,0.5989473684210527,0.547128438949585,1.800145149230957,ok,
+HR_Analytics_Job_Change_of_Data_Scientists,/data0/zhuhao2025/tabiclv2_test/data178/HR_Analytics_Job_Change_of_Data_Scientists,binclass,15326,3066,3832,13,2,0.8001043841336117,1.6871919631958008,15.272867202758789,ok,
+INNHotelsGroup,/data0/zhuhao2025/tabiclv2_test/data178/INNHotelsGroup,binclass,29020,5804,7255,17,2,0.8861474844934528,6.821767568588257,74.91093111038208,ok,
+JapaneseVowels,/data0/zhuhao2025/tabiclv2_test/data178/JapaneseVowels,multiclass,7968,1594,1993,14,9,0.9989964877069744,1.360025405883789,6.866210460662842,ok,
+MIC,/data0/zhuhao2025/tabiclv2_test/data178/MIC,binclass,1319,264,330,104,2,0.906060606060606,1.8080065250396729,1.8866572380065918,ok,
+Marketing_Campaign,/data0/zhuhao2025/tabiclv2_test/data178/Marketing_Campaign,binclass,1792,359,448,27,2,0.8839285714285714,0.5854556560516357,0.9617743492126465,ok,
+National_Health_and_Nutrition_Health_Survey,/data0/zhuhao2025/tabiclv2_test/data178/National_Health_and_Nutrition_Health_Survey,binclass,1822,365,456,7,2,0.8355263157894737,0.35254478454589844,0.5037539005279541,ok,
+PieChart3,/data0/zhuhao2025/tabiclv2_test/data178/PieChart3,binclass,861,173,216,37,2,0.875,0.7423946857452393,0.9359443187713623,ok,
+PizzaCutter3,/data0/zhuhao2025/tabiclv2_test/data178/PizzaCutter3,binclass,834,167,209,37,2,0.8803827751196173,0.5386590957641602,0.6595470905303955,ok,
+QSAR_biodegradation,/data0/zhuhao2025/tabiclv2_test/data178/QSAR_biodegradation,binclass,843,169,211,41,2,0.9004739336492891,0.5692479610443115,0.8951141834259033,ok,
+SDSS17,/data0/zhuhao2025/tabiclv2_test/data178/SDSS17,multiclass,80000,16000,20000,12,3,0.9747,13.127011060714722,416.4715139865875,ok,
+Telecom_Churn_Dataset,/data0/zhuhao2025/tabiclv2_test/data178/Telecom_Churn_Dataset,binclass,2666,534,667,17,2,0.95952023988006,0.6388261318206787,1.6571505069732666,ok,
+Water_Quality_and_Potability,/data0/zhuhao2025/tabiclv2_test/data178/Water_Quality_and_Potability,binclass,2620,524,656,8,2,0.6600609756097561,0.4258553981781006,0.7893280982971191,ok,
+abalone,/data0/zhuhao2025/tabiclv2_test/data178/abalone,multiclass,3341,669,836,8,3,0.6543062200956937,0.5077962875366211,1.070838451385498,ok,
+ada,/data0/zhuhao2025/tabiclv2_test/data178/ada,binclass,3317,664,830,48,2,0.8530120481927711,1.1779265403747559,3.089176893234253,ok,
+ada_prior,/data0/zhuhao2025/tabiclv2_test/data178/ada_prior,binclass,3649,730,913,14,2,0.8510405257393209,0.6184701919555664,1.5751183032989502,ok,
+allbp,/data0/zhuhao2025/tabiclv2_test/data178/allbp,multiclass,3017,604,755,29,3,0.9788079470198675,0.7546648979187012,2.0362138748168945,ok,
+analcatdata_authorship,/data0/zhuhao2025/tabiclv2_test/data178/analcatdata_authorship,multiclass,672,135,169,69,4,1.0,1.1910271644592285,0.8447291851043701,ok,
+autoUniv-au4-2500,/data0/zhuhao2025/tabiclv2_test/data178/autoUniv-au4-2500,multiclass,2000,400,500,100,3,0.71,2.0019278526306152,3.672607898712158,ok,
+bank,/data0/zhuhao2025/tabiclv2_test/data178/bank,binclass,36168,7234,9043,16,2,0.910206789782152,6.630472660064697,103.81376338005066,ok,
+baseball,/data0/zhuhao2025/tabiclv2_test/data178/baseball,multiclass,1072,215,268,16,3,0.9477611940298507,0.3918430805206299,0.5089800357818604,ok,
+churn,/data0/zhuhao2025/tabiclv2_test/data178/churn,binclass,4000,800,1000,20,2,0.964,0.9220101833343506,2.679107666015625,ok,
+company_bankruptcy_prediction,/data0/zhuhao2025/tabiclv2_test/data178/company_bankruptcy_prediction,binclass,5455,1091,1364,95,2,0.9714076246334311,20.288915634155273,24.24532985687256,ok,
+contraceptive_method_choice,/data0/zhuhao2025/tabiclv2_test/data178/contraceptive_method_choice,multiclass,1178,236,295,9,3,0.6271186440677966,0.4430816173553467,0.4446132183074951,ok,
+customer_satisfaction_in_airline,/data0/zhuhao2025/tabiclv2_test/data178/customer_satisfaction_in_airline,binclass,103904,20781,25976,21,2,0.9531490606713889,15.806825399398804,934.6782119274139,ok,
+default_of_credit_card_clients,/data0/zhuhao2025/tabiclv2_test/data178/default_of_credit_card_clients,binclass,24000,4800,6000,23,2,0.8261666666666667,7.203364849090576,67.30088758468628,ok,
+dis,/data0/zhuhao2025/tabiclv2_test/data178/dis,binclass,3017,604,755,29,2,0.9894039735099338,0.7295494079589844,1.797623872756958,ok,
+drug_consumption,/data0/zhuhao2025/tabiclv2_test/data178/drug_consumption,multiclass,1507,302,377,12,7,0.40318302387267907,0.371218204498291,0.5816564559936523,ok,
+eeg-eye-state,/data0/zhuhao2025/tabiclv2_test/data178/eeg-eye-state,binclass,11984,2397,2996,14,2,0.9886515353805073,1.7053468227386475,13.740673542022705,ok,
+estimation_of_obesity_levels,/data0/zhuhao2025/tabiclv2_test/data178/estimation_of_obesity_levels,multiclass,1688,338,423,16,7,0.9929078014184397,0.46381640434265137,0.793339729309082,ok,
+eye_movements_bin,/data0/zhuhao2025/tabiclv2_test/data178/eye_movements_bin,binclass,6086,1218,1522,20,2,0.735873850197109,1.1988308429718018,5.682509183883667,ok,
+gas-drift,/data0/zhuhao2025/tabiclv2_test/data178/gas-drift,multiclass,11128,2226,2782,128,6,0.9953271028037384,28.822908639907837,96.86322021484375,ok,
+golf_play_dataset_extended,/data0/zhuhao2025/tabiclv2_test/data178/golf_play_dataset_extended,binclass,876,176,219,9,2,0.9452054794520548,0.34015607833862305,0.45052528381347656,ok,
+hill-valley,/data0/zhuhao2025/tabiclv2_test/data178/hill-valley,binclass,969,194,243,100,2,0.9917695473251029,1.4947168827056885,1.7388331890106201,ok,
+htru,/data0/zhuhao2025/tabiclv2_test/data178/htru,binclass,14318,2864,3580,8,2,0.9793296089385475,1.3489785194396973,12.25219202041626,ok,
+in_vehicle_coupon_recommendation,/data0/zhuhao2025/tabiclv2_test/data178/in_vehicle_coupon_recommendation,binclass,10147,2030,2537,21,2,0.7528577059519117,1.4521219730377197,9.200594663619995,ok,
+internet_usage,/data0/zhuhao2025/tabiclv2_test/data178/internet_usage,multiclass,8086,1618,2022,70,46,0.5489614243323442,0.07700657844543457,355.0698010921478,ok,
+jungle_chess_2pcs_raw_endgame_complete,/data0/zhuhao2025/tabiclv2_test/data178/jungle_chess_2pcs_raw_endgame_complete,multiclass,35855,7171,8964,6,3,0.8665774207942882,2.184298038482666,56.53327417373657,ok,
+kdd_ipums_la_97-small,/data0/zhuhao2025/tabiclv2_test/data178/kdd_ipums_la_97-small,binclass,4150,830,1038,20,2,0.8853564547206165,0.6985416412353516,3.1244637966156006,ok,
+kropt,/data0/zhuhao2025/tabiclv2_test/data178/kropt,multiclass,22444,4489,5612,6,18,0.8451532430506058,0.0668032169342041,239.5675323009491,ok,
+led7,/data0/zhuhao2025/tabiclv2_test/data178/led7,multiclass,2560,512,640,7,10,0.73125,0.3173484802246094,0.5172140598297119,ok,
+madeline,/data0/zhuhao2025/tabiclv2_test/data178/madeline,binclass,2512,503,628,259,2,0.9044585987261147,55.42636799812317,16.104963302612305,ok,
+maternal_health_risk,/data0/zhuhao2025/tabiclv2_test/data178/maternal_health_risk,multiclass,811,163,203,6,3,0.8669950738916257,0.29611635208129883,0.4515528678894043,ok,
+mfeat-fourier,/data0/zhuhao2025/tabiclv2_test/data178/mfeat-fourier,multiclass,1600,320,400,76,10,0.91,2.2921178340911865,2.682581663131714,ok,
+mfeat-morphological,/data0/zhuhao2025/tabiclv2_test/data178/mfeat-morphological,multiclass,1600,320,400,6,10,0.765,0.32933497428894043,0.470628023147583,ok,
+mfeat-zernike,/data0/zhuhao2025/tabiclv2_test/data178/mfeat-zernike,multiclass,1600,320,400,47,10,0.8725,1.3610188961029053,1.5471198558807373,ok,
+microaggregation2,/data0/zhuhao2025/tabiclv2_test/data178/microaggregation2,multiclass,16000,3200,4000,20,5,0.63275,9.145474433898926,31.89600372314453,ok,
+mozilla4,/data0/zhuhao2025/tabiclv2_test/data178/mozilla4,binclass,12436,2488,3109,4,2,0.9376005146349309,1.037285327911377,5.394381523132324,ok,
+national-longitudinal-survey-binary,/data0/zhuhao2025/tabiclv2_test/data178/national-longitudinal-survey-binary,binclass,3926,786,982,16,2,1.0,0.7116317749023438,1.969343900680542,ok,
+one-hundred-plants-margin,/data0/zhuhao2025/tabiclv2_test/data178/one-hundred-plants-margin,multiclass,1280,256,320,64,100,0.84375,0.08449244499206543,54.86228680610657,ok,
+one-hundred-plants-texture,/data0/zhuhao2025/tabiclv2_test/data178/one-hundred-plants-texture,multiclass,1279,256,320,64,100,0.859375,0.05709242820739746,53.45705580711365,ok,
+optdigits,/data0/zhuhao2025/tabiclv2_test/data178/optdigits,multiclass,4496,900,1124,64,10,0.9884341637010676,21.412538528442383,9.575595617294312,ok,
+page-blocks,/data0/zhuhao2025/tabiclv2_test/data178/page-blocks,multiclass,4378,876,1095,10,5,0.9771689497716894,0.4658818244934082,1.8560552597045898,ok,
+pc3,/data0/zhuhao2025/tabiclv2_test/data178/pc3,binclass,1250,250,313,37,2,0.8881789137380192,0.4901294708251953,0.9040465354919434,ok,
+pendigits,/data0/zhuhao2025/tabiclv2_test/data178/pendigits,multiclass,8793,1759,2199,16,10,0.9959072305593452,1.1078710556030273,8.79414701461792,ok,
+pol,/data0/zhuhao2025/tabiclv2_test/data178/pol,binclass,8065,1613,2017,26,2,0.9876053544868617,2.2951302528381348,11.615878343582153,ok,
+qsar,/data0/zhuhao2025/tabiclv2_test/data178/qsar,binclass,844,169,211,40,2,0.8957345971563981,0.7302238941192627,0.8863735198974609,ok,
+ringnorm,/data0/zhuhao2025/tabiclv2_test/data178/ringnorm,binclass,5920,1184,1480,20,2,0.9804054054054054,1.600754976272583,5.313417434692383,ok,
+satimage,/data0/zhuhao2025/tabiclv2_test/data178/satimage,multiclass,5144,1029,1286,36,6,0.9346811819595645,2.210355758666992,7.682692289352417,ok,
+seismic+bumps,/data0/zhuhao2025/tabiclv2_test/data178/seismic+bumps,binclass,2067,414,517,18,2,0.9342359767891683,0.6473157405853271,1.3240141868591309,ok,
+shuttle,/data0/zhuhao2025/tabiclv2_test/data178/shuttle,multiclass,46400,9280,11600,9,7,0.9994827586206897,10.65158200263977,122.88881468772888,ok,
+splice,/data0/zhuhao2025/tabiclv2_test/data178/splice,multiclass,2552,511,638,60,3,0.9639498432601881,1.447108268737793,2.49929141998291,ok,
+statlog,/data0/zhuhao2025/tabiclv2_test/data178/statlog,binclass,800,160,200,20,2,0.725,0.3714280128479004,0.583160400390625,ok,
+sylvine,/data0/zhuhao2025/tabiclv2_test/data178/sylvine,binclass,4099,820,1025,20,2,0.975609756097561,0.9521114826202393,2.9601809978485107,ok,
+telco-customer-churn,/data0/zhuhao2025/tabiclv2_test/data178/telco-customer-churn,binclass,5634,1127,1409,18,2,0.8034066713981547,0.9394576549530029,3.6589345932006836,ok,
+thyroid,/data0/zhuhao2025/tabiclv2_test/data178/thyroid,multiclass,5760,1152,1440,21,3,0.9972222222222222,1.5727672576904297,5.203782558441162,ok,
+thyroid-dis,/data0/zhuhao2025/tabiclv2_test/data178/thyroid-dis,multiclass,2240,448,560,26,5,0.6857142857142857,0.6431376934051514,1.1553733348846436,ok,
+twonorm,/data0/zhuhao2025/tabiclv2_test/data178/twonorm,binclass,5920,1184,1480,20,2,0.9790540540540541,1.5747342109680176,5.338361024856567,ok,
+volkert,/data0/zhuhao2025/tabiclv2_test/data178/volkert,multiclass,0,0,0,0,0,,0.0,0.0,fail,"TabPFNCUDAOutOfMemoryError: CUDA out of memory with 11,662 test samples.
+
+This is issue is usually caused by one of the following two reasons:
+
+1) Large test set — split into batches:
+
+    predictions = []
+    for i in range(0, len(X_test), 100):
+        pred = model.predict_proba(X_test[i:i + 100])
+        predictions.append(pred)
+    predictions = np.vstack(predictions)
+
+2) Large training set — batching won't help.
+   You need subsampling or ensembling, see:
+   https://github.com/PriorLabs/tabpfn-extensions/blob/main/examples/large_datasets/large_datasets_example.py
+
+Your sizes: 46,648 train / 11,662 test samples, 180 features.
+Not sure which? If model.predict_proba(X_test[:1]) also fails, it's (2).
+
+Original error: CUDA out of memory. Tried to allocate 2.32 GiB. GPU 0 has a total capacity of 10.57 GiB of which 675.06 MiB is free. Including non-PyTorch memory, this process has 9.91 GiB memory in use. Of the allocated memory 9.39 GiB is allocated by PyTorch, and 333.20 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)"
+wall-robot-navigation,/data0/zhuhao2025/tabiclv2_test/data178/wall-robot-navigation,multiclass,4364,873,1092,24,4,0.9945054945054945,1.2082180976867676,3.8489301204681396,ok,
+waveform-5000,/data0/zhuhao2025/tabiclv2_test/data178/waveform-5000,multiclass,4000,800,1000,40,3,0.864,1.8831396102905273,5.000635147094727,ok,
+waveform_database_generator_version_1,/data0/zhuhao2025/tabiclv2_test/data178/waveform_database_generator_version_1,multiclass,4000,800,1000,21,3,0.87,1.1209838390350342,2.759354591369629,ok,
+wine,/data0/zhuhao2025/tabiclv2_test/data178/wine,binclass,2043,409,511,4,2,0.7690802348336595,0.3385629653930664,0.4727976322174072,ok,
+wine-quality-white,/data0/zhuhao2025/tabiclv2_test/data178/wine-quality-white,multiclass,3918,784,980,11,7,0.6693877551020408,0.6302387714385986,1.6040875911712646,ok,

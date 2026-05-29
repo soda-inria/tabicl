@@ -1,0 +1,449 @@
+dataset_name,task_type,n_train,n_val,n_test,n_features,n_classes,accuracy_s8,fit_seconds_s8,predict_seconds_s8,status_s8,error_s8,accuracy_s9,fit_seconds_s9,predict_seconds_s9,status_s9,error_s9,delta_s8_minus_s9,delta_pp_s8_minus_s9,bucket_s8_vs_s9
+ASP-POTASSCO-classification,multiclass,1035,207,259,141,11,0.4401544401544401,0.8151788711547852,3.5207114219665527,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='ASP-POTASSCO-classification' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/ASP-POTASSCO-classification/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/ASP-POTASSCO-classification/step_8.ckpt,0.4401544401544401,1.232409954071045,4.208019733428955,ok,,0.0,0.0,tie
+BNG(breast-w),binclass,31492,6299,7874,9,2,0.9885699771399544,1.0471243858337402,20.652212142944336,ok,,0.9886969773939548,891.3512582778931,19.4663987159729,ok,,-0.00012700025400036452,-0.012700025400036452,step9_better
+Bank_Customer_Churn_Dataset,binclass,8000,1600,2000,10,2,0.8755,0.6846370697021484,2.421693801879883,ok,,0.8745,76.52150249481201,2.5339815616607666,ok,,0.0009999999999998899,0.09999999999998899,step8_better
+Cardiovascular-Disease-dataset,binclass,56000,11200,14000,11,2,0.7328571428571429,1.105968713760376,52.87384843826294,ok,,0.7329285714285714,2668.640292406082,53.76030254364014,ok,,-7.142857142850012e-05,-0.007142857142850012,step9_better
+Customer_Personality_Analysis,binclass,1792,359,448,24,2,0.8816964285714286,0.7038664817810059,0.778653621673584,ok,,0.8816964285714286,14.18190598487854,0.6862466335296631,ok,,0.0,0.0,tie
+Employee,binclass,3722,745,931,8,2,0.8549946294307197,0.6251897811889648,0.9303703308105468,ok,,0.8549946294307197,26.46536993980408,0.97179913520813,ok,,0.0,0.0,tie
+FOREX_audcad-hour-High,binclass,35060,7012,8765,10,2,0.7151169423844838,0.9251987934112548,22.91793417930603,ok,,0.7147746719908727,1086.7542698383331,23.4400646686554,ok,,0.0003422703936110105,0.03422703936110105,step8_better
+FOREX_audjpy-hour-High,binclass,35060,7012,8765,10,2,0.7247005134055904,0.6170802116394043,22.976882934570312,ok,,0.7245864232743867,1086.2670648097992,23.467933893203732,ok,,0.00011409013120367018,0.011409013120367018,step8_better
+FOREX_cadjpy-day-High,binclass,1467,294,367,10,2,0.7166212534059946,0.6763017177581787,0.3861427307128906,ok,,0.7138964577656676,11.502116203308104,0.4057142734527588,ok,,0.0027247956403270157,0.27247956403270157,step8_better
+Fitness_Club_c,binclass,1200,240,300,6,2,0.8,0.6070897579193115,0.2481703758239746,ok,,0.7933333333333333,8.350634336471558,0.2760696411132812,ok,,0.00666666666666671,0.666666666666671,step8_better
+Gender_Gap_in_Spanish_WP,multiclass,3796,760,950,13,3,0.6063157894736843,0.6812827587127686,1.0635278224945068,ok,,0.608421052631579,27.07010817527771,1.160226345062256,ok,,-0.002105263157894721,-0.21052631578947212,step9_better
+IBM_HR_Analytics_Employee_Attrition_and_Performance,binclass,1176,236,294,31,2,0.8673469387755102,0.6248559951782227,0.4866197109222412,ok,,0.8673469387755102,11.414092063903809,0.5083713531494141,ok,,0.0,0.0,tie
+JapaneseVowels,multiclass,7968,1594,1993,14,9,0.9989964877069744,0.6484880447387695,2.633160352706909,ok,,0.9989964877069744,77.9844560623169,2.542854070663452,ok,,0.0,0.0,tie
+MagicTelescope,binclass,15216,3044,3804,9,2,0.8882754994742377,0.716620683670044,5.943998098373413,ok,,0.8890641430073607,226.8189063072205,6.298311471939087,ok,,-0.0007886435331230235,-0.07886435331230235,step9_better
+National_Health_and_Nutrition_Health_Survey,binclass,1822,365,456,7,2,0.8421052631578947,0.6095895767211914,0.4175701141357422,ok,,0.8399122807017544,11.711706638336182,0.4689314365386963,ok,,0.002192982456140302,0.21929824561403022,step8_better
+Pima_Indians_Diabetes_Database,binclass,614,123,154,8,2,0.7792207792207793,0.6112282276153564,0.3599030971527099,ok,,0.7662337662337663,10.60501265525818,0.3282263278961181,ok,,0.012987012987012991,1.2987012987012991,step8_better
+QSAR_biodegradation,binclass,843,169,211,41,2,0.8767772511848341,0.7300734519958496,0.7134506702423096,ok,,0.8767772511848341,10.756572961807253,0.7534842491149902,ok,,0.0,0.0,tie
+Satellite,binclass,4080,816,1020,36,2,0.992156862745098,0.7003529071807861,1.6869239807128906,ok,,0.992156862745098,34.23135685920715,1.6717395782470703,ok,,0.0,0.0,tie
+Water_Quality_and_Potability,binclass,2620,524,656,8,2,0.6295731707317073,0.594489336013794,0.650768518447876,ok,,0.6219512195121951,16.95079755783081,0.642554759979248,ok,,0.007621951219512146,0.7621951219512146,step8_better
+accelerometer,multiclass,122403,24481,30601,4,4,0.7410542139145779,0.7155473232269287,231.66927766799927,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='accelerometer' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/accelerometer/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/accelerometer/step_8.ckpt,0.7410542139145779,0.7155473232269287,231.66927766799927,ok,"baseline_fallback_from_v1.1_baseline; original_error: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 334, in _train_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 269, in forward
+    representations = self._train_forward(embeddings, d)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 204, in _train_forward
+    representations = self._aggregate_embeddings(embeddings, key_mask)  # (B, T, C*E)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 147, in _aggregate_embeddings
+    embeddings = block(embeddings, key_padding_mask=key_mask, rope=rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 118, in sdpa_with_flattened_batch
+    out = F.scaled_dot_product_attention(q, k, v, attn_mask, dropout_p)
+RuntimeError: CUDA error: invalid configuration argument
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+",0.0,0.0,tie
+ada_prior,binclass,3649,730,913,14,2,0.8488499452354874,0.6388542652130127,1.0496876239776611,ok,,0.8488499452354874,26.66042304039001,1.006169319152832,ok,,0.0,0.0,tie
+allrep,multiclass,3017,604,755,29,4,0.9841059602649008,0.6903386116027832,1.0799198150634766,ok,,0.9854304635761588,21.46197462081909,1.0355629920959473,ok,,-0.0013245033112579963,-0.13245033112579963,step9_better
+autoUniv-au4-2500,multiclass,2000,400,500,100,3,0.558,0.8781759738922119,1.580679416656494,ok,,0.56,23.11110091209412,1.7058954238891602,ok,,-0.0020000000000000018,-0.20000000000000018,step9_better
+banknote_authentication,binclass,1097,220,275,4,2,0.5563636363636364,0.6089580059051514,0.1712777614593505,ok,,0.5563636363636364,5.994508504867554,0.2049214839935302,ok,,0.0,0.0,tie
+churn,binclass,4000,800,1000,20,2,0.95,0.7503225803375244,1.3872895240783691,ok,,0.95,30.35092186927796,1.3506548404693604,ok,,0.0,0.0,tie
+compass,binclass,13315,2663,3329,17,2,0.8759387203364374,0.884854793548584,5.376385688781738,ok,,0.8765395013517573,185.98691391944885,5.604018688201904,ok,,-0.0006007810153199067,-0.06007810153199067,step9_better
+customer_satisfaction_in_airline,binclass,103904,20781,25976,21,2,0.9615414228518632,2.281546115875244,256.28031945228577,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='customer_satisfaction_in_airline' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/customer_satisfaction_in_airline/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/customer_satisfaction_in_airline/step_8.ckpt,0.9615414228518632,2.281546115875244,256.28031945228577,ok,"baseline_fallback_from_v1.1_baseline; original_error: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 334, in _train_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 269, in forward
+    representations = self._train_forward(embeddings, d)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 204, in _train_forward
+    representations = self._aggregate_embeddings(embeddings, key_mask)  # (B, T, C*E)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 147, in _aggregate_embeddings
+    embeddings = block(embeddings, key_padding_mask=key_mask, rope=rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 118, in sdpa_with_flattened_batch
+    out = F.scaled_dot_product_attention(q, k, v, attn_mask, dropout_p)
+RuntimeError: CUDA error: invalid configuration argument
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+",0.0,0.0,tie
+delta_ailerons,binclass,5703,1141,1426,5,2,0.9495091164095372,0.585024356842041,0.9595546722412108,ok,,0.9495091164095372,30.52866554260254,0.976588010787964,ok,,0.0,0.0,tie
+drug_consumption,multiclass,1507,302,377,12,7,0.403183023872679,0.6495311260223389,0.4272663593292236,ok,,0.403183023872679,11.305675506591797,0.42498779296875,ok,,0.0,0.0,tie
+electricity,binclass,36249,7250,9063,8,2,0.908529184596712,0.9073326587677002,23.94613742828369,ok,,0.908749862076575,1142.1465768814087,24.5098819732666,ok,,-0.00022067747986309616,-0.022067747986309616,step9_better
+eye_movements_bin,binclass,6086,1218,1522,20,2,0.6708278580814717,0.721095085144043,2.3260886669158936,ok,,0.6727989487516426,52.521992206573486,2.148458242416382,ok,,-0.001971090670170872,-0.1971090670170872,step9_better
+gina_agnostic,binclass,2774,555,694,970,2,0.9322766570605188,3.441117525100708,83.88395810127258,ok,,0.9351585014409222,248.8220579624176,95.11873602867126,ok,,-0.0028818443804033977,-0.2881844380403398,step9_better
+hill-valley,binclass,969,194,243,100,2,0.9670781893004116,0.7357690334320068,0.8614113330841064,ok,,0.9629629629629628,12.928416728973389,0.7949051856994629,ok,,0.004115226337448763,0.4115226337448763,step8_better
+ibm-employee-performance,binclass,1176,236,294,30,2,1.0,0.7075610160827637,0.7211711406707764,ok,,1.0,11.552865982055664,0.4977898597717285,ok,,0.0,0.0,tie
+internet_usage,multiclass,8086,1618,2022,70,46,0.5296735905044511,0.8728311061859131,9.529549837112429,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='internet_usage' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/internet_usage/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/internet_usage/step_8.ckpt,0.5296735905044511,1.6167387962341309,9.608580350875854,ok,,0.0,0.0,tie
+kc1,binclass,1687,338,422,21,2,0.8838862559241706,0.6486828327178955,0.5420353412628174,ok,,0.8815165876777251,12.476845264434814,0.5714256763458252,ok,,0.0023696682464454666,0.23696682464454666,step8_better
+kropt,multiclass,22444,4489,5612,6,18,0.852815395580898,0.4674258232116699,23.84211778640747,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='kropt' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/kropt/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/kropt/step_8.ckpt,0.852815395580898,0.9271774291992188,23.91143798828125,ok,,0.0,0.0,tie
+letter,multiclass,16000,3200,4000,15,26,0.98625,0.5111706256866455,15.320677995681764,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='letter' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/letter/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/letter/step_8.ckpt,0.98625,0.9659533500671388,15.120098352432253,ok,,0.0,0.0,tie
+maternal_health_risk,multiclass,811,163,203,6,3,0.8719211822660099,0.3298308849334717,0.4065382480621338,ok,,0.8719211822660099,10.59805703163147,0.4394199848175049,ok,,0.0,0.0,tie
+mfeat-karhunen,multiclass,1600,320,400,64,10,0.9725,0.6785120964050293,0.999269962310791,ok,,0.9725,14.999264240264893,1.009981393814087,ok,,0.0,0.0,tie
+mfeat-zernike,multiclass,1600,320,400,47,10,0.9025,0.9049177169799804,0.827509880065918,ok,,0.905,13.254135131835938,0.8565833568572998,ok,,-0.0025000000000000577,-0.2500000000000058,step9_better
+mobile_c36_oversampling,binclass,41408,8282,10352,6,2,0.9927550231839258,0.7518556118011475,22.39148259162903,ok,,0.9928516228748068,984.8926601409912,23.08196997642517,ok,,-9.659969088093856e-05,-0.009659969088093856,step9_better
+national-longitudinal-survey-binary,binclass,3926,786,982,16,2,0.9989816700610998,0.6836192607879639,1.1663475036621094,ok,,0.9989816700610998,29.43347716331482,1.1930506229400637,ok,,0.0,0.0,tie
+one-hundred-plants-shape,multiclass,1280,256,320,64,100,0.8,0.4362640380859375,3.622575044631958,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='one-hundred-plants-shape' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/one-hundred-plants-shape/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/one-hundred-plants-shape/step_8.ckpt,0.8,0.8490374088287354,3.528810977935791,ok,,0.0,0.0,tie
+optdigits,multiclass,4496,900,1124,64,10,0.99644128113879,0.8111684322357178,2.4772844314575195,ok,,0.99644128113879,44.78165340423584,2.5611367225646973,ok,,0.0,0.0,tie
+pc1,binclass,887,178,222,21,2,0.945945945945946,0.3571040630340576,0.545081615447998,ok,,0.945945945945946,10.709735870361328,0.5704619884490967,ok,,0.0,0.0,tie
+pendigits,multiclass,8793,1759,2199,16,10,0.9968167348794906,0.7116248607635498,3.194875240325928,ok,,0.9968167348794906,94.37768983840942,3.277328968048096,ok,,0.0,0.0,tie
+predict_students_dropout_and_academic_success,multiclass,3539,708,885,34,3,0.7706214689265537,0.7344975471496582,1.443882703781128,ok,,0.7717514124293785,29.317068815231323,1.4308133125305176,ok,,-0.001129943502824804,-0.1129943502824804,step9_better
+ringnorm,binclass,5920,1184,1480,20,2,0.9763513513513512,0.6728813648223877,2.016196250915528,ok,,0.977027027027027,50.83368468284607,2.123540163040161,ok,,-0.0006756756756758353,-0.06756756756758353,step9_better
+segment,multiclass,1848,370,462,17,7,0.9393939393939394,0.6152610778808594,0.5577125549316406,ok,,0.9415584415584416,14.03267216682434,0.5484685897827148,ok,,-0.0021645021645021467,-0.21645021645021467,step9_better
+shuttle,multiclass,46400,9280,11600,9,7,0.9994827586206896,0.9340555667877196,37.37217807769776,ok,,0.999396551724138,1841.8788242340088,38.047892808914185,ok,,8.620689655158831e-05,0.00862068965515883,step8_better
+sports_articles_for_objectivity_analysis,binclass,800,160,200,59,2,0.845,0.8322153091430664,0.8299620151519775,ok,,0.845,11.038830280303957,0.8164196014404297,ok,,0.0,0.0,tie
+sylvine,binclass,4099,820,1025,20,2,0.9707317073170731,0.7081842422485352,1.313828706741333,ok,,0.9707317073170731,31.37319016456604,1.381143569946289,ok,,0.0,0.0,tie
+texture,multiclass,4400,880,1100,40,11,1.0,0.4593575000762939,5.77265739440918,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='texture' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/texture/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/texture/step_8.ckpt,1.0,0.9791462421417236,3.956350088119507,ok,,0.0,0.0,tie
+thyroid-dis,multiclass,2240,448,560,26,5,0.6928571428571428,0.7489230632781982,0.7893755435943604,ok,,0.6910714285714286,16.355462074279785,0.7381443977355957,ok,,0.0017857142857142794,0.17857142857142794,step8_better
+vehicle,multiclass,676,136,170,18,4,0.8823529411764706,0.6259057521820068,0.4108405113220215,ok,,0.888235294117647,10.583425760269163,0.4296181201934814,ok,,-0.00588235294117645,-0.588235294117645,step9_better
+wall-robot-navigation,multiclass,4364,873,1092,24,4,0.9853479853479854,0.7180418968200684,1.5032591819763184,ok,,0.9853479853479854,33.705570220947266,1.4973580837249756,ok,,0.0,0.0,tie
+waveform_database_generator,multiclass,3999,800,1000,21,3,0.355,0.6505599021911621,1.3087522983551023,ok,,0.35,30.72909164428711,1.3524904251098633,ok,,0.0050000000000000044,0.5000000000000004,step8_better
+wine,binclass,2043,409,511,4,2,0.7729941291585127,0.6278934478759766,0.2240045070648193,ok,,0.7710371819960861,7.775801658630371,0.2866148948669433,ok,,0.00195694716242667,0.195694716242667,step8_better
+yeast,multiclass,1187,238,297,8,10,0.632996632996633,0.6938867568969727,0.3186266422271728,ok,,0.6296296296296297,10.869611024856567,0.3331573009490967,ok,,0.0033670033670033517,0.33670033670033517,step8_better
+Amazon_employee_access,binclass,26215,5243,6554,7,2,0.9452242905096124,1.0571603775024414,13.920475959777832,ok,,0.94537686908758,520.1439762115479,12.428553819656372,ok,,-0.000152578577967577,-0.015257857796757701,step9_better
+BNG(cmc),multiclass,44236,8848,11060,9,3,0.5859855334538879,1.0154578685760498,34.176870346069336,ok,,0.5851717902350814,1681.2838897705078,34.84951591491699,ok,,0.0008137432188065619,0.08137432188065619,step8_better
+Basketball_c,binclass,1072,215,268,11,2,0.6940298507462687,0.6404073238372803,0.307652473449707,ok,,0.6940298507462687,10.84122633934021,0.3285748958587646,ok,,0.0,0.0,tie
+Click_prediction_small,binclass,31958,6392,7990,3,2,0.8322903629536921,0.7611687183380127,6.933643579483032,ok,,0.8322903629536921,300.4726276397705,7.282541513442993,ok,,0.0,0.0,tie
+Diabetic_Retinopathy_Debrecen,binclass,920,184,231,19,2,0.7489177489177489,0.3940327167510986,0.5870828628540039,ok,,0.7532467532467533,10.683709859848022,0.5188422203063965,ok,,-0.0043290043290044045,-0.43290043290044045,step9_better
+FICO-HELOC-cleaned,binclass,7896,1580,1975,23,2,0.7448101265822785,0.7223944664001465,2.9444899559021,ok,,0.7448101265822785,80.67553353309631,3.050803899765014,ok,,0.0,0.0,tie
+FOREX_audchf-day-High,binclass,1466,294,367,10,2,0.7384196185286104,0.6669230461120605,0.3772697448730469,ok,,0.7411444141689373,11.687852382659912,0.4203708171844482,ok,,-0.0027247956403269047,-0.27247956403269047,step9_better
+FOREX_audsgd-hour-High,binclass,35060,7012,8765,10,2,0.7043924700513405,0.9350135326385498,23.014330625534058,ok,,0.7075869937250427,1086.5302169322968,23.25040888786316,ok,,-0.00319452367370221,-0.319452367370221,step9_better
+FOREX_cadjpy-hour-High,binclass,35060,7012,8765,10,2,0.7148887621220764,0.8779940605163574,23.05469012260437,ok,,0.7151169423844838,1086.4679980278015,23.46988010406494,ok,,-0.00022818026240734035,-0.022818026240734035,step9_better
+GAMETES_Epistasis_2-Way_20atts_0.1H_EDM-1_1,binclass,1280,256,320,20,2,0.678125,0.674715518951416,0.4183318614959717,ok,,0.678125,11.003024578094482,0.4120407104492187,ok,,0.0,0.0,tie
+GesturePhaseSegmentationProcessed,multiclass,7898,1580,1975,32,5,0.8045569620253165,0.83085036277771,3.340308427810669,ok,,0.8050632911392405,84.79790306091309,3.41318154335022,ok,,-0.0005063291139240089,-0.05063291139240089,step9_better
+INNHotelsGroup,binclass,29020,5804,7255,17,2,0.9024121295658166,0.9861786365509032,17.81709885597229,ok,,0.9021364576154376,765.2595024108887,18.009326457977295,ok,,0.0002756719503790306,0.02756719503790306,step8_better
+KDDCup09_upselling,binclass,4102,821,1026,49,2,0.8118908382066277,0.7704207897186279,1.9941725730896,ok,,0.8128654970760234,37.37950301170349,1.9957928657531736,ok,,-0.0009746588693957392,-0.09746588693957392,step9_better
+Marketing_Campaign,binclass,1792,359,448,27,2,0.8950892857142857,0.7081737518310547,0.6253659725189209,ok,,0.8950892857142857,14.397438049316406,0.6551570892333984,ok,,0.0,0.0,tie
+PhishingWebsites,binclass,8844,1769,2211,30,2,0.9796472184531886,0.5988564491271973,3.753533363342285,ok,,0.9796472184531886,101.36296153068542,3.8476035594940186,ok,,0.0,0.0,tie
+PizzaCutter3,binclass,834,167,209,37,2,0.8803827751196173,0.6683769226074219,0.6680397987365723,ok,,0.8803827751196173,10.485070943832396,0.6953377723693848,ok,,0.0,0.0,tie
+Rain_in_Australia,multiclass,116368,23274,29092,18,3,0.8503712360786471,2.0024683475494385,296.4315595626831,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='Rain_in_Australia' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/Rain_in_Australia/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/Rain_in_Australia/step_8.ckpt,0.8503712360786471,2.0024683475494385,296.4315595626831,ok,"baseline_fallback_from_v1.1_baseline; original_error: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 334, in _train_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 269, in forward
+    representations = self._train_forward(embeddings, d)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 204, in _train_forward
+    representations = self._aggregate_embeddings(embeddings, key_mask)  # (B, T, C*E)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 147, in _aggregate_embeddings
+    embeddings = block(embeddings, key_padding_mask=key_mask, rope=rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 118, in sdpa_with_flattened_batch
+    out = F.scaled_dot_product_attention(q, k, v, attn_mask, dropout_p)
+RuntimeError: CUDA error: invalid configuration argument
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+",0.0,0.0,tie
+Telecom_Churn_Dataset,binclass,2666,534,667,17,2,0.9535232383808095,0.6656785011291504,0.7938392162322998,ok,,0.9535232383808095,18.46372652053833,0.7554843425750732,ok,,0.0,0.0,tie
+Wilt,binclass,3856,772,965,5,2,0.9917098445595854,0.6181538105010986,0.6195125579833984,ok,,0.9917098445595854,17.945818662643433,0.6396920680999756,ok,,0.0,0.0,tie
+ada,binclass,3317,664,830,48,2,0.8409638554216867,0.6857690811157227,1.5662105083465576,ok,,0.844578313253012,26.55420517921448,1.7171196937561035,ok,,-0.0036144578313253017,-0.3614457831325302,step9_better
+airlines_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True,binclass,1600,320,400,7,2,0.625,0.6083886623382568,0.3684732913970947,ok,,0.6225,9.892051696777344,0.3193356990814209,ok,,0.0024999999999999467,0.24999999999999467,step8_better
+analcatdata_authorship,multiclass,672,135,169,69,4,0.9881656804733728,0.7010748386383057,0.5042247772216797,ok,,0.9881656804733728,10.815778017044067,0.4385881423950195,ok,,0.0,0.0,tie
+autoUniv-au7-1100,multiclass,880,176,220,12,5,0.4181818181818181,0.6370143890380859,0.4837360382080078,ok,,0.4272727272727272,10.548584938049316,0.4852414131164551,ok,,-0.009090909090909094,-0.9090909090909094,step9_better
+baseball,multiclass,1072,215,268,16,3,0.9514925373134328,0.6150658130645752,0.3522763252258301,ok,,0.9477611940298508,10.78411865234375,0.3308587074279785,ok,,0.003731343283581934,0.3731343283581934,step8_better
+cmc,multiclass,1178,236,295,9,3,0.5864406779661017,0.6345598697662354,0.3232789039611816,ok,,0.5830508474576271,10.928845643997192,0.2956159114837646,ok,,0.003389830508474523,0.3389830508474523,step8_better
+contraceptive_method_choice,multiclass,1178,236,295,9,3,0.6474576271186441,0.5949711799621582,0.3583755493164062,ok,,0.6406779661016949,10.951878547668455,0.3447213172912597,ok,,0.006779661016949157,0.6779661016949157,step8_better
+dabetes_130-us_hospitals,binclass,81412,16283,20354,20,2,0.6411516163898988,1.7948837280273438,113.52792263031006,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='dabetes_130-us_hospitals' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/dabetes_130-us_hospitals/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/dabetes_130-us_hospitals/step_8.ckpt,0.6411516163898988,1.7948837280273438,113.52792263031006,ok,"baseline_fallback_from_v1.1_baseline; original_error: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 334, in _train_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 269, in forward
+    representations = self._train_forward(embeddings, d)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 204, in _train_forward
+    representations = self._aggregate_embeddings(embeddings, key_mask)  # (B, T, C*E)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 147, in _aggregate_embeddings
+    embeddings = block(embeddings, key_padding_mask=key_mask, rope=rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 118, in sdpa_with_flattened_batch
+    out = F.scaled_dot_product_attention(q, k, v, attn_mask, dropout_p)
+RuntimeError: CUDA error: invalid configuration argument
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+",0.0,0.0,tie
+dis,binclass,3017,604,755,29,2,0.9854304635761588,0.6466851234436035,1.136813402175903,ok,,0.9854304635761588,21.70180869102478,1.0368375778198242,ok,,0.0,0.0,tie
+dry_bean_dataset,multiclass,10888,2178,2723,16,7,0.929122291590158,0.759810209274292,4.053818702697754,ok,,0.929122291590158,133.17440843582153,4.2512524127960205,ok,,0.0,0.0,tie
+estimation_of_obesity_levels,multiclass,1688,338,423,16,7,0.9858156028368794,0.6097424030303955,0.5081844329833984,ok,,0.9858156028368794,12.208509683609009,0.5352473258972168,ok,,0.0,0.0,tie
+first-order-theorem-proving,multiclass,4894,979,1224,51,6,0.6299019607843137,0.7895026206970215,2.422737598419189,ok,,0.6315359477124183,43.98286318778992,2.522311925888061,ok,,-0.0016339869281045694,-0.16339869281045694,step9_better
+golf_play_dataset_extended,binclass,876,176,219,9,2,0.9315068493150684,0.6592311859130859,0.4657461643218994,ok,,0.9360730593607306,10.46845269203186,0.4060838222503662,ok,,-0.004566210045662156,-0.45662100456621557,step9_better
+house_16H,binclass,10790,2158,2698,16,2,0.8888065233506302,0.756533145904541,4.010238409042358,ok,,0.888065233506301,132.28365683555603,4.245909929275513,ok,,0.000741289844329196,0.0741289844329196,step8_better
+in_vehicle_coupon_recommendation,binclass,10147,2030,2537,21,2,0.7910918407567994,0.8586528301239014,3.937369108200073,ok,,0.7895151754040205,114.6926839351654,4.10089921951294,ok,,0.0015766653527788943,0.15766653527788943,step8_better
+jm1,binclass,8708,1742,2177,21,2,0.8222324299494718,0.7091898918151855,3.2348878383636475,ok,,0.8226917776757005,94.92969059944151,3.204241752624512,ok,,-0.00045934772622868714,-0.045934772622868714,step9_better
+kdd_ipums_la_97-small,binclass,4150,830,1038,20,2,0.8872832369942196,0.7278590202331543,1.323735237121582,ok,,0.8892100192678227,31.286568880081177,1.4197733402252195,ok,,-0.0019267822736031004,-0.19267822736031004,step9_better
+led24,multiclass,2560,512,640,24,10,0.7296875,0.7163281440734863,0.8606469631195068,ok,,0.7296875,17.867043495178223,0.8703820705413818,ok,,0.0,0.0,tie
+madeline,binclass,2512,503,628,259,2,0.7595541401273885,1.1740617752075195,4.511330366134644,ok,,0.7611464968152867,54.32665061950684,4.544730186462402,ok,,-0.0015923566878981443,-0.15923566878981443,step9_better
+mfeat-factors,multiclass,1600,320,400,216,10,0.975,0.7152438163757324,2.46590518951416,ok,,0.9725,29.439576864242557,2.522150993347168,ok,,0.0024999999999999467,0.24999999999999467,step8_better
+mfeat-morphological,multiclass,1600,320,400,6,10,0.77,0.6775462627410889,0.405231237411499,ok,,0.7625,11.65804672241211,0.3935825824737549,ok,,0.007500000000000062,0.7500000000000062,step8_better
+mice_protein_expression,multiclass,864,173,216,75,8,1.0,0.7468459606170654,0.6795220375061035,ok,,1.0,11.69899320602417,0.6835689544677734,ok,,0.0,0.0,tie
+mozilla4,binclass,12436,2488,3109,4,2,0.9401736892891605,0.6963460445404053,2.010884046554565,ok,,0.9398520424573816,80.8923819065094,2.22309947013855,ok,,0.00032164683177882125,0.032164683177882125,step8_better
+okcupid_stem,multiclass,21341,4269,5336,13,3,0.7485007496251874,0.8782970905303955,10.529627323150637,ok,,0.7488755622188905,433.867600440979,10.849377393722534,ok,,-0.00037481259370308884,-0.037481259370308884,step9_better
+one-hundred-plants-texture,multiclass,1279,256,320,64,100,0.91875,0.4542803764343261,3.5845377445220947,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='one-hundred-plants-texture' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/one-hundred-plants-texture/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/one-hundred-plants-texture/step_8.ckpt,0.91875,0.9264676570892334,3.50581431388855,ok,,0.0,0.0,tie
+ozone-level-8hr,binclass,2027,406,507,72,2,0.9546351084812624,0.748823881149292,1.2893810272216797,ok,,0.9526627218934912,20.46607518196106,1.3306806087493896,ok,,0.0019723865877712132,0.19723865877712132,step8_better
+pc3,binclass,1250,250,313,37,2,0.9009584664536742,0.4207913875579834,0.5817170143127441,ok,,0.9009584664536742,11.307624340057371,0.6072378158569336,ok,,0.0,0.0,tie
+phoneme,binclass,4323,865,1081,5,2,0.904717853839038,0.642317533493042,0.7081027030944824,ok,,0.906567992599445,20.40233588218689,0.7618198394775391,ok,,-0.0018501387604069608,-0.18501387604069608,step9_better
+qsar,binclass,844,169,211,40,2,0.90521327014218,0.4270381927490234,0.702692985534668,ok,,0.90521327014218,10.938661813735962,0.7039449214935303,ok,,0.0,0.0,tie
+rl,binclass,3976,796,994,12,2,0.8551307847082495,0.7057688236236572,1.0848946571350098,ok,,0.8561368209255533,28.998213291168213,1.1447207927703855,ok,,-0.001006036217303774,-0.1006036217303774,step9_better
+seismic+bumps,binclass,2067,414,517,18,2,0.9342359767891684,0.6266608238220215,0.6080737113952637,ok,,0.9342359767891684,14.850090980529783,0.6665680408477783,ok,,0.0,0.0,tie
+spambase,binclass,3680,736,921,57,2,0.9587404994571118,0.7566163539886475,1.950352430343628,ok,,0.9565689467969598,33.934669494628906,1.9681954383850095,ok,,0.0021715526601520097,0.21715526601520097,step8_better
+statlog,binclass,800,160,200,20,2,0.735,0.632652759552002,0.483849287033081,ok,,0.735,10.651405334472656,0.5119695663452148,ok,,0.0,0.0,tie
+taiwanese_bankruptcy_prediction,binclass,5455,1091,1364,95,2,0.9721407624633432,1.0300335884094238,4.013515949249268,ok,,0.9721407624633432,68.28874564170837,4.026365280151367,ok,,0.0,0.0,tie
+thyroid,multiclass,5760,1152,1440,21,3,0.99375,0.4298422336578369,1.987026929855347,ok,,0.99375,49.226866245269775,1.9725282192230225,ok,,0.0,0.0,tie
+turiye_student_evaluation,multiclass,4656,932,1164,32,5,0.5154639175257731,0.7155592441558838,1.9055836200714111,ok,,0.5163230240549829,37.83013558387756,1.9058492183685305,ok,,-0.00085910652920973,-0.085910652920973,step9_better
+volkert,multiclass,46648,9330,11662,180,10,0.7337506431143886,5.66342306137085,280.0815114974976,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='volkert' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/volkert/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/volkert/step_8.ckpt,0.7337506431143886,5.5267322063446045,271.0998442173004,ok,,0.0,0.0,tie
+water_quality,binclass,6396,1280,1600,20,2,0.90875,0.8018674850463867,2.085895299911499,ok,,0.909375,53.90369892120361,2.239020824432373,ok,,-0.0006250000000000977,-0.06250000000000977,step9_better
+waveform_database_generator_version_1,multiclass,4000,800,1000,21,3,0.869,0.655146598815918,1.3115179538726809,ok,,0.87,30.75959825515747,1.414632797241211,ok,,-0.0010000000000000009,-0.10000000000000009,step9_better
+wine-quality-red,multiclass,1279,256,320,4,6,0.65625,0.5706889629364014,0.3065693378448486,ok,,0.659375,11.130829572677612,0.3362836837768554,ok,,-0.0031250000000000444,-0.31250000000000444,step9_better
+BLE_RSSI_dataset_for_Indoor_localization,multiclass,7987,1598,1997,3,3,0.7421131697546319,0.9903831481933594,3.4140748977661133,ok,,0.7421131697546319,38.24024295806885,1.3193950653076172,ok,,0.0,0.0,tie
+BNG(tic-tac-toe),binclass,31492,6299,7874,9,2,0.8168656337312674,0.9179573059082032,19.0010199546814,ok,,0.8173736347472695,890.4878516197205,19.309696435928345,ok,,-0.0005080010160021242,-0.05080010160021242,step9_better
+California-Housing-Classification,binclass,16512,3303,4128,8,2,0.913032945736434,0.7348132133483887,6.659205436706543,ok,,0.913032945736434,264.37148118019104,7.014236688613892,ok,,0.0,0.0,tie
+Credit_c,multiclass,80000,16000,20000,22,3,0.792,1.7806065082550049,111.15165758132936,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='Credit_c' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/Credit_c/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/Credit_c/step_8.ckpt,0.792,1.7806065082550049,111.15165758132936,ok,"baseline_fallback_from_v1.1_baseline; original_error: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 334, in _train_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 269, in forward
+    representations = self._train_forward(embeddings, d)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 204, in _train_forward
+    representations = self._aggregate_embeddings(embeddings, key_mask)  # (B, T, C*E)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 147, in _aggregate_embeddings
+    embeddings = block(embeddings, key_padding_mask=key_mask, rope=rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 118, in sdpa_with_flattened_batch
+    out = F.scaled_dot_product_attention(q, k, v, attn_mask, dropout_p)
+RuntimeError: CUDA error: invalid configuration argument
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+",0.0,0.0,tie
+E-CommereShippingData,binclass,8799,1760,2200,10,2,0.6763636363636364,0.717139482498169,2.7993810176849365,ok,,0.6763636363636364,92.02002143859865,3.005728006362915,ok,,0.0,0.0,tie
+FOREX_audcad-day-High,binclass,1467,294,367,10,2,0.7574931880108992,0.8296585083007812,0.3862133026123047,ok,,0.7520435967302452,11.34440279006958,0.4239394664764404,ok,,0.00544959128065392,0.544959128065392,step8_better
+FOREX_audjpy-day-High,binclass,1465,293,367,10,2,0.7574931880108992,0.6031556129455566,0.3831322193145752,ok,,0.7547683923705722,11.408393383026125,0.3633124828338623,ok,,0.0027247956403269047,0.27247956403269047,step8_better
+FOREX_audusd-hour-High,binclass,35060,7012,8765,10,2,0.7031374786081004,0.8673651218414307,23.014811992645264,ok,,0.7049629207073588,1085.8812713623047,23.3603515625,ok,,-0.0018254420992583897,-0.18254420992583897,step9_better
+Firm-Teacher_Clave-Direction_Classification,multiclass,8640,1728,2160,16,4,0.8791666666666667,0.7396101951599121,3.0389227867126465,ok,,0.8810185185185185,85.60808229446411,3.141376256942749,ok,,-0.0018518518518518823,-0.18518518518518823,step9_better
+GAMETES_Heterogeneity_20atts_1600_Het_0.4_0.2_50_EDM-2_001,binclass,1280,256,320,20,2,0.68125,0.6370892524719238,0.4211800098419189,ok,,0.68125,10.99317502975464,0.4750897884368896,ok,,0.0,0.0,tie
+HR_Analytics_Job_Change_of_Data_Scientists,binclass,15326,3066,3832,13,2,0.800365344467641,0.7933456897735596,6.3550543785095215,ok,,0.8006263048016702,231.7064754962921,6.602977991104126,ok,,-0.00026096033402922547,-0.026096033402922547,step9_better
+Indian_pines,multiclass,7315,1463,1829,220,8,0.965008201202843,1.7011559009552002,11.135059833526611,ok,,0.9655549480590486,155.12442541122437,10.965352296829224,ok,,-0.0005467468562055933,-0.05467468562055933,step9_better
+MIC,binclass,1319,264,330,104,2,0.896969696969697,0.8509387969970703,1.1480023860931396,ok,,0.9,15.846659898757936,1.0945885181427002,ok,,-0.00303030303030305,-0.303030303030305,step9_better
+Mobile_Price_Classification,multiclass,1600,320,400,20,4,0.9475,0.6147351264953613,0.5161232948303223,ok,,0.9475,11.785499572753906,0.5536494255065918,ok,,0.0,0.0,tie
+PieChart3,binclass,861,173,216,37,2,0.875,0.6438138484954834,0.7261414527893066,ok,,0.875,10.73590874671936,0.7144713401794434,ok,,0.0,0.0,tie
+Pumpkin_Seeds,binclass,2000,400,500,12,2,0.874,0.6457898616790771,0.5381252765655518,ok,,0.874,14.530792236328123,0.5709495544433594,ok,,0.0,0.0,tie
+SDSS17,multiclass,80000,16000,20000,12,3,0.9762,1.0477042198181152,106.15025877952576,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='SDSS17' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/SDSS17/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/SDSS17/step_8.ckpt,0.9762,1.0477042198181152,106.15025877952576,ok,"baseline_fallback_from_v1.1_baseline; original_error: RuntimeError: Caught RuntimeError in replica 0 on device 0.
+Original Traceback (most recent call last):
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/parallel/parallel_apply.py"", line 96, in _worker
+    output = module(*input, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 496, in forward
+    out = self._train_forward(X, y_train, d=d, embed_with_test=embed_with_test)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/tabicl.py"", line 334, in _train_forward
+    representations = self.row_interactor(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 269, in forward
+    representations = self._train_forward(embeddings, d)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 204, in _train_forward
+    representations = self._aggregate_embeddings(embeddings, key_mask)  # (B, T, C*E)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/interaction.py"", line 147, in _aggregate_embeddings
+    embeddings = block(embeddings, key_padding_mask=key_mask, rope=rope)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 454, in forward
+    attn_result = self._attn_block(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 506, in _attn_block
+    result = self.attn(
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File ""/home/crc00006699/anaconda3/envs/tabicl/lib/python3.10/site-packages/torch/nn/modules/module.py"", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/layers.py"", line 269, in forward
+    return multi_head_attention_forward(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 287, in multi_head_attention_forward
+    attn_output = sdpa_with_flattened_batch(
+  File ""/home/crc00006699/zh/tabiclv2/src/tabicl/model/attention.py"", line 118, in sdpa_with_flattened_batch
+    out = F.scaled_dot_product_attention(q, k, v, attn_mask, dropout_p)
+RuntimeError: CUDA error: invalid configuration argument
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+",0.0,0.0,tie
+UJI_Pen_Characters,multiclass,1091,219,273,80,35,0.5421245421245421,0.4650278091430664,2.3061394691467285,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='UJI_Pen_Characters' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/UJI_Pen_Characters/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/UJI_Pen_Characters/step_8.ckpt,0.5421245421245421,0.9166913032531738,2.092579126358032,ok,,0.0,0.0,tie
+abalone,multiclass,3341,669,836,8,3,0.6447368421052632,0.5864529609680176,0.8372368812561035,ok,,0.6471291866028708,21.370643615722656,0.9091525077819824,ok,,-0.0023923444976076125,-0.23923444976076125,step9_better
+ada_agnostic,binclass,3649,730,913,48,2,0.8400876232201533,0.7022676467895508,1.7461624145507812,ok,,0.8400876232201533,32.00208020210266,1.8348090648651123,ok,,0.0,0.0,tie
+allbp,multiclass,3017,604,755,29,3,0.9827814569536424,0.4203276634216308,1.0809710025787354,ok,,0.9827814569536424,21.497992038726807,1.03342866897583,ok,,0.0,0.0,tie
+artificial-characters,multiclass,8174,1635,2044,7,10,0.8953033268101761,0.6155519485473633,2.412594795227051,ok,,0.8962818003913894,77.58672952651978,2.589893579483032,ok,,-0.0009784735812132794,-0.09784735812132794,step9_better
+bank,binclass,36168,7234,9043,16,2,0.9086586309852924,1.041653394699097,25.6915385723114,ok,,0.9087692137564968,1152.1394498348236,25.82384276390076,ok,,-0.00011058277120434834,-0.011058277120434834,step9_better
+car-evaluation,multiclass,1382,277,346,21,4,0.9884393063583816,0.6591870784759521,0.4741494655609131,ok,,0.9884393063583816,11.32503581047058,0.441812515258789,ok,,0.0,0.0,tie
+company_bankruptcy_prediction,binclass,5455,1091,1364,95,2,0.9699413489736072,1.0088887214660645,4.014919996261597,ok,,0.9699413489736072,68.17727875709534,4.054075002670288,ok,,0.0,0.0,tie
+credit,binclass,13371,2675,3343,10,2,0.7849237212084954,0.7455654144287109,5.013667106628418,ok,,0.7855219862399043,182.1979320049286,5.275973081588745,ok,,-0.0005982650314089177,-0.059826503140891774,step9_better
+default_of_credit_card_clients,binclass,24000,4800,6000,23,2,0.829,1.088146686553955,13.94380807876587,ok,,0.829,539.956152677536,13.831305027008057,ok,,0.0,0.0,tie
+dna,multiclass,2548,510,638,180,3,0.962382445141066,1.2731528282165527,3.3177287578582764,ok,,0.9608150470219436,40.06475353240967,3.333099842071533,ok,,0.0015673981191223207,0.15673981191223207,step8_better
+eeg-eye-state,binclass,11984,2397,2996,14,2,0.992656875834446,0.767420768737793,4.552857875823975,ok,,0.9929906542056076,150.85798048973083,4.724655866622925,ok,,-0.00033377837116166376,-0.033377837116166376,step9_better
+eye_movements,multiclass,8748,1750,2188,27,3,0.7527422303473492,0.8251540660858154,3.574719190597534,ok,,0.7536563071297989,98.15353727340698,3.644699096679688,ok,,-0.000914076782449702,-0.0914076782449702,step9_better
+gas-drift,multiclass,11128,2226,2782,128,6,0.9971243709561468,1.553462028503418,11.77494978904724,ok,,0.9971243709561468,208.1717402935028,11.935659170150757,ok,,0.0,0.0,tie
+heloc,binclass,8000,1600,2000,22,2,0.728,0.7084145545959473,2.969410181045532,ok,,0.7275,80.64534068107605,2.8768043518066406,ok,,0.0004999999999999449,0.04999999999999449,step8_better
+htru,binclass,14318,2864,3580,8,2,0.9810055865921788,0.7031762599945068,5.378582000732422,ok,,0.9807262569832402,206.42343401908877,5.648424386978149,ok,,0.0002793296089386166,0.027932960893861658,step8_better
+internet_firewall,multiclass,52425,10485,13107,7,4,0.9310292210269322,0.8686327934265137,46.63973593711853,ok,,0.9310292210269322,2318.2641820907597,46.52233552932739,ok,,0.0,0.0,tie
+jungle_chess_2pcs_raw_endgame_complete,multiclass,35855,7171,8964,6,3,0.9174475680499776,0.5248074531555176,23.58666038513184,ok,,0.9242525658188308,1122.3145954608915,23.71921181678772,ok,,-0.006804997768853127,-0.6804997768853127,step9_better
+kr-vs-k,multiclass,22444,4489,5612,6,18,0.8508553100498931,0.4808611869812011,24.13630962371826,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='kr-vs-k' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/kr-vs-k/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/kr-vs-k/step_8.ckpt,0.8508553100498931,0.9878096580505372,23.790518522262573,ok,,0.0,0.0,tie
+led7,multiclass,2560,512,640,7,10,0.74375,0.6415538787841797,0.6234734058380127,ok,,0.7390625,16.574766874313354,0.6904406547546387,ok,,0.004687500000000067,0.46875000000000666,step8_better
+mammography,binclass,8946,1790,2237,6,2,0.9892713455520786,0.3857700824737549,2.081756591796875,ok,,0.9892713455520786,62.179500102996826,2.175054788589477,ok,,0.0,0.0,tie
+mfeat-fourier,multiclass,1600,320,400,76,10,0.8975,0.7418451309204102,1.1147537231445312,ok,,0.8975,15.962729930877686,1.110466480255127,ok,,0.0,0.0,tie
+mfeat-pixel,multiclass,1600,320,400,240,10,0.975,0.9827797412872314,2.713155031204224,ok,,0.9775,31.860238790512085,2.778836727142334,ok,,-0.0025000000000000577,-0.2500000000000058,step9_better
+microaggregation2,multiclass,16000,3200,4000,20,5,0.637,1.1766846179962158,7.36658501625061,ok,,0.63725,262.60674834251404,7.499969959259033,ok,,-0.00024999999999997247,-0.024999999999997247,step9_better
+naticusdroid+android+permissions+dataset,binclass,23465,4693,5867,86,2,0.9725583773649225,2.2869741916656494,22.015485525131226,ok,,0.97204704278166,599.7094843387604,22.078521013259888,ok,,0.0005113345832624683,0.05113345832624683,step8_better
+one-hundred-plants-margin,multiclass,1280,256,320,64,100,0.909375,0.4495551586151123,3.682534456253052,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='one-hundred-plants-margin' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/one-hundred-plants-margin/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/one-hundred-plants-margin/step_8.ckpt,0.909375,0.9590508937835692,3.526822090148926,ok,,0.0,0.0,tie
+online_shoppers,binclass,9864,1973,2466,14,2,0.9059205190592052,0.7248303890228271,3.5016424655914307,ok,,0.90551500405515,108.44314646720886,3.5038137435913086,ok,,0.00040551500405527907,0.04055150040552791,step8_better
+page-blocks,multiclass,4378,876,1095,10,5,0.978082191780822,0.6138262748718262,1.1746344566345217,ok,,0.978082191780822,31.26939058303833,1.263399600982666,ok,,0.0,0.0,tie
+pc4,binclass,1166,234,292,37,2,0.9178082191780822,0.6596555709838867,0.5368995666503906,ok,,0.9178082191780822,11.464761018753052,0.5249521732330322,ok,,0.0,0.0,tie
+pol,binclass,8065,1613,2017,26,2,0.9811601388200296,0.733722448348999,3.1916182041168213,ok,,0.9811601388200296,83.4619791507721,3.2711615562438965,ok,,0.0,0.0,tie
+rice_cammeo_and_osmancik,binclass,3048,610,762,7,2,0.9225721784776902,0.6142146587371826,0.6888480186462402,ok,,0.9225721784776902,16.731661319732666,0.7587895393371582,ok,,0.0,0.0,tie
+satimage,multiclass,5144,1029,1286,36,6,0.9354587869362364,0.7554817199707031,2.216201066970825,ok,,0.9354587869362364,42.740769147872925,2.282628297805786,ok,,0.0,0.0,tie
+semeion,multiclass,1274,255,319,256,10,0.962382445141066,0.7754499912261963,2.474647521972656,ok,,0.962382445141066,28.373136520385746,2.562600612640381,ok,,0.0,0.0,tie
+splice,multiclass,2552,511,638,60,3,0.9529780564263324,0.8102986812591553,1.4373219013214111,ok,,0.95141065830721,22.15317463874817,1.4618752002716064,ok,,0.0015673981191223207,0.15673981191223207,step8_better
+steel_plates_faults,multiclass,1552,311,389,27,7,0.8406169665809768,0.6882157325744629,0.5698707103729248,ok,,0.8457583547557841,11.94502305984497,0.6103215217590332,ok,,-0.005141388174807249,-0.5141388174807249,step9_better
+telco-customer-churn,binclass,5634,1127,1409,18,2,0.8090844570617459,0.680199146270752,1.8564214706420896,ok,,0.8076650106458482,47.78695964813232,1.972034215927124,ok,,0.0014194464158977516,0.14194464158977516,step8_better
+thyroid-ann,multiclass,3017,604,755,21,3,0.9933774834437086,0.6310722827911377,0.9735910892486572,ok,,0.9933774834437086,20.824055433273315,0.9273614883422852,ok,,0.0,0.0,tie
+twonorm,binclass,5920,1184,1480,20,2,0.9783783783783784,0.4152009487152099,2.0317821502685547,ok,,0.979054054054054,50.770066022872925,2.155461072921753,ok,,-0.0006756756756756133,-0.06756756756756133,step9_better
+walking-activity,multiclass,119465,23893,29867,4,22,0.6641443733886898,0.7436614036560059,364.9849166870117,ok,baseline_fallback_from_v1.1_baseline; original_error: FileNotFoundError: Missing checkpoint for dataset='walking-activity' step=8: checked 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/walking-activity/step_8.ckpt and 1b_result/ensmble_ttt_step9_lr5e-6/ttt_ckpts/*/walking-activity/step_8.ckpt,0.6641443733886898,1.5082051753997805,359.7228546142578,ok,,0.0,0.0,tie
+waveform-5000,multiclass,4000,800,1000,40,3,0.876,0.6790058612823486,1.7487561702728271,ok,,0.876,34.434072971343994,1.842801094055176,ok,,0.0,0.0,tie
+website_phishing,multiclass,1082,217,271,9,3,0.92619926199262,0.6569011211395264,0.3020374774932861,ok,,0.92619926199262,10.818768739700316,0.3263373374938965,ok,,0.0,0.0,tie
+wine-quality-white,multiclass,3918,784,980,11,7,0.6836734693877551,0.6046702861785889,1.0731406211853027,ok,,0.6857142857142857,28.672760009765625,1.1587648391723633,ok,,-0.0020408163265306367,-0.20408163265306367,step9_better

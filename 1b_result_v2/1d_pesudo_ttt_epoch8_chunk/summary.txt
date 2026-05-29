@@ -1,0 +1,19 @@
+discovered_datasets: 178
+processed_datasets: 178
+ok_count: 178
+failed_count: 0
+skipped_count: 0
+ttt_oom_fallback_count: 13
+pseudo_enabled_count: 0
+total_pseudo_selected_ok: 0
+avg_pseudo_selected_ratio_ok: None
+avg_pseudo_conf_mean_ok: None
+avg_pseudo_margin_mean_ok: None
+avg_pseudo_precision_posthoc_ok: None
+avg_accuracy_ok: 0.849220
+avg_f1_ok: 0.841908
+avg_roc_auc_ok: 0.910782
+wall_seconds: 21789.429
+failed_datasets: (none)
+skipped_datasets: (none)
+ttt_oom_fallback_datasets: Credit_c, INNHotelsGroup, Indian_pines, Rain_in_Australia, SDSS17, bank, customer_satisfaction_in_airline, dabetes_130-us_hospitals, default_of_credit_card_clients, gas-drift, gina_agnostic, madeline, naticusdroid+android+permissions+dataset

@@ -1,0 +1,13 @@
+discovered_datasets: 178
+processed_datasets: 178
+ok_count: 162
+failed_count: 16
+skipped_count: 0
+ttt_oom_fallback_count: 0
+avg_accuracy_ok: 0.837159
+avg_f1_ok: 0.826838
+avg_roc_auc_ok: 0.899916
+wall_seconds: 10679.061
+failed_datasets: company_bankruptcy_prediction, customer_satisfaction_in_airline, default_of_credit_card_clients, gas-drift, madeline, one-hundred-plants-margin, one-hundred-plants-texture, volkert, Credit_c, Indian_pines, Rain_in_Australia, accelerometer, gina_agnostic, naticusdroid+android+permissions+dataset, one-hundred-plants-shape, taiwanese_bankruptcy_prediction
+skipped_datasets: (none)
+ttt_oom_fallback_datasets: (none)

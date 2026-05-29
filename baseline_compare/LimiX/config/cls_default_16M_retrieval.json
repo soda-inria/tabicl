@@ -1,0 +1,138 @@
+[
+    {
+        "RebalanceFeatureDistribution": {
+            "worker_tags": [
+                "quantile_uniform_10"
+            ],
+            "discrete_flag": false,
+            "original_flag": true,
+            "svd_tag": "svd"
+        },
+        "CategoricalFeatureEncoder": {
+            "encoding_strategy": "ordinal_strict_feature_shuffled"
+        },
+        "FeatureShuffler": {
+            "mode": "shuffle"
+        },
+        "retrieval_config": {
+            "use_retrieval": true,
+            "retrieval_before_preprocessing": false,
+            "calculate_feature_attention": false,
+            "calculate_sample_attention": true,
+            "retrieval_len": 389,
+            "subsample_type": "sample",
+            "use_type": "only_sample",
+            "use_cluster": true,
+            "cluster_num": 22,
+            "threshold": 0.85,
+            "dynamic_ratio": 0.4,
+            "mixed_method": "min",
+            "sub_feature_ratio": 1,
+            "use_threshold": false,
+            "use_dynamic": false,
+            "sample_ratio": 389
+        }
+    },
+    {
+        "RebalanceFeatureDistribution": {
+            "worker_tags": [
+                "quantile_uniform_10"
+            ],
+            "discrete_flag": false,
+            "original_flag": true,
+            "svd_tag": "svd"
+        },
+        "CategoricalFeatureEncoder": {
+            "encoding_strategy": "ordinal_strict_feature_shuffled"
+        },
+        "FeatureShuffler": {
+            "mode": "shuffle"
+        },
+        "retrieval_config": {
+            "use_retrieval": true,
+            "retrieval_before_preprocessing": false,
+            "calculate_feature_attention": false,
+            "calculate_sample_attention": true,
+            "retrieval_len": 389,
+            "subsample_type": "sample",
+            "use_type": "only_sample",
+            "use_cluster": true,
+            "cluster_num": 22,
+            "threshold": 0.85,
+            "dynamic_ratio": 0.4,
+            "mixed_method": "min",
+            "sub_feature_ratio": 1,
+            "use_threshold": false,
+            "use_dynamic": false,
+            "sample_ratio": 389
+        }
+    },
+    {
+        "RebalanceFeatureDistribution": {
+            "worker_tags": [
+                null
+            ],
+            "discrete_flag": true,
+            "original_flag": false,
+            "svd_tag": null
+        },
+        "CategoricalFeatureEncoder": {
+            "encoding_strategy": "numeric"
+        },
+        "FeatureShuffler": {
+            "mode": "shuffle"
+        },
+        "retrieval_config": {
+            "use_retrieval": true,
+            "retrieval_before_preprocessing": false,
+            "calculate_feature_attention": false,
+            "calculate_sample_attention": true,
+            "retrieval_len": 389,
+            "subsample_type": "sample",
+            "use_type": "only_sample",
+            "use_cluster": true,
+            "cluster_num": 22,
+            "threshold": 0.85,
+            "dynamic_ratio": 0.4,
+            "mixed_method": "min",
+            "sub_feature_ratio": 1,
+            "use_threshold": false,
+            "use_dynamic": false,
+            "sample_ratio": 389
+        }
+    },
+    {
+        "RebalanceFeatureDistribution": {
+            "worker_tags": [
+                null
+            ],
+            "discrete_flag": true,
+            "original_flag": false,
+            "svd_tag": null
+        },
+        "CategoricalFeatureEncoder": {
+            "encoding_strategy": "numeric"
+        },
+        "FeatureShuffler": {
+            "mode": "shuffle"
+        },
+        "retrieval_config": {
+            "use_retrieval": true,
+            "retrieval_before_preprocessing": false,
+            "calculate_feature_attention": false,
+            "calculate_sample_attention": true,
+            "retrieval_len": 389,
+            "subsample_type": "sample",
+            "use_type": "only_sample",
+            "use_cluster": true,
+            "cluster_num": 22,
+            "threshold": 0.85,
+            "dynamic_ratio": 0.4,
+            "mixed_method": "min",
+            "sub_feature_ratio": 1,
+            "use_threshold": false,
+            "use_dynamic": false,
+            "sample_ratio": 389
+        }
+    }
+]
