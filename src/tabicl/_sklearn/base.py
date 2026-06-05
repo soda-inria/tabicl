@@ -298,6 +298,11 @@ class TabICLBaseEstimator(BaseEstimator):
         if metadata:
             _check_version_compatibility(metadata)
 
+        if "n_features_in_" not in state:
+            # The serialized estimator was not fitted. There is no device_,
+            # model_ or KV cache to restore.
+            return
+
         # Resolve device
         self._resolve_device()
 
