@@ -243,7 +243,7 @@ class TabICLBaseEstimator(BaseEstimator):
         state.pop("model_path_", None)
 
         # Handle model weights
-        if save_model_weights:
+        if save_model_weights and hasattr(self, "model_"):
             # Save state dict (not nn.Module itself)
             state["_model_state_dict"] = {k: v.cpu() for k, v in self.model_.state_dict().items()}
             # model_config_ stays in state
@@ -257,11 +257,9 @@ class TabICLBaseEstimator(BaseEstimator):
             for method, cache in state["model_kv_cache_"].items():
                 cpu_cache[method] = cache.to("cpu")
             state["model_kv_cache_"] = cpu_cache
-        else:
-            state["model_kv_cache_"] = None
 
         # Handle training data
-        if not save_training_data:
+        if not save_training_data and "ensemble_generator_" in state:
             eg = copy.deepcopy(state["ensemble_generator_"])
             eg.X_ = None
             eg.y_ = None
