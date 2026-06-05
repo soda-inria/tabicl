@@ -103,25 +103,44 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
         num_tfm = SimpleImputer()
 
         if not hasattr(X, "columns"):  # proxy way to check whether X is a dataframe without importing pandas
-            # no dataframe
-            # check if dtype is bool, object, byte sting, or unicode string
-            is_categorical = np.asarray(X).dtype.kind in {"b", "O", "S", "U"}
-            self.tfm_ = cat_tfm if is_categorical else num_tfm
-            self.tfm_.fit(X)
-            return self
+            # no dataframe, so we can't do column-wise transformations. Instead, we check if it's already numeric and if not, raise an error.
+            X_arr = np.asarray(X)
+            try:
+                X_arr.astype(np.float64)
+            except (ValueError, TypeError) as e:
+                raise ValueError(
+                    "NumPy arrays passed to TabICL must be castable to a numeric dtype, "
+                    f"but casting to float64 failed with: {e}. "
+                    "If your data contains categorical or string columns, pass it as a pandas "
+                    "DataFrame instead, so each column can be typed and preprocessed accordingly."
+                ) from None
+            self.tfm_ = num_tfm
 
-        cat_cols = make_column_selector(dtype_include=["string", "object", "category", "boolean"])(X)
-        cat_pos = [X.columns.get_loc(col) for col in cat_cols]
+        else:
 
-        numeric_cols = make_column_selector(dtype_include="number")(X)
-        numeric_pos = [X.columns.get_loc(col) for col in numeric_cols]
+            cat_cols = make_column_selector(dtype_include=["string", "object", "category", "boolean"])(X)
+            cat_pos = [X.columns.get_loc(col) for col in cat_cols]
 
-        self.tfm_ = ColumnTransformer(
-            transformers=[("categorical", cat_tfm, cat_pos), ("continuous", num_tfm, numeric_pos)]
-        )
+            high_cardinality_cols = [col for col in cat_cols if X[col].nunique() > 40]
+            if high_cardinality_cols:
+                import warnings
+
+                warnings.warn(
+                    f"The following categorical columns have a cardinality above 40: {high_cardinality_cols}. "
+                    "High-cardinality columns might benefit from a better encoding than ordinal encoding, "
+                    "e.g. Skrub's TableVectorizer for strings."
+                )
+
+            numeric_cols = make_column_selector(dtype_include="number")(X)
+            numeric_pos = [X.columns.get_loc(col) for col in numeric_cols]
+
+            self.tfm_ = ColumnTransformer(
+                transformers=[("categorical", cat_tfm, cat_pos), ("continuous", num_tfm, numeric_pos)]
+            )
+
         self.tfm_.fit(X)
 
-        if self.verbose:
+        if self.verbose and hasattr(self.tfm_, "transformers_"):
             selected_cols = []
             for name, tfm, pos in self.tfm_.transformers_:
                 if tfm != "drop":
