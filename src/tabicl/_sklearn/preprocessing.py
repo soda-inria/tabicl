@@ -8,6 +8,7 @@ from copy import deepcopy
 from typing import List, Optional
 
 import numpy as np
+from scipy.sparse import issparse
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer, make_column_selector
 from sklearn.impute import SimpleImputer
@@ -104,11 +105,20 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
 
         if not hasattr(X, "columns"):  # proxy way to check whether X is a dataframe without importing pandas
             # no dataframe, so we can't do column-wise transformations. Instead, we check if it's already numeric and if not, raise an error.
+            
+            # For compatibility with sklearn's tests
+            if issparse(X):
+                raise TypeError(
+                    "Sparse input is not supported by TabICL. "
+                    "Convert X to a dense array, e.g. with X.toarray()."
+                )
             X_arr = np.asarray(X)
             try:
                 X_arr.astype(np.float64)
             except (ValueError, TypeError) as e:
-                raise ValueError(
+                # Preserve the original exception type so that, e.g., object arrays
+                # holding non-string/non-number elements still raise a TypeError.
+                raise type(e)(
                     "NumPy arrays passed to TabICL must be castable to a numeric dtype, "
                     f"but casting to float64 failed with: {e}. "
                     "If your data contains categorical or string columns, pass it as a pandas "
