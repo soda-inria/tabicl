@@ -19,13 +19,17 @@ def test_sklearn_compatible_estimator(estimator, check):
 def test_serialization():
     clf = TabICLClassifier(n_estimators=2)
     assert not hasattr(clf, "model_")
+    assert not hasattr(clf, "model_kv_cache_")
     clone = copy.deepcopy(clf)
     assert not hasattr(clone, "model_")
+    assert not hasattr(clf, "model_kv_cache_")
     X, y = make_classification(n_samples=50, n_features=5, random_state=42)
     clf.fit(X, y)
     assert hasattr(clf, "model_")
+    assert hasattr(clf, "model_kv_cache_")
     clone = copy.deepcopy(clf)
     assert hasattr(clone, "model_")
+    assert hasattr(clf, "model_kv_cache_")
 
 
 class TestClassifierKVCache:
