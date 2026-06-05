@@ -73,6 +73,7 @@ finetune = [
 ]
 test = [
     "pandas",
+    "pytest",
 ]
 all = [
     "tabicl[doc,forecast,shap,pretrain,finetune,test]",
