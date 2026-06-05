@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import pytest
 from sklearn.datasets import make_classification, make_regression
@@ -12,6 +14,18 @@ from tabicl import TabICLClassifier, TabICLRegressor
 @parametrize_with_checks([TabICLClassifier(n_estimators=2), TabICLRegressor(n_estimators=2)])
 def test_sklearn_compatible_estimator(estimator, check):
     check(estimator)
+
+
+def test_serialization():
+    clf = TabICLClassifier(n_estimators=2)
+    assert not hasattr(clf, "model_")
+    clone = copy.deepcopy(clf)
+    assert not hasattr(clone, "model_")
+    X, y = make_classification(n_samples=50, n_features=5, random_state=42)
+    clf.fit(X, y)
+    assert hasattr(clf, "model_")
+    clone = copy.deepcopy(clf)
+    assert hasattr(clone, "model_")
 
 
 class TestClassifierKVCache:
