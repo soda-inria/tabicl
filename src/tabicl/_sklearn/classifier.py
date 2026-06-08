@@ -711,9 +711,9 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
                         f"TabICL got n_jobs={self.n_jobs} but there are only {n_logical_cores} logical cores available."
                         f" Only {n_logical_cores} threads will be used."
                     )
-                n_threads = max(n_logical_cores, self.n_jobs)
+                n_threads = min(n_logical_cores, self.n_jobs)
             else:
-                n_threads = max(1, mp.cpu_count() + 1 + self.n_jobs)
+                n_threads = max(1, n_logical_cores + 1 + self.n_jobs)
 
             torch.set_num_threads(n_threads)
 
