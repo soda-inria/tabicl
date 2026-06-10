@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Type, Union, overl
 import numpy as np
 import pandas as pd
 from joblib.parallel import Parallel, delayed
-from pandas.core.internals import ArrayManager, BlockManager
+from pandas.core.internals import BlockManager
 from typing_extensions import Self
 
 logger = logging.getLogger(__name__)
@@ -133,7 +133,7 @@ class TimeSeriesDataFrame(pd.DataFrame):
         *args,
         **kwargs,
     ):
-        if isinstance(data, (BlockManager, ArrayManager)):
+        if isinstance(data, BlockManager):
             # necessary for copy constructor to work in pandas <= 2.0.x. In >= 2.1.x this is replaced by _constructor_from_mgr
             pass
         elif isinstance(data, pd.DataFrame):
