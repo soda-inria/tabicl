@@ -47,6 +47,7 @@ torchrun --standalone --nproc_per_node=1 /path/to/tabicl/train/run.py \
             --icl_nhead 4 \
             --ff_factor 2 \
             --norm_first True \
+            --ignore_d False \
             --checkpoint_dir /my/stage2/checkpoint/dir \
             --checkpoint_path /my/stage1/checkpoint/dir/step-{latest}.ckpt \
             --save_temp_every 5 \
@@ -117,6 +118,7 @@ torchrun --standalone --nproc_per_node=1 /path/to/tabicl/train/run.py \
             --icl_nhead 4 \
             --ff_factor 2 \
             --norm_first True \
+            --ignore_d False \
             --checkpoint_dir /my/stage2/checkpoint/dir \
             --checkpoint_path /my/stage1/checkpoint/dir/step-{latest}.ckpt \
             --save_temp_every 5 \

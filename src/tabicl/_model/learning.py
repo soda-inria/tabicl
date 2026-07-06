@@ -83,6 +83,7 @@ class ICLearning(nn.Module):
         norm_first: bool = True,
         bias_free_ln: bool = False,
         ssmax: Union[bool, str] = False,
+        zero_init: bool = True,
         recompute: bool = False,
     ):
         super().__init__()
@@ -100,6 +101,7 @@ class ICLearning(nn.Module):
             norm_first=norm_first,
             bias_free_ln=bias_free_ln,
             ssmax=ssmax,
+            zero_init=zero_init,
             recompute=recompute,
         )
         if self.norm_first:

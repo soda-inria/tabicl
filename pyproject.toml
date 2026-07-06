@@ -130,7 +130,11 @@ exclude_lines = [
 # gluonts pins an old numpy version which is not available for Python 3.14. The
 # following override is a temporary workaround to avoid having uv build numpy
 # from source on Python 3.14 and later.
+# The <2.5 cap exists because overrides REPLACE every numpy requirement,
+# including numba's own "numpy<2.5" — without it, uv installs numpy 2.5+,
+# which numba (<=0.66) rejects at import time, breaking tabicl.shap and the
+# docs build. Relax when numba supports newer numpy.
 override-dependencies = [
     "numpy>=2.4; python_version >= '3.14'",
-    "numpy; python_version < '3.14'",
+    "numpy<2.5; python_version < '3.14'",
 ]
