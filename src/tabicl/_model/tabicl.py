@@ -98,10 +98,12 @@ class TabICL(nn.Module):
     row_rope_base : float, default=100000
         Base scaling factor for rotary position encoding in the row interaction transformer.
 
-    row_rope_interleaved : bool, default=False
+    row_rope_interleaved : bool, default=True
         If True, uses interleaved rotation where dimension pairs are (0,1), (2,3), etc.
-        If False, uses non-interleaved rotation where the embedding is split into
-        first half [0:d//2] and second half [d//2:d].
+        (the TabICLv1 variant). If False, uses non-interleaved rotation where the
+        embedding is split into first half [0:d//2] and second half [d//2:d]
+        (the TabICLv2 variant). The two variants are not equivalent; checkpoint
+        configs store this flag explicitly.
 
     icl_num_blocks : int, default=12
         Number of transformer blocks in the in-context learning transformer.
@@ -137,6 +139,13 @@ class TabICL(nn.Module):
     bias_free_ln : bool, default=False
         If True, removes bias from all LayerNorm layers (sets bias=False in nn.LayerNorm).
 
+    zero_init : bool, default=True
+        If True, zero-initializes the attention output projections and the second
+        feedforward linear layer in every transformer block, so all residual branches
+        start as identity (TabICLv1 behavior). Set to False for standard PyTorch
+        initialization (used for TabICLv2 pre-training). Only affects freshly
+        constructed models; irrelevant when loading a trained checkpoint.
+
     recompute : bool, default=False
         If True, uses gradient checkpointing to save memory at the cost of additional computation.
     """
@@ -168,7 +177,7 @@ class TabICL(nn.Module):
         row_nhead: int = 8,
         row_num_cls: int = 4,
         row_rope_base: float = 100000,
-        row_rope_interleaved: bool = False,
+        row_rope_interleaved: bool = True,
         icl_num_blocks: int = 12,
         icl_nhead: int = 8,
         icl_ssmax: Union[
@@ -187,6 +196,7 @@ class TabICL(nn.Module):
         activation: str | callable = "gelu",
         norm_first: bool = True,
         bias_free_ln: bool = False,
+        zero_init: bool = True,
         recompute: bool = False,
     ):
         super().__init__()
@@ -225,6 +235,7 @@ class TabICL(nn.Module):
         self.activation = activation
         self.norm_first = norm_first
         self.bias_free_ln = bias_free_ln
+        self.zero_init = zero_init
 
         self.col_embedder = ColEmbedding(
             embed_dim=embed_dim,
@@ -243,6 +254,7 @@ class TabICL(nn.Module):
             max_classes=max_classes,
             reserve_cls_tokens=row_num_cls,
             ssmax=col_ssmax,
+            zero_init=zero_init,
             recompute=recompute,
         )
 
@@ -258,6 +270,7 @@ class TabICL(nn.Module):
             activation=activation,
             norm_first=norm_first,
             bias_free_ln=bias_free_ln,
+            zero_init=zero_init,
             recompute=recompute,
         )
 
@@ -273,6 +286,7 @@ class TabICL(nn.Module):
             norm_first=norm_first,
             bias_free_ln=bias_free_ln,
             ssmax=icl_ssmax,
+            zero_init=zero_init,
             recompute=recompute,
         )
 

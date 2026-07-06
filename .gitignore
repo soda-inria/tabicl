@@ -135,3 +135,13 @@ dmypy.json
 # sphinx-gallery generated files
 docs/sg_execution_times.rst
 docs/tutorials/
+# Claude Code local sandbox/workflow artifacts
+.venv/
+.claude/settings.local.json
+
+# Downloaded reference papers (local only)
+papers/
+
+CLAUDE.md
+ckpts/
+src_private/

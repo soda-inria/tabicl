@@ -137,6 +137,7 @@ class ColEmbedding(nn.Module):
         max_classes: int = 10,
         reserve_cls_tokens: int = 4,
         ssmax: Union[bool, str] = False,
+        zero_init: bool = True,
         mixed_radix_ensemble: bool = True,
         recompute: bool = False,
     ) -> None:
@@ -162,6 +163,7 @@ class ColEmbedding(nn.Module):
             norm_first=norm_first,
             bias_free_ln=bias_free_ln,
             ssmax=ssmax,
+            zero_init=zero_init,
             recompute=recompute,
         )
 

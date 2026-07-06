@@ -62,7 +62,7 @@ foundation models.
 .. **Easy to use:** TabICL is easy to install with `pip`. It is also fully
 .. scikit-learn compliant, by notably giving access to the classical `fit` and
 .. `predict` methods of the scikit-learn API. It is also **open source**
-.. (including pre-training for v1, and soon for v2), with a
+.. (including pre-training for v1 and v2), with a
 .. permissive license.
 
 **Scalability:** TabICL shows excellent performance on benchmarks with

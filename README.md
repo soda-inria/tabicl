@@ -287,10 +287,42 @@ plot_shap(shap_values)
 
 ## Pre-training
 
-Pre-training code (including synthetic data generation) is currently available for the v1 model. 
-The scripts folder provides the commands for [stage 1](./scripts/train_stage1.sh), [stage 2](./scripts/train_stage2.sh), 
-and [stage 3](./scripts/train_stage3.sh) of curriculum learning.
-Pre-training code for v2 will be released upon publication.
+Pre-training code (including synthetic data generation) is available for **both TabICLv1 and TabICLv2**.
+
+The easiest way to pre-train is to run the stage scripts in the `scripts` folder, which contain
+the full recipes (they launch `python -m tabicl.train` under `torchrun` with all arguments set).
+Adjust the placeholder checkpoint paths, `NUM_GPUS`, and `--n_jobs` at the top of each script for
+your hardware, then run the three stages in order, e.g. for the TabICLv2 classifier:
+
+```bash
+bash scripts/train_v2_clf_stage1.sh
+bash scripts/train_v2_clf_stage2.sh   # loads the stage-1 checkpoint
+bash scripts/train_v2_clf_stage3.sh   # loads the stage-2 checkpoint
+```
+
+Available recipes:
+- **TabICLv2** ([arXiv](https://arxiv.org/abs/2602.11139), §4.1): the three-stage `graph_scm` recipe with
+  the Muon optimizer, with separate scripts for the classifier and regressor checkpoints —
+  classifier [stage 1](./scripts/train_v2_clf_stage1.sh), [stage 2](./scripts/train_v2_clf_stage2.sh),
+  [stage 3](./scripts/train_v2_clf_stage3.sh); regressor [stage 1](./scripts/train_v2_reg_stage1.sh),
+  [stage 2](./scripts/train_v2_reg_stage2.sh), [stage 3](./scripts/train_v2_reg_stage3.sh).
+- **TabICLv1**: [stage 1](./scripts/train_stage1.sh), [stage 2](./scripts/train_stage2.sh),
+  [stage 3](./scripts/train_stage3.sh).
+
+By default, `tabicl.train` generates synthetic prior datasets **on the fly** in the DataLoader
+workers while training — this is how the TabICLv2 checkpoints were trained (and what the v2
+scripts do). Alternatively, datasets can be **pre-generated to disk** with
+`python -m tabicl.prior --save_dir /my/prior/dir --num_batches 100000 ...` and loaded during
+training via `--prior_dir`, which is how TabICLv1 was trained (the v1 scripts show both variants).
+
+Training supports classification (cross-entropy) and quantile regression (pinball loss, via
+`--regression_method quantile`), and both the **AdamW** (default) and **Muon** (`--muon True`)
+optimizers. See `python -m tabicl.train --help` for the full set of options.
+
+A note on the v2 training entry point: the paper reports using cautious weight decay, which is
+available via `--use_cautious_wd`, but the released checkpoints were trained with it left `False`
+(it was not wired into Muon during the reference runs), so the v2 scripts keep it `False` to
+reproduce that behavior.
 
 ## Nanotabicl: a minimal architecture implementation
 

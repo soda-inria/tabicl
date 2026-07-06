@@ -170,7 +170,9 @@ class Prior:
         if isinstance(min_train_size, int) and isinstance(max_train_size, int):
             assert 0 < min_train_size < max_train_size, "0 < min_train_size < max_train_size"
         elif isinstance(min_train_size, float) and isinstance(max_train_size, float):
-            assert 0 < min_train_size < max_train_size < 1, "0 < min_train_size < max_train_size < 1"
+            # Allow min == max to express a fixed train fraction (e.g. the 80% used in
+            # TabICLv2 pretraining stages 2 & 3); the float sampler uses np.random.uniform.
+            assert 0 < min_train_size <= max_train_size < 1, "0 < min_train_size <= max_train_size < 1"
         else:
             raise ValueError("Both training sizes must be of the same type (int or float)")
 
@@ -847,6 +849,9 @@ class GraphPrior(Prior):
     log_seq_len : bool, default=False
         If True, sample sequence length from a log-uniform distribution
 
+    log_n_features : bool, default=False
+        If True, sample the number of features from a log-uniform distribution
+
     seq_len_per_gp : bool = False
         If True, sample sequence length per group, allowing variable-sized datasets
 
@@ -887,6 +892,7 @@ class GraphPrior(Prior):
             min_seq_len: Optional[int] = None,
             max_seq_len: int = 1024,
             log_seq_len: bool = False,
+            log_n_features: bool = False,
             seq_len_per_gp: bool = False,
             min_train_size: Union[int, float] = 0.1,
             max_train_size: Union[int, float] = 0.9,
@@ -913,7 +919,8 @@ class GraphPrior(Prior):
         self.batch_size_per_gp = batch_size_per_gp
         self.batch_size_per_subgp = batch_size_per_subgp or batch_size_per_gp
         self.seq_len_per_gp = seq_len_per_gp
-        self.config = config
+        self.log_n_features = log_n_features
+        self.config = config or PriorConfig()
         self.n_jobs = n_jobs
         self.num_threads_per_generate = num_threads_per_generate
         self.device = device
@@ -1050,7 +1057,10 @@ class GraphPrior(Prior):
                     break
 
                 # Each subgroup shares the same number of features
-                subgp_num_features = round(np.random.uniform(self.min_features, gp_max_features))
+                if self.log_n_features:
+                    subgp_num_features = int(loguniform.rvs(self.min_features, gp_max_features))
+                else:
+                    subgp_num_features = round(np.random.uniform(self.min_features, gp_max_features))
 
                 # Generate parameters for each dataset in this subgroup
                 for ds_idx in range(actual_subgp_size):
@@ -1400,6 +1410,7 @@ class PriorDataset(IterableDataset):
                 min_seq_len=min_seq_len,
                 max_seq_len=max_seq_len,
                 log_seq_len=log_seq_len,
+                log_n_features=log_n_features,
                 seq_len_per_gp=seq_len_per_gp,
                 min_train_size=min_train_size,
                 max_train_size=max_train_size,
