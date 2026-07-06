@@ -17,6 +17,12 @@ New features
   three-stage TabICLv2 curriculum scripts, separately for the classifier and regressor
   checkpoints (`scripts/train_v2_{clf,reg}_stage{1,2,3}.sh`).
 
+Bug fixes
+---------
+
+- When unpickling a TabICL estimator, the fitted attributes `device_`, `model_`, etc. are only state if the pickled model was fitted. ([PR#121](https://github.com/soda-inria/tabicl/pull/121))
+
+
 2.1.0
 =====
 
