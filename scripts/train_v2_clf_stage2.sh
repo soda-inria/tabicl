@@ -2,16 +2,26 @@
 # TabICLv2 pre-training -- CLASSIFIER, Stage 2 (of 3). See train_v2_clf_stage1.sh for
 # the full recipe.
 #
-# Stage 2: 40K steps on datasets with 400-10,240 samples (log-uniform), 80% for
-# training, max LR 1e-4, gradient clipping 10. Continues from the Stage 1 checkpoint
-# (weights only). FlashAttention-3 is enabled (--use_flash_attn3 True; used when
-# installed, runs attention in fp16) for stages 2 & 3 only.
+# Stage 2: 40K steps on datasets with 400-10,240 samples (log-uniform), 79-81% of
+# samples for training, max LR 1e-4, gradient clipping 10. Continues from the Stage 1
+# checkpoint (weights only). FlashAttention-3 is enabled (--use_flash_attn3 True; used
+# when installed, runs attention in fp16) for stages 2 & 3 only.
 #
 # Adjust the placeholder paths and --nproc_per_node / --n_jobs for your hardware.
 
 NUM_GPUS=4                                   # the paper used 4 GPUs for pre-training
 CKPT_DIR=/path/to/checkpoints/tabiclv2-clf/stage2
 STAGE1_CKPT=/path/to/checkpoints/tabiclv2-clf/stage1/step-500000.ckpt
+
+# Load the Stage 1 weights only on the very first launch. On later launches (e.g.
+# restarts after a cluster time limit), CKPT_DIR already contains Stage 2
+# checkpoints, and the trainer instead resumes from the latest one with full
+# optimizer/scheduler state (--checkpoint_path would override that, so it must
+# only be passed the first time).
+RESUME_ARGS="--checkpoint_path $STAGE1_CKPT --only_load_model True"
+if ls "$CKPT_DIR"/step-*.ckpt >/dev/null 2>&1; then
+    RESUME_ARGS=""
+fi
 
 torchrun --standalone --nproc_per_node=$NUM_GPUS -m tabicl.train \
             --wandb_log False \
@@ -23,7 +33,7 @@ torchrun --standalone --nproc_per_node=$NUM_GPUS -m tabicl.train \
             --torch_seed 42 \
             --max_steps 40000 \
             --batch_size 64 \
-            --micro_batch_size 2 \
+            --micro_batch_size 1 \
             --lr 1e-4 \
             --muon True \
             --beta1 0.9 \
@@ -38,15 +48,15 @@ torchrun --standalone --nproc_per_node=$NUM_GPUS -m tabicl.train \
             --prior_type graph_scm \
             --prior_device cpu \
             --n_jobs 16 \
-            --batch_size_per_gp 4 \
+            --batch_size_per_gp 1 \
             --min_features 1 \
             --max_features 100 \
             --max_classes 10 \
             --min_seq_len 400 \
             --max_seq_len 10240 \
             --log_seq_len True \
-            --min_train_size 0.8 \
-            --max_train_size 0.8 \
+            --min_train_size 0.79 \
+            --max_train_size 0.81 \
             --seq_len_per_gp True \
             --graph_noise False \
             --filter_unpredictable_graphs True \
@@ -78,7 +88,6 @@ torchrun --standalone --nproc_per_node=$NUM_GPUS -m tabicl.train \
             --zero_init False \
             --use_flash_attn3 True \
             --checkpoint_dir $CKPT_DIR \
-            --checkpoint_path $STAGE1_CKPT \
-            --only_load_model True \
-            --save_temp_every 500 \
-            --save_perm_every 2000
+            $RESUME_ARGS \
+            --save_temp_every 50 \
+            --save_perm_every 1000

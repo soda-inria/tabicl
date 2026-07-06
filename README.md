@@ -289,6 +289,11 @@ plot_shap(shap_values)
 
 Pre-training code (including synthetic data generation) is available for **both TabICLv1 and TabICLv2**.
 
+> **Disclaimer:** the TabICLv2 pre-training code has been vibe-migrated from the original
+> (private) pre-training codebase into this repository. While the port has been carefully
+> cross-checked against the original code and the released checkpoints, the training scripts
+> have not yet been tested end-to-end to reproduce the original pre-training results.
+
 The easiest way to pre-train is to run the stage scripts in the `scripts` folder, which contain
 the full recipes (they launch `python -m tabicl.train` under `torchrun` with all arguments set).
 Adjust the placeholder checkpoint paths, `NUM_GPUS`, and `--n_jobs` at the top of each script for

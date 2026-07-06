@@ -7,8 +7,8 @@
 # the same three-stage curriculum as the classifier (batch size 64 throughout):
 #
 #   Stage 1: 500K steps, 1,024 samples/dataset,       30-90% train, max LR 8e-4, grad clip 10
-#   Stage 2:  40K steps, 400-10,240 samples (log-u),  80%    train, max LR 1e-4, grad clip 10
-#   Stage 3:  10K steps, 400-60,000 samples (log-u),  80%    train, max LR 2e-5, grad clip  1
+#   Stage 2:  40K steps, 400-10,240 samples (log-u), 79-81% train, max LR 1e-4, grad clip 10
+#   Stage 3:  10K steps, 400-60,000 samples (log-u), 79-81% train, max LR 2e-5, grad clip  1
 #
 # Differences from the classifier (paper §3 / §A.4, Table A.1): quantile regression
 # with a pinball loss over 999 quantiles (--regression_method quantile,
@@ -35,8 +35,8 @@ torchrun --standalone --nproc_per_node=$NUM_GPUS -m tabicl.train \
             --wandb_name tabiclv2_reg_stage1 \
             --device cuda \
             --dtype float32 \
-            --np_seed 42 \
-            --torch_seed 42 \
+            --np_seed 43 \
+            --torch_seed 43 \
             --max_steps 500000 \
             --batch_size 64 \
             --micro_batch_size 4 \

@@ -7,8 +7,8 @@
 # curriculum that progressively increases dataset size (batch size 64 throughout):
 #
 #   Stage 1: 500K steps, 1,024 samples/dataset,       30-90% train, max LR 8e-4, grad clip 10
-#   Stage 2:  40K steps, 400-10,240 samples (log-u),  80%    train, max LR 1e-4, grad clip 10
-#   Stage 3:  10K steps, 400-60,000 samples (log-u),  80%    train, max LR 2e-5, grad clip  1
+#   Stage 2:  40K steps, 400-10,240 samples (log-u), 79-81% train, max LR 1e-4, grad clip 10
+#   Stage 3:  10K steps, 400-60,000 samples (log-u), 79-81% train, max LR 2e-5, grad clip  1
 #
 # Common: Muon optimizer, cautious weight decay parameter 0.01 (see note below),
 # cosine schedule, AMP, per-micro-batch train/test sizes (--seq_len_per_gp), up to
