@@ -60,10 +60,24 @@ scores = cross_val_score(reg, X, y, cv=2, scoring="roc_auc_ovr")
 print(f"ROC AUC without skrub: {scores.mean():.3f} (+/- {scores.std():.3f}), time: {time.time()-start_time:.1f} s")
 
 # %%
+# .. _tabicl_with_skrub:
 # TabICL with skrub
 # -------------------------------------
 #
 # With skrub, we can embed high-cardinality string columns using semantics-aware methods into numerical features.
+# The function :func:`skrub.tabular_pipeline` provides a convenient way to initialize a pipeline.
+# In addition to estimators from ``scikit-learn``, it accepts instances of type
+# :class:`tabicl.TabICLClassifier` and :class:`tabicl.TabICLRegressor` with TabICL-suitable defaults for
+# :class:`skrub.TableVectorizer` as the first step. Here is a short example on how to use it:
+#
+# .. code-block:: python
+#
+#    from skrub import tabular_pipeline
+#
+#    pipeline = tabular_pipeline(TabICLClassifier())
+#
+# Let's take a look below to see how this works behind the scenes.
+#
 # The `TableVectorizer <https://skrub-data.org/stable/reference/generated/skrub.TableVectorizer.html>`_
 # applies different conversions to columns of a dataframe.
 # Here, for efficiency reasons, we use the StringEncoder with lower-dimensional embeddings
@@ -72,8 +86,16 @@ print(f"ROC AUC without skrub: {scores.mean():.3f} (+/- {scores.std():.3f}), tim
 # which then treats them as categoricals.
 # (Without "passthrough", they would be one-hot encoded by default,
 # which is not the recommended way to handle categoricals for TabICL.)
-# We also provide advanced settings for the DatetimeEncoder,
-# even though our example dataset here does not contain dates.
+#
+# .. note::
+#    We also provide advanced settings for the DatetimeEncoder,
+#    even though our example dataset here does not contain dates. This also serves to show how to
+#    adjust parameters. In :func:`skrub.tabular_pipeline` you would get instead a TableVectorizer, with
+#
+#    - :class:`StringEncoder() <skrub._string_encoder.StringEncoder>` for high cardinality with default parameters, and
+#    - :class:`DatetimeEncoder(periodic_encoding='spline') <skrub._datetime_encoder.DatetimeEncoder>`
+#
+#    instead.
 
 pipeline = make_pipeline(
     TableVectorizer(
