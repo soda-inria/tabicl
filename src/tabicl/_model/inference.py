@@ -1041,7 +1041,7 @@ class InferenceManager:
             Tensor on the execution device. If already on the correct
             device, returns the same tensor without copying.
         """
-        if isinstance(tensor, torch.Tensor) and self.exe_device.type == "cuda" and not tensor.is_cuda:
+        if isinstance(tensor, torch.Tensor):
             return tensor.to(self.exe_device, non_blocking=True)
         return tensor
 
@@ -1064,8 +1064,8 @@ class InferenceManager:
     def _run_forward(self, forward_fn: Callable[..., Tensor], inputs: Dict[str, Any]) -> Tensor:
         """Execute forward function with no_grad and optional AMP."""
         with torch.no_grad(), flash_attn3_toggle(self.use_fa3):
-            if self.use_amp and self.exe_device.type == "cuda":
-                with torch.autocast(device_type="cuda"):
+            if self.use_amp:
+                with torch.autocast(device_type=self.exe_device.type):
                     return forward_fn(**inputs)
             return forward_fn(**inputs)
 
