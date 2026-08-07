@@ -1228,10 +1228,10 @@ class InferenceManager:
             - CPU mode: Returns CPU tensor (pinned or non-pinned)
             - Disk mode: Returns CPU tensor backed by memory-mapped file
 
-                Notes
-                -----
-                - For CPU execution, batching is not supported and the forward function
-                    is called once with all inputs.
+        Notes
+        -----
+        - For CPU execution, batching is not supported and the forward function
+          is called once with all inputs.
         - When OOM occurs, batch size is halved and inference is retried.
         - Async copy is used when ``use_async=True`` and offloading to CPU/disk.
         """
