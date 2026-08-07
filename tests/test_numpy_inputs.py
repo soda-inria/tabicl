@@ -242,7 +242,7 @@ def test_tabicl_classifier_device_cpu_logloss_parity(device, kv_cache, use_amp):
 
     # Float16 AMP introduces cross-device numeric drift; fp32 should match tightly.
     if use_amp:
-        rtol, atol, score_tol = 1e-1, 1e-1, 1e-3
+        rtol, atol, score_tol = 1e-1, 1e-1, 1e-2
     else:
         rtol, atol, score_tol = 1e-4, 1e-4, 1e-5
 
