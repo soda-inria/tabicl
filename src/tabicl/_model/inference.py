@@ -685,7 +685,7 @@ class InferenceManager:
 
         device : Optional[str or torch.device], default=None
             Device to use for computation. If None, defaults to CUDA if available,
-            otherwise XPU, and falls back to CPU.
+            otherwise XPU, then MPS, and falls back to CPU.
 
         use_amp : bool, default=True
             Whether to use automatic mixed precision (AMP) during inference.
@@ -779,10 +779,14 @@ class InferenceManager:
         if device is None:
             xpu_api = getattr(torch, "xpu", None)
             xpu_available = callable(getattr(xpu_api, "is_available", None)) and xpu_api.is_available()
+            mps_api = getattr(torch, "mps", None)
+            mps_available = callable(getattr(mps_api, "is_available", None)) and mps_api.is_available()
             if torch.cuda.is_available():
                 self.exe_device = torch.device("cuda")
             elif xpu_available:
                 self.exe_device = torch.device("xpu")
+            elif mps_available:
+                self.exe_device = torch.device("mps")
             else:
                 self.exe_device = torch.device("cpu")
         elif isinstance(device, str):
@@ -865,6 +869,11 @@ class InferenceManager:
         Synchronizes device operations and clears cache before checking to get
         an accurate reading of available memory.
 
+        Backends that expose ``mem_get_info`` (CUDA, XPU) use that API. On MPS,
+        which does not provide ``mem_get_info``, free memory is approximated as
+        ``recommended_max_memory - current_allocated_memory`` so that
+        auto-batching can still run.
+
         Returns
         -------
         float
@@ -875,25 +884,34 @@ class InferenceManager:
         if backend_api is None:
             return 0.0
 
-        mem_get_info = getattr(backend_api, "mem_get_info", None)
-        if not callable(mem_get_info):
-            return 0.0
-
         synchronize = getattr(backend_api, "synchronize", None)
         if callable(synchronize):
             synchronize()
 
         self._empty_backend_cache(backend_api)
 
-        try:
-            free_mem, _ = mem_get_info(self.exe_device)
-        except TypeError:
-            # Some backends may expose mem_get_info() without a device argument.
-            free_mem, _ = mem_get_info()
-        except Exception:
-            return 0.0
+        mem_get_info = getattr(backend_api, "mem_get_info", None)
+        if callable(mem_get_info):
+            try:
+                free_mem, _ = mem_get_info(self.exe_device)
+            except TypeError:
+                # Some backends may expose mem_get_info() without a device argument.
+                free_mem, _ = mem_get_info()
+            except Exception:
+                return 0.0
+            return free_mem / (1024 * 1024)
 
-        return free_mem / (1024 * 1024)
+        # MPS (and similar) fallback without mem_get_info.
+        recommended = getattr(backend_api, "recommended_max_memory", None)
+        current = getattr(backend_api, "current_allocated_memory", None)
+        if callable(recommended) and callable(current):
+            try:
+                free_mem = recommended() - current()
+            except Exception:
+                return 0.0
+            return max(0.0, free_mem) / (1024 * 1024)
+
+        return 0.0
 
     def get_available_disk_space(self, path: Optional[str]) -> float:
         """Get available disk space at the specified path in MB.
@@ -1230,8 +1248,10 @@ class InferenceManager:
 
         Notes
         -----
-        - For CPU execution, batching is not supported and the forward function
-          is called once with all inputs.
+        - For CPU execution, batching is not supported and the forward runs once
+          via ``_run_forward`` (optional AMP + input preparation).
+        - Accelerator backends with a usable memory query (CUDA, XPU, and MPS via
+          an approximate free-memory estimate) use auto-batching and OOM recovery.
         - When OOM occurs, batch size is halved and inference is retried.
         - Async copy is used when ``use_async=True`` and offloading to CPU/disk.
         """
@@ -1243,9 +1263,10 @@ class InferenceManager:
         if not auto_batch:
             return self._run_forward(forward_fn, self._prepare_inputs(inputs))
 
-        # CPU/MPS execution: batching not supported (requires accelerator memory APIs)
-        if self.exe_device.type in ("cpu", "mps"):
-            return forward_fn(**inputs)
+        # CPU: no accelerator memory APIs for safe batch sizing; still route
+        # through _run_forward so AMP/no_grad wrapping stays consistent.
+        if self.exe_device.type == "cpu":
+            return self._run_forward(forward_fn, self._prepare_inputs(inputs))
 
         # Extract shape/dtype info
         first_value = next(iter(inputs.values()))

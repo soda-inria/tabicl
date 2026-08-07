@@ -65,10 +65,14 @@ class TabICLBaseEstimator(BaseEstimator):
         if self.device is None:
             xpu_api = getattr(torch, "xpu", None)
             xpu_available = callable(getattr(xpu_api, "is_available", None)) and xpu_api.is_available()
+            mps_api = getattr(torch, "mps", None)
+            mps_available = callable(getattr(mps_api, "is_available", None)) and mps_api.is_available()
             if torch.cuda.is_available():
                 self.device_ = torch.device("cuda")
             elif xpu_available:
                 self.device_ = torch.device("xpu")
+            elif mps_available:
+                self.device_ = torch.device("mps")
             else:
                 self.device_ = torch.device("cpu")
         elif isinstance(self.device, str):
@@ -80,8 +84,10 @@ class TabICLBaseEstimator(BaseEstimator):
         """Resolve the ``"auto"`` option for ``use_amp`` and ``use_fa3``.
 
         Called by ``_build_inference_config`` at ``fit()`` and ``__setstate__``.
-        Explicit bool values are returned as-is, while ``"auto"`` triggers a simple
-        heuristic based on ``n_samples_in_`` and ``n_features_in_``:
+        Explicit bool values are returned as-is, while ``"auto"`` triggers a
+        device-aware heuristic based on ``n_samples_in_`` and ``n_features_in_``.
+
+        For CUDA and XPU (and other non-CPU / non-MPS accelerators):
 
         +--------------------------------------+-------+-------+
         | Regime                               |  AMP  |  FA3  |
@@ -93,8 +99,15 @@ class TabICLBaseEstimator(BaseEstimator):
         | Large  (n >= 10240)                  |  on   |  on   |
         +--------------------------------------+-------+-------+
 
+        Device overrides for ``use_amp="auto"``:
+
+        - **CPU**: AMP stays off (mixed precision does not help CPU inference).
+        - **MPS**: same size heuristic as CUDA/XPU (float16 SDPA / autocast are
+          supported on Apple Silicon).
+
         When ``use_amp=False`` (explicitly disabled by the user) and the data
-        is above the small threshold, FA3 is enabled as a fallback accelerator.
+        is above the small threshold, FA3 is enabled as a fallback accelerator
+        on CUDA. FA3 has no effect on CPU/MPS at runtime.
 
         The thresholds are based on preliminary observations and are not rigorously
         tuned. It assumes that the training set is large relative to the test set
@@ -112,10 +125,15 @@ class TabICLBaseEstimator(BaseEstimator):
         n_samples = getattr(self, "n_samples_in_", 0)
         n_features = getattr(self, "n_features_in_", 0)
         small_data = n_samples < 1024 and n_features < 60
+        device_type = getattr(getattr(self, "device_", None), "type", None)
 
         # -- AMP --
         if self.use_amp == "auto":
-            use_amp = not small_data
+            if device_type == "cpu":
+                use_amp = False
+            else:
+                # CUDA, XPU, MPS, and other accelerators: size heuristic.
+                use_amp = not small_data
         else:
             use_amp = bool(self.use_amp)
 
@@ -170,16 +188,18 @@ class TabICLBaseEstimator(BaseEstimator):
         """Move KV cache to the current device, auto-upcasting if needed.
 
         When the cache contains reduced-precision tensors (float16/bfloat16)
-        and the target environment cannot use them directly (CPU, MPS, or
-        CUDA without AMP), the tensors are upcast to float32 and a warning
-        is emitted.
+        and the target environment cannot use them directly (CPU, or any
+        device with AMP disabled), the tensors are upcast to float32 and a
+        warning is emitted. MPS keeps float16 caches when AMP is enabled,
+        matching CUDA/XPU behaviour.
         """
         if not (hasattr(self, "model_kv_cache_") and self.model_kv_cache_ is not None):
             return
 
         use_amp, _ = self._resolve_amp_fa3()
-        # CPU and MPS do not support float16 attention; CUDA needs AMP on
-        needs_upcast = self.device_.type in ("cpu", "mps") or not use_amp
+        # CPU needs float32 attention; accelerators keep reduced precision only
+        # when AMP is on (including MPS, which supports float16 SDPA).
+        needs_upcast = self.device_.type == "cpu" or not use_amp
         upcast_dtype = torch.float32 if needs_upcast else None
 
         # Warn once if we are actually upcasting reduced-precision tensors
@@ -187,8 +207,8 @@ class TabICLBaseEstimator(BaseEstimator):
             first_cache = next(iter(self.model_kv_cache_.values()))
             cache_dtype = next(iter(first_cache.col_cache.kv.values())).key.dtype
             if cache_dtype != torch.float32:
-                if self.device_.type in ("cpu", "mps"):
-                    reason = f"{self.device_.type.upper()} does not support float16/bfloat16 attention"
+                if self.device_.type == "cpu":
+                    reason = "CPU does not support float16/bfloat16 attention"
                 else:
                     reason = "AMP is not enabled"
                 warnings.warn(

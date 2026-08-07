@@ -104,8 +104,9 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
         The cache retains whatever dtype the model produced during ``fit()``
         (float16 when AMP is active, float32 otherwise). If the cache is later
-        loaded on CPU or on CUDA without AMP, the tensors are automatically
-        upcast to float32 to avoid dtype-mismatch errors.
+        loaded on CPU or on a device without AMP, the tensors are automatically
+        upcast to float32 to avoid dtype-mismatch errors. MPS keeps float16
+        caches when AMP is enabled.
 
     model_path : Optional[str | Path] = None
         Path to the pre-trained model checkpoint file.
@@ -133,10 +134,9 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
     device : Optional[str or torch.device], default=None
         Device to use for inference. If None, automatically selects CUDA when
-        available, otherwise XPU, and falls back to CPU. Can be specified as a
-        string (``'cuda'``, ``'xpu'``, ``'cpu'``, ``'mps'``) or a ``torch.device``
-        object. MPS (Apple Silicon GPU) is supported but must be explicitly
-        requested.
+        available, otherwise XPU, then MPS (Apple Silicon), and falls back to
+        CPU. Can be specified as a string (``'cuda'``, ``'xpu'``, ``'cpu'``,
+        ``'mps'``) or a ``torch.device`` object.
 
     use_amp : bool or "auto", default="auto"
         Controls automatic mixed precision (AMP) for inference.
