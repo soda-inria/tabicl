@@ -63,7 +63,14 @@ class TabICLBaseEstimator(BaseEstimator):
     def _resolve_device(self) -> None:
         """Resolve the target device from the init parameter."""
         if self.device is None:
-            self.device_ = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            xpu_api = getattr(torch, "xpu", None)
+            xpu_available = callable(getattr(xpu_api, "is_available", None)) and xpu_api.is_available()
+            if torch.cuda.is_available():
+                self.device_ = torch.device("cuda")
+            elif xpu_available:
+                self.device_ = torch.device("xpu")
+            else:
+                self.device_ = torch.device("cpu")
         elif isinstance(self.device, str):
             self.device_ = torch.device(self.device)
         else:

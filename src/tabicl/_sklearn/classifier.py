@@ -132,10 +132,11 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         - `'tabicl-classifier-v1-20250208.ckpt'`: The version used in our TabICLv1 paper.
 
     device : Optional[str or torch.device], default=None
-        Device to use for inference. If None, automatically selects CUDA if
-        available, otherwise CPU. Can be specified as a string (``'cuda'``,
-        ``'cpu'``, ``'mps'``) or a ``torch.device`` object. MPS (Apple Silicon
-        GPU) is supported but must be explicitly requested.
+        Device to use for inference. If None, automatically selects CUDA when
+        available, otherwise XPU, and falls back to CPU. Can be specified as a
+        string (``'cuda'``, ``'xpu'``, ``'cpu'``, ``'mps'``) or a ``torch.device``
+        object. MPS (Apple Silicon GPU) is supported but must be explicitly
+        requested.
 
     use_amp : bool or "auto", default="auto"
         Controls automatic mixed precision (AMP) for inference.
