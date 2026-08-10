@@ -41,8 +41,9 @@ jobs:
         run: uv pip install --system hatch
       - name: Show installed package versions
         run: |
-          hatch env create hatch-test
-          uv pip list --python "$(hatch env find hatch-test)"
+          ENV_NAME="hatch-test.py${{ matrix.python-version }}"
+          hatch env create "$ENV_NAME"
+          uv pip list --python "$(hatch env find "$ENV_NAME")"
       - name: Run tests
         run: hatch test
       - name: Upload coverage reports to Codecov
@@ -79,7 +80,8 @@ jobs:
             torch
       - name: Show installed package versions
         run: |
-          hatch env create hatch-test
-          uv pip list --python "$(hatch env find hatch-test)"
+          ENV_NAME="hatch-test.py3.13"
+          hatch env create "$ENV_NAME"
+          uv pip list --python "$(hatch env find "$ENV_NAME")"
       - name: Run tests
         run: hatch test
