@@ -68,7 +68,8 @@ print(f"ROC AUC without skrub: {scores.mean():.3f} (+/- {scores.std():.3f}), tim
 # The function :func:`skrub.tabular_pipeline` provides a convenient way to initialize a pipeline.
 # In addition to estimators from ``scikit-learn``, it accepts instances of type
 # :class:`tabicl.TabICLClassifier` and :class:`tabicl.TabICLRegressor` with TabICL-suitable defaults for
-# :class:`skrub.TableVectorizer` as the first step. Here is a short example on how to use it:
+# :class:`skrub.TableVectorizer` as the first step and the estimator itself as the second step.
+# Here is a short example on how to use it:
 #
 # .. code-block:: python
 #
