@@ -301,6 +301,130 @@ def compare_weight_transfer() -> CompareResult:
     )
 
 
+def compare_tabicl_model_forward() -> list[CompareResult]:
+    """Isolate neural net + InferenceManager from sklearn ensemble preprocessing."""
+    try:
+        from tabicl import TabICLRegressor
+        from tabicl._model.inference_config import InferenceConfig
+    except Exception as exc:  # noqa: BLE001
+        return [CompareResult("tabicl_model_forward", False, f"import failed: {exc}")]
+
+    import torch
+
+    results: list[CompareResult] = []
+    reg = TabICLRegressor(device="cpu", n_estimators=1, use_amp=False, use_fa3=False, verbose=False)
+    reg._load_model()  # noqa: SLF001
+    model = reg.model_
+    model.eval()
+
+    gen = torch.Generator(device="cpu").manual_seed(0)
+    B, T, H = 2, 64, 16
+    train_size = 40
+    X = torch.randn(B, T, H, generator=gen, dtype=torch.float32)
+    y = torch.randn(B, train_size, generator=gen, dtype=torch.float32)
+
+    def _cfg(device: str, *, offload: str, verbose: bool) -> InferenceConfig:
+        cfg = InferenceConfig()
+        cfg.update_from_dict(
+            {
+                "COL_CONFIG": {
+                    "device": device,
+                    "use_amp": False,
+                    "use_fa3": False,
+                    "verbose": verbose,
+                    "offload": offload,
+                },
+                "ROW_CONFIG": {
+                    "device": device,
+                    "use_amp": False,
+                    "use_fa3": False,
+                    "verbose": verbose,
+                    "offload": offload,
+                },
+                "ICL_CONFIG": {
+                    "device": device,
+                    "use_amp": False,
+                    "use_fa3": False,
+                    "verbose": verbose,
+                    "offload": offload,
+                },
+            }
+        )
+        return cfg
+
+    # CPU baseline (raw quantiles + mean).
+    with torch.no_grad():
+        raw_cpu = model.predict_stats(
+            X, y, output_type=["mean", "raw_quantiles"], inference_config=_cfg("cpu", offload="gpu", verbose=False)
+        )
+    mean_cpu = raw_cpu["mean"].detach().cpu()
+    q_cpu = raw_cpu["raw_quantiles"].detach().cpu()
+    print(
+        f"  raw_cpu: mean_stats mean={mean_cpu.mean():.4f} std={mean_cpu.std():.4f} "
+        f"q_std={q_cpu.std():.4f} q_shape={tuple(q_cpu.shape)}"
+    )
+
+    # MPS with forced GPU offload + verbose (surfaces InferenceManager decisions on CI).
+    model_mps = model.to("mps")
+    _sync("mps")
+    print("  --- MPS predict_stats verbose (offload=gpu) ---")
+    with torch.no_grad():
+        raw_mps = model_mps.predict_stats(
+            X.to("mps"),
+            y.to("mps"),
+            output_type=["mean", "raw_quantiles"],
+            inference_config=_cfg("mps", offload="gpu", verbose=True),
+        )
+    _sync("mps")
+    mean_mps = raw_mps["mean"].detach().cpu()
+    q_mps = raw_mps["raw_quantiles"].detach().cpu()
+    print(
+        f"  raw_mps[offload=gpu]: mean_stats mean={mean_mps.mean():.4f} std={mean_mps.std():.4f} "
+        f"q_std={q_mps.std():.4f}"
+    )
+    d_mean = (mean_cpu - mean_mps).abs().max().item()
+    d_q = (q_cpu - q_mps).abs().max().item()
+    results.append(
+        CompareResult(
+            "model_predict_stats[offload=gpu]",
+            d_mean < 1e-2 and d_q < 1e-1,
+            f"max|dmean|={d_mean:.3e} max|dq|={d_q:.3e} "
+            f"mean_std_cpu={mean_cpu.std():.4f} mean_std_mps={mean_mps.std():.4f}",
+        )
+    )
+
+    # MPS with offload=cpu (exercises D2H path used by auto mode under pressure).
+    print("  --- MPS predict_stats verbose (offload=cpu) ---")
+    with torch.no_grad():
+        raw_mps_cpu = model_mps.predict_stats(
+            X.to("mps"),
+            y.to("mps"),
+            output_type=["mean", "raw_quantiles"],
+            inference_config=_cfg("mps", offload="cpu", verbose=True),
+        )
+    _sync("mps")
+    mean_mps_cpu = raw_mps_cpu["mean"].detach().cpu()
+    q_mps_cpu = raw_mps_cpu["raw_quantiles"].detach().cpu()
+    print(
+        f"  raw_mps[offload=cpu]: mean_stats mean={mean_mps_cpu.mean():.4f} std={mean_mps_cpu.std():.4f} "
+        f"q_std={q_mps_cpu.std():.4f}"
+    )
+    d_mean2 = (mean_cpu - mean_mps_cpu).abs().max().item()
+    d_q2 = (q_cpu - q_mps_cpu).abs().max().item()
+    results.append(
+        CompareResult(
+            "model_predict_stats[offload=cpu]",
+            d_mean2 < 1e-2 and d_q2 < 1e-1,
+            f"max|dmean|={d_mean2:.3e} max|dq|={d_q2:.3e} "
+            f"mean_std_cpu={mean_cpu.std():.4f} mean_std_mps={mean_mps_cpu.std():.4f}",
+        )
+    )
+
+    # Move model back to CPU for subsequent probes that reload/fit.
+    model.to("cpu")
+    return results
+
+
 def compare_tabicl_tiny() -> list[CompareResult]:
     """TabICLRegressor parity probes (mirrors CI failure + isolation variants)."""
     try:
@@ -410,6 +534,35 @@ def compare_tabicl_tiny() -> list[CompareResult]:
             f"|dR2|={d_r2_1:.3e} max|dpred|={d_pred_1:.3e}",
         )
     )
+
+    # Probe D: sklearn path with forced offload=gpu (no auto offload).
+    scores_g = {}
+    preds_g = {}
+    for device in ("cpu", "mps"):
+        reg = TabICLRegressor(
+            n_estimators=1,
+            device=device,
+            use_amp=False,
+            use_fa3=False,
+            random_state=0,
+            verbose=device == "mps",
+            offload_mode="gpu",
+        )
+        reg.fit(X_train, y_train)
+        pred = reg.predict(X_test)
+        preds_g[device] = pred
+        scores_g[device] = float(r2_score(y_test, pred))
+        print(f"  {_pred_stats(f'pred_offload_gpu[{device}]', pred)}")
+    d_r2_g = abs(scores_g["cpu"] - scores_g["mps"])
+    d_pred_g = float(np.max(np.abs(preds_g["cpu"] - preds_g["mps"])))
+    results.append(
+        CompareResult(
+            "tabicl_fit_predict[offload=gpu,n_estimators=1]",
+            d_r2_g < 1e-3 and d_pred_g < 1e-2,
+            f"R2_cpu={scores_g['cpu']:.4f} R2_mps={scores_g['mps']:.4f} "
+            f"|dR2|={d_r2_g:.3e} max|dpred|={d_pred_g:.3e}",
+        )
+    )
     return results
 
 
@@ -427,6 +580,7 @@ def run_mps_checks(*, include_tabicl: bool) -> list[CompareResult]:
     ]
     if include_tabicl:
         checks.append(("weight transfer", compare_weight_transfer))
+        checks.append(("tabicl model forward", compare_tabicl_model_forward))
         checks.append(("tabicl probes", compare_tabicl_tiny))
 
     for label, fn in checks:
