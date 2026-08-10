@@ -254,6 +254,135 @@ def case_mha_view_transpose_sdpa() -> CaseResult:
     )
 
 
+def case_linear_only_same_as_04() -> CaseResult:
+    """Bisect 04: packed QKV projection alone (no SDPA)."""
+    import torch
+    import torch.nn.functional as F
+
+    snippet = textwrap.dedent(
+        """\
+        x = torch.randn(2, 64, 128)
+        w = torch.randn(384, 128)  # N(0,1) — large activations
+        b = torch.randn(384)
+        o = F.linear(x, w, b)
+        """
+    )
+    g = _seeded(1)
+    x = torch.randn(2, 64, 128, generator=g)
+    w = torch.randn(384, 128, generator=g)
+    b = torch.randn(384, generator=g)
+
+    def _run(device: str):
+        return F.linear(x.to(device), w.to(device), b.to(device))
+
+    return _compare(
+        "04a_linear_only_randn_weights",
+        lambda: _run("cpu"),
+        lambda: _run("mps"),
+        tol=1e-2,
+        snippet=snippet,
+    )
+
+
+def case_linear_xavier_then_sdpa() -> CaseResult:
+    """Same graph as 04 but Xavier-scaled weights (realistic activation scale)."""
+    import torch
+    import torch.nn.functional as F
+
+    snippet = textwrap.dedent(
+        """\
+        x = torch.randn(2, 64, 128)
+        w = torch.empty(384, 128); nn.init.xavier_uniform_(w)
+        qkv = F.linear(x, w).view(2, 64, 3, 8, 16).unbind(2)
+        q, k, v = [t.transpose(1, 2).contiguous() for t in qkv]
+        o = F.scaled_dot_product_attention(q, k, v)
+        """
+    )
+    g = _seeded(1)
+    B, S, E, H = 2, 64, 128, 8
+    D = E // H
+    x = torch.randn(B, S, E, generator=g)
+    w = torch.empty(3 * E, E)
+    torch.nn.init.xavier_uniform_(w)
+    b = torch.zeros(3 * E)
+
+    def _run(device: str):
+        qkv = F.linear(x.to(device), w.to(device), b.to(device))
+        q, k, v = qkv.view(B, S, 3, H, D).unbind(-3)
+        q, k, v = [t.transpose(1, 2).contiguous() for t in (q, k, v)]
+        return F.scaled_dot_product_attention(q, k, v)
+
+    return _compare(
+        "04b_xavier_linear_then_sdpa",
+        lambda: _run("cpu"),
+        lambda: _run("mps"),
+        tol=1e-2,
+        snippet=snippet,
+    )
+
+
+def case_matmul_same_shapes_as_04() -> CaseResult:
+    """Raw matmul matching F.linear shapes from 04."""
+    import torch
+
+    snippet = textwrap.dedent(
+        """\
+        x = torch.randn(2, 64, 128)
+        w = torch.randn(384, 128)
+        o = x @ w.T
+        """
+    )
+    g = _seeded(1)
+    x = torch.randn(2, 64, 128, generator=g)
+    w = torch.randn(384, 128, generator=g)
+
+    def _run(device: str):
+        return x.to(device) @ w.to(device).T
+
+    return _compare(
+        "04c_matmul_x_wT",
+        lambda: _run("cpu"),
+        lambda: _run("mps"),
+        tol=1e-2,
+        snippet=snippet,
+    )
+
+
+def case_sdpa_on_cpu_qkv_moved_to_mps() -> CaseResult:
+    """Project on CPU, attention on MPS — isolates SDPA from Linear on VirtualMac."""
+    import torch
+    import torch.nn.functional as F
+
+    snippet = textwrap.dedent(
+        """\
+        qkv = F.linear(x.cpu(), w.cpu(), b.cpu()).view(2, 64, 3, 8, 16)
+        q, k, v = [t.transpose(1, 2).contiguous().to("mps") for t in qkv.unbind(2)]
+        o = F.scaled_dot_product_attention(q, k, v).cpu()
+        """
+    )
+    g = _seeded(1)
+    B, S, E, H = 2, 64, 128, 8
+    D = E // H
+    x = torch.randn(B, S, E, generator=g)
+    w = torch.randn(3 * E, E, generator=g)
+    b = torch.randn(3 * E, generator=g)
+    qkv_cpu = F.linear(x, w, b).view(B, S, 3, H, D)
+    q_c, k_c, v_c = [t.transpose(1, 2).contiguous() for t in qkv_cpu.unbind(-3)]
+    out_cpu = F.scaled_dot_product_attention(q_c, k_c, v_c)
+
+    def mps():
+        q, k, v = q_c.to("mps"), k_c.to("mps"), v_c.to("mps")
+        return F.scaled_dot_product_attention(q, k, v)
+
+    return _compare(
+        "04d_sdpa_only_cpu_projected_qkv",
+        lambda: out_cpu,
+        mps,
+        tol=1e-2,
+        snippet=snippet,
+    )
+
+
 def case_mha_view_transpose_sdpa_contig() -> CaseResult:
     import torch
     import torch.nn.functional as F
@@ -525,11 +654,37 @@ def case_wide_feature_batch_encoder() -> CaseResult:
     )
 
 
+def case_linear_small_vs_large_init() -> CaseResult:
+    """Single Linear: N(0,1) weights (suspect) vs small init."""
+    import torch
+    import torch.nn as nn
+
+    snippet = "nn.Linear(128, 384) with default vs N(0,1) weight init"
+    g = _seeded(10)
+    x = torch.randn(2, 64, 128, generator=g)
+    lin = nn.Linear(128, 384)
+    # Force large init like case 04
+    with torch.no_grad():
+        lin.weight.copy_(torch.randn_like(lin.weight))
+        lin.bias.copy_(torch.randn_like(lin.bias))
+
+    def _run(device: str):
+        return lin.to(device)(x.to(device))
+
+    return _compare(
+        "04e_nn_linear_randn_init",
+        lambda: _run("cpu"),
+        lambda: _run("mps"),
+        tol=1e-2,
+        snippet=snippet,
+    )
+
+
 def case_gelu_layernorm_chain() -> CaseResult:
     import torch
     import torch.nn as nn
 
-    snippet = "LN→Linear→GELU→Linear×8 residual-ish chain without attention"
+    snippet = "LN→Linear→GELU→Linear×8 residual chain; default Linear init"
     g = _seeded(9)
     x = torch.randn(2, 64, 128, generator=g)
     mods = nn.ModuleList()
@@ -565,6 +720,11 @@ CASES: list[tuple[str, Callable[[], CaseResult]]] = [
     ("02_sdpa_permute_noncontig", case_sdpa_permute_noncontig),
     ("03_sdpa_permute_then_contiguous", case_sdpa_permute_then_contiguous),
     ("04_mha_view_transpose_sdpa", case_mha_view_transpose_sdpa),
+    ("04a_linear_only_randn_weights", case_linear_only_same_as_04),
+    ("04b_xavier_linear_then_sdpa", case_linear_xavier_then_sdpa),
+    ("04c_matmul_x_wT", case_matmul_same_shapes_as_04),
+    ("04d_sdpa_only_cpu_projected_qkv", case_sdpa_on_cpu_qkv_moved_to_mps),
+    ("04e_nn_linear_randn_init", case_linear_small_vs_large_init),
     ("05_mha_view_transpose_sdpa_contig", case_mha_view_transpose_sdpa_contig),
     ("06_multidim_batch_flatten_sdpa", case_multidim_batch_flatten_sdpa),
     ("07_sdpa_additive_mask", case_sdpa_with_additive_mask),
