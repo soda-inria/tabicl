@@ -301,6 +301,97 @@ def compare_weight_transfer() -> CompareResult:
     )
 
 
+def compare_tabicl_stages() -> list[CompareResult]:
+    """Compare col / row / icl stage outputs CPU vs MPS to localize divergence."""
+    try:
+        from tabicl import TabICLRegressor
+        from tabicl._model.inference_config import InferenceConfig
+    except Exception as exc:  # noqa: BLE001
+        return [CompareResult("tabicl_stages", False, f"import failed: {exc}")]
+
+    import torch
+
+    reg = TabICLRegressor(device="cpu", n_estimators=1, use_amp=False, use_fa3=False, verbose=False)
+    reg._load_model()  # noqa: SLF001
+    model = reg.model_
+    model.eval()
+
+    gen = torch.Generator(device="cpu").manual_seed(0)
+    B, T, H = 2, 64, 16
+    train_size = 40
+    X = torch.randn(B, T, H, generator=gen, dtype=torch.float32)
+    y = torch.randn(B, train_size, generator=gen, dtype=torch.float32)
+
+    def _mgr(device: str):
+        cfg = InferenceConfig()
+        cfg.update_from_dict(
+            {
+                "COL_CONFIG": {"device": device, "use_amp": False, "use_fa3": False, "verbose": False, "offload": "gpu"},
+                "ROW_CONFIG": {"device": device, "use_amp": False, "use_fa3": False, "verbose": False, "offload": "gpu"},
+                "ICL_CONFIG": {"device": device, "use_amp": False, "use_fa3": False, "verbose": False, "offload": "gpu"},
+            }
+        )
+        return cfg
+
+    cfg_cpu = _mgr("cpu")
+    with torch.no_grad():
+        col_cpu = model.col_embedder(X, y_train=y, mgr_config=cfg_cpu.COL_CONFIG)
+        row_cpu = model.row_interactor(col_cpu, mgr_config=cfg_cpu.ROW_CONFIG)
+        icl_cpu = model.icl_predictor(row_cpu, y_train=y, mgr_config=cfg_cpu.ICL_CONFIG)
+
+    model_mps = model.to("mps")
+    cfg_mps = _mgr("mps")
+    Xm, ym = X.to("mps"), y.to("mps")
+    _sync("mps")
+
+    def _empty_mps() -> None:
+        import torch
+
+        torch.mps.synchronize()
+        torch.mps.empty_cache()
+
+    with torch.no_grad():
+        # Native MPS stages (fresh cache each time).
+        _empty_mps()
+        col_mps = model_mps.col_embedder(Xm, y_train=ym, mgr_config=cfg_mps.COL_CONFIG)
+        _empty_mps()
+        row_mps = model_mps.row_interactor(col_mps, mgr_config=cfg_mps.ROW_CONFIG)
+        _empty_mps()
+        icl_mps = model_mps.icl_predictor(row_mps, y_train=ym, mgr_config=cfg_mps.ICL_CONFIG)
+
+        # Cross-device isolation with explicit clone+contiguous to avoid aliasing.
+        _empty_mps()
+        row_from_cpu_col = model_mps.row_interactor(
+            col_cpu.detach().to("mps").contiguous().clone(), mgr_config=cfg_mps.ROW_CONFIG
+        )
+        _empty_mps()
+        icl_from_cpu_row = model_mps.icl_predictor(
+            row_cpu.detach().to("mps").contiguous().clone(),
+            y_train=ym,
+            mgr_config=cfg_mps.ICL_CONFIG,
+        )
+    _sync("mps")
+
+    def _cmp(name: str, a: torch.Tensor, b: torch.Tensor, tol: float = 1e-2) -> CompareResult:
+        a_c, b_c = a.detach().float().cpu(), b.detach().float().cpu()
+        max_abs = (a_c - b_c).abs().max().item()
+        print(
+            f"  {name}: shape={tuple(a_c.shape)} "
+            f"std_cpu={a_c.std():.4f} std_mps={b_c.std():.4f} max_abs={max_abs:.3e}"
+        )
+        return CompareResult(name, max_abs < tol, f"max_abs={max_abs:.3e} std_cpu={a_c.std():.4f} std_mps={b_c.std():.4f}")
+
+    results = [
+        _cmp("stage_col_embed", col_cpu, col_mps),
+        _cmp("stage_row_interact", row_cpu, row_mps),
+        _cmp("stage_icl", icl_cpu, icl_mps, tol=1e-1),
+        _cmp("stage_row_from_cpu_col", row_cpu, row_from_cpu_col),
+        _cmp("stage_icl_from_cpu_row", icl_cpu, icl_from_cpu_row, tol=1e-1),
+    ]
+    model.to("cpu")
+    return results
+
+
 def compare_tabicl_model_forward() -> list[CompareResult]:
     """Isolate neural net + InferenceManager from sklearn ensemble preprocessing."""
     try:
@@ -580,6 +671,7 @@ def run_mps_checks(*, include_tabicl: bool) -> list[CompareResult]:
     ]
     if include_tabicl:
         checks.append(("weight transfer", compare_weight_transfer))
+        checks.append(("tabicl stages", compare_tabicl_stages))
         checks.append(("tabicl model forward", compare_tabicl_model_forward))
         checks.append(("tabicl probes", compare_tabicl_tiny))
 
