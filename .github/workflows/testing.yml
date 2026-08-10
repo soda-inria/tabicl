@@ -39,6 +39,10 @@ jobs:
           version: "0.5.4"
       - name: Install hatch
         run: uv pip install --system hatch
+      - name: Show installed package versions
+        run: |
+          hatch env create hatch-test
+          uv pip list --python "$(hatch env find hatch-test)"
       - name: Run tests
         run: hatch test
       - name: Upload coverage reports to Codecov
@@ -73,5 +77,9 @@ jobs:
           uv pip install --system --pre --upgrade \
             --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
             torch
+      - name: Show installed package versions
+        run: |
+          hatch env create hatch-test
+          uv pip list --python "$(hatch env find hatch-test)"
       - name: Run tests
         run: hatch test
