@@ -90,12 +90,7 @@ print(f"ROC AUC without skrub: {scores.mean():.3f} (+/- {scores.std():.3f}), tim
 # .. note::
 #    We also provide advanced settings for the DatetimeEncoder,
 #    even though our example dataset here does not contain dates. This also serves to show how to
-#    adjust parameters. In :func:`skrub.tabular_pipeline` you would get instead a TableVectorizer, with
-#
-#    - :class:`StringEncoder() <skrub._string_encoder.StringEncoder>` for high cardinality with default parameters, and
-#    - :class:`DatetimeEncoder(periodic_encoding='spline') <skrub._datetime_encoder.DatetimeEncoder>`
-#
-#    instead.
+#    adjust parameters.
 
 pipeline = make_pipeline(
     TableVectorizer(
