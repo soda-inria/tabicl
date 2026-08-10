@@ -11,7 +11,14 @@ from tabicl import TabICLClassifier, TabICLRegressor
 # n_estimators=2 ensures the full preprocessing and ensembling pipeline is tested:
 # n_estimators=1 skips shuffling and uses only one norm method, while n_estimators=2
 # exercises feature/class shuffling, multiple normalization methods, and ensemble averaging.
-@parametrize_with_checks([TabICLClassifier(n_estimators=2), TabICLRegressor(n_estimators=2)])
+#
+# device="cpu" keeps these API-compliance checks deterministic and hardware
+# independent. Without it, ``device=None`` auto-selects an accelerator (e.g. MPS
+# on macOS CI, which runs on a virtualized GPU that produces incorrect results),
+# making the checks fail for reasons unrelated to sklearn compatibility.
+@parametrize_with_checks(
+    [TabICLClassifier(n_estimators=2, device="cpu"), TabICLRegressor(n_estimators=2, device="cpu")]
+)
 def test_sklearn_compatible_estimator(estimator, check):
     check(estimator)
 
