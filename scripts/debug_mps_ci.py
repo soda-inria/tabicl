@@ -209,8 +209,100 @@ def compare_autocast_matmul() -> CompareResult:
     )
 
 
-def compare_tabicl_tiny() -> CompareResult:
-    """Minimal TabICLRegressor CPU vs MPS parity (mirrors CI failure mode)."""
+def _mps_mem(tag: str) -> None:
+    import torch
+
+    try:
+        print(
+            f"  mps_mem[{tag}]: "
+            f"alloc={torch.mps.current_allocated_memory() / 1024**3:.3f}GB "
+            f"driver={torch.mps.driver_allocated_memory() / 1024**3:.3f}GB "
+            f"recommended_max={torch.mps.recommended_max_memory() / 1024**3:.2f}GB"
+        )
+    except Exception as exc:  # noqa: BLE001
+        print(f"  mps_mem[{tag}]: <failed: {exc}>")
+
+
+def _pred_stats(name: str, pred) -> str:
+    import numpy as np
+
+    p = np.asarray(pred, dtype=np.float64)
+    return (
+        f"{name}: shape={p.shape} mean={p.mean():.4f} std={p.std():.4f} "
+        f"min={p.min():.4f} max={p.max():.4f} "
+        f"nan={np.isnan(p).sum()} inf={np.isinf(p).sum()}"
+    )
+
+
+def compare_layernorm() -> CompareResult:
+    import torch
+    import torch.nn as nn
+
+    gen = torch.Generator(device="cpu").manual_seed(0)
+    x = torch.randn(8, 128, 256, generator=gen, dtype=torch.float32)
+    ln = nn.LayerNorm(256)
+    out_cpu = ln(x)
+    ln_m = ln.to("mps")
+    _sync("mps")
+    out_mps = ln_m(x.to("mps")).cpu()
+    _sync("mps")
+    max_abs = (out_cpu - out_mps).abs().max().item()
+    ok = max_abs < 1e-4
+    return CompareResult("layernorm[float32]", ok, f"max_abs={max_abs:.3e}")
+
+
+def compare_sdpa_large() -> CompareResult:
+    """SDPA with shapes closer to TabICL attention (longer sequence)."""
+    import torch
+    import torch.nn.functional as F
+
+    gen = torch.Generator(device="cpu").manual_seed(0)
+    # B=1, H=8, S=512, D=64 — stress virtualized MPS memory a bit more
+    q = torch.randn(1, 8, 512, 64, generator=gen, dtype=torch.float32)
+    k = torch.randn(1, 8, 512, 64, generator=gen, dtype=torch.float32)
+    v = torch.randn(1, 8, 512, 64, generator=gen, dtype=torch.float32)
+    out_cpu = F.scaled_dot_product_attention(q, k, v)
+    _sync("mps")
+    out_mps = F.scaled_dot_product_attention(q.to("mps"), k.to("mps"), v.to("mps")).cpu()
+    _sync("mps")
+    max_abs = (out_cpu - out_mps).abs().max().item()
+    ok = max_abs < 1e-3
+    return CompareResult("sdpa_large[1,8,512,64]", ok, f"max_abs={max_abs:.3e}")
+
+
+def compare_weight_transfer() -> CompareResult:
+    """Load TabICL regressor checkpoint on CPU, move to MPS, compare params."""
+    try:
+        from tabicl import TabICLRegressor
+    except Exception as exc:  # noqa: BLE001
+        return CompareResult("weight_transfer", False, f"import failed: {exc}")
+
+    import torch
+
+    reg = TabICLRegressor(device="cpu", n_estimators=1, verbose=False)
+    reg._load_model()  # noqa: SLF001 - intentional diagnostic access
+    cpu_sd = {k: v.detach().cpu().clone() for k, v in reg.model_.state_dict().items()}
+    reg.model_.to("mps")
+    _sync("mps")
+    mps_sd = {k: v.detach().cpu() for k, v in reg.model_.state_dict().items()}
+    max_abs = 0.0
+    worst = ""
+    for k in cpu_sd:
+        d = (cpu_sd[k].float() - mps_sd[k].float()).abs().max().item()
+        if d >= max_abs:
+            max_abs = d
+            worst = k
+    ok = max_abs == 0.0
+    n_params = sum(v.numel() for v in cpu_sd.values())
+    return CompareResult(
+        "weight_transfer[cpu->mps->cpu]",
+        ok,
+        f"max_abs={max_abs:.3e} worst={worst} n_params={n_params}",
+    )
+
+
+def compare_tabicl_tiny() -> list[CompareResult]:
+    """TabICLRegressor parity probes (mirrors CI failure + isolation variants)."""
     try:
         from sklearn.datasets import make_friedman1
         from sklearn.metrics import r2_score
@@ -218,11 +310,17 @@ def compare_tabicl_tiny() -> CompareResult:
 
         from tabicl import TabICLRegressor
     except Exception as exc:  # noqa: BLE001
-        return CompareResult("tabicl_tiny", False, f"import failed: {exc}")
+        return [CompareResult("tabicl_tiny", False, f"import failed: {exc}")]
+
+    import numpy as np
+    import torch
 
     X, y = make_friedman1(n_samples=120, n_features=16, noise=1.0, random_state=0)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=0)
+    results: list[CompareResult] = []
 
+    # Probe A: fit+predict on each device (CI failure mode).
+    _mps_mem("before_fit_predict")
     scores = {}
     preds = {}
     for device in ("cpu", "mps"):
@@ -238,20 +336,81 @@ def compare_tabicl_tiny() -> CompareResult:
         pred = reg.predict(X_test)
         preds[device] = pred
         scores[device] = float(r2_score(y_test, pred))
-
-    import numpy as np
-
+        print(f"  {_pred_stats(f'pred[{device}]', pred)}")
+        print(f"  R2[{device}]={scores[device]:.4f}")
+        if device == "mps":
+            _mps_mem("after_mps_fit_predict")
     d_r2 = abs(scores["cpu"] - scores["mps"])
     d_pred = float(np.max(np.abs(preds["cpu"] - preds["mps"])))
-    ok = d_r2 < 1e-3 and d_pred < 1e-2
-    return CompareResult(
-        name="tabicl_regressor[amp=off,n_estimators=2]",
-        ok=ok,
-        detail=(
+    results.append(
+        CompareResult(
+            "tabicl_fit_predict[amp=off,n_estimators=2]",
+            d_r2 < 1e-3 and d_pred < 1e-2,
             f"R2_cpu={scores['cpu']:.4f} R2_mps={scores['mps']:.4f} "
-            f"|dR2|={d_r2:.3e} max|pred|={d_pred:.3e}"
-        ),
+            f"|dR2|={d_r2:.3e} max|dpred|={d_pred:.3e}",
+        )
     )
+
+    # Probe B: fit on CPU, move model to MPS, predict (isolates device move).
+    reg_cpu = TabICLRegressor(
+        n_estimators=2,
+        device="cpu",
+        use_amp=False,
+        use_fa3=False,
+        random_state=0,
+        verbose=False,
+    )
+    reg_cpu.fit(X_train, y_train)
+    pred_cpu = reg_cpu.predict(X_test)
+    reg_cpu.device_ = torch.device("mps")
+    reg_cpu.model_.to("mps")
+    reg_cpu._build_inference_config()  # noqa: SLF001 - rebuild MgrConfig devices
+    if hasattr(reg_cpu, "model_kv_cache_"):
+        reg_cpu._move_cache_to_device()  # noqa: SLF001
+    _sync("mps")
+    pred_moved = reg_cpu.predict(X_test)
+    print(f"  {_pred_stats('pred[cpu_fit]', pred_cpu)}")
+    print(f"  {_pred_stats('pred[moved_mps]', pred_moved)}")
+    d_moved = float(np.max(np.abs(pred_cpu - pred_moved)))
+    r2_moved = float(r2_score(y_test, pred_moved))
+    results.append(
+        CompareResult(
+            "tabicl_fit_cpu_then_predict_mps",
+            d_moved < 1e-2,
+            f"R2_cpu={float(r2_score(y_test, pred_cpu)):.4f} R2_moved={r2_moved:.4f} "
+            f"max|dpred|={d_moved:.3e}",
+        )
+    )
+    _mps_mem("after_moved_predict")
+
+    # Probe C: n_estimators=1 (smaller / simpler).
+    scores1 = {}
+    preds1 = {}
+    for device in ("cpu", "mps"):
+        reg = TabICLRegressor(
+            n_estimators=1,
+            device=device,
+            use_amp=False,
+            use_fa3=False,
+            random_state=0,
+            verbose=False,
+        )
+        reg.fit(X_train, y_train)
+        pred = reg.predict(X_test)
+        preds1[device] = pred
+        scores1[device] = float(r2_score(y_test, pred))
+        print(f"  {_pred_stats(f'pred_n1[{device}]', pred)}")
+    d_r2_1 = abs(scores1["cpu"] - scores1["mps"])
+    d_pred_1 = float(np.max(np.abs(preds1["cpu"] - preds1["mps"])))
+    results.append(
+        CompareResult(
+            "tabicl_fit_predict[n_estimators=1]",
+            d_r2_1 < 1e-3 and d_pred_1 < 1e-2,
+            f"R2_cpu={scores1['cpu']:.4f} R2_mps={scores1['mps']:.4f} "
+            f"|dR2|={d_r2_1:.3e} max|dpred|={d_pred_1:.3e}",
+        )
+    )
+    return results
 
 
 def run_mps_checks(*, include_tabicl: bool) -> list[CompareResult]:
@@ -262,10 +421,13 @@ def run_mps_checks(*, include_tabicl: bool) -> list[CompareResult]:
         ("matmul float16", lambda: compare_matmul("float16")),
         ("sdpa float32", lambda: compare_sdpa("float32")),
         ("sdpa float16", lambda: compare_sdpa("float16")),
+        ("sdpa large", compare_sdpa_large),
+        ("layernorm", compare_layernorm),
         ("autocast matmul", compare_autocast_matmul),
     ]
     if include_tabicl:
-        checks.append(("tabicl tiny", compare_tabicl_tiny))
+        checks.append(("weight transfer", compare_weight_transfer))
+        checks.append(("tabicl probes", compare_tabicl_tiny))
 
     for label, fn in checks:
         print(f"\n-- {label} --")
@@ -274,9 +436,11 @@ def run_mps_checks(*, include_tabicl: bool) -> list[CompareResult]:
         except Exception as exc:  # noqa: BLE001
             result = CompareResult(label, False, f"EXCEPTION {type(exc).__name__}: {exc}")
             traceback.print_exc()
-        status = "OK" if result.ok else "FAIL"
-        print(f"[{status}] {result.name}: {result.detail}")
-        results.append(result)
+        batch = result if isinstance(result, list) else [result]
+        for item in batch:
+            status = "OK" if item.ok else "FAIL"
+            print(f"[{status}] {item.name}: {item.detail}")
+            results.append(item)
         sys.stdout.flush()
     return results
 
