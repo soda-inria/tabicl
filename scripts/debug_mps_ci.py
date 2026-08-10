@@ -254,6 +254,106 @@ def case_mha_view_transpose_sdpa() -> CaseResult:
     )
 
 
+def case_linear_vs_matmul_same_tensors() -> CaseResult:
+    """Minimal suspect: F.linear vs mathematically identical x @ w.T + b."""
+    import torch
+    import torch.nn.functional as F
+
+    snippet = textwrap.dedent(
+        """\
+        # On GitHub VirtualMac MPS, F.linear diverges from x @ w.T (+ bias)
+        # for the same float32 tensors (torch 2.13).
+        x = torch.randn(2, 64, 128)
+        w = torch.randn(384, 128)
+        b = torch.randn(384)
+        # FAIL path:
+        y_lin = torch.nn.functional.linear(x.to("mps"), w.to("mps"), b.to("mps")).cpu()
+        # OK path:
+        y_mm = (x.to("mps") @ w.to("mps").T + b.to("mps")).cpu()
+        # Also compare each to CPU F.linear(x, w, b)
+        """
+    )
+    g = _seeded(1)
+    x = torch.randn(2, 64, 128, generator=g)
+    w = torch.randn(384, 128, generator=g)
+    b = torch.randn(384, generator=g)
+    ref = F.linear(x, w, b)
+
+    def mps_linear():
+        return F.linear(x.to("mps"), w.to("mps"), b.to("mps"))
+
+    # Primary compare: CPU linear vs MPS linear
+    primary = _compare(
+        "04a0_F_linear_vs_cpu",
+        lambda: ref,
+        mps_linear,
+        tol=1e-2,
+        snippet=snippet,
+    )
+    # Side diagnostics printed always for CI logs
+    with torch.no_grad():
+        y_mm = (x.to("mps") @ w.to("mps").T + b.to("mps")).cpu()
+        y_lin = F.linear(x.to("mps"), w.to("mps"), b.to("mps")).cpu()
+        y_lin_nobias = F.linear(x.to("mps"), w.to("mps"), None).cpu()
+        y_mm_nobias = (x.to("mps") @ w.to("mps").T).cpu()
+        _sync()
+    print(
+        f"  diag: |lin-cpu|={_max_abs(y_lin, ref):.3e} "
+        f"|mm-cpu|={_max_abs(y_mm, ref):.3e} "
+        f"|lin-mm|={_max_abs(y_lin, y_mm):.3e} "
+        f"|lin0-mm0|={_max_abs(y_lin_nobias, y_mm_nobias):.3e} "
+        f"|lin0-cpu0|={_max_abs(y_lin_nobias, x @ w.T):.3e}"
+    )
+    return primary
+
+
+def case_linear_nobias() -> CaseResult:
+    import torch
+    import torch.nn.functional as F
+
+    snippet = "F.linear(x, w, bias=None) vs CPU"
+    g = _seeded(1)
+    x = torch.randn(2, 64, 128, generator=g)
+    w = torch.randn(384, 128, generator=g)
+
+    return _compare(
+        "04a1_F_linear_nobias",
+        lambda: F.linear(x, w, None),
+        lambda: F.linear(x.to("mps"), w.to("mps"), None),
+        tol=1e-2,
+        snippet=snippet,
+    )
+
+
+def case_addmm() -> CaseResult:
+    import torch
+
+    snippet = textwrap.dedent(
+        """\
+        # addmm(b, x_flat, w.T) — common F.linear implementation path
+        x = torch.randn(128, 128)   # flattened 2D
+        w = torch.randn(384, 128)
+        b = torch.randn(384)
+        y = torch.addmm(b, x, w.T)
+        """
+    )
+    g = _seeded(11)
+    x = torch.randn(128, 128, generator=g)
+    w = torch.randn(384, 128, generator=g)
+    b = torch.randn(384, generator=g)
+
+    def _run(device: str):
+        return torch.addmm(b.to(device), x.to(device), w.to(device).T)
+
+    return _compare(
+        "04a2_addmm_2d",
+        lambda: _run("cpu"),
+        lambda: _run("mps"),
+        tol=1e-2,
+        snippet=snippet,
+    )
+
+
 def case_linear_only_same_as_04() -> CaseResult:
     """Bisect 04: packed QKV projection alone (no SDPA)."""
     import torch
@@ -719,12 +819,16 @@ CASES: list[tuple[str, Callable[[], CaseResult]]] = [
     ("01_sdpa_contiguous", case_sdpa_contiguous),
     ("02_sdpa_permute_noncontig", case_sdpa_permute_noncontig),
     ("03_sdpa_permute_then_contiguous", case_sdpa_permute_then_contiguous),
-    ("04_mha_view_transpose_sdpa", case_mha_view_transpose_sdpa),
+    # Linear/matmul bisect (VirtualMac: F.linear fails, x@w.T matches)
+    ("04a0_F_linear_vs_cpu", case_linear_vs_matmul_same_tensors),
+    ("04a1_F_linear_nobias", case_linear_nobias),
+    ("04a2_addmm_2d", case_addmm),
     ("04a_linear_only_randn_weights", case_linear_only_same_as_04),
     ("04b_xavier_linear_then_sdpa", case_linear_xavier_then_sdpa),
     ("04c_matmul_x_wT", case_matmul_same_shapes_as_04),
     ("04d_sdpa_only_cpu_projected_qkv", case_sdpa_on_cpu_qkv_moved_to_mps),
     ("04e_nn_linear_randn_init", case_linear_small_vs_large_init),
+    ("04_mha_view_transpose_sdpa", case_mha_view_transpose_sdpa),
     ("05_mha_view_transpose_sdpa_contig", case_mha_view_transpose_sdpa_contig),
     ("06_multidim_batch_flatten_sdpa", case_multidim_batch_flatten_sdpa),
     ("07_sdpa_additive_mask", case_sdpa_with_additive_mask),
