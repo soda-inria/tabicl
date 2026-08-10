@@ -44,6 +44,12 @@ jobs:
         run: |
           hatch env create "hatch-test.py${{ matrix.python-version }}"
           uv pip list --python "$(hatch env find "hatch-test.py${{ matrix.python-version }}")"
+      - name: Debug MPS / hardware (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          ENV_DIR="$(hatch env find "hatch-test.py${{ matrix.python-version }}")"
+          "${ENV_DIR}/bin/python" scripts/debug_mps_ci.py
       - name: Run tests
         run: hatch test
       - name: Upload coverage reports to Codecov
