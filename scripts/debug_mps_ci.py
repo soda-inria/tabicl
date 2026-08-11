@@ -6,6 +6,10 @@ There, isolated kernels can match CPU while some ops silently diverge.
 
 Current minimal reproducer (no TabICL import)::
 
+    # Identify virtualized Apple Silicon (GHA VirtualMac):
+    #   sysctl -n machdep.cpu.brand_string   # e.g. "Apple M1 (Virtual)"
+    #   sysctl -n hw.model                  # e.g. "VirtualMac2,1"
+
     # F.linear with bias on 3D inputs diverges; matmul+bias and bias-free linear match.
     y = F.linear(x.to("mps"), w.to("mps"), b.to("mps"))  # BAD on VirtualMac
     y = x.to("mps") @ w.to("mps").T + b.to("mps")         # OK
@@ -270,6 +274,10 @@ def case_linear_3d_bias_minimal() -> CaseResult:
 
     snippet = textwrap.dedent(
         """\
+        # Identify virtualized Apple Silicon (fails on GHA VirtualMac, OK on real Macs):
+        #   sysctl -n machdep.cpu.brand_string   # e.g. "Apple M1 (Virtual)"
+        #   sysctl -n hw.model                  # e.g. "VirtualMac2,1"
+
         import torch
         import torch.nn.functional as F
 
