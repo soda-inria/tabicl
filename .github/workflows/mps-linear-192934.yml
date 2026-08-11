@@ -1,0 +1,66 @@
+name: 'mps-linear-192934'
+
+# Draft CI probe: does pytorch nightly (post #189496) also fix #192934 on
+# GitHub Actions VirtualMac / Apple M1? See scripts/check_mps_linear_192934.py.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches:
+      - check-mps-nightly-192934
+
+jobs:
+  check:
+    name: macos / torch-${{ matrix.torch-channel }}
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Stable documents the current VirtualMac failure (#192934).
+        # Nightly asks whether the #189496 flatten workaround covers it.
+        torch-channel: [stable, nightly]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.5.4"
+      - name: Install PyTorch (${{ matrix.torch-channel }})
+        shell: bash
+        run: |
+          if [ "${{ matrix.torch-channel }}" = "nightly" ]; then
+            uv pip install --system --pre --upgrade \
+              --index-url https://download.pytorch.org/whl/nightly/cpu \
+              torch
+          else
+            uv pip install --system --upgrade torch
+          fi
+          python -c "import torch; print(torch.__version__)"
+      - name: Run #192934 F.linear MPS repro
+        id: repro
+        # Stable is expected to FAIL on VirtualMac today; nightly is the question.
+        continue-on-error: ${{ matrix.torch-channel == 'stable' }}
+        run: python scripts/check_mps_linear_192934.py
+      - name: Job summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## torch-${{ matrix.torch-channel }}"
+            echo ""
+            echo "- version: \`$(python -c 'import torch; print(torch.__version__)')\`"
+            echo "- repro step outcome: \`${{ steps.repro.outcome }}\`"
+            if [ "${{ matrix.torch-channel }}" = "stable" ]; then
+              echo "- note: failure is currently expected on GHA VirtualMac (pytorch#192934)"
+            else
+              echo "- note: success means nightly (post #189496) also fixes #192934 here"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
