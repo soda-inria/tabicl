@@ -1,7 +1,3 @@
-import functools
-import subprocess
-import sys
-
 import numpy as np
 import pytest
 import torch
@@ -11,63 +7,10 @@ from sklearn.metrics import log_loss, r2_score
 from sklearn.model_selection import train_test_split
 
 from src.tabicl import TabICLClassifier, TabICLRegressor
+from tests.torch_devices import skip_if_device_unusable
 
 
-def _sysctl(name: str) -> str | None:
-    """Return a sysctl string value, or None if unavailable."""
-    try:
-        return subprocess.check_output(["sysctl", "-n", name], text=True, stderr=subprocess.DEVNULL).strip()
-    except (OSError, subprocess.CalledProcessError):
-        return None
-
-
-@functools.lru_cache(maxsize=1)
-def _mps_numerically_reliable() -> bool:
-    """Return whether MPS is expected to produce correct TabICL results.
-
-    GitHub Actions macOS arm64 runners are VirtualMac guests (``hw.model`` like
-    ``VirtualMac2,1``, CPU brand like ``Apple M1 (Virtual)``). On those hosts
-    ``torch.backends.mps.is_available()`` is True and isolated kernels can match
-    CPU, but TabICL's attention path silently collapses output variance on MPS.
-    Real Apple Silicon hardware (non-virtual ``sysctl`` identity) is fine.
-
-    """
-    if not _device_available("mps"):
-        return False
-    if sys.platform != "darwin":
-        return False
-
-    brand = _sysctl("machdep.cpu.brand_string") or ""
-    model = _sysctl("hw.model") or ""
-    # Match GHA VirtualMac guests; keep parity tests on physical Macs.
-    if "Virtual" in brand or model.startswith("VirtualMac"):
-        return False
-    return True
-
-
-def _device_available(device: str | torch.device | None) -> bool:
-    """Return whether a torch device backend is available on this host.
-
-    Uses torch's backend naming convention where a device type maps to
-    ``torch.<device_type>`` exposing an ``is_available()`` function.
-    """
-    if device is None:
-        # The default device is always available.
-        return True
-    try:
-        device_type = torch.device(device).type
-    except (TypeError, RuntimeError, ValueError):
-        return False
-
-    if device_type == "cpu":
-        return True
-
-    backend_api = getattr(torch, device_type, None)
-    is_available = getattr(backend_api, "is_available", None)
-    if not callable(is_available):
-        return False
-    return bool(is_available())
-
+_DEVICES = ["cpu", "cuda", "xpu", "mps"]
 
 @pytest.mark.parametrize(
     "estimator",
@@ -140,10 +83,9 @@ def test_tabicl_supports_nans(estimator):
         TabICLRegressor(random_state=0),
     ],
 )
-@pytest.mark.parametrize("device", ["cpu", "cuda", "xpu", "mps", None])
+@pytest.mark.parametrize("device", _DEVICES)
 def test_tabicl_supports_bool_object_and_string_inputs(estimator, X, device):
-    if not _device_available(device):
-        pytest.skip(f"{device} device is not available on this host")
+    skip_if_device_unusable(device)
 
     est = clone(estimator).set_params(device=device)
 
@@ -228,15 +170,12 @@ def test_resolve_amp_is_device_aware(
     assert use_amp is expected_amp
 
 
-@pytest.mark.parametrize("device", ["cuda", "xpu", "mps"])
+@pytest.mark.parametrize("device", _DEVICES)
 @pytest.mark.parametrize("kv_cache", [False, True])
 @pytest.mark.parametrize("use_amp", [False, True])
 def test_tabicl_regressor_device_cpu_r2_parity(device, kv_cache, use_amp):
     """Accelerator predictions should roughly match CPU on a small regression task."""
-    if not _device_available(device):
-        pytest.skip(f"{device} device is not available on this host")
-    if device == "mps" and not _mps_numerically_reliable():
-        pytest.skip("MPS parity skipped on virtualized Apple Silicon (sysctl VirtualMac / Virtual CPU)")
+    skip_if_device_unusable(device)
 
     # Float16 AMP introduces cross-device numeric drift; fp32 should match tightly.
     if use_amp:
@@ -275,10 +214,7 @@ def test_tabicl_regressor_device_cpu_r2_parity(device, kv_cache, use_amp):
 @pytest.mark.parametrize("use_amp", [False, True])
 def test_tabicl_classifier_device_cpu_logloss_parity(device, kv_cache, use_amp):
     """Accelerator probabilities should roughly match CPU on a small classification task."""
-    if not _device_available(device):
-        pytest.skip(f"{device} device is not available on this host")
-    if device == "mps" and not _mps_numerically_reliable():
-        pytest.skip("MPS parity skipped on virtualized Apple Silicon (sysctl VirtualMac / Virtual CPU)")
+    skip_if_device_unusable(device)
 
     # Float16 AMP introduces cross-device numeric drift; fp32 should match tightly.
     if use_amp:
