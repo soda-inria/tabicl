@@ -2,10 +2,13 @@
 """Craft a minimal CPU-vs-MPS numerical reproducer for virtualized Apple Silicon CI.
 
 GitHub Actions macOS arm64 runners report ``Apple M* (Virtual)`` / ``VirtualMac*``.
-There, isolated kernels can match CPU while larger attention-style graphs silently
-diverge. This script does **not** import TabICL; it escalates pure-PyTorch probes
-from known-good SDPA toward TabICL-like MultiheadAttention patterns so CI logs
-can identify the smallest failing case.
+There, isolated kernels can match CPU while some ops silently diverge.
+
+Current minimal reproducer (no TabICL import)::
+
+    # F.linear with bias on 3D inputs diverges; matmul+bias and bias-free linear match.
+    y = F.linear(x.to("mps"), w.to("mps"), b.to("mps"))  # BAD on VirtualMac
+    y = x.to("mps") @ w.to("mps").T + b.to("mps")         # OK
 
 Exit code is 0 even when cases fail (diagnostics). Pass ``--strict`` to fail on
 mismatches. Use ``--only NAME`` / ``--from NAME`` while iterating.
@@ -249,6 +252,91 @@ def case_mha_view_transpose_sdpa() -> CaseResult:
         "04_mha_view_transpose_sdpa",
         lambda: _run("cpu", False),
         lambda: _run("mps", False),
+        tol=1e-2,
+        snippet=snippet,
+    )
+
+
+def case_linear_3d_bias_minimal() -> CaseResult:
+    """Minimal CI repro: F.linear with bias on 3D activations.
+
+    VirtualMac MPS diag (torch 2.13):
+      F.linear(x, w, b)     diverges from CPU
+      F.linear(x, w, None)  matches CPU exactly
+      x @ w.T + b           matches CPU
+    """
+    import torch
+    import torch.nn.functional as F
+
+    snippet = textwrap.dedent(
+        """\
+        import torch
+        import torch.nn.functional as F
+
+        torch.manual_seed(0)
+        x = torch.randn(2, 64, 128)
+        w = torch.randn(384, 128)
+        b = torch.randn(384)
+
+        y_cpu = F.linear(x, w, b)
+        y_mps = F.linear(x.to("mps"), w.to("mps"), b.to("mps")).cpu()
+        y_mm  = (x.to("mps") @ w.to("mps").T + b.to("mps")).cpu()
+        y_nb  = F.linear(x.to("mps"), w.to("mps"), None).cpu()
+
+        print((y_cpu - y_mps).abs().max())  # ~3.8 on VirtualMac GHA
+        print((y_cpu - y_mm).abs().max())   # ~1e-5
+        print((x @ w.T - y_nb).abs().max()) # 0
+        """
+    )
+    g = _seeded(1)
+    x = torch.randn(2, 64, 128, generator=g)
+    w = torch.randn(384, 128, generator=g)
+    b = torch.randn(384, generator=g)
+
+    return _compare(
+        "00_F_linear_3d_with_bias",
+        lambda: F.linear(x, w, b),
+        lambda: F.linear(x.to("mps"), w.to("mps"), b.to("mps")),
+        tol=1e-2,
+        snippet=snippet,
+    )
+
+
+def case_linear_2d_with_bias() -> CaseResult:
+    """Control: same op on 2D input (addmm path)."""
+    import torch
+    import torch.nn.functional as F
+
+    snippet = "F.linear on 2D (128,128)->(128,384) with bias"
+    g = _seeded(1)
+    x = torch.randn(128, 128, generator=g)
+    w = torch.randn(384, 128, generator=g)
+    b = torch.randn(384, generator=g)
+
+    return _compare(
+        "00b_F_linear_2d_with_bias",
+        lambda: F.linear(x, w, b),
+        lambda: F.linear(x.to("mps"), w.to("mps"), b.to("mps")),
+        tol=1e-2,
+        snippet=snippet,
+    )
+
+
+def case_linear_3d_bias_via_add() -> CaseResult:
+    """Control: 3D matmul + bias add (workaround)."""
+    import torch
+
+    snippet = "y = x.to('mps') @ w.to('mps').T + b.to('mps')"
+    g = _seeded(1)
+    x = torch.randn(2, 64, 128, generator=g)
+    w = torch.randn(384, 128, generator=g)
+    b = torch.randn(384, generator=g)
+    ref = x @ w.T + b
+
+    return _compare(
+        "00c_matmul_plus_bias_3d",
+        lambda: ref,
+        lambda: x.to("mps") @ w.to("mps").T + b.to("mps"),
         tol=1e-2,
         snippet=snippet,
     )
@@ -816,10 +904,14 @@ def case_gelu_layernorm_chain() -> CaseResult:
 
 
 CASES: list[tuple[str, Callable[[], CaseResult]]] = [
+    # Minimal VirtualMac repro: F.linear + bias on 3D inputs
+    ("00_F_linear_3d_with_bias", case_linear_3d_bias_minimal),
+    ("00b_F_linear_2d_with_bias", case_linear_2d_with_bias),
+    ("00c_matmul_plus_bias_3d", case_linear_3d_bias_via_add),
     ("01_sdpa_contiguous", case_sdpa_contiguous),
     ("02_sdpa_permute_noncontig", case_sdpa_permute_noncontig),
     ("03_sdpa_permute_then_contiguous", case_sdpa_permute_then_contiguous),
-    # Linear/matmul bisect (VirtualMac: F.linear fails, x@w.T matches)
+    # Linear/matmul bisect (VirtualMac: F.linear+bias fails, x@w.T matches)
     ("04a0_F_linear_vs_cpu", case_linear_vs_matmul_same_tensors),
     ("04a1_F_linear_nobias", case_linear_nobias),
     ("04a2_addmm_2d", case_addmm),
