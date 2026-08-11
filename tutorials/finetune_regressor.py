@@ -126,10 +126,6 @@ ft_pred = reg.predict(X_test)
 ft_mse, ft_mae, ft_r2 = _metrics(ft_pred, y_test)
 
 if is_main_process:
-    # Keep this table ASCII-only: it is printed to the console, and the
-    # legacy Windows code page (cp1252) cannot encode "Δ"/"↑"/"↓", which
-    # would raise UnicodeEncodeError. Non-ASCII is fine in the figures below,
-    # since Matplotlib renders text itself.
     header = f"{'metric':<10}{'pretrained':>14}{'fine-tuned':>14}{'delta':>14}"
     rule = "=" * len(header)
     print()
