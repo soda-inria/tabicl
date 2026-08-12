@@ -8,7 +8,7 @@ from sklearn.datasets import make_classification, make_friedman1
 from sklearn.metrics import log_loss, r2_score
 from sklearn.model_selection import train_test_split
 
-from src.tabicl import TabICLClassifier, TabICLRegressor
+from tabicl import TabICLClassifier, TabICLRegressor
 from tabicl._model.inference import InferenceManager
 from tabicl._torch_devices import (
     MPS_NUMERICS_ISSUE_URL,
