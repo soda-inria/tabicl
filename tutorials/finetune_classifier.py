@@ -142,7 +142,7 @@ ft_proba = clf.predict_proba(X_test)
 ft_auc, ft_ll, ft_acc = _metrics(ft_proba, y_test)
 
 if is_main_process:
-    header = f"{'metric':<12}{'pretrained':>14}{'fine-tuned':>14}{'Δ':>14}"
+    header = f"{'metric':<12}{'pretrained':>14}{'fine-tuned':>14}{'delta':>14}"
     rule = "=" * len(header)
     print()
     print(rule)
@@ -150,10 +150,11 @@ if is_main_process:
     print(rule)
     print(header)
     print("-" * len(header))
-    print(f"{'ROC-AUC ↑':<12}{base_auc:>14.4f}{ft_auc:>14.4f}{ft_auc - base_auc:>+14.4f}")
-    print(f"{'log-loss ↓':<12}{base_ll:>14.4f}{ft_ll:>14.4f}{ft_ll - base_ll:>+14.4f}")
-    print(f"{'accuracy ↑':<12}{base_acc:>14.4f}{ft_acc:>14.4f}{ft_acc - base_acc:>+14.4f}")
+    print(f"{'ROC-AUC':<12}{base_auc:>14.4f}{ft_auc:>14.4f}{ft_auc - base_auc:>+14.4f}")
+    print(f"{'log-loss':<12}{base_ll:>14.4f}{ft_ll:>14.4f}{ft_ll - base_ll:>+14.4f}")
+    print(f"{'accuracy':<12}{base_acc:>14.4f}{ft_acc:>14.4f}{ft_acc - base_acc:>+14.4f}")
     print(rule)
+    print("higher is better: ROC-AUC, accuracy;  lower is better: log-loss")
 
 # %%
 # Figure 1 — Decision boundaries + probability contours
