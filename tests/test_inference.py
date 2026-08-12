@@ -5,7 +5,58 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 
-from tabicl._model.inference import AsyncCopyManager, InferenceManager
+from tabicl._model.inference import AsyncCopyManager, InferenceManager, devices_match
+
+
+@pytest.mark.parametrize(
+    "left, right, expected",
+    [
+        ("cpu", "cpu", True),
+        ("cuda", "cuda:0", True),
+        ("cuda:0", "cuda", True),
+        ("cuda:0", "cuda:0", True),
+        ("cuda:0", "cuda:1", False),
+        ("mps", "mps:0", True),
+        ("mps:0", "mps", True),
+        ("mps:0", "mps:0", True),
+        ("xpu", "xpu:0", True),
+        ("xpu:0", "xpu", True),
+        ("xpu:0", "xpu:1", False),
+        ("cuda", "cpu", False),
+        ("cuda", "mps", False),
+        ("mps", "xpu", False),
+    ],
+)
+def test_devices_match(left, right, expected):
+    assert devices_match(torch.device(left), torch.device(right)) is expected
+
+
+@pytest.mark.parametrize("device_backend", ["cpu", "cuda", "xpu", "mps"])
+def test_is_tensor_on_exe_device_accepts_unindexed_and_indexed(device_backend):
+    """``device='cuda'`` must match tensors that land on ``cuda:0`` (same for MPS/XPU)."""
+    backend_api = (
+        getattr(torch, device_backend, None) if device_backend != "cpu" else None
+    )
+    if device_backend != "cpu" and (
+        backend_api is None
+        or not callable(getattr(backend_api, "is_available", None))
+        or not backend_api.is_available()
+    ):
+        pytest.skip(f"{device_backend} backend is not available on this host")
+
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device=device_backend, use_amp=False, use_fa3=False, use_async=False)
+
+    # configure() stores an unindexed device (e.g. ``cuda``); tensors usually get index 0.
+    assert mgr.exe_device.index is None or device_backend == "cpu"
+
+    on_device = torch.zeros(1, device=device_backend)
+    on_cpu = torch.zeros(1, device="cpu")
+    assert mgr._is_tensor_on_exe_device(on_device) is True
+    assert mgr._is_tensor_on_exe_device(on_cpu) is (device_backend == "cpu")
+    # Avoid a redundant host→device copy when the tensor is already placed correctly.
+    moved = mgr._to_exe_device(on_device)
+    assert moved is on_device
 
 
 @pytest.mark.parametrize("device_backend", ["cuda", "xpu", "mps"])

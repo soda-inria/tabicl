@@ -23,6 +23,19 @@ from .kv_cache import KVCache
 from .attention import flash_attn3_toggle
 
 
+def devices_match(a: torch.device, b: torch.device) -> bool:
+    """Return whether two devices refer to the same backend placement.
+
+    ``torch.device("cuda")`` (index ``None``) matches ``cuda:0``, and likewise
+    for MPS/XPU. When both sides carry an explicit index they must agree.
+    """
+    if a.type != b.type:
+        return False
+    if a.index is None or b.index is None:
+        return True
+    return a.index == b.index
+
+
 class MemoryEstimator:
     """Estimates peak activation memory requirements for different attention-based components.
 
@@ -861,7 +874,7 @@ class InferenceManager:
 
     def _is_tensor_on_exe_device(self, tensor: Tensor) -> bool:
         """Return whether the tensor is already on the configured execution device."""
-        return isinstance(tensor, torch.Tensor) and tensor.device == self.exe_device
+        return isinstance(tensor, torch.Tensor) and devices_match(tensor.device, self.exe_device)
 
     def get_available_gpu_memory(self) -> float:
         """Get available GPU memory in MB.
