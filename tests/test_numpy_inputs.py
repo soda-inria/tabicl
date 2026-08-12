@@ -7,6 +7,8 @@ from sklearn.metrics import log_loss, r2_score
 from sklearn.model_selection import train_test_split
 
 from src.tabicl import TabICLClassifier, TabICLRegressor
+from tabicl._model.inference import InferenceManager
+from tabicl._torch_devices import resolve_default_device
 from tests.torch_devices import skip_if_device_unusable
 
 
@@ -135,10 +137,15 @@ def test_tabicl_default_device_selection(
     monkeypatch.setattr(torch, "mps", _FakeMPSBackend, raising=False)
     monkeypatch.setattr(torch.cuda, "is_available", lambda: cuda_available)
 
+    assert resolve_default_device().type == expected_device
+
     est = estimator_cls(random_state=0)
     est._resolve_device()
-
     assert est.device_.type == expected_device
+
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device=None, use_amp=False, use_fa3=False, use_async=False)
+    assert mgr.exe_device.type == expected_device
 
 
 @pytest.mark.parametrize(

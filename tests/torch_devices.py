@@ -9,6 +9,8 @@ import sys
 import pytest
 import torch
 
+from tabicl._torch_devices import backend_is_available, resolve_default_device
+
 
 def sysctl(name: str) -> str | None:
     """Return a sysctl string value, or None if unavailable."""
@@ -21,8 +23,8 @@ def sysctl(name: str) -> str | None:
 def device_available(device: str | torch.device | None) -> bool:
     """Return whether a torch device backend is available on this host.
 
-    Uses torch's backend naming convention where a device type maps to
-    ``torch.<device_type>`` exposing an ``is_available()`` function.
+    Uses the shared :func:`tabicl._torch_devices.backend_is_available` helper so
+    test skips stay aligned with library default-device selection.
     """
     if device is None:
         # The default device is always available.
@@ -32,14 +34,7 @@ def device_available(device: str | torch.device | None) -> bool:
     except (TypeError, RuntimeError, ValueError):
         return False
 
-    if device_type == "cpu":
-        return True
-
-    backend_api = getattr(torch, device_type, None)
-    is_available = getattr(backend_api, "is_available", None)
-    if not callable(is_available):
-        return False
-    return bool(is_available())
+    return backend_is_available(device_type)
 
 
 @functools.lru_cache(maxsize=1)
@@ -67,21 +62,10 @@ def mps_numerically_reliable() -> bool:
     return True
 
 
-def default_device_type() -> str:
-    """Return the device type ``device=None`` would resolve to."""
-    if device_available("cuda"):
-        return "cuda"
-    if device_available("xpu"):
-        return "xpu"
-    if device_available("mps"):
-        return "mps"
-    return "cpu"
-
-
 def skip_if_device_unusable(device: str | None) -> None:
     """Skip the current test when ``device`` cannot be used reliably."""
     if device is None:
-        resolved = default_device_type()
+        resolved = resolve_default_device().type
         if resolved == "mps" and not mps_numerically_reliable():
             pytest.skip(
                 "device=None would select unreliable MPS "

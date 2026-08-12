@@ -17,6 +17,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from tabicl import InferenceConfig
 from tabicl._model.tabicl import TabICL
+from tabicl._torch_devices import resolve_torch_device
 
 
 def _check_version_compatibility(metadata: dict) -> None:
@@ -62,23 +63,7 @@ class TabICLBaseEstimator(BaseEstimator):
 
     def _resolve_device(self) -> None:
         """Resolve the target device from the init parameter."""
-        if self.device is None:
-            xpu_api = getattr(torch, "xpu", None)
-            xpu_available = callable(getattr(xpu_api, "is_available", None)) and xpu_api.is_available()
-            mps_api = getattr(torch, "mps", None)
-            mps_available = callable(getattr(mps_api, "is_available", None)) and mps_api.is_available()
-            if torch.cuda.is_available():
-                self.device_ = torch.device("cuda")
-            elif xpu_available:
-                self.device_ = torch.device("xpu")
-            elif mps_available:
-                self.device_ = torch.device("mps")
-            else:
-                self.device_ = torch.device("cpu")
-        elif isinstance(self.device, str):
-            self.device_ = torch.device(self.device)
-        else:
-            self.device_ = self.device
+        self.device_ = resolve_torch_device(self.device)
 
     def _resolve_amp_fa3(self) -> tuple:
         """Resolve the ``"auto"`` option for ``use_amp`` and ``use_fa3``.

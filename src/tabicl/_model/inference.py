@@ -21,6 +21,7 @@ from torch import Tensor
 
 from .kv_cache import KVCache
 from .attention import flash_attn3_toggle
+from tabicl._torch_devices import resolve_torch_device
 
 
 def devices_match(a: torch.device, b: torch.device) -> bool:
@@ -796,23 +797,7 @@ class InferenceManager:
         self.offload_mode = self._normalize_offload(offload)
 
         # Setup device
-        if device is None:
-            xpu_api = getattr(torch, "xpu", None)
-            xpu_available = callable(getattr(xpu_api, "is_available", None)) and xpu_api.is_available()
-            mps_api = getattr(torch, "mps", None)
-            mps_available = callable(getattr(mps_api, "is_available", None)) and mps_api.is_available()
-            if torch.cuda.is_available():
-                self.exe_device = torch.device("cuda")
-            elif xpu_available:
-                self.exe_device = torch.device("xpu")
-            elif mps_available:
-                self.exe_device = torch.device("mps")
-            else:
-                self.exe_device = torch.device("cpu")
-        elif isinstance(device, str):
-            self.exe_device = torch.device(device)
-        else:
-            self.exe_device = device
+        self.exe_device = resolve_torch_device(device)
 
         # Initialize buffer pool
         self._buffer_pool = PinnedBufferPool()
