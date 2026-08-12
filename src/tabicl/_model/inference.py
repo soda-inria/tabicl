@@ -608,8 +608,8 @@ class InferenceManager:
     4. OOM Recovery: Automatically reduces batch size when out-of-memory errors
        occur, retrying until inference succeeds or minimum batch size is reached.
 
-        5. Async Data Transfer: Uses backend stream/event primitives for overlapping
-             computation with device-to-CPU data movement when available.
+    5. Async Data Transfer: Uses backend stream/event primitives for
+       overlapping computation with device-to-CPU data movement when available.
 
     6. Result Merging: Combines outputs from multiple batches into a single
        contiguous tensor.

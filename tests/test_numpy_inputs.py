@@ -12,7 +12,6 @@ from src.tabicl import TabICLClassifier, TabICLRegressor
 from tabicl._model.inference import InferenceManager
 from tabicl._torch_devices import (
     MPS_NUMERICS_ISSUE_URL,
-    mps_possibly_faulty,
     resolve_default_device,
     resolve_torch_device,
 )
