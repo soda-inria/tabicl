@@ -104,9 +104,9 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
         The cache retains whatever dtype the model produced during ``fit()``
         (float16 when AMP is active, float32 otherwise). If the cache is later
-        loaded on CPU or on a device without AMP, the tensors are automatically
-        upcast to float32 to avoid dtype-mismatch errors. MPS keeps float16
-        caches when AMP is enabled.
+        loaded on a device without AMP, the tensors are automatically upcast to
+        float32 to avoid dtype-mismatch errors. With AMP enabled, reduced-precision
+        caches are kept on CPU, CUDA, XPU, and MPS.
 
     model_path : Optional[str | Path] = None
         Path to the pre-trained model checkpoint file.
@@ -153,8 +153,10 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
             | Large  (n >= 10240)                  |  on   |  on   |
             +--------------------------------------+-------+-------+
 
-            The AMP columns apply on CUDA / XPU / MPS. The FA3 column applies on
-            CUDA only (``use_fa3="auto"`` is always off on CPU / MPS / XPU).
+            The AMP columns apply on CUDA / XPU / MPS. On CPU, ``use_amp="auto"``
+            stays off (explicit ``use_amp=True`` still enables bfloat16 autocast,
+            but local benchmarks found it much slower than fp32). The FA3 column
+            applies on CUDA only (``use_fa3="auto"`` is always off on CPU / MPS / XPU).
 
             The above heuristic is based on the observation that AMP can introduce overhead that outweighs
             its benefits for small inputs. In addition, it assumes that the training set is large relative to

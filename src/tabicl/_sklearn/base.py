@@ -86,7 +86,9 @@ class TabICLBaseEstimator(BaseEstimator):
 
         Device overrides for ``"auto"``:
 
-        - **AMP on CPU**: stays off (mixed precision does not help CPU inference).
+        - **AMP on CPU**: stays off. ``torch.autocast(device_type="cpu")``
+          (bfloat16) works when ``use_amp=True`` is set explicitly, but local
+          benchmarks found it much slower than fp32 on CPU.
         - **AMP on MPS / XPU**: same size heuristic as CUDA.
         - **FA3**: CUDA-only. FlashAttention-3 kernels require NVIDIA CUDA; on
           CPU / MPS / XPU, ``use_fa3="auto"`` resolves to ``False``. Explicit
@@ -177,18 +179,16 @@ class TabICLBaseEstimator(BaseEstimator):
         """Move KV cache to the current device, auto-upcasting if needed.
 
         When the cache contains reduced-precision tensors (float16/bfloat16)
-        and the target environment cannot use them directly (CPU, or any
-        device with AMP disabled), the tensors are upcast to float32 and a
-        warning is emitted. MPS keeps float16 caches when AMP is enabled,
-        matching CUDA/XPU behaviour.
+        and AMP is disabled, the tensors are upcast to float32 and a warning
+        is emitted. With AMP enabled, reduced-precision caches are kept on
+        CPU, CUDA, XPU, and MPS.
         """
         if not (hasattr(self, "model_kv_cache_") and self.model_kv_cache_ is not None):
             return
 
         use_amp, _ = self._resolve_amp_fa3()
-        # CPU needs float32 attention; accelerators keep reduced precision only
-        # when AMP is on (including MPS, which supports float16 SDPA).
-        needs_upcast = self.device_.type == "cpu" or not use_amp
+        # Keep reduced precision when AMP is on; otherwise upcast for fp32 attention.
+        needs_upcast = not use_amp
         upcast_dtype = torch.float32 if needs_upcast else None
 
         # Warn once if we are actually upcasting reduced-precision tensors
@@ -196,13 +196,9 @@ class TabICLBaseEstimator(BaseEstimator):
             first_cache = next(iter(self.model_kv_cache_.values()))
             cache_dtype = next(iter(first_cache.col_cache.kv.values())).key.dtype
             if cache_dtype != torch.float32:
-                if self.device_.type == "cpu":
-                    reason = "CPU does not support float16/bfloat16 attention"
-                else:
-                    reason = "AMP is not enabled"
                 warnings.warn(
                     f"KV cache contains {cache_dtype} tensors (typically from AMP). "
-                    f"Automatically upcasting to float32 because {reason}.",
+                    "Automatically upcasting to float32 because AMP is not enabled.",
                     UserWarning,
                     stacklevel=3,
                 )
