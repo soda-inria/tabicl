@@ -938,7 +938,7 @@ class InferenceManager:
         try:
             os.makedirs(path, exist_ok=True)
             return shutil.disk_usage(path).free / (1024 * 1024)
-        except Exception:
+        except OSError:
             return 0.0
 
     def _estimate_tensor_mb(self, shape: Tuple[int, ...], dtype: torch.dtype, repeat: int = 1) -> float:
