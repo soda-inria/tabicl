@@ -455,8 +455,15 @@ class AsyncCopyManager:
         self._warned_sync_fallback = False
 
     def _warn_sync_fallback(self, reason: str) -> None:
-        """Warn once per manager when async copy is unavailable for this backend."""
+        """Warn once per manager when async copy is unavailable for this backend.
+
+        MPS has no stream/event D2H APIs, so the sync fallback is expected and
+        stays silent there. Unexpected backends still warn once.
+        """
         if self._warned_sync_fallback:
+            return
+
+        if self.device.type == "mps":
             return
 
         warnings.warn(

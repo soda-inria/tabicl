@@ -150,6 +150,25 @@ def test_async_copy_manager_falls_back_to_sync_without_async_primitives(monkeypa
     assert manager.get_bytes_written() > 0.0
 
 
+@pytest.mark.skipif(not torch.backends.mps.is_available(), reason="MPS not available")
+def test_async_copy_manager_mps_sync_fallback_is_silent():
+    """MPS has no D2H streams; sync fallback must not warn."""
+    manager = AsyncCopyManager(device=torch.device("mps"))
+    src = torch.ones((4,), dtype=torch.float32, device="mps")
+    dst = torch.zeros((4,), dtype=torch.float32)
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        manager.submit_copy(src, dst, (slice(None),))
+
+    assert len(manager._pending) == 0
+    assert torch.equal(dst, src.cpu())
+    assert not any(
+        issubclass(w.category, RuntimeWarning) and "AsyncCopyManager" in str(w.message)
+        for w in caught
+    )
+
+
 def test_cpu_path_uses_run_forward():
     """CPU still skips auto-batching but must go through ``_run_forward``."""
     mgr = InferenceManager(enc_name="tf_col", out_dim=4)
