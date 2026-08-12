@@ -72,7 +72,7 @@ class TabICLBaseEstimator(BaseEstimator):
         Explicit bool values are returned as-is, while ``"auto"`` triggers a
         device-aware heuristic based on ``n_samples_in_`` and ``n_features_in_``.
 
-        For CUDA and XPU (and other non-CPU / non-MPS accelerators):
+        AMP / FA3 size heuristic on CUDA:
 
         +--------------------------------------+-------+-------+
         | Regime                               |  AMP  |  FA3  |
@@ -84,15 +84,17 @@ class TabICLBaseEstimator(BaseEstimator):
         | Large  (n >= 10240)                  |  on   |  on   |
         +--------------------------------------+-------+-------+
 
-        Device overrides for ``use_amp="auto"``:
+        Device overrides for ``"auto"``:
 
-        - **CPU**: AMP stays off (mixed precision does not help CPU inference).
-        - **MPS**: same size heuristic as CUDA/XPU (float16 SDPA / autocast are
-          supported on Apple Silicon).
+        - **AMP on CPU**: stays off (mixed precision does not help CPU inference).
+        - **AMP on MPS / XPU**: same size heuristic as CUDA.
+        - **FA3**: CUDA-only. FlashAttention-3 kernels require NVIDIA CUDA; on
+          CPU / MPS / XPU, ``use_fa3="auto"`` resolves to ``False``. Explicit
+          ``use_fa3=True`` is still accepted but is a no-op at runtime off CUDA.
 
         When ``use_amp=False`` (explicitly disabled by the user) and the data
-        is above the small threshold, FA3 is enabled as a fallback accelerator
-        on CUDA. FA3 has no effect on CPU/MPS at runtime.
+        is above the small threshold on CUDA, FA3 is enabled as a fallback
+        attention accelerator.
 
         The thresholds are based on preliminary observations and are not rigorously
         tuned. It assumes that the training set is large relative to the test set
@@ -122,15 +124,17 @@ class TabICLBaseEstimator(BaseEstimator):
         else:
             use_amp = bool(self.use_amp)
 
-        # -- FA3 --
+        # -- FA3 (CUDA-only; flash_attn_interface kernels require NVIDIA GPUs) --
         if self.use_fa3 == "auto":
-            if small_data:
+            if device_type != "cuda":
+                use_fa3 = False
+            elif small_data:
                 use_fa3 = False
             elif not use_amp:
-                # AMP is off and use FA3 as the main accelerator for attention
+                # AMP is off: use FA3 as the main attention accelerator on CUDA
                 use_fa3 = True
             else:
-                # AMP is on and FA3 only adds meaningful benefit at large scale
+                # AMP is on: FA3 only adds meaningful benefit at large scale
                 use_fa3 = n_samples >= 10240
         else:
             use_fa3 = bool(self.use_fa3)

@@ -153,6 +153,9 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
             | Large  (n >= 10240)                  |  on   |  on   |
             +--------------------------------------+-------+-------+
 
+            The AMP columns apply on CUDA / XPU / MPS. The FA3 column applies on
+            CUDA only (``use_fa3="auto"`` is always off on CPU / MPS / XPU).
+
             The above heuristic is based on the observation that AMP can introduce overhead that outweighs
             its benefits for small inputs. In addition, it assumes that the training set is large relative to
             the test set and does not account for KV-cache scenarios. If it is suboptimal for your workload,
@@ -160,9 +163,9 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
 
     use_fa3 : bool or "auto", default="auto"
         Whether to use Flash Attention 3 that can speed up inference for large datasets on NVIDIA Hopper
-        GPUs like H100. Only effective when FA3 is installed.
+        GPUs like H100. Only effective on CUDA when FA3 is installed; a no-op on CPU / MPS / XPU.
         - True / False: force on / off.
-        - "auto": Automatically enable FA3 based on input data size using a simple heuristic (see above).
+        - "auto": Enable FA3 from the size heuristic above on CUDA only; always off on other devices.
 
     offload_mode : str or bool, default='auto'
         Controls where column-wise embedding outputs are stored during inference.

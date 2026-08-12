@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pytest
 import torch
@@ -8,11 +10,35 @@ from sklearn.model_selection import train_test_split
 
 from src.tabicl import TabICLClassifier, TabICLRegressor
 from tabicl._model.inference import InferenceManager
-from tabicl._torch_devices import resolve_default_device
+from tabicl._torch_devices import (
+    MPS_NUMERICS_ISSUE_URL,
+    mps_possibly_faulty,
+    resolve_default_device,
+    resolve_torch_device,
+)
 from tests.torch_devices import skip_if_device_unusable
 
 
 _DEVICES = ["cpu", "cuda", "xpu", "mps"]
+
+
+def _patch_backend_availability(
+    monkeypatch, *, cuda_available, xpu_available, mps_available
+):
+    class _FakeXPUBackend:
+        @staticmethod
+        def is_available():
+            return xpu_available
+
+    class _FakeMPSBackend:
+        @staticmethod
+        def is_available():
+            return mps_available
+
+    monkeypatch.setattr(torch, "xpu", _FakeXPUBackend, raising=False)
+    monkeypatch.setattr(torch, "mps", _FakeMPSBackend, raising=False)
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: cuda_available)
+
 
 @pytest.mark.parametrize(
     "estimator",
@@ -123,19 +149,16 @@ def test_tabicl_supports_bool_object_and_string_inputs(estimator, X, device):
 def test_tabicl_default_device_selection(
     monkeypatch, estimator_cls, cuda_available, xpu_available, mps_available, expected_device
 ):
-    class _FakeXPUBackend:
-        @staticmethod
-        def is_available():
-            return xpu_available
-
-    class _FakeMPSBackend:
-        @staticmethod
-        def is_available():
-            return mps_available
-
-    monkeypatch.setattr(torch, "xpu", _FakeXPUBackend, raising=False)
-    monkeypatch.setattr(torch, "mps", _FakeMPSBackend, raising=False)
-    monkeypatch.setattr(torch.cuda, "is_available", lambda: cuda_available)
+    _patch_backend_availability(
+        monkeypatch,
+        cuda_available=cuda_available,
+        xpu_available=xpu_available,
+        mps_available=mps_available,
+    )
+    # Preference-order tests assume healthy MPS hardware.
+    monkeypatch.setattr(
+        "tabicl._torch_devices.mps_possibly_faulty", lambda: False
+    )
 
     assert resolve_default_device().type == expected_device
 
@@ -146,6 +169,66 @@ def test_tabicl_default_device_selection(
     mgr = InferenceManager(enc_name="tf_col", out_dim=4)
     mgr.configure(device=None, use_amp=False, use_fa3=False, use_async=False)
     assert mgr.exe_device.type == expected_device
+
+
+def test_resolve_default_device_falls_back_from_faulty_mps(monkeypatch):
+    _patch_backend_availability(
+        monkeypatch, cuda_available=False, xpu_available=False, mps_available=True
+    )
+    monkeypatch.setattr("tabicl._torch_devices.mps_possibly_faulty", lambda: True)
+
+    with pytest.warns(
+        RuntimeWarning, match=rf"virtualized Apple Silicon.*{MPS_NUMERICS_ISSUE_URL}.*Falling back to CPU"
+    ):
+        assert resolve_default_device().type == "cpu"
+
+    est = TabICLClassifier(random_state=0, device=None)
+    with pytest.warns(RuntimeWarning, match="Falling back to CPU"):
+        est._resolve_device()
+    assert est.device_.type == "cpu"
+
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    with pytest.warns(RuntimeWarning, match="Falling back to CPU"):
+        mgr.configure(device=None, use_amp=False, use_fa3=False, use_async=False)
+    assert mgr.exe_device.type == "cpu"
+
+
+def test_resolve_explicit_mps_warns_but_keeps_mps_on_faulty_host(monkeypatch):
+    _patch_backend_availability(
+        monkeypatch, cuda_available=False, xpu_available=False, mps_available=True
+    )
+    monkeypatch.setattr("tabicl._torch_devices.mps_possibly_faulty", lambda: True)
+
+    with pytest.warns(
+        RuntimeWarning,
+        match=rf"device='mps' was requested.*{MPS_NUMERICS_ISSUE_URL}.*device='cpu'",
+    ):
+        resolved = resolve_torch_device("mps")
+    assert resolved.type == "mps"
+
+    est = TabICLClassifier(random_state=0, device="mps")
+    with pytest.warns(RuntimeWarning, match="device='mps' was requested"):
+        est._resolve_device()
+    assert est.device_.type == "mps"
+
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    with pytest.warns(RuntimeWarning, match="device='mps' was requested"):
+        mgr.configure(device="mps", use_amp=False, use_fa3=False, use_async=False)
+    assert mgr.exe_device.type == "mps"
+
+
+def test_resolve_mps_no_warning_on_healthy_host(monkeypatch):
+    _patch_backend_availability(
+        monkeypatch, cuda_available=False, xpu_available=False, mps_available=True
+    )
+    monkeypatch.setattr("tabicl._torch_devices.mps_possibly_faulty", lambda: False)
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        assert resolve_default_device().type == "mps"
+        assert resolve_torch_device("mps").type == "mps"
+
+    assert not any(issubclass(w.category, RuntimeWarning) for w in caught)
 
 
 @pytest.mark.parametrize(
@@ -175,6 +258,47 @@ def test_resolve_amp_is_device_aware(
     est.n_features_in_ = n_features
     use_amp, _ = est._resolve_amp_fa3()
     assert use_amp is expected_amp
+
+
+@pytest.mark.parametrize(
+    "estimator_cls",
+    [
+        TabICLClassifier,
+        TabICLRegressor,
+    ],
+)
+@pytest.mark.parametrize(
+    "device_type, n_samples, n_features, use_amp, expected_fa3",
+    [
+        # FA3 auto is CUDA-only.
+        ("cpu", 20000, 100, "auto", False),
+        ("mps", 20000, 100, "auto", False),
+        ("xpu", 20000, 100, "auto", False),
+        ("cuda", 100, 10, "auto", False),  # small data
+        ("cuda", 2000, 100, "auto", False),  # medium + AMP on → FA3 off
+        ("cuda", 20000, 100, "auto", True),  # large + AMP on → FA3 on
+        ("cuda", 2000, 100, False, True),  # medium + AMP off → FA3 fallback
+        ("mps", 2000, 100, False, False),  # AMP off does not enable FA3 off CUDA
+    ],
+)
+def test_resolve_fa3_auto_is_cuda_only(
+    estimator_cls, device_type, n_samples, n_features, use_amp, expected_fa3
+):
+    est = estimator_cls(random_state=0, use_amp=use_amp, use_fa3="auto")
+    est.device_ = torch.device(device_type)
+    est.n_samples_in_ = n_samples
+    est.n_features_in_ = n_features
+    _, use_fa3 = est._resolve_amp_fa3()
+    assert use_fa3 is expected_fa3
+
+
+def test_resolve_fa3_explicit_true_preserved_off_cuda():
+    est = TabICLClassifier(random_state=0, use_amp=False, use_fa3=True)
+    est.device_ = torch.device("mps")
+    est.n_samples_in_ = 100
+    est.n_features_in_ = 10
+    _, use_fa3 = est._resolve_amp_fa3()
+    assert use_fa3 is True
 
 
 @pytest.mark.parametrize("device", _DEVICES)
