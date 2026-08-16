@@ -101,7 +101,7 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
         cat_tfm = OrdinalEncoder(
             dtype=np.int64, handle_unknown="use_encoded_value", unknown_value=-1, encoded_missing_value=-1
         )
-        num_tfm = SimpleImputer()
+        num_tfm = SimpleImputer(keep_empty_features=True)
 
         if not hasattr(X, "columns"):  # proxy way to check whether X is a dataframe without importing pandas
             # no dataframe, so we can't do column-wise transformations. Instead, we check if it's already numeric and if not, raise an error.

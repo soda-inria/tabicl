@@ -32,6 +32,15 @@ def test_serialization():
     assert hasattr(clf, "model_kv_cache_")
 
 
+def test_all_nan_column():
+    """An all-NaN feature column must not break fit or predict_proba (gh-147)."""
+    X, y = make_classification(n_samples=50, n_features=5, random_state=42)
+    X = np.hstack([X, np.full((X.shape[0], 1), np.nan)])
+    clf = TabICLClassifier(n_estimators=2)
+    clf.fit(X[:40], y[:40])
+    proba = clf.predict_proba(X[40:])
+    assert proba.shape == (10, 2)
+
 class TestClassifierKVCache:
     @pytest.mark.parametrize("kv_cache", ["kv", "repr"])
     def test_kv_cache(self, kv_cache):
