@@ -2,6 +2,7 @@ import copy
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 from sklearn.datasets import make_classification, make_regression
 from sklearn.utils.estimator_checks import parametrize_with_checks
 
@@ -40,6 +41,9 @@ def test_all_nan_column():
     clf.fit(X[:40], y[:40])
     proba = clf.predict_proba(X[40:])
     assert proba.shape == (10, 2)
+    assert np.all(np.isfinite(proba))
+    assert_allclose(proba.sum(axis=1), 1.0)
+
 
 class TestClassifierKVCache:
     @pytest.mark.parametrize("kv_cache", ["kv", "repr"])
