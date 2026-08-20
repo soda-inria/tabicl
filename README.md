@@ -7,7 +7,7 @@
 This repository is the official implementation of **TabICLv2** ([ICML 2026](https://arxiv.org/abs/2602.11139)) 
 and **TabICL** ([ICML 2025](https://arxiv.org/abs/2502.05564)).
 
-**State-of-the-art accuracy even without hyperparameter tuning:** 
+**State-of-the-art performance even without hyperparameter tuning:** 
 TabICLv2 is the new state-of-the-art model for tabular classification and regression 
 on the [TabArena](https://tabarena.ai) and [TALENT](https://arxiv.org/abs/2407.00956) benchmarks. 
 It does not require hyperparameter tuning 
