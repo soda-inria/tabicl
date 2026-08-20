@@ -8,6 +8,7 @@ from contextlib import nullcontext
 
 import math
 import numpy as np
+import psutil
 
 import torch
 from torch import nn
@@ -22,9 +23,12 @@ from tqdm import tqdm
 import wandb
 
 from tabicl._model.tabicl import TabICL
+from tabicl._model.attention import set_flash_attn3_enabled
 from tabicl.prior._dataset import PriorDataset
-from tabicl.prior._genload import LoadPriorDataset
+from tabicl.prior._genload import LoadPriorDataset, seed_worker
+from tabicl.prior.graph_lib._config import PriorConfig
 from tabicl.train._optim import get_scheduler
+from tabicl.train._muon import Muon
 from tabicl.train._train_config import build_parser
 
 warnings.filterwarnings(
@@ -88,6 +92,7 @@ class Trainer:
         self.configure_optimizer()
         self.configure_amp()
         self.load_checkpoint()
+        self.seed()
 
     def configure_ddp(self):
         """Set up distributed training and system configuration.
@@ -168,22 +173,58 @@ class Trainer:
     def build_model(self):
         """Build and initialize the TabICL model."""
 
+        # Determine the task type. regression_method=None trains for classification;
+        # "quantile" trains for quantile regression (max_classes=0) with a pinball loss.
+        self.regression = self.config.regression_method is not None
+        if self.regression and self.config.regression_method != "quantile":
+            raise NotImplementedError(
+                f"regression_method='{self.config.regression_method}' is not supported. "
+                "Only None (classification) and 'quantile' (pinball regression) are available."
+            )
+        if self.regression and self.config.num_quantiles <= 0:
+            raise ValueError("For quantile regression, num_quantiles must be greater than 0.")
+
+        # Map the private-style --norm_type to the public model's bias_free_ln flag.
+        if self.config.norm_type == "default":
+            bias_free_ln = False
+        elif self.config.norm_type == "layernorm_nobias":
+            bias_free_ln = True
+        else:
+            raise NotImplementedError(
+                f"norm_type='{self.config.norm_type}' is not supported. "
+                "Use 'default' or 'layernorm_nobias'."
+            )
+
+        # FlashAttention-3 runs attention in fp16; the v2 recipe enables it only for stages 2 & 3.
+        set_flash_attn3_enabled(self.config.use_flash_attn3)
+
         self.model_config = {
-            "max_classes": self.config.max_classes,
+            "max_classes": 0 if self.regression else self.config.max_classes,
+            "num_quantiles": self.config.num_quantiles,
             "embed_dim": self.config.embed_dim,
             "col_num_blocks": self.config.col_num_blocks,
             "col_nhead": self.config.col_nhead,
             "col_num_inds": self.config.col_num_inds,
+            "col_affine": self.config.col_affine,
+            "col_feature_group": self.config.col_feature_group,
+            "col_feature_group_size": self.config.col_feature_group_size,
+            "col_target_aware": self.config.col_target_aware,
+            "col_ssmax": self.config.ssmax_type if self.config.col_ssmax else False,
             "row_num_blocks": self.config.row_num_blocks,
             "row_nhead": self.config.row_nhead,
             "row_num_cls": self.config.row_num_cls,
             "row_rope_base": self.config.row_rope_base,
+            "row_rope_interleaved": self.config.row_rope_interleaved,
             "icl_num_blocks": self.config.icl_num_blocks,
             "icl_nhead": self.config.icl_nhead,
+            "icl_ssmax": self.config.ssmax_type if self.config.icl_ssmax else False,
             "ff_factor": self.config.ff_factor,
             "dropout": self.config.dropout,
             "activation": self.config.activation,
             "norm_first": self.config.norm_first,
+            "bias_free_ln": bias_free_ln,
+            "zero_init": self.config.zero_init,
+            "recompute": self.config.recompute,
         }
 
         model = TabICL(**self.model_config)
@@ -229,6 +270,7 @@ class Trainer:
         if self.config.prior_dir is None:
             # Generate prior data on the fly
             dataset = PriorDataset(
+                regression=self.regression,
                 batch_size=self.config.batch_size,
                 batch_size_per_gp=self.config.batch_size_per_gp,
                 min_features=self.config.min_features,
@@ -237,13 +279,15 @@ class Trainer:
                 min_seq_len=self.config.min_seq_len,
                 max_seq_len=self.config.max_seq_len,
                 log_seq_len=self.config.log_seq_len,
+                log_n_features=self.config.log_n_features,
                 seq_len_per_gp=self.config.seq_len_per_gp,
                 min_train_size=self.config.min_train_size,
                 max_train_size=self.config.max_train_size,
                 replay_small=self.config.replay_small,
                 prior_type=self.config.prior_type,
+                config=PriorConfig.from_args(self.config),  # graph_scm prior options
                 device=self.config.prior_device,
-                n_jobs=1,  # Set to 1 to avoid nested parallelism during DDP
+                n_jobs=1,  # Set to 1 to avoid nested parallelism; the DataLoader parallelizes across batches
             )
         else:
             # Load pre-generated prior data from disk
@@ -260,23 +304,56 @@ class Trainer:
         if self.master_process:
             print(dataset)
 
+        # For on-the-fly generation, parallelize dataset creation across dataloader workers.
+        # For pre-generated data loaded from disk, a single worker is enough.
+        if self.config.prior_dir is None:
+            # psutil.cpu_count(logical=False) can return None on some platforms; fall back safely.
+            num_workers = self.config.n_jobs
+            if num_workers <= 0:
+                num_workers = psutil.cpu_count(logical=False) or os.cpu_count() or 1
+            prefetch_factor = 2
+        else:
+            num_workers = 1
+            prefetch_factor = 4
+
         # Create dataloader for efficient loading and prefetching
         self.dataloader = DataLoader(
             dataset,
             batch_size=None,  # No additional batching since PriorDataset handles batching internally
             shuffle=False,
-            num_workers=1,
-            prefetch_factor=4,
+            num_workers=num_workers,
+            prefetch_factor=prefetch_factor,
             pin_memory=True if self.config.prior_device == "cpu" else False,
             pin_memory_device=self.config.device if self.config.prior_device == "cpu" else "",
+            worker_init_fn=seed_worker,
+            persistent_workers=True,
         )
 
     def configure_optimizer(self):
         """Configure optimizer and scheduler."""
 
-        self.optimizer = optim.AdamW(
-            params=self.raw_model.parameters(), lr=self.config.lr, weight_decay=self.config.weight_decay
-        )
+        if self.config.muon:
+            if self.master_process:
+                print("Using Muon optimizer.")
+            self.optimizer = Muon(
+                param_groups=[dict(params=list(self.raw_model.parameters()), use_muon=True)],
+                lr=self.config.lr,
+                weight_decay=self.config.weight_decay,
+                matched_adamw_rms=0.2,
+                momentum=self.config.beta1,
+                nesterov=True,
+                ns_steps=5,
+                adamw_betas=(self.config.beta1, self.config.beta2),
+                adamw_eps=1e-8,
+                use_cautious_wd=self.config.use_cautious_wd,
+            )
+        else:
+            self.optimizer = optim.AdamW(
+                params=self.raw_model.parameters(),
+                lr=self.config.lr,
+                betas=(self.config.beta1, self.config.beta2),
+                weight_decay=self.config.weight_decay,
+            )
         self.scheduler = get_scheduler(config=self.config, optimizer=self.optimizer)
 
     def configure_amp(self):
@@ -402,6 +479,16 @@ class Trainer:
                     os.remove(ckpt_path)
                 except Exception as e:
                     print(f"Error removing checkpoint {ckpt_path}: {e}")
+
+    def seed(self):
+        """Reset global seeds with the current step. This avoids regenerating
+        identical datasets when resuming pretraining with on-the-fly data
+        generation.
+        """
+        # Set random seeds
+        seed_offset = self.ddp_rank if self.ddp else 0
+        np.random.seed(self.config.np_seed + seed_offset + self.curr_step)
+        torch.manual_seed(self.config.torch_seed + seed_offset + self.curr_step)
 
     @ddp_cleanup
     def train(self):
@@ -576,11 +663,26 @@ class Trainer:
         if self.ddp:
             self.model.require_backward_grad_sync = micro_batch_idx == num_micro_batches - 1
 
+        # By default (v2), ignore the per-dataset feature count so the model treats all (padded)
+        # columns uniformly. This is required for the model's feature grouping and supports
+        # variable-feature priors (e.g. graph_scm).
+        model_d = None if self.config.ignore_d else micro_d
+
         with self.amp_ctx:
-            pred = self.model(micro_X, y_train, micro_d)  # (B, test_size, max_classes)
-            pred = pred.flatten(end_dim=-2)
-            true = y_test.long().flatten()
-            loss = F.cross_entropy(pred, true)
+            if self.regression:
+                # (B, test_size, num_quantiles) predicted quantiles at levels
+                # linspace(0, 1, num_quantiles + 2)[1:-1] (matches inference / QuantileDistribution)
+                pred = self.model(micro_X, y_train, model_d)
+                alphas = torch.linspace(
+                    0.0, 1.0, self.config.num_quantiles + 2, device=pred.device, dtype=pred.dtype
+                )[1:-1].view(1, 1, -1)
+                errors = y_test.unsqueeze(-1) - pred
+                loss = torch.maximum(alphas * errors, (alphas - 1) * errors).mean()
+            else:
+                pred = self.model(micro_X, y_train, model_d)  # (B, test_size, max_classes)
+                pred = pred.flatten(end_dim=-2)
+                true = y_test.long().flatten()
+                loss = F.cross_entropy(pred, true)
 
         # Scale loss for gradient accumulation and backpropagate
         scaled_loss = loss / num_micro_batches
@@ -588,9 +690,12 @@ class Trainer:
 
         with torch.no_grad():
             micro_results = {}
-            micro_results["ce"] = scaled_loss.item()
-            accuracy = (pred.argmax(dim=1) == true).sum() / len(true)
-            micro_results["accuracy"] = accuracy.item() / num_micro_batches
+            if self.regression:
+                micro_results["pinball"] = scaled_loss.item()
+            else:
+                micro_results["ce"] = scaled_loss.item()
+                accuracy = (pred.argmax(dim=1) == true).sum() / len(true)
+                micro_results["accuracy"] = accuracy.item() / num_micro_batches
 
         return micro_results
 
@@ -629,7 +734,7 @@ class Trainer:
         micro_batches = [torch.split(t, self.config.micro_batch_size, dim=0) for t in batch]
         micro_batches = list(zip(*micro_batches))
 
-        results = {"ce": 0.0, "accuracy": 0.0}
+        results = {"pinball": 0.0} if self.regression else {"ce": 0.0, "accuracy": 0.0}
         failed_batches = 0
 
         for idx, micro_batch in enumerate(micro_batches):

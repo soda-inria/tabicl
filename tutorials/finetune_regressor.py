@@ -126,7 +126,7 @@ ft_pred = reg.predict(X_test)
 ft_mse, ft_mae, ft_r2 = _metrics(ft_pred, y_test)
 
 if is_main_process:
-    header = f"{'metric':<10}{'pretrained':>14}{'fine-tuned':>14}{'Δ':>14}"
+    header = f"{'metric':<10}{'pretrained':>14}{'fine-tuned':>14}{'delta':>14}"
     rule = "=" * len(header)
     print()
     print(rule)
@@ -134,10 +134,11 @@ if is_main_process:
     print(rule)
     print(header)
     print("-" * len(header))
-    print(f"{'MSE ↓':<10}{base_mse:>14.4f}{ft_mse:>14.4f}{ft_mse - base_mse:>+14.4f}")
-    print(f"{'MAE ↓':<10}{base_mae:>14.4f}{ft_mae:>14.4f}{ft_mae - base_mae:>+14.4f}")
-    print(f"{'R² ↑':<10}{base_r2:>14.4f}{ft_r2:>14.4f}{ft_r2 - base_r2:>+14.4f}")
+    print(f"{'MSE':<10}{base_mse:>14.4f}{ft_mse:>14.4f}{ft_mse - base_mse:>+14.4f}")
+    print(f"{'MAE':<10}{base_mae:>14.4f}{ft_mae:>14.4f}{ft_mae - base_mae:>+14.4f}")
+    print(f"{'R2':<10}{base_r2:>14.4f}{ft_r2:>14.4f}{ft_r2 - base_r2:>+14.4f}")
     print(rule)
+    print("lower is better: MSE, MAE;  higher is better: R2")
 
 # %%
 # Figure 1 — Predictions + residuals

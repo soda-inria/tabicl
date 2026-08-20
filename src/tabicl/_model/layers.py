@@ -340,6 +340,7 @@ class MultiheadAttentionBlock(nn.TransformerEncoderLayer):
         norm_first: bool = True,
         bias_free_ln: bool = False,
         ssmax: Union[bool, str] = False,
+        zero_init: bool = True,
     ):
         super().__init__(
             d_model, nhead, dim_feedforward, dropout, activation=activation, norm_first=norm_first, batch_first=True
@@ -350,7 +351,8 @@ class MultiheadAttentionBlock(nn.TransformerEncoderLayer):
 
         del self.self_attn
         self.attn = MultiheadAttention(d_model, nhead, dropout, ssmax)
-        self.init_weights()
+        if zero_init:
+            self.init_weights()
 
     def init_weights(self):
         """Initialize projection layers to zero for stable training."""
@@ -598,6 +600,7 @@ class InducedSelfAttentionBlock(nn.Module):
         norm_first: bool = True,
         bias_free_ln: bool = False,
         ssmax: Union[bool, str] = False,
+        zero_init: bool = True,
         skip_value: float = -100.0,
     ):
         super().__init__()
@@ -608,10 +611,10 @@ class InducedSelfAttentionBlock(nn.Module):
 
         # Two-stage attention mechanism
         self.multihead_attn1 = MultiheadAttentionBlock(
-            d_model, nhead, dim_feedforward, dropout, activation, norm_first, bias_free_ln, ssmax
+            d_model, nhead, dim_feedforward, dropout, activation, norm_first, bias_free_ln, ssmax, zero_init
         )
         self.multihead_attn2 = MultiheadAttentionBlock(
-            d_model, nhead, dim_feedforward, dropout, activation, norm_first, bias_free_ln
+            d_model, nhead, dim_feedforward, dropout, activation, norm_first, bias_free_ln, zero_init=zero_init
         )
 
         # Learnable inducing points

@@ -1,6 +1,28 @@
 In development
 ==============
 
+New features
+------------
+
+- Add TabICLv2 pre-training code (`python -m tabicl.train`): quantile regression training via a
+  pinball loss (`--regression_method quantile`) in addition to classification, and the Muon
+  optimizer (`--muon True`) alongside AdamW. The training CLI now also exposes the `graph_scm`
+  prior options, layernorm-without-bias (`--norm_type layernorm_nobias`), SSMax
+  (`--col_ssmax`/`--icl_ssmax` with `--ssmax_type`), feature grouping and target-aware embeddings
+  (`--col_feature_group`, `--col_target_aware`, `--col_affine`), the RoPE variant
+  (`--row_rope_interleaved`; v1 interleaved by default, v2 uses `False`), residual initialization
+  (`--zero_init`; v2 uses `False`), and FlashAttention-3 during training (`--use_flash_attn3`;
+  the v2 recipe enables it for stages 2 and 3 only). All CLI defaults reproduce the TabICLv1
+  model configuration; resuming a run re-seeds the data stream with the current step. Ships the
+  three-stage TabICLv2 curriculum scripts, separately for the classifier and regressor
+  checkpoints (`scripts/train_v2_{clf,reg}_stage{1,2,3}.sh`).
+
+Bug fixes
+---------
+
+- When unpickling a TabICL estimator, the fitted attributes `device_`, `model_`, etc. are only state if the pickled model was fitted. ([PR#121](https://github.com/soda-inria/tabicl/pull/121))
+
+
 2.1.0
 =====
 

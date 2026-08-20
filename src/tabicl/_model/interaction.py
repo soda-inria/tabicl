@@ -76,6 +76,7 @@ class RowInteraction(nn.Module):
         activation: str | callable = "gelu",
         norm_first: bool = True,
         bias_free_ln: bool = False,
+        zero_init: bool = True,
         recompute: bool = False,
     ) -> None:
         super().__init__()
@@ -97,6 +98,7 @@ class RowInteraction(nn.Module):
             use_rope=True,
             rope_base=rope_base,
             rope_interleaved=rope_interleaved,
+            zero_init=zero_init,
             recompute=recompute,
         )
 

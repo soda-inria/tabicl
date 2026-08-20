@@ -62,7 +62,7 @@ foundation models.
 .. **Easy to use:** TabICL is easy to install with `pip`. It is also fully
 .. scikit-learn compliant, by notably giving access to the classical `fit` and
 .. `predict` methods of the scikit-learn API. It is also **open source**
-.. (including pre-training for v1, and soon for v2), with a
+.. (including pre-training for v1 and v2), with a
 .. permissive license.
 
 **Scalability:** TabICL shows excellent performance on benchmarks with
@@ -120,6 +120,9 @@ It also plugs directly into scikit-learn pipelines:
    pipeline = make_pipeline(TableVectorizer(), TabICLClassifier())
    pipeline.fit(X_train, y_train)
    pipeline.predict(X_test)
+
+See more in the tutorial :ref:`tabicl_with_skrub` on how to create a pipeline
+with good parameters.
 
 For **time-series forecasting**, install the extra dependencies and use
 :class:`tabicl.TabICLForecaster`:

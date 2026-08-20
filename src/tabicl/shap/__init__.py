@@ -8,10 +8,13 @@ try:
         plot_shap_feature,
     )
     from tabicl.shap._shapiq import get_shapiq_explainer
-except ImportError:
+except ImportError as e:
+    # Keep the original error visible: the failure is not necessarily a missing
+    # package (e.g. numba raises ImportError when the installed numpy is too new).
     raise ImportError(
-        "tabicl.shap requires extra dependencies. Install with: pip install tabicl[shap]"
-    ) from None
+        "tabicl.shap requires extra dependencies. Install with: pip install tabicl[shap] "
+        f"(original error: {e})"
+    ) from e
 
 __all__ = [
     "get_shap_explainer",
