@@ -6,7 +6,7 @@ from sklearn.datasets import make_classification, make_regression
 from sklearn.utils.estimator_checks import parametrize_with_checks
 
 from tabicl import TabICLClassifier, TabICLRegressor
-from tests.torch_devices import skip_if_device_unusable
+from tests.torch_devices_helpers import skip_if_device_unusable
 
 
 # n_estimators=2 ensures the full preprocessing and ensembling pipeline is tested:

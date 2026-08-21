@@ -15,7 +15,7 @@ from tabicl._torch_devices import (
     resolve_default_device,
     resolve_torch_device,
 )
-from tests.torch_devices import skip_if_device_unusable
+from tests.torch_devices_helpers import skip_if_device_unusable
 
 
 _DEVICES = ["cpu", "cuda", "xpu", "mps"]
