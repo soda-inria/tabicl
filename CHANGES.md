@@ -1,5 +1,5 @@
-In development
-==============
+2.2.0
+=====
 
 New features
 ------------
@@ -18,6 +18,9 @@ New features
   `float16`. All CLI defaults reproduce the TabICLv1 model configuration; resuming a run
   re-seeds the data stream with the current step. The v2 curriculum scripts
   (`scripts/train_v2_{clf,reg}_stage{1,2,3}.sh`) now use `--dtype float16` for faster training.
+  ([PR#135](https://github.com/soda-inria/tabicl/pull/135))
+
+- Remove the GluonTS dependency from the forecasting module. ([PR#108](https://github.com/soda-inria/tabicl/pull/108), @daidahao)
 
 Bug fixes
 ---------
@@ -30,9 +33,46 @@ Bug fixes
 
 - Fix `predict_proba`/`predict` crashing with `TypeError` when a categorical column is all-NaN in the prediction batch. Removed the batch-global all-NaN feature-masking detection from the prediction path — it was intended for SHAP but did not work correctly with SHAP's coalition batching, and made predictions depend on batch composition. All-NaN columns now flow through normal preprocessing (OrdinalEncoder/SimpleImputer handle NaN natively). (Reported by @Innixma in [#143](https://github.com/soda-inria/tabicl/issues/143))
 
-- Fix PyTorch autograd error when fine-tuning with partial module freezing (e.g. `freeze_col=True, freeze_row=True, freeze_icl=False`). An in-place operation on a tensor view from frozen modules conflicted with autograd; resolved by cloning before the in-place write. (Reported by @denisfouchard in [#128](https://github.com/soda-inria/tabicl/issues/128))
+- Fix PyTorch autograd error when fine-tuning with partial module freezing (e.g. `freeze_col=True, freeze_row=True, freeze_icl=False`). An in-place operation on a tensor view from frozen modules conflicted with autograd; resolved by detaching before the in-place write. (Reported by @denisfouchard in [#128](https://github.com/soda-inria/tabicl/issues/128))
 
-- When unpickling a TabICL estimator, the fitted attributes `device_`, `model_`, etc. are only state if the pickled model was fitted. ([PR#121](https://github.com/soda-inria/tabicl/pull/121))
+- When unpickling a TabICL estimator, the fitted attributes `device_`, `model_`, etc. are only set if the pickled model was fitted. ([PR#121](https://github.com/soda-inria/tabicl/pull/121), @jeromedockes)
+
+- Fix `get_state`/`set_state` for `model_kv_cache_`. ([PR#124](https://github.com/soda-inria/tabicl/pull/124), @jeromedockes)
+
+- Fix default behaviour on NumPy arrays with string-valued columns. ([PR#123](https://github.com/soda-inria/tabicl/pull/123), @marineLM)
+
+- `n_threads` is now set to the minimum of `n_logical_cores` and `n_jobs`, rather than maximum. ([PR#107](https://github.com/soda-inria/tabicl/pull/107), @douglas-boubert)
+
+- Keep all-NaN columns in `SimpleImputer` so `predict_proba` does not crash on datasets where an entire feature is missing at prediction time. ([PR#148](https://github.com/soda-inria/tabicl/pull/148), @axsaucedo)
+
+- Fix `UnicodeEncodeError` in fine-tuning tutorials on Windows. ([PR#141](https://github.com/soda-inria/tabicl/pull/141), @maxdemarzi)
+
+- Fix `mix_probs` key in `SCMPrior`. ([PR#106](https://github.com/soda-inria/tabicl/pull/106), @nightcityblade)
+
+Documentation
+-------------
+
+- Document `skrub.tabular_pipeline`'s new support for TabICL. ([PR#139](https://github.com/soda-inria/tabicl/pull/139), @ashwinvis)
+
+- Remove ambiguity on classification/regression in README. ([PR#134](https://github.com/soda-inria/tabicl/pull/134), @MarieSacksick)
+
+- Fix broken star history chart in README. ([PR#149](https://github.com/soda-inria/tabicl/pull/149), @FaintFlower)
+
+Maintenance
+-----------
+
+- Rename prior config variables for consistency. ([PR#105](https://github.com/soda-inria/tabicl/pull/105), @ChristopheMuller)
+
+- Add `pytest` to the `test` dependency group. ([PR#122](https://github.com/soda-inria/tabicl/pull/122), @jeromedockes)
+
+
+2.1.1
+=====
+
+New features
+------------
+
+- Add fine-tuning support for TabICL via `FinetunedTabICLClassifier` and `FinetunedTabICLRegressor`: full PyTorch training loop with AdamW, cosine-warmup schedule, early stopping, gradient clipping, AMP, DDP, partial module freezing, and checkpointing in the pre-training schema. ([PR#101](https://github.com/soda-inria/tabicl/pull/101), @JingangQu)
 
 
 2.1.0
