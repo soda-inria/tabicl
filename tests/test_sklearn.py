@@ -2,6 +2,7 @@ import copy
 
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 from sklearn.datasets import make_classification, make_regression
 from sklearn.utils.estimator_checks import parametrize_with_checks
 
@@ -30,6 +31,18 @@ def test_serialization():
     clone = copy.deepcopy(clf)
     assert hasattr(clone, "model_")
     assert hasattr(clf, "model_kv_cache_")
+
+
+def test_all_nan_column():
+    """An all-NaN feature column must not break fit or predict_proba (gh-147)."""
+    X, y = make_classification(n_samples=50, n_features=5, random_state=42)
+    X = np.hstack([X, np.full((X.shape[0], 1), np.nan)])
+    clf = TabICLClassifier(n_estimators=2)
+    clf.fit(X[:40], y[:40])
+    proba = clf.predict_proba(X[40:])
+    assert proba.shape == (10, 2)
+    assert np.all(np.isfinite(proba))
+    assert_allclose(proba.sum(axis=1), 1.0)
 
 
 class TestClassifierKVCache:
