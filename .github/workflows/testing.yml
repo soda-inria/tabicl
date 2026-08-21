@@ -39,6 +39,11 @@ jobs:
           version: "0.5.4"
       - name: Install hatch
         run: uv pip install --system hatch
+      - name: Show installed package versions
+        shell: bash
+        run: |
+          hatch env create "hatch-test.py${{ matrix.python-version }}"
+          uv pip list --python "$(hatch env find "hatch-test.py${{ matrix.python-version }}")"
       - name: Run tests
         run: hatch test
       - name: Upload coverage reports to Codecov
@@ -64,14 +69,28 @@ jobs:
           version: "0.5.4"
       - name: Install hatch
         run: uv pip install --system hatch
-      - name: Install package and dev dependencies
+      - name: Create hatch test environment
+        shell: bash
+        run: hatch env create "hatch-test.py3.13"
+      - name: Install nightly dependencies into hatch test environment
+        shell: bash
         run: |
-          uv pip install --system -e ".[all]"
-          uv pip install --system --pre --upgrade \
+          HATCH_TEST_ENV="$(hatch env find "hatch-test.py3.13")"
+          echo "HATCH_TEST_ENV=$HATCH_TEST_ENV" >> "$GITHUB_ENV"
+          # Upgrade scientific stack / torch nightlies inside the same env that
+          # hatch test would use (not the system interpreter).
+          uv pip install --python "$HATCH_TEST_ENV" --pre --upgrade \
             --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple \
             numpy scipy scikit-learn
-          uv pip install --system --pre --upgrade \
+          uv pip install --python "$HATCH_TEST_ENV" --pre --upgrade \
             --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
             torch
+      - name: Show installed package versions
+        shell: bash
+        run: uv pip list --python "$HATCH_TEST_ENV"
       - name: Run tests
-        run: hatch test
+        shell: bash
+        run: |
+          # Call pytest via the hatch-test interpreter directly so hatch does
+          # not re-sync the env and replace the nightlies installed above.
+          "$HATCH_TEST_ENV/bin/python" -m pytest

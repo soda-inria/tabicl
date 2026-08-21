@@ -77,8 +77,9 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
 
         The cache retains whatever dtype the model produced during ``fit()``
         (float16 when AMP is active, float32 otherwise). If the cache is later
-        loaded on CPU or on CUDA without AMP, the tensors are automatically
-        upcast to float32 to avoid dtype-mismatch errors.
+        loaded on a device without AMP, the tensors are automatically upcast to
+        float32 to avoid dtype-mismatch errors. With AMP enabled, reduced-precision
+        caches are kept on CPU, CUDA, XPU, and MPS.
 
     model_path : Optional[str or Path], default=None
         Path to the pre-trained model checkpoint file.
@@ -101,10 +102,10 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         Checkpoints are downloaded from https://huggingface.co/jingang/TabICL.
 
     device : Optional[str or torch.device], default=None
-        Device to use for inference. If None, automatically selects CUDA if
-        available, otherwise CPU. Can be specified as a string (``'cuda'``,
-        ``'cpu'``, ``'mps'``) or a ``torch.device`` object. MPS (Apple Silicon
-        GPU) is supported but must be explicitly requested.
+        Device to use for inference. If None, automatically selects CUDA when
+        available, otherwise XPU, then MPS (Apple Silicon), and falls back to
+        CPU. Can be specified as a string (``'cuda'``, ``'xpu'``, ``'cpu'``,
+        ``'mps'``) or a ``torch.device`` object.
 
     use_amp : bool or "auto", default="auto"
         Controls automatic mixed precision (AMP) for inference.
@@ -121,6 +122,11 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
             | Large  (n >= 10240)                  |  on   |  on   |
             +--------------------------------------+-------+-------+
 
+            The AMP columns apply on CUDA / XPU / MPS. On CPU, ``use_amp="auto"``
+            stays off (explicit ``use_amp=True`` still enables bfloat16 autocast,
+            but local benchmarks found it much slower than fp32). The FA3 column
+            applies on CUDA only (``use_fa3="auto"`` is always off on CPU / MPS / XPU).
+
             The above heuristic is based on the observation that AMP can introduce overhead that outweighs
             its benefits for small inputs. In addition, it assumes that the training set is large relative to
             the test set and does not account for KV-cache scenarios. If it is suboptimal for your workload,
@@ -128,9 +134,9 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
 
     use_fa3 : bool or "auto", default="auto"
         Whether to use Flash Attention 3 that can speed up inference for large datasets on NVIDIA Hopper
-        GPUs like H100. Only effective when FA3 is installed.
+        GPUs like H100. Only effective on CUDA when FA3 is installed; a no-op on CPU / MPS / XPU.
         - True / False: force on / off.
-        - "auto": Automatically enable FA3 based on input data size using a simple heuristic (see above).
+        - "auto": Enable FA3 from the size heuristic above on CUDA only; always off on other devices.
 
     offload_mode : str or bool, default='auto'
         Controls where column-wise embedding outputs are stored during inference.

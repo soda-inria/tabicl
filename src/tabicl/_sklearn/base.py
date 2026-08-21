@@ -17,6 +17,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from tabicl import InferenceConfig
 from tabicl._model.tabicl import TabICL
+from tabicl._torch_devices import resolve_torch_device
 
 
 def _check_version_compatibility(metadata: dict) -> None:
@@ -62,19 +63,16 @@ class TabICLBaseEstimator(BaseEstimator):
 
     def _resolve_device(self) -> None:
         """Resolve the target device from the init parameter."""
-        if self.device is None:
-            self.device_ = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        elif isinstance(self.device, str):
-            self.device_ = torch.device(self.device)
-        else:
-            self.device_ = self.device
+        self.device_ = resolve_torch_device(self.device)
 
     def _resolve_amp_fa3(self) -> tuple:
         """Resolve the ``"auto"`` option for ``use_amp`` and ``use_fa3``.
 
         Called by ``_build_inference_config`` at ``fit()`` and ``__setstate__``.
-        Explicit bool values are returned as-is, while ``"auto"`` triggers a simple
-        heuristic based on ``n_samples_in_`` and ``n_features_in_``:
+        Explicit bool values are returned as-is, while ``"auto"`` triggers a
+        device-aware heuristic based on ``n_samples_in_`` and ``n_features_in_``.
+
+        AMP / FA3 size heuristic on CUDA:
 
         +--------------------------------------+-------+-------+
         | Regime                               |  AMP  |  FA3  |
@@ -86,8 +84,19 @@ class TabICLBaseEstimator(BaseEstimator):
         | Large  (n >= 10240)                  |  on   |  on   |
         +--------------------------------------+-------+-------+
 
+        Device overrides for ``"auto"``:
+
+        - **AMP on CPU**: stays off. ``torch.autocast(device_type="cpu")``
+          (bfloat16) works when ``use_amp=True`` is set explicitly, but local
+          benchmarks found it much slower than fp32 on CPU.
+        - **AMP on MPS / XPU**: same size heuristic as CUDA.
+        - **FA3**: CUDA-only. FlashAttention-3 kernels require NVIDIA CUDA; on
+          CPU / MPS / XPU, ``use_fa3="auto"`` resolves to ``False``. Explicit
+          ``use_fa3=True`` is still accepted but is a no-op at runtime off CUDA.
+
         When ``use_amp=False`` (explicitly disabled by the user) and the data
-        is above the small threshold, FA3 is enabled as a fallback accelerator.
+        is above the small threshold on CUDA, FA3 is enabled as a fallback
+        attention accelerator.
 
         The thresholds are based on preliminary observations and are not rigorously
         tuned. It assumes that the training set is large relative to the test set
@@ -105,22 +114,29 @@ class TabICLBaseEstimator(BaseEstimator):
         n_samples = getattr(self, "n_samples_in_", 0)
         n_features = getattr(self, "n_features_in_", 0)
         small_data = n_samples < 1024 and n_features < 60
+        device_type = getattr(getattr(self, "device_", None), "type", None)
 
         # -- AMP --
         if self.use_amp == "auto":
-            use_amp = not small_data
+            if device_type == "cpu":
+                use_amp = False
+            else:
+                # CUDA, XPU, MPS, and other accelerators: size heuristic.
+                use_amp = not small_data
         else:
             use_amp = bool(self.use_amp)
 
-        # -- FA3 --
+        # -- FA3 (CUDA-only; flash_attn_interface kernels require NVIDIA GPUs) --
         if self.use_fa3 == "auto":
-            if small_data:
+            if device_type != "cuda":
+                use_fa3 = False
+            elif small_data:
                 use_fa3 = False
             elif not use_amp:
-                # AMP is off and use FA3 as the main accelerator for attention
+                # AMP is off: use FA3 as the main attention accelerator on CUDA
                 use_fa3 = True
             else:
-                # AMP is on and FA3 only adds meaningful benefit at large scale
+                # AMP is on: FA3 only adds meaningful benefit at large scale
                 use_fa3 = n_samples >= 10240
         else:
             use_fa3 = bool(self.use_fa3)
@@ -163,16 +179,16 @@ class TabICLBaseEstimator(BaseEstimator):
         """Move KV cache to the current device, auto-upcasting if needed.
 
         When the cache contains reduced-precision tensors (float16/bfloat16)
-        and the target environment cannot use them directly (CPU, MPS, or
-        CUDA without AMP), the tensors are upcast to float32 and a warning
-        is emitted.
+        and AMP is disabled, the tensors are upcast to float32 and a warning
+        is emitted. With AMP enabled, reduced-precision caches are kept on
+        CPU, CUDA, XPU, and MPS.
         """
         if not (hasattr(self, "model_kv_cache_") and self.model_kv_cache_ is not None):
             return
 
         use_amp, _ = self._resolve_amp_fa3()
-        # CPU and MPS do not support float16 attention; CUDA needs AMP on
-        needs_upcast = self.device_.type in ("cpu", "mps") or not use_amp
+        # Keep reduced precision when AMP is on; otherwise upcast for fp32 attention.
+        needs_upcast = not use_amp
         upcast_dtype = torch.float32 if needs_upcast else None
 
         # Warn once if we are actually upcasting reduced-precision tensors
@@ -180,13 +196,9 @@ class TabICLBaseEstimator(BaseEstimator):
             first_cache = next(iter(self.model_kv_cache_.values()))
             cache_dtype = next(iter(first_cache.col_cache.kv.values())).key.dtype
             if cache_dtype != torch.float32:
-                if self.device_.type in ("cpu", "mps"):
-                    reason = f"{self.device_.type.upper()} does not support float16/bfloat16 attention"
-                else:
-                    reason = "AMP is not enabled"
                 warnings.warn(
                     f"KV cache contains {cache_dtype} tensors (typically from AMP). "
-                    f"Automatically upcasting to float32 because {reason}.",
+                    "Automatically upcasting to float32 because AMP is not enabled.",
                     UserWarning,
                     stacklevel=3,
                 )
