@@ -30,7 +30,7 @@ torchrun --standalone --nproc_per_node=$NUM_GPUS -m tabicl.train \
             --wandb_project TabICLv2 \
             --wandb_name tabiclv2_reg_stage3 \
             --device cuda \
-            --dtype float32 \
+            --dtype float16 \
             --np_seed 43 \
             --torch_seed 43 \
             --max_steps 10000 \

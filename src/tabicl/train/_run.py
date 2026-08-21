@@ -198,6 +198,12 @@ class Trainer:
         # FlashAttention-3 runs attention in fp16; the v2 recipe enables it only for stages 2 & 3.
         set_flash_attn3_enabled(self.config.use_flash_attn3)
 
+        # PyTorch >= 2.4 sends fp16/bf16 attention on Hopper to the cuDNN SDPA backend, whose
+        # backward is slower than the Flash Attention kernel and copies grad_output when its
+        # strides differ from the output's. Always disabled.
+        if hasattr(torch.backends.cuda, "enable_cudnn_sdp"):
+            torch.backends.cuda.enable_cudnn_sdp(False)
+
         self.model_config = {
             "max_classes": 0 if self.regression else self.config.max_classes,
             "num_quantiles": self.config.num_quantiles,
@@ -359,14 +365,18 @@ class Trainer:
     def configure_amp(self):
         """Configure automatic mixed precision (AMP) for training."""
 
+        dtypes = {"float32": torch.float32, "float16": torch.float16, "bfloat16": torch.bfloat16}
+        if self.config.dtype not in dtypes:
+            raise ValueError(f"dtype='{self.config.dtype}' is not supported. Use one of {sorted(dtypes)}.")
+        amp_dtype = dtypes[self.config.dtype]
+
         self.amp = self.config.amp and "cuda" in self.config.device
-        self.scaler = torch.GradScaler("cuda", enabled=self.amp)
+        # Only float16 needs loss scaling; bfloat16 has the dynamic range of float32.
+        self.scaler = torch.GradScaler("cuda", enabled=self.amp and amp_dtype == torch.float16)
         if self.amp:
             if self.master_process:
-                print(f"Automatic Mixed Precision is enabled.")
-            self.amp_ctx = torch.autocast(
-                device_type="cuda", dtype=torch.float16 if self.config.dtype == "float16" else torch.float32
-            )
+                print(f"Automatic Mixed Precision is enabled with dtype {self.config.dtype}.")
+            self.amp_ctx = torch.autocast(device_type="cuda", dtype=amp_dtype)
         else:
             self.amp_ctx = nullcontext()
 

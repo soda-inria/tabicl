@@ -11,11 +11,13 @@ New features
   (`--col_ssmax`/`--icl_ssmax` with `--ssmax_type`), feature grouping and target-aware embeddings
   (`--col_feature_group`, `--col_target_aware`, `--col_affine`), the RoPE variant
   (`--row_rope_interleaved`; v1 interleaved by default, v2 uses `False`), residual initialization
-  (`--zero_init`; v2 uses `False`), and FlashAttention-3 during training (`--use_flash_attn3`;
-  the v2 recipe enables it for stages 2 and 3 only). All CLI defaults reproduce the TabICLv1
-  model configuration; resuming a run re-seeds the data stream with the current step. Ships the
-  three-stage TabICLv2 curriculum scripts, separately for the classifier and regressor
-  checkpoints (`scripts/train_v2_{clf,reg}_stage{1,2,3}.sh`).
+  (`--zero_init`; v2 uses `False`), FlashAttention-3 during training (`--use_flash_attn3`;
+  the v2 recipe enables it for stages 2 and 3 only). The cuDNN SDPA backend is now
+  automatically disabled during training (slower than Flash Attention on Hopper). `--dtype` now
+  supports `bfloat16` in addition to `float16`/`float32`; the GradScaler is only enabled for
+  `float16`. All CLI defaults reproduce the TabICLv1 model configuration; resuming a run
+  re-seeds the data stream with the current step. The v2 curriculum scripts
+  (`scripts/train_v2_{clf,reg}_stage{1,2,3}.sh`) now use `--dtype float16` for faster training.
 
 Bug fixes
 ---------
