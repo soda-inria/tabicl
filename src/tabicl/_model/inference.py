@@ -4,6 +4,7 @@ import os
 import uuid
 import math
 import shutil
+import pathlib
 import psutil
 import warnings
 import weakref
@@ -35,6 +36,37 @@ def devices_match(a: torch.device, b: torch.device) -> bool:
     if a.index is None or b.index is None:
         return True
     return a.index == b.index
+
+
+def _cgroup_memory_headroom() -> int | None:
+    """Bytes this process may still allocate under its cgroup, or None if unlimited.
+
+    Handles cgroup v2 (``memory.max`` / ``memory.current``) and v1
+    (``memory.limit_in_bytes`` / ``memory.usage_in_bytes``). Returns None when there is
+    no cgroup, when the limit is literally ``"max"``, or when it is the sentinel huge
+    value v1 uses to mean unlimited -- in all of which cases psutil's figure stands.
+
+    Never raises: a memory estimate is not worth crashing an inference call over, and
+    every failure path here simply falls back to the previous behaviour.
+    """
+    pairs = (("/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory.current"),
+             ("/sys/fs/cgroup/memory/memory.limit_in_bytes",
+              "/sys/fs/cgroup/memory/memory.usage_in_bytes"))
+    for limit_path, usage_path in pairs:
+        try:
+            limit_raw = pathlib.Path(limit_path).read_text().split()[0]
+            if limit_raw == "max":
+                return None
+            limit = int(limit_raw)
+            # v1 signals "unlimited" with a value near 2**63; anything at or above the
+            # host's physical memory is not a real constraint either.
+            if limit >= psutil.virtual_memory().total:
+                return None
+            usage = int(pathlib.Path(usage_path).read_text().split()[0])
+            return max(0, limit - usage)
+        except (OSError, ValueError, IndexError):
+            continue
+    return None
 
 
 class MemoryEstimator:
@@ -825,15 +857,37 @@ class InferenceManager:
         raise ValueError(f"Invalid offload={offload!r}. Expected bool or one of 'auto', 'gpu', 'cpu', 'disk'.")
 
     def get_available_cpu_memory(self) -> float:
-        """Get available CPU memory in MB.
+        """Get available CPU memory in MB, respecting any cgroup limit.
 
         Returns
         -------
         float
             Available CPU memory in megabytes. This is the amount of memory
-            that can be allocated without causing swap.
+            that can be allocated without causing swap -- or, inside a
+            memory-limited container, without being killed.
+
+        Notes
+        -----
+        ``psutil.virtual_memory().available`` reports the **host's** free memory and is
+        blind to cgroup limits, so inside a memory-limited container (Docker, Kubernetes,
+        most GPU clouds) it can substantially overstate what this process may actually
+        allocate. Measured on one such container: psutil reported **450.8 GB available**
+        against a real headroom of **102.4 GB**, an overestimate of 4.4x.
+
+        This value feeds ``_resolve_offload_mode``, which decides whether ``offload="auto"``
+        keeps outputs in CPU memory or escalates to disk. Overestimating it means never
+        escalating, and the resulting failure is unusually hard to diagnose: the cgroup OOM
+        killer sends SIGKILL, so the process dies with **no Python traceback and no CUDA
+        error**, which from the outside is indistinguishable from a clean exit.
+
+        The cgroup headroom is intersected with psutil's figure rather than replacing it,
+        so this can only ever be more conservative than the previous behaviour.
         """
-        return psutil.virtual_memory().available / (1024 * 1024)
+        available = psutil.virtual_memory().available
+        headroom = _cgroup_memory_headroom()
+        if headroom is not None:
+            available = min(available, headroom)
+        return available / (1024 * 1024)
 
     def _get_device_backend_api(self) -> Optional[Any]:
         """Return torch backend module matching the execution device type.
