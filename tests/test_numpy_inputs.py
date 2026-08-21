@@ -3,6 +3,7 @@ import pytest
 from sklearn.base import clone, is_classifier
 
 from src.tabicl import TabICLClassifier, TabICLRegressor
+from src.tabicl._sklearn.preprocessing import Shuffler
 
 
 @pytest.mark.parametrize(
@@ -88,3 +89,34 @@ def test_tabicl_supports_bool_object_and_string_inputs(estimator, X):
     y_pred = est.predict(X)
 
     assert y_pred.shape == y.shape
+
+
+@pytest.mark.parametrize("method", ["latin", "shift", "random", "none"])
+def test_shuffler_handles_zero_elements(method):
+    """Shuffling nothing must not crash (used to raise IndexError for 'latin')."""
+
+    shuffles = Shuffler(n_elements=0, method=method, random_state=0).shuffle(4)
+
+    assert all(len(shuffle) == 0 for shuffle in shuffles)
+
+
+@pytest.mark.parametrize(
+    "estimator",
+    [
+        TabICLClassifier(n_estimators=4, random_state=0),
+        TabICLRegressor(n_estimators=4, random_state=0),
+    ],
+)
+def test_tabicl_all_constant_features_raise_informative_error(estimator):
+    """All-constant X leaves zero features; the error must name the shape, not IndexError."""
+
+    est = clone(estimator)
+
+    X = np.array([[0.4, 1.0, 0.5, 118.2], [0.4, 1.0, 0.5, 118.2]])
+    if is_classifier(est):
+        y = np.array([0, 1])
+    else:
+        y = np.array([-3.2, -1.0])
+
+    with pytest.raises(ValueError, match="0 feature"):
+        est.fit(X, y)
