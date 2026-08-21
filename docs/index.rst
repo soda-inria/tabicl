@@ -51,9 +51,9 @@ Calling fit just stores the data, learning happens during predict.
 What TabICL can do
 ------------------
 
-**State-of-the-art accuracy — zero tuning required.** TabICLv2 is competitive
-with heavily tuned XGBoost, CatBoost, and LightGBM, and even outperforms them
-on ~80% of `TabArena <https://tabarena.ai>`__ datasets. It is state-of-the-art
+**Strong accuracy — zero tuning required.** TabICLv2 is competitive
+with heavily tuned XGBoost, CatBoost, and LightGBM, and outperforms them
+on ~80% of `TabArena <https://tabarena.ai>`__ datasets. It performs well
 on the `TabArena <https://tabarena.ai>`__ and
 `TALENT <https://arxiv.org/abs/2407.00956>`__ benchmarks, among other
 hyperparameter-tuned gradient boosted trees, as well as concurrent tabular
@@ -177,9 +177,9 @@ Available models
      - ``tabicl-classifier-v1-20250208.ckpt``
      - —
 
-- **TabICLv2** — state-of-the-art, supports classification and
-  regression. Improved accuracy through better synthetic pre-training
-  data, architectural improvements, and better pre-training, with
+- **TabICLv2** — supports classification and regression.
+  Improved accuracy through better synthetic pre-training data,
+  architectural improvements, and better pre-training, with
   comparable runtime to v1.
 - **TabICLv1.1** — TabICLv1 post-trained on an early v2 prior.
   Classification only.
