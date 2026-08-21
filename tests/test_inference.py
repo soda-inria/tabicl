@@ -103,7 +103,7 @@ class _FakeNoAsyncBackend:
 
 @pytest.mark.parametrize("device_type", ["cuda", "xpu"])
 def test_async_copy_manager_uses_backend_async_primitives(device_type):
-    """Check that theasync copy manager uses CUDA/XPU Stream/Event primitives.
+    """Check that the async copy manager uses CUDA/XPU Stream/Event primitives.
 
     CUDA and XPU device backends are expected to always expose Stream/Event primitives.
     """
