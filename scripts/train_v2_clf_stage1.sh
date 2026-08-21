@@ -11,8 +11,8 @@
 #   Stage 3:  10K steps, 400-60,000 samples (log-u), 79-81% train, max LR 2e-5, grad clip  1
 #
 # Common: Muon optimizer, cautious weight decay parameter 0.01 (see note below),
-# cosine schedule, AMP, per-micro-batch train/test sizes (--seq_len_per_gp), up to
-# 100 features, 8 attention heads everywhere, graph_scm prior. AMP is always used.
+# cosine schedule, AMP (float16), per-micro-batch train/test sizes (--seq_len_per_gp),
+# up to 100 features, 8 attention heads everywhere, graph_scm prior.
 #
 # The classifier uses LayerNorm WITH biases (the --norm_type default; paper Table A.1),
 # unlike the regressor, which uses bias-free LayerNorm (--norm_type layernorm_nobias).
@@ -29,7 +29,7 @@ torchrun --standalone --nproc_per_node=$NUM_GPUS -m tabicl.train \
             --wandb_project TabICLv2 \
             --wandb_name tabiclv2_clf_stage1 \
             --device cuda \
-            --dtype float32 \
+            --dtype float16 \
             --np_seed 42 \
             --torch_seed 42 \
             --max_steps 500000 \

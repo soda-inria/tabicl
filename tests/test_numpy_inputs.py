@@ -38,6 +38,8 @@ def _patch_backend_availability(
     monkeypatch.setattr(torch, "mps", _FakeMPSBackend, raising=False)
     monkeypatch.setattr(torch.cuda, "is_available", lambda: cuda_available)
 
+from conftest import model_path
+
 
 @pytest.mark.parametrize(
     "estimator",
@@ -126,14 +128,34 @@ def test_tabicl_supports_bool_object_and_string_inputs(estimator, X, device):
 
     assert y_pred.shape == y.shape
 
-
 @pytest.mark.parametrize(
+    "estimator",
+    [
+        TabICLClassifier(random_state=0, **model_path("classifier")),
+        TabICLRegressor(random_state=0, **model_path("regressor")),
+    ],
+)
+def test_tabicl_supports_float16(estimator):
+    """float16 arrays should not crash the Yeo-Johnson normalizer (issue #140)."""
+    rng = np.random.default_rng(42)
+    X = rng.standard_normal((50, 4)).astype(np.float16)
+
+    est = clone(estimator)
+    if is_classifier(est):
+        y = rng.integers(0, 2, size=50)
+    else:
+        y = rng.standard_normal(50)
+
+    est.fit(X, y)
+    y_pred = est.predict(X)
+    assert y_pred.shape == y.shape
     "estimator_cls",
     [
         TabICLClassifier,
         TabICLRegressor,
     ],
 )
+
 @pytest.mark.parametrize(
     "cuda_available, xpu_available, mps_available, expected_device",
     [

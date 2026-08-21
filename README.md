@@ -2,16 +2,16 @@
 [![PyPI version](https://badge.fury.io/py/tabicl.svg)](https://badge.fury.io/py/tabicl)
 [![Downloads](https://img.shields.io/pypi/dm/tabicl)](https://pypistats.org/packages/tabicl)
 
-# TabICLv2: A state-of-the-art tabular foundation model
+# TabICLv2: An open tabular foundation model
 
 This repository is the official implementation of **TabICLv2** ([ICML 2026](https://arxiv.org/abs/2602.11139)) 
 and **TabICL** ([ICML 2025](https://arxiv.org/abs/2502.05564)).
 
-**State-of-the-art performance even without hyperparameter tuning:** 
-TabICLv2 is the new state-of-the-art model for tabular classification and regression 
+**Strong performance without hyperparameter tuning:** 
+TabICLv2 is a competitive model for tabular classification and regression 
 on the [TabArena](https://tabarena.ai) and [TALENT](https://arxiv.org/abs/2407.00956) benchmarks. 
 It does not require hyperparameter tuning 
-and still outperforms heavily tuned XGBoost, CatBoost, or LightGBM on TabArena on ~80% of datasets.
+and outperforms heavily tuned XGBoost, CatBoost, or LightGBM on TabArena on ~80% of datasets.
 
 **Easy to use:** TabICL is pip-installable and scikit-learn compliant. 
 It is also **open source** (including [pre-training](#pre-training) for v1), 
@@ -134,7 +134,7 @@ clf = TabICLClassifier(
 | **TabICLv1.1** (May 2025, no paper) | `tabicl-classifier-v1.1-20250506.ckpt` | — |
 | **TabICLv1** ([ICML 2025](https://arxiv.org/abs/2502.05564)) | `tabicl-classifier-v1-20250208.ckpt` | — |
 
-- **TabICLv2**: Our state-of-the-art model, supporting both classification and regression.
+- **TabICLv2**: Our latest model, supporting both classification and regression.
   Strongly improved accuracy over v1 through better synthetic pre-training data,
   architectural improvements, and better pre-training, with comparable runtime.
 - **TabICLv1.1**: TabICLv1 post-trained on an early version of the v2 prior. Classification only.

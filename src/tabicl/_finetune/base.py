@@ -687,6 +687,8 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         """
         from sklearn.utils.validation import check_X_y, check_array
 
+        from tabicl._sklearn.preprocessing import TransformToNumerical
+
         # 1. DDP setup
         using_ddp, rank, world_size, local_rank, master, device = _ddp_env(self._resolve_device())
         self._is_master_ = master
@@ -702,6 +704,11 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
                 _logger = NullLogger()
 
         # 3. Input validation / stash
+        # Preserve the original input container (DataFrame or array) so the
+        # final inner estimator can run its own TransformToNumerical in .fit().
+        X_original = X
+        y_original = y
+
         ensure_numeric_y = self._model_type == "regressor"
         X, y = check_X_y(
             X,
@@ -710,7 +717,6 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
             y_numeric=ensure_numeric_y,
             dtype=None,
         )
-        self.X_raw_ = X
         self.y_raw_ = y  # original labels; the final estimator re-encodes internally
 
         # 3b. Label-encode classification targets. The meta-batch builder uses
@@ -724,10 +730,19 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         else:
             y_fit = y
 
+        # 3c. Encode categorical/string features to numeric. This mirrors the
+        # TransformToNumerical step in TabICLClassifier/TabICLRegressor.fit()
+        # and must run on the original container (DataFrame) so column dtype
+        # info is available for detecting categoricals.
+        self._X_encoder_ = TransformToNumerical()
+        X = self._X_encoder_.fit_transform(X_original)
+        X = np.asarray(X, dtype=np.float64)
+        self.X_raw_ = X
+
         # 4. Val split
         if X_val is not None and y_val is not None:
             X_train_arr, y_train_arr = X, y_fit
-            X_val_arr = check_array(X_val, ensure_all_finite=False, dtype=None)
+            X_val_arr = np.asarray(self._X_encoder_.transform(X_val), dtype=np.float64)
             y_val_arr = np.asarray(y_val)
             if self._model_type == "classifier":
                 y_val_arr = self._label_encoder_.transform(y_val_arr).astype(np.int64)
@@ -1028,10 +1043,14 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         # underlying module to eval mode so `_final_estimator_.predict` routes
         # through the inference forward (which emits n_classes-wide logits /
         # proper quantile tensors), not the training forward.
+        # Use the original (pre-encoded) input so the inner estimator can run
+        # its own TransformToNumerical — this keeps predict/predict_proba able
+        # to accept the same input types (DataFrames with categoricals) that
+        # the user passed to fit().
         if master:
             self.model_.eval()
             self._final_estimator_ = self._build_inner_estimator(self.model_, self.n_estimators_inference, device)
-            self._final_estimator_.fit(self.X_raw_, self.y_raw_)
+            self._final_estimator_.fit(X_original, y_original)
             # Make the final estimator self-contained on pickle. Two reasons:
             # (a) ``model_`` holds the fine-tuned weights, which aren't in any
             #     on-disk checkpoint by default — the inner's pickle default

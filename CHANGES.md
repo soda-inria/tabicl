@@ -1,5 +1,5 @@
-In development
-==============
+2.2.0
+=====
 
 New features
 ------------
@@ -11,16 +11,68 @@ New features
   (`--col_ssmax`/`--icl_ssmax` with `--ssmax_type`), feature grouping and target-aware embeddings
   (`--col_feature_group`, `--col_target_aware`, `--col_affine`), the RoPE variant
   (`--row_rope_interleaved`; v1 interleaved by default, v2 uses `False`), residual initialization
-  (`--zero_init`; v2 uses `False`), and FlashAttention-3 during training (`--use_flash_attn3`;
-  the v2 recipe enables it for stages 2 and 3 only). All CLI defaults reproduce the TabICLv1
-  model configuration; resuming a run re-seeds the data stream with the current step. Ships the
-  three-stage TabICLv2 curriculum scripts, separately for the classifier and regressor
-  checkpoints (`scripts/train_v2_{clf,reg}_stage{1,2,3}.sh`).
+  (`--zero_init`; v2 uses `False`), FlashAttention-3 during training (`--use_flash_attn3`;
+  the v2 recipe enables it for stages 2 and 3 only). The cuDNN SDPA backend is now
+  automatically disabled during training (slower than Flash Attention on Hopper). `--dtype` now
+  supports `bfloat16` in addition to `float16`/`float32`; the GradScaler is only enabled for
+  `float16`. All CLI defaults reproduce the TabICLv1 model configuration; resuming a run
+  re-seeds the data stream with the current step. The v2 curriculum scripts
+  (`scripts/train_v2_{clf,reg}_stage{1,2,3}.sh`) now use `--dtype float16` for faster training.
+  ([PR#135](https://github.com/soda-inria/tabicl/pull/135))
+
+- Remove the GluonTS dependency from the forecasting module. ([PR#108](https://github.com/soda-inria/tabicl/pull/108), @daidahao)
 
 Bug fixes
 ---------
 
-- When unpickling a TabICL estimator, the fitted attributes `device_`, `model_`, etc. are only state if the pickled model was fitted. ([PR#121](https://github.com/soda-inria/tabicl/pull/121))
+- Finetuning now supports string/categorical features in DataFrames, matching the behavior of the base `TabICLClassifier` and `TabICLRegressor`. Previously, `FinetunedTabICLClassifier` and `FinetunedTabICLRegressor` would raise `ValueError: could not convert string to float` when the input contained categorical columns. (Reported by @zehua-jerry-yu in [#118](https://github.com/soda-inria/tabicl/issues/118))
+
+- Fix `DatetimeEncoder` sin/cos encoding off-by-one error that caused the first and last elements of a period to map to identical angles (e.g. Monday and Sunday getting the same encoding). The denominator was incorrectly `p-1` instead of `p`. (Reported by @christophM in [#136](https://github.com/soda-inria/tabicl/issues/136))
+
+- Fix `float16` input arrays crashing during Yeo-Johnson normalization in the preprocessing pipeline. The `PreprocessingPipeline` now upcasts `float16` to `float32` before fitting/transforming, avoiding scipy's narrow-exponent bound error. (Reported by @SebastienMelo in [#140](https://github.com/soda-inria/tabicl/issues/140))
+
+- Fix `predict_proba`/`predict` crashing with `TypeError` when a categorical column is all-NaN in the prediction batch. Removed the batch-global all-NaN feature-masking detection from the prediction path — it was intended for SHAP but did not work correctly with SHAP's coalition batching, and made predictions depend on batch composition. All-NaN columns now flow through normal preprocessing (OrdinalEncoder/SimpleImputer handle NaN natively). (Reported by @Innixma in [#143](https://github.com/soda-inria/tabicl/issues/143))
+
+- Fix PyTorch autograd error when fine-tuning with partial module freezing (e.g. `freeze_col=True, freeze_row=True, freeze_icl=False`). An in-place operation on a tensor view from frozen modules conflicted with autograd; resolved by detaching before the in-place write. (Reported by @denisfouchard in [#128](https://github.com/soda-inria/tabicl/issues/128))
+
+- When unpickling a TabICL estimator, the fitted attributes `device_`, `model_`, etc. are only set if the pickled model was fitted. ([PR#121](https://github.com/soda-inria/tabicl/pull/121), @jeromedockes)
+
+- Fix `get_state`/`set_state` for `model_kv_cache_`. ([PR#124](https://github.com/soda-inria/tabicl/pull/124), @jeromedockes)
+
+- Fix default behaviour on NumPy arrays with string-valued columns. ([PR#123](https://github.com/soda-inria/tabicl/pull/123), @marineLM)
+
+- `n_threads` is now set to the minimum of `n_logical_cores` and `n_jobs`, rather than maximum. ([PR#107](https://github.com/soda-inria/tabicl/pull/107), @douglas-boubert)
+
+- Keep all-NaN columns in `SimpleImputer` so `predict_proba` does not crash on datasets where an entire feature is missing at prediction time. ([PR#148](https://github.com/soda-inria/tabicl/pull/148), @axsaucedo)
+
+- Fix `UnicodeEncodeError` in fine-tuning tutorials on Windows. ([PR#141](https://github.com/soda-inria/tabicl/pull/141), @maxdemarzi)
+
+- Fix `mix_probs` key in `SCMPrior`. ([PR#106](https://github.com/soda-inria/tabicl/pull/106), @nightcityblade)
+
+Documentation
+-------------
+
+- Document `skrub.tabular_pipeline`'s new support for TabICL. ([PR#139](https://github.com/soda-inria/tabicl/pull/139), @ashwinvis)
+
+- Remove ambiguity on classification/regression in README. ([PR#134](https://github.com/soda-inria/tabicl/pull/134), @MarieSacksick)
+
+- Fix broken star history chart in README. ([PR#149](https://github.com/soda-inria/tabicl/pull/149), @FaintFlower)
+
+Maintenance
+-----------
+
+- Rename prior config variables for consistency. ([PR#105](https://github.com/soda-inria/tabicl/pull/105), @ChristopheMuller)
+
+- Add `pytest` to the `test` dependency group. ([PR#122](https://github.com/soda-inria/tabicl/pull/122), @jeromedockes)
+
+
+2.1.1
+=====
+
+New features
+------------
+
+- Add fine-tuning support for TabICL via `FinetunedTabICLClassifier` and `FinetunedTabICLRegressor`: full PyTorch training loop with AdamW, cosine-warmup schedule, early stopping, gradient clipping, AMP, DDP, partial module freezing, and checkpointing in the pre-training schema. ([PR#101](https://github.com/soda-inria/tabicl/pull/101), @JingangQu)
 
 - Improve non-CUDA GPU inference reliability and performance (including XPU): inference now consistently runs on the configured backend device, uses backend-appropriate autocast, and queries available memory plus async stream/event primitives through backend-agnostic `torch.<backend>` APIs (with safe synchronous fallbacks when async is unavailable). This fixes pathological auto-batch sizing (e.g. batch size forced to 1) and restores expected accelerated inference behavior on supported non-CUDA GPU backends. When `device=None`, estimators now default to CUDA when available, otherwise XPU, then MPS, and then CPU. ([PR#144](https://github.com/soda-inria/tabicl/pull/144))
 
