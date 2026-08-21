@@ -114,9 +114,8 @@ class DatetimeEncoder(TimeTransform):
 
             if periods is not None:
                 for p in periods:
-                    adjusted = p - 1  # Adjust for 0-based indexing
-                    df[f"{feature_name}_sin"] = np.sin(2 * np.pi * feature / adjusted)
-                    df[f"{feature_name}_cos"] = np.cos(2 * np.pi * feature / adjusted)
+                    df[f"{feature_name}_sin"] = np.sin(2 * np.pi * feature / p)
+                    df[f"{feature_name}_cos"] = np.cos(2 * np.pi * feature / p)
             else:
                 df[feature_name] = feature
 
