@@ -1,24 +1,12 @@
 """Tests for finetuning with string/categorical features (GitHub issue #118)."""
 
-import os
-
 import numpy as np
 import pandas as pd
 import pytest
 
 from tabicl import FinetunedTabICLClassifier, FinetunedTabICLRegressor
 
-# Optional env var to point at a local checkpoint directory (e.g. when HF
-# downloads are unavailable). When unset, estimators use default auto-download.
-_CKPT_DIR = os.environ.get("TABICL_CHECKPOINT_DIR")
-
-
-def _model_path(kind: str):
-    """Return model_path kwarg dict for the given kind ('classifier'/'regressor')."""
-    if _CKPT_DIR is None:
-        return {}
-    filenames = {"classifier": "tabicl-classifier-v2-20260212.ckpt", "regressor": "tabicl-regressor-v2-20260212.ckpt"}
-    return {"model_path": os.path.join(_CKPT_DIR, filenames[kind])}
+from conftest import model_path
 
 
 def _make_categorical_dataframe(n=80, rng=None):
@@ -65,7 +53,7 @@ class TestFinetunedClassifierStringCategoricals:
             n_estimators_validation=1,
             n_estimators_inference=1,
             early_stopping=False,
-            **_model_path("classifier"),
+            **model_path("classifier"),
         )
         est.fit(X, y)
         preds = est.predict(X)
@@ -81,7 +69,7 @@ class TestFinetunedClassifierStringCategoricals:
             n_estimators_validation=1,
             n_estimators_inference=1,
             early_stopping=False,
-            **_model_path("classifier"),
+            **model_path("classifier"),
         )
         est.fit(X, y)
         preds = est.predict(X)
@@ -97,7 +85,7 @@ class TestFinetunedClassifierStringCategoricals:
             n_estimators_validation=1,
             n_estimators_inference=1,
             early_stopping=False,
-            **_model_path("classifier"),
+            **model_path("classifier"),
         )
         est.fit(X, y)
         preds = est.predict(X)
@@ -113,7 +101,7 @@ class TestFinetunedClassifierStringCategoricals:
             n_estimators_validation=1,
             n_estimators_inference=1,
             early_stopping=False,
-            **_model_path("classifier"),
+            **model_path("classifier"),
         )
         est.fit(X_train, y_train, X_val=X_val, y_val=y_val)
         preds = est.predict(X)
@@ -133,7 +121,7 @@ class TestFinetunedClassifierStringCategoricals:
             n_estimators_validation=1,
             n_estimators_inference=1,
             early_stopping=False,
-            **_model_path("classifier"),
+            **model_path("classifier"),
         )
         est.fit(X_train, y_train, X_val=X_val, y_val=y_val)
         preds = est.predict(X_val)
@@ -151,7 +139,7 @@ class TestFinetunedRegressorStringCategoricals:
             n_estimators_validation=1,
             n_estimators_inference=1,
             early_stopping=False,
-            **_model_path("regressor"),
+            **model_path("regressor"),
         )
         est.fit(X, y)
         preds = est.predict(X)
@@ -167,7 +155,7 @@ class TestFinetunedRegressorStringCategoricals:
             n_estimators_validation=1,
             n_estimators_inference=1,
             early_stopping=False,
-            **_model_path("regressor"),
+            **model_path("regressor"),
         )
         est.fit(X, y)
         preds = est.predict(X)
@@ -183,7 +171,7 @@ class TestFinetunedRegressorStringCategoricals:
             n_estimators_validation=1,
             n_estimators_inference=1,
             early_stopping=False,
-            **_model_path("regressor"),
+            **model_path("regressor"),
         )
         est.fit(X_train, y_train, X_val=X_val, y_val=y_val)
         preds = est.predict(X)

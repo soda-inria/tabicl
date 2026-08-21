@@ -1,22 +1,10 @@
-import os
-
 import numpy as np
 import pytest
 from sklearn.base import clone, is_classifier
 
 from src.tabicl import TabICLClassifier, TabICLRegressor
 
-# Optional env var to point at a local checkpoint directory (e.g. when HF
-# downloads are unavailable). When unset, estimators use default auto-download.
-_CKPT_DIR = os.environ.get("TABICL_CHECKPOINT_DIR")
-
-
-def _model_path(kind: str):
-    """Return model_path kwarg dict for the given kind ('classifier'/'regressor')."""
-    if _CKPT_DIR is None:
-        return {}
-    filenames = {"classifier": "tabicl-classifier-v2-20260212.ckpt", "regressor": "tabicl-regressor-v2-20260212.ckpt"}
-    return {"model_path": os.path.join(_CKPT_DIR, filenames[kind])}
+from conftest import model_path
 
 
 @pytest.mark.parametrize(
@@ -107,8 +95,8 @@ def test_tabicl_supports_bool_object_and_string_inputs(estimator, X):
 @pytest.mark.parametrize(
     "estimator",
     [
-        TabICLClassifier(random_state=0, **_model_path("classifier")),
-        TabICLRegressor(random_state=0, **_model_path("regressor")),
+        TabICLClassifier(random_state=0, **model_path("classifier")),
+        TabICLRegressor(random_state=0, **model_path("regressor")),
     ],
 )
 def test_tabicl_supports_float16(estimator):

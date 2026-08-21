@@ -1,21 +1,12 @@
 """Tests for predict_proba with all-NaN categorical columns (GitHub issue #143)."""
 
-import os
-
 import numpy as np
 import pandas as pd
 import pytest
 
 from tabicl import TabICLClassifier, TabICLRegressor
 
-_CKPT_DIR = os.environ.get("TABICL_CHECKPOINT_DIR")
-
-
-def _model_path(kind: str):
-    if _CKPT_DIR is None:
-        return {}
-    filenames = {"classifier": "tabicl-classifier-v2-20260212.ckpt", "regressor": "tabicl-regressor-v2-20260212.ckpt"}
-    return {"model_path": os.path.join(_CKPT_DIR, filenames[kind])}
+from conftest import model_path
 
 
 class TestPredictAllNanCategorical:
@@ -30,7 +21,7 @@ class TestPredictAllNanCategorical:
         })
         y = rng.choice([0, 1], size=n)
 
-        clf = TabICLClassifier(n_estimators=1, **_model_path("classifier"))
+        clf = TabICLClassifier(n_estimators=1, **model_path("classifier"))
         clf.fit(X, y)
 
         X_pred = X.head(20).copy()
@@ -48,7 +39,7 @@ class TestPredictAllNanCategorical:
         })
         y = rng.choice([0, 1], size=n)
 
-        clf = TabICLClassifier(n_estimators=1, **_model_path("classifier"))
+        clf = TabICLClassifier(n_estimators=1, **model_path("classifier"))
         clf.fit(X, y)
 
         X_pred = X.head(20).copy()
@@ -65,7 +56,7 @@ class TestPredictAllNanCategorical:
         })
         y = rng.normal(size=n)
 
-        reg = TabICLRegressor(n_estimators=1, **_model_path("regressor"))
+        reg = TabICLRegressor(n_estimators=1, **model_path("regressor"))
         reg.fit(X, y)
 
         X_pred = X.head(20).copy()
@@ -80,7 +71,7 @@ class TestPredictAllNanCategorical:
         X = rng.normal(size=(n, 4))
         y = rng.choice([0, 1], size=n)
 
-        clf = TabICLClassifier(n_estimators=1, **_model_path("classifier"))
+        clf = TabICLClassifier(n_estimators=1, **model_path("classifier"))
         clf.fit(X, y)
 
         X_pred = X[:10].copy()
