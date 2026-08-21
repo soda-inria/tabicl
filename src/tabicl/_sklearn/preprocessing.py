@@ -836,6 +836,12 @@ class Shuffler:
         self.rng_ = random.Random(self.random_state)
         indices = list(range(self.n_elements))
 
+        # Nothing to permute (e.g. all features were constant and got dropped). Return empty
+        # permutations so the caller's own validation reports the problem, instead of failing
+        # inside the Latin square recursion with an unrelated IndexError.
+        if self.n_elements == 0:
+            return [list(indices) for _ in range(n_estimators)]
+
         # Use the random method if n_elements exceeds the limit for Latin square
         if self.n_elements > self.max_elements_for_latin and self.method == "latin":
             method = "random"
