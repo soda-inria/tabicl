@@ -26,6 +26,8 @@ Bug fixes
 
 - Fix `float16` input arrays crashing during Yeo-Johnson normalization in the preprocessing pipeline. The `PreprocessingPipeline` now upcasts `float16` to `float32` before fitting/transforming, avoiding scipy's narrow-exponent bound error. (Reported by @SebastienMelo in [#140](https://github.com/soda-inria/tabicl/issues/140))
 
+- Fix `predict_proba`/`predict` crashing with `TypeError` when a categorical column is all-NaN in the prediction batch. Removed the batch-global all-NaN feature-masking detection from the prediction path — it was intended for SHAP but did not work correctly with SHAP's coalition batching, and made predictions depend on batch composition. All-NaN columns now flow through normal preprocessing (OrdinalEncoder/SimpleImputer handle NaN natively). (Reported by @Innixma in [#143](https://github.com/soda-inria/tabicl/issues/143))
+
 - When unpickling a TabICL estimator, the fitted attributes `device_`, `model_`, etc. are only state if the pickled model was fitted. ([PR#121](https://github.com/soda-inria/tabicl/pull/121))
 
 
