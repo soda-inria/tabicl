@@ -24,6 +24,8 @@ Bug fixes
 
 - Fix `DatetimeEncoder` sin/cos encoding off-by-one error that caused the first and last elements of a period to map to identical angles (e.g. Monday and Sunday getting the same encoding). The denominator was incorrectly `p-1` instead of `p`. (Reported by @christophM in [#136](https://github.com/soda-inria/tabicl/issues/136))
 
+- Fix `float16` input arrays crashing during Yeo-Johnson normalization in the preprocessing pipeline. The `PreprocessingPipeline` now upcasts `float16` to `float32` before fitting/transforming, avoiding scipy's narrow-exponent bound error. (Reported by @SebastienMelo in [#140](https://github.com/soda-inria/tabicl/issues/140))
+
 - When unpickling a TabICL estimator, the fitted attributes `device_`, `model_`, etc. are only state if the pickled model was fitted. ([PR#121](https://github.com/soda-inria/tabicl/pull/121))
 
 

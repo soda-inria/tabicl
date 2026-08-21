@@ -698,6 +698,8 @@ class PreprocessingPipeline(TransformerMixin, BaseEstimator):
             Returns self.
         """
         X = validate_data(self, X)
+        if hasattr(X, "dtype") and X.dtype == np.float16:
+            X = X.astype(np.float32)
 
         # 1. Apply standard scaling
         self.standard_scaler_ = CustomStandardScaler()
@@ -752,6 +754,8 @@ class PreprocessingPipeline(TransformerMixin, BaseEstimator):
         """
         check_is_fitted(self)
         X = validate_data(self, X, reset=False, copy=True)
+        if hasattr(X, "dtype") and X.dtype == np.float16:
+            X = X.astype(np.float32)
         # Standard scaling
         X = self.standard_scaler_.transform(X)
         # Normalization

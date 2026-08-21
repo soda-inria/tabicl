@@ -1,6 +1,6 @@
 """Tests for finetuning with string/categorical features (GitHub issue #118)."""
 
-from pathlib import Path
+import os
 
 import numpy as np
 import pandas as pd
@@ -8,16 +8,17 @@ import pytest
 
 from tabicl import FinetunedTabICLClassifier, FinetunedTabICLRegressor
 
-CKPT_DIR = Path(__file__).resolve().parent.parent / "ckpts"
-CLF_CKPT = CKPT_DIR / "tabicl-classifier-v2-20260212.ckpt"
-REG_CKPT = CKPT_DIR / "tabicl-regressor-v2-20260212.ckpt"
+# Optional env var to point at a local checkpoint directory (e.g. when HF
+# downloads are unavailable). When unset, estimators use default auto-download.
+_CKPT_DIR = os.environ.get("TABICL_CHECKPOINT_DIR")
 
-skip_no_clf_ckpt = pytest.mark.skipif(
-    not CLF_CKPT.exists(), reason="classifier checkpoint not available locally"
-)
-skip_no_reg_ckpt = pytest.mark.skipif(
-    not REG_CKPT.exists(), reason="regressor checkpoint not available locally"
-)
+
+def _model_path(kind: str):
+    """Return model_path kwarg dict for the given kind ('classifier'/'regressor')."""
+    if _CKPT_DIR is None:
+        return {}
+    filenames = {"classifier": "tabicl-classifier-v2-20260212.ckpt", "regressor": "tabicl-regressor-v2-20260212.ckpt"}
+    return {"model_path": os.path.join(_CKPT_DIR, filenames[kind])}
 
 
 def _make_categorical_dataframe(n=80, rng=None):
@@ -53,7 +54,6 @@ def reg_data():
     return X, y
 
 
-@skip_no_clf_ckpt
 class TestFinetunedClassifierStringCategoricals:
     """FinetunedTabICLClassifier should handle string categoricals like TabICLClassifier."""
 
@@ -65,7 +65,7 @@ class TestFinetunedClassifierStringCategoricals:
             n_estimators_validation=1,
             n_estimators_inference=1,
             early_stopping=False,
-            model_path=str(CLF_CKPT),
+            **_model_path("classifier"),
         )
         est.fit(X, y)
         preds = est.predict(X)
@@ -81,7 +81,7 @@ class TestFinetunedClassifierStringCategoricals:
             n_estimators_validation=1,
             n_estimators_inference=1,
             early_stopping=False,
-            model_path=str(CLF_CKPT),
+            **_model_path("classifier"),
         )
         est.fit(X, y)
         preds = est.predict(X)
@@ -97,7 +97,7 @@ class TestFinetunedClassifierStringCategoricals:
             n_estimators_validation=1,
             n_estimators_inference=1,
             early_stopping=False,
-            model_path=str(CLF_CKPT),
+            **_model_path("classifier"),
         )
         est.fit(X, y)
         preds = est.predict(X)
@@ -113,7 +113,7 @@ class TestFinetunedClassifierStringCategoricals:
             n_estimators_validation=1,
             n_estimators_inference=1,
             early_stopping=False,
-            model_path=str(CLF_CKPT),
+            **_model_path("classifier"),
         )
         est.fit(X_train, y_train, X_val=X_val, y_val=y_val)
         preds = est.predict(X)
@@ -133,14 +133,13 @@ class TestFinetunedClassifierStringCategoricals:
             n_estimators_validation=1,
             n_estimators_inference=1,
             early_stopping=False,
-            model_path=str(CLF_CKPT),
+            **_model_path("classifier"),
         )
         est.fit(X_train, y_train, X_val=X_val, y_val=y_val)
         preds = est.predict(X_val)
         assert len(preds) == len(y_val)
 
 
-@skip_no_reg_ckpt
 class TestFinetunedRegressorStringCategoricals:
     """FinetunedTabICLRegressor should handle string categoricals like TabICLRegressor."""
 
@@ -152,7 +151,7 @@ class TestFinetunedRegressorStringCategoricals:
             n_estimators_validation=1,
             n_estimators_inference=1,
             early_stopping=False,
-            model_path=str(REG_CKPT),
+            **_model_path("regressor"),
         )
         est.fit(X, y)
         preds = est.predict(X)
@@ -168,7 +167,7 @@ class TestFinetunedRegressorStringCategoricals:
             n_estimators_validation=1,
             n_estimators_inference=1,
             early_stopping=False,
-            model_path=str(REG_CKPT),
+            **_model_path("regressor"),
         )
         est.fit(X, y)
         preds = est.predict(X)
@@ -184,7 +183,7 @@ class TestFinetunedRegressorStringCategoricals:
             n_estimators_validation=1,
             n_estimators_inference=1,
             early_stopping=False,
-            model_path=str(REG_CKPT),
+            **_model_path("regressor"),
         )
         est.fit(X_train, y_train, X_val=X_val, y_val=y_val)
         preds = est.predict(X)
