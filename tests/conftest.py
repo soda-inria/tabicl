@@ -3,10 +3,16 @@
 import os
 import sys
 
+import torch
 import pytest
 
 # Make the tests/ directory importable so test modules can do `from conftest import ...`
 sys.path.insert(0, os.path.dirname(__file__))
+
+# Disable oneDNN/MKLDNN when requested (used on Windows CI to avoid flaky
+# "could not create a primitive" errors from the oneDNN backend).
+if os.environ.get("TABICL_DISABLE_MKLDNN") == "1":
+    torch.backends.mkldnn.enabled = False
 
 _CKPT_DIR = os.environ.get("TABICL_CHECKPOINT_DIR")
 

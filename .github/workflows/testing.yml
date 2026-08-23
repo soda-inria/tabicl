@@ -46,10 +46,10 @@ jobs:
           uv pip list --python "$(hatch env find "hatch-test.py${{ matrix.python-version }}")"
       - name: Run tests
         env:
-          # Limit CPU threading on Windows to avoid flaky oneDNN "could not
-          # create a primitive" errors on some GitHub Actions hosts.
-          OMP_NUM_THREADS: ${{ runner.os == 'Windows' && '1' || '' }}
-          MKL_NUM_THREADS: ${{ runner.os == 'Windows' && '1' || '' }}
+          # Disable oneDNN/MKLDNN on Windows to avoid flaky "could not create
+          # a primitive" errors on some GitHub Actions hosts. Linux still
+          # exercises the optimized MKLDNN path.
+          TABICL_DISABLE_MKLDNN: ${{ runner.os == 'Windows' && '1' || '0' }}
         run: hatch test
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.5.0
