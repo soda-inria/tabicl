@@ -48,7 +48,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y)
 #
 from tabicl import TabICLRegressor
 
-clf = TabICLRegressor(n_estimators=4, device="cpu")
+clf = TabICLRegressor(n_estimators=2, device="cpu")  # use n_estimators=8 for best results
 clf.fit(X_train, y_train)
 
 # %%

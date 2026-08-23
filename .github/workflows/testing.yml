@@ -45,6 +45,11 @@ jobs:
           hatch env create "hatch-test.py${{ matrix.python-version }}"
           uv pip list --python "$(hatch env find "hatch-test.py${{ matrix.python-version }}")"
       - name: Run tests
+        env:
+          # Limit CPU threading on Windows to avoid flaky oneDNN "could not
+          # create a primitive" errors on some GitHub Actions hosts.
+          OMP_NUM_THREADS: ${{ runner.os == 'Windows' && '1' || '' }}
+          MKL_NUM_THREADS: ${{ runner.os == 'Windows' && '1' || '' }}
         run: hatch test
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.5.0
