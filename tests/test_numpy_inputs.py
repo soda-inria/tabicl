@@ -149,13 +149,15 @@ def test_tabicl_supports_float16(estimator):
     est.fit(X, y)
     y_pred = est.predict(X)
     assert y_pred.shape == y.shape
+
+
+@pytest.mark.parametrize(
     "estimator_cls",
     [
         TabICLClassifier,
         TabICLRegressor,
     ],
 )
-
 @pytest.mark.parametrize(
     "cuda_available, xpu_available, mps_available, expected_device",
     [

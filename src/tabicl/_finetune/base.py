@@ -512,17 +512,15 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         return bool(frozen_modules)
 
     def _set_training_mode(self, training: bool) -> None:
-        """Switch ``self.model_`` between train/eval while honoring freezes.
+        """Switch ``self.model_`` between train/eval.
 
-        ``nn.Module.train()`` is recursive, so naively calling
-        ``self.model_.train()`` flips frozen sub-modules (and their dropout /
-        BN) back into training mode. We first toggle the whole model, then
-        snap frozen sub-modules back to ``eval()``.
+        Frozen sub-modules are kept in train mode alongside unfrozen ones.
+        Their parameters already have requires_grad=False so they won't
+        accumulate gradients. Putting them in eval() would route through the
+        inference forward path (InferenceManager with autocast), causing dtype
+        mismatches at the frozen→unfrozen boundary.
         """
         self.model_.train(training)
-        if training:
-            for sub in self._frozen_submodules(self.model_):
-                sub.eval()
 
     def _load_pretrained(self, device: torch.device) -> None:
         """Compose with the sklearn estimator's ``_load_model`` to pull the
@@ -717,7 +715,6 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
             y_numeric=ensure_numeric_y,
             dtype=None,
         )
-        self.y_raw_ = y  # original labels; the final estimator re-encodes internally
 
         # 3b. Label-encode classification targets. The meta-batch builder uses
         # raw labels as array indices and class counts (see data.py), which
@@ -730,31 +727,29 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         else:
             y_fit = y
 
-        # 3c. Encode categorical/string features to numeric. This mirrors the
-        # TransformToNumerical step in TabICLClassifier/TabICLRegressor.fit()
-        # and must run on the original container (DataFrame) so column dtype
-        # info is available for detecting categoricals.
-        self._X_encoder_ = TransformToNumerical()
-        X = self._X_encoder_.fit_transform(X_original)
-        X = np.asarray(X, dtype=np.float64)
-        self.X_raw_ = X
-
-        # 4. Val split
+        # 4. Val split — done BEFORE encoding so the encoder is fit on train
+        # only and validation categories/values don't leak into preprocessing.
         if X_val is not None and y_val is not None:
-            X_train_arr, y_train_arr = X, y_fit
-            X_val_arr = np.asarray(self._X_encoder_.transform(X_val), dtype=np.float64)
+            X_train_orig, X_val_orig = X_original, X_val
+            y_train_arr = y_fit
             y_val_arr = np.asarray(y_val)
             if self._model_type == "classifier":
                 y_val_arr = self._label_encoder_.transform(y_val_arr).astype(np.int64)
         else:
             stratify = y_fit if self._model_type == "classifier" else None
-            X_train_arr, X_val_arr, y_train_arr, y_val_arr = train_test_split(
-                X,
+            X_train_orig, X_val_orig, y_train_arr, y_val_arr = train_test_split(
+                X_original,
                 y_fit,
                 test_size=self.validation_split_ratio,
                 random_state=self.random_state,
                 stratify=stratify,
             )
+
+        # 4b. Encode categorical/string features to numeric. Fit on training
+        # portion only so validation data doesn't leak into the encoder.
+        self._X_encoder_ = TransformToNumerical()
+        X_train_arr = np.asarray(self._X_encoder_.fit_transform(X_train_orig), dtype=np.float64)
+        X_val_arr = np.asarray(self._X_encoder_.transform(X_val_orig), dtype=np.float64)
 
         # 5. Load pretrained model
         self._load_pretrained(device)

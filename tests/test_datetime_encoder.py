@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+pytest.importorskip("statsmodels", reason="forecast extra not installed")
 from tabicl.forecast.transforms._calendar import DatetimeEncoder
 
 

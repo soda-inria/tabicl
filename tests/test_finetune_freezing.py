@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 
+pytest.importorskip("transformers", reason="finetune extra not installed")
 from tabicl import FinetunedTabICLClassifier, FinetunedTabICLRegressor
 
 from conftest import model_path
@@ -31,6 +32,7 @@ def test_classifier_partial_freezing(freeze_col, freeze_row, freeze_icl):
         n_estimators_validation=1,
         n_estimators_inference=1,
         early_stopping=False,
+        amp=False,
         freeze_col=freeze_col,
         freeze_row=freeze_row,
         freeze_icl=freeze_icl,
@@ -60,6 +62,7 @@ def test_regressor_partial_freezing(freeze_col, freeze_row, freeze_icl):
         n_estimators_validation=1,
         n_estimators_inference=1,
         early_stopping=False,
+        amp=False,
         freeze_col=freeze_col,
         freeze_row=freeze_row,
         freeze_icl=freeze_icl,

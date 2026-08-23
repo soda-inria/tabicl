@@ -52,6 +52,24 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: soda-inria/tabicl
 
+  test-optional-extras:
+    # Run tests that require optional extras (finetune, forecast).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.5.4"
+      - name: Install package with all extras
+        run: uv pip install --system -e ".[all]"
+      - name: Run tests
+        run: python -m pytest tests/ -x
+
   test-dev-deps:
     # Only run on scheduled builds or manual triggers to avoid causing random
     # failure in regular CI run on PRs.

@@ -1,7 +1,7 @@
 [project]
 name = "tabicl"
 dynamic = ["version"]
-description = "TabICL: A state-of-the-art tabular foundation model"
+description = "TabICL: An open tabular foundation model"
 readme = "README.md"
 authors = [
     { name = "Jingang Qu" },

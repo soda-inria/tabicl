@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+pytest.importorskip("transformers", reason="finetune extra not installed")
 from tabicl import FinetunedTabICLClassifier, FinetunedTabICLRegressor
 
 from conftest import model_path

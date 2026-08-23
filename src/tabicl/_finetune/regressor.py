@@ -304,6 +304,7 @@ class FinetunedTabICLRegressor(RegressorMixin, FinetunedTabICLBase):
                 allow_auto_download=self.allow_auto_download,
                 checkpoint_version=self.checkpoint_version,
                 device=device,
+                use_amp=False,
                 random_state=self.random_state,
             )
         )
