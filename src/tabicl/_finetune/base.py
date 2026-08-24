@@ -223,9 +223,7 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
     **Freezing**
 
     freeze_col : bool, default=False
-        Freeze the column-embedding sub-module. Its parameters retain
-        ``requires_grad=False`` and its dropout / batch-norm stay in eval mode
-        across the entire training loop.
+        Freeze the column-embedding sub-module.
 
     freeze_row : bool, default=False
         Freeze the row-interaction sub-module.

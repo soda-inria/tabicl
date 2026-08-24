@@ -64,8 +64,8 @@ class TestPredictAllNanCategorical:
         preds = reg.predict(X_pred)
         assert preds.shape == (20,)
 
-    def test_shap_numpy_allnan_column_still_works(self):
-        """SHAP's feature masking (numpy arrays with all-NaN columns) must still work."""
+    def test_numpy_allnan_column_predict_proba(self):
+        """Numpy arrays with all-NaN columns should produce valid predictions."""
         rng = np.random.default_rng(0)
         n = 50
         X = rng.normal(size=(n, 4))

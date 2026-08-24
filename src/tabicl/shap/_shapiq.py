@@ -4,9 +4,10 @@
 indices — richer than plain SHAP values because they also capture feature
 interactions.
 
-TabICL natively treats NaN columns as absent features, so we provide a
-custom :class:`_NaNImputer` that replaces masked features with NaN instead
-of drawing from the marginal distribution.
+We provide a custom :class:`_NaNImputer` that replaces masked features with
+NaN instead of drawing from the marginal distribution. TabICL's preprocessing
+handles NaN through mean imputation (numeric) or missing-category encoding
+(categorical), providing a natural missing-value baseline.
 
 Example::
 
@@ -34,12 +35,11 @@ from sklearn.base import BaseEstimator
 
 
 class _NaNImputer(MarginalImputer):
-    """Replace absent features with NaN for TabICL's native missing-feature handling.
+    """Replace absent features with NaN for TabICL's missing-value baseline.
 
     When shapiq evaluates a coalition (subset of features), absent features are
-    set to NaN.  TabICL recognises NaN columns as genuinely missing by giving
-    semantically correct "remove-and-recontextualize" explanations without any
-    sampling noise.
+    set to NaN. TabICL's preprocessing handles these through normal imputation,
+    providing a deterministic baseline without sampling noise.
 
     Parameters
     ----------

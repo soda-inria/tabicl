@@ -1,9 +1,9 @@
 """SHAP explanations for TabICL.
 
-TabICL treats NaN columns as absent features. This module exploits that
-by using a single all-NaN row as the SHAP background, so that masked
-features are genuinely removed from the model's perspective rather than
-replaced by some reference value.
+This module uses a single all-NaN row as the SHAP background. NaN values
+are handled by TabICL's normal preprocessing (mean imputation for numeric
+features, missing-category encoding for categoricals), providing a
+natural missing-value baseline for feature attribution.
 
 Example::
 
