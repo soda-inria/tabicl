@@ -4,7 +4,6 @@ import os
 import uuid
 import math
 import shutil
-import pathlib
 import psutil
 import weakref
 import itertools
@@ -21,37 +20,7 @@ from torch import Tensor
 
 from .kv_cache import KVCache
 from .attention import flash_attn3_toggle
-
-
-def _cgroup_memory_headroom() -> int | None:
-    """Bytes this process may still allocate under its cgroup, or None if unlimited.
-
-    Handles cgroup v2 (``memory.max`` / ``memory.current``) and v1
-    (``memory.limit_in_bytes`` / ``memory.usage_in_bytes``). Returns None when there is
-    no cgroup, when the limit is literally ``"max"``, or when it is the sentinel huge
-    value v1 uses to mean unlimited -- in all of which cases psutil's figure stands.
-
-    Never raises: a memory estimate is not worth crashing an inference call over, and
-    every failure path here simply falls back to the previous behaviour.
-    """
-    pairs = (("/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory.current"),
-             ("/sys/fs/cgroup/memory/memory.limit_in_bytes",
-              "/sys/fs/cgroup/memory/memory.usage_in_bytes"))
-    for limit_path, usage_path in pairs:
-        try:
-            limit_raw = pathlib.Path(limit_path).read_text().split()[0]
-            if limit_raw == "max":
-                return None
-            limit = int(limit_raw)
-            # v1 signals "unlimited" with a value near 2**63; anything at or above the
-            # host's physical memory is not a real constraint either.
-            if limit >= psutil.virtual_memory().total:
-                return None
-            usage = int(pathlib.Path(usage_path).read_text().split()[0])
-            return max(0, limit - usage)
-        except (OSError, ValueError, IndexError):
-            continue
-    return None
+from ._cgroup_memory import _cgroup_memory_headroom
 
 
 class MemoryEstimator:
@@ -810,7 +779,10 @@ class InferenceManager:
         error**, which from the outside is indistinguishable from a clean exit.
 
         The cgroup headroom is intersected with psutil's figure rather than replacing it,
-        so this can only ever be more conservative than the previous behaviour.
+        so this can only ever be more conservative than the previous behaviour. The process
+        cgroup is resolved from ``/proc/self/cgroup`` and ancestors are walked, so nested
+        layouts (Kubernetes, ``docker run --cgroupns=host``) are handled rather than only
+        ``/sys/fs/cgroup/memory.max``.
         """
         available = psutil.virtual_memory().available
         headroom = _cgroup_memory_headroom()
