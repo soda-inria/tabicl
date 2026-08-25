@@ -968,22 +968,22 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
                 )
 
             # 10.5  Update best-state / patience, maybe early-stop.
-            if self.early_stopping and not np.isnan(primary):
-                if is_best:
-                    best_metric = primary
-                    patience_counter = 0
-                    best_state = {k: v.detach().cpu().clone() for k, v in self.model_.state_dict().items()}
-                else:
-                    patience_counter += 1
-                if patience_counter >= self.patience:
-                    if master:
-                        logger.info(
-                            "Early stopping at epoch %d (best %s=%.4f)",
-                            epoch,
-                            self._metric_name,
-                            best_metric,
-                        )
-                    break
+            if not np.isnan(primary) and is_best:
+                best_metric = primary
+                best_state = {k: v.detach().cpu().clone() for k, v in self.model_.state_dict().items()}
+                patience_counter = 0
+            else:
+                patience_counter += 1
+
+            if self.early_stopping and patience_counter >= self.patience:
+                if master:
+                    logger.info(
+                        "Early stopping at epoch %d (best %s=%.4f)",
+                        epoch,
+                        self._metric_name,
+                        best_metric,
+                    )
+                break
 
             # 10.6  Wall-clock time-budget check — stop if the *next* epoch
             #       would push us past ``self.time_limit``. Decision is made

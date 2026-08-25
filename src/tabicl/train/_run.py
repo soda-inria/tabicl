@@ -198,11 +198,13 @@ class Trainer:
         # FlashAttention-3 runs attention in fp16; the v2 recipe enables it only for stages 2 & 3.
         set_flash_attn3_enabled(self.config.use_flash_attn3)
 
-        # PyTorch >= 2.4 sends fp16/bf16 attention on Hopper to the cuDNN SDPA backend, whose
-        # backward is slower than the Flash Attention kernel and copies grad_output when its
-        # strides differ from the output's. Always disabled.
-        if hasattr(torch.backends.cuda, "enable_cudnn_sdp"):
-            torch.backends.cuda.enable_cudnn_sdp(False)
+        # PyTorch >= 2.4 may route fp16/bf16 attention to the cuDNN SDPA backend,
+        # whose backward is slower than Flash Attention for TabICL's attention
+        # patterns and warns about mismatched grad_output strides. Disabled for
+        # the training forward via sdpa_kernel (see configure_amp).
+        self._disable_cudnn_sdp = (
+            hasattr(torch.backends.cuda, "enable_cudnn_sdp") and "cuda" in self.config.device
+        )
 
         self.model_config = {
             "max_classes": 0 if self.regression else self.config.max_classes,
@@ -379,6 +381,14 @@ class Trainer:
             self.amp_ctx = torch.autocast(device_type="cuda", dtype=amp_dtype)
         else:
             self.amp_ctx = nullcontext()
+
+    def _sdpa_ctx(self):
+        """Context manager that disables cuDNN SDPA for the training forward."""
+        if self._disable_cudnn_sdp:
+            from torch.nn.attention import sdpa_kernel, SDPBackend
+
+            return sdpa_kernel([SDPBackend.FLASH_ATTENTION, SDPBackend.EFFICIENT_ATTENTION, SDPBackend.MATH])
+        return nullcontext()
 
     def get_latest_checkpoint(self):
         """Returns the latest checkpoint from `checkpoint_dir`
@@ -678,7 +688,7 @@ class Trainer:
         # variable-feature priors (e.g. graph_scm).
         model_d = None if self.config.ignore_d else micro_d
 
-        with self.amp_ctx:
+        with self.amp_ctx, self._sdpa_ctx():
             if self.regression:
                 # (B, test_size, num_quantiles) predicted quantiles at levels
                 # linspace(0, 1, num_quantiles + 2)[1:-1] (matches inference / QuantileDistribution)

@@ -79,3 +79,27 @@ class TestPredictAllNanCategorical:
         proba = clf.predict_proba(X_pred)
         assert proba.shape == (10, 2)
         assert np.allclose(proba.sum(axis=1), 1.0)
+
+    def test_prediction_independent_of_batch_composition(self):
+        """A row's prediction must not change based on other rows' NaN patterns."""
+        rng = np.random.default_rng(0)
+        n = 50
+        X = rng.normal(size=(n, 4))
+        y = rng.choice([0, 1], size=n)
+
+        clf = TabICLClassifier(n_estimators=1, **model_path("classifier"))
+        clf.fit(X, y)
+
+        # Row 0 has a non-NaN value in column 2
+        X_row = X[:1].copy()
+
+        # Predict row 0 alone
+        proba_alone = clf.predict_proba(X_row)
+
+        # Predict row 0 alongside rows where column 2 is all-NaN
+        X_batch = np.vstack([X_row, X[1:5]])
+        X_batch[1:, 2] = np.nan
+        proba_in_batch = clf.predict_proba(X_batch)
+
+        # Row 0's prediction should be the same regardless of batch composition
+        np.testing.assert_allclose(proba_alone[0], proba_in_batch[0], rtol=1e-5)

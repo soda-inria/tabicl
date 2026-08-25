@@ -29,15 +29,15 @@ New features
 Bug fixes
 ---------
 
-- Finetuning now supports string/categorical features in DataFrames, matching the behavior of the base `TabICLClassifier` and `TabICLRegressor`. Previously, `FinetunedTabICLClassifier` and `FinetunedTabICLRegressor` would raise `ValueError: could not convert string to float` when the input contained categorical columns. (Reported by @zehua-jerry-yu in [#118](https://github.com/soda-inria/tabicl/issues/118))
+- Finetuning now supports string/categorical features in DataFrames, matching the behavior of the base `TabICLClassifier` and `TabICLRegressor`. Previously, `FinetunedTabICLClassifier` and `FinetunedTabICLRegressor` would raise `ValueError: could not convert string to float` when the input contained categorical columns. ([PR#151](https://github.com/soda-inria/tabicl/pull/151); reported by @zehua-jerry-yu in [#118](https://github.com/soda-inria/tabicl/issues/118))
 
-- Fix `DatetimeEncoder` sin/cos encoding off-by-one error that caused the first and last elements of a period to map to identical angles (e.g. Monday and Sunday getting the same encoding). The denominator was incorrectly `p-1` instead of `p`. (Reported by @christophM in [#136](https://github.com/soda-inria/tabicl/issues/136))
+- Fix `DatetimeEncoder` sin/cos encoding off-by-one error that caused the first and last elements of a period to map to identical angles (e.g. Monday and Sunday getting the same encoding). The denominator was incorrectly `p-1` instead of `p`. ([PR#151](https://github.com/soda-inria/tabicl/pull/151); reported by @christophM in [#136](https://github.com/soda-inria/tabicl/issues/136))
 
-- Fix `float16` input arrays crashing during Yeo-Johnson normalization in the preprocessing pipeline. The `PreprocessingPipeline` now upcasts `float16` to `float32` before fitting/transforming, avoiding scipy's narrow-exponent bound error. (Reported by @SebastienMelo in [#140](https://github.com/soda-inria/tabicl/issues/140))
+- Fix `float16` input arrays crashing during Yeo-Johnson normalization in the preprocessing pipeline. The `PreprocessingPipeline` now upcasts `float16` to `float32` before fitting/transforming, avoiding scipy's narrow-exponent bound error. ([PR#151](https://github.com/soda-inria/tabicl/pull/151); reported by @SebastienMelo in [#140](https://github.com/soda-inria/tabicl/issues/140))
 
-- Fix `predict_proba`/`predict` crashing with `TypeError` when a categorical column is all-NaN in the prediction batch. Removed the batch-global all-NaN feature-masking detection from the prediction path — it was intended for SHAP but did not work correctly with SHAP's coalition batching, and made predictions depend on batch composition. All-NaN columns now flow through normal preprocessing (OrdinalEncoder/SimpleImputer handle NaN natively). (Reported by @Innixma in [#143](https://github.com/soda-inria/tabicl/issues/143))
+- Fix `predict_proba`/`predict` crashing with `TypeError` when a categorical column is all-NaN in the prediction batch. Removed the batch-global all-NaN feature-masking detection from the prediction path — it was intended for SHAP but did not work correctly with SHAP's coalition batching, and made predictions depend on batch composition. All-NaN columns now flow through normal preprocessing (OrdinalEncoder/SimpleImputer handle NaN natively). ([PR#151](https://github.com/soda-inria/tabicl/pull/151); reported by @Innixma in [#143](https://github.com/soda-inria/tabicl/issues/143))
 
-- Fix PyTorch autograd error when fine-tuning with partial module freezing (e.g. `freeze_col=True, freeze_row=True, freeze_icl=False`). An in-place operation on a tensor view from frozen modules conflicted with autograd; resolved by detaching before the in-place write. (Reported by @denisfouchard in [#128](https://github.com/soda-inria/tabicl/issues/128))
+- Fix PyTorch autograd error when fine-tuning with partial module freezing (e.g. `freeze_col=True, freeze_row=True, freeze_icl=False`). An in-place operation on a tensor view from frozen modules conflicted with autograd; resolved by detaching before the in-place write. ([PR#151](https://github.com/soda-inria/tabicl/pull/151); reported by @denisfouchard in [#128](https://github.com/soda-inria/tabicl/issues/128))
 
 - When unpickling a TabICL estimator, the fitted attributes `device_`, `model_`, etc. are only set if the pickled model was fitted. ([PR#121](https://github.com/soda-inria/tabicl/pull/121), @jeromedockes)
 
@@ -52,6 +52,8 @@ Bug fixes
 - Fix `UnicodeEncodeError` in fine-tuning tutorials on Windows. ([PR#141](https://github.com/soda-inria/tabicl/pull/141), @maxdemarzi)
 
 - Fix `mix_probs` key in `SCMPrior`. ([PR#106](https://github.com/soda-inria/tabicl/pull/106), @nightcityblade)
+
+- Fix `early_stopping=False` silently discarding all fine-tuning updates: `best_state` was only updated inside the early-stopping branch, so disabling early stopping caused the pretrained weights to be restored after training. ([PR#151](https://github.com/soda-inria/tabicl/pull/151), @dholzmueller)
 
 Documentation
 -------------

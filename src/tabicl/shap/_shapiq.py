@@ -102,8 +102,8 @@ def get_shapiq_explainer(
         How absent features are handled when evaluating coalitions:
 
         - ``"nan"`` (default) — uses :class:`_NaNImputer` so that absent
-          features become NaN, exploiting TabICL's native missing-feature
-          handling.  Deterministic, no sampling noise.
+          features become NaN, handled by TabICL's normal preprocessing
+          (imputation).  Deterministic, no sampling noise.
         - ``"marginal"`` — standard marginal-sampling imputation.
         - ``"baseline"`` — replace absent features with a fixed baseline
           value (typically the mean of `data`).
