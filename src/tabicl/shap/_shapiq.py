@@ -7,7 +7,10 @@ interactions.
 We provide a custom :class:`_NaNImputer` that replaces masked features with
 NaN instead of drawing from the marginal distribution. TabICL's preprocessing
 handles NaN through mean imputation (numeric) or missing-category encoding
-(categorical), providing a natural missing-value baseline.
+(numerically-encoded categoricals), providing a natural missing-value baseline.
+
+Note: Categorical features must be numerically encoded before computing ShapIQ
+values. See the SHAP module documentation and tutorials/interpretability.py.
 
 Example::
 

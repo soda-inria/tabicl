@@ -494,9 +494,10 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
     def _apply_freezing(self, model: TabICL) -> bool:
         """Zero ``requires_grad`` on frozen sub-modules.
 
-        Mode (train/eval) is handled separately by :meth:`_set_training_mode`
-        so that calling ``model.train()`` elsewhere doesn't silently re-enable
-        dropout / BN updates on the frozen parts.
+        Frozen modules are kept in train mode alongside unfrozen ones by
+        :meth:`_set_training_mode`. This avoids dtype mismatches at the
+        frozen→unfrozen boundary that would occur if frozen submodules were
+        in eval mode (inference path with autocast).
 
         Returns
         -------
@@ -786,6 +787,7 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         best_metric = self._broadcast_metric(best_metric, using_ddp, device)
 
         best_state = {k: v.detach().cpu().clone() for k, v in self.model_.state_dict().items()}
+        has_valid_metric = not np.isnan(best_metric)
 
         # 9. Estimate steps per epoch for scheduler. Under DDP the count is
         # per-rank (drop_last sharding), so ``total_steps`` matches the
@@ -951,6 +953,9 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
 
             primary = self._broadcast_metric(primary, using_ddp, device)
 
+            if not np.isnan(primary):
+                has_valid_metric = True
+
             # 10.4  Decide whether to checkpoint (best or interval-aligned).
             is_best = not np.isnan(primary) and self._metric_improved(primary, best_metric)
             save_this_interval = (
@@ -1009,9 +1014,29 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
                         )
                     break
 
-        # 11. Restore best weights
-        self.model_.load_state_dict(best_state)
-        self._best_metric_ = best_metric
+        # 11. Restore best weights, unless early_stopping=False and no valid metrics
+        if not has_valid_metric:
+            if self.early_stopping:
+                raise ValueError(
+                    f"Early stopping enabled but validation metric '{self._metric_name}' "
+                    f"could not be computed (NaN). This usually means the validation set "
+                    f"is incompatible with the chosen metric (e.g., single-class validation "
+                    f"with ROC-AUC). Either fix the validation set, choose a different metric, "
+                    f"or disable early stopping."
+                )
+            else:
+                # Keep final trained weights when early stopping is disabled
+                if master:
+                    logger.warning(
+                        "Validation metric '%s' was NaN for all epochs. "
+                        "Keeping final trained weights (early_stopping=False).",
+                        self._metric_name,
+                    )
+                self._best_metric_ = float("nan")
+        else:
+            # Normal case or baseline was NaN but training had valid metrics
+            self.model_.load_state_dict(best_state)
+            self._best_metric_ = best_metric
 
         # 11b. Always write a final best checkpoint so users have a single file
         # to point TabICLClassifier(model_path=...) at. If no epoch ever

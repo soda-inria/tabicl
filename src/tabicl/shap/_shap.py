@@ -2,8 +2,12 @@
 
 This module uses a single all-NaN row as the SHAP background. NaN values
 are handled by TabICL's normal preprocessing (mean imputation for numeric
-features, missing-category encoding for categoricals), providing a
-natural missing-value baseline for feature attribution.
+features, missing-category encoding for numerically-encoded categoricals),
+providing a natural missing-value baseline for feature attribution.
+
+Note: String/object categorical features must be numerically encoded before
+calling get_shap_values (e.g., via pandas' get_dummies or sklearn's
+OrdinalEncoder). See tutorials/interpretability.py for an example.
 
 Example::
 
@@ -49,6 +53,12 @@ def get_shap_values(estimator: Any, X_test: np.ndarray, attribute_names: list[st
     if hasattr(X_test, "columns") and attribute_names is None:
         attribute_names = list(X_test.columns)
     X_np = np.asarray(X_test, dtype=np.float64)
+    if X_np.dtype == object:
+        raise TypeError(
+            "SHAP values require numeric input. Categorical features must be "
+            "encoded before calling get_shap_values (e.g., via pd.get_dummies). "
+            "See tutorials/interpretability.py for an example."
+        )
 
     predict_fn = "predict_proba" if hasattr(estimator, "predict_proba") else "predict"
     explainer = get_shap_explainer(estimator, X_np, predict_fn=predict_fn, **kwargs)
