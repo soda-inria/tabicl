@@ -14,7 +14,7 @@ It does not require hyperparameter tuning
 and outperforms heavily tuned XGBoost, CatBoost, or LightGBM on TabArena on ~80% of datasets.
 
 **Easy to use:** TabICL is pip-installable and scikit-learn compliant. 
-It is also **open source** (including [pre-training](#pre-training) for v1), 
+It is also **open source** (including [pre-training](#pre-training)), 
 with a permissive license.
 
 **Speed:** TabICL performs `fit` and `predict` jointly via a single 
@@ -289,10 +289,10 @@ plot_shap(shap_values)
 
 Pre-training code (including synthetic data generation) is available for **both TabICLv1 and TabICLv2**.
 
-> **Disclaimer:** the TabICLv2 pre-training code has been vibe-migrated from the original
-> (private) pre-training codebase into this repository. While the port has been carefully
-> cross-checked against the original code and the released checkpoints, the training scripts
-> have not yet been tested end-to-end to reproduce the original pre-training results.
+> **Note:** We updated the TabICLv2 pre-training code 
+> to use AMP with float16 as in the original pre-training runs. 
+> While the code has been vibe-migrated from the original
+> (private) pre-training codebase, users have been able to achieve good performance with it.
 
 The easiest way to pre-train is to run the stage scripts in the `scripts` folder, which contain
 the full recipes (they launch `python -m tabicl.train` under `torchrun` with all arguments set).
@@ -306,9 +306,7 @@ bash scripts/train_v2_clf_stage3.sh   # loads the stage-2 checkpoint
 ```
 
 Available recipes:
-- **TabICLv2** ([arXiv](https://arxiv.org/abs/2602.11139), §4.1): the three-stage `graph_scm` recipe with
-  the Muon optimizer, with separate scripts for the classifier and regressor checkpoints —
-  classifier [stage 1](./scripts/train_v2_clf_stage1.sh), [stage 2](./scripts/train_v2_clf_stage2.sh),
+- **TabICLv2** ([arXiv](https://arxiv.org/abs/2602.11139), §4.1): classifier [stage 1](./scripts/train_v2_clf_stage1.sh), [stage 2](./scripts/train_v2_clf_stage2.sh),
   [stage 3](./scripts/train_v2_clf_stage3.sh); regressor [stage 1](./scripts/train_v2_reg_stage1.sh),
   [stage 2](./scripts/train_v2_reg_stage2.sh), [stage 3](./scripts/train_v2_reg_stage3.sh).
 - **TabICLv1**: [stage 1](./scripts/train_stage1.sh), [stage 2](./scripts/train_stage2.sh),
@@ -363,8 +361,7 @@ We have not tested if TabICL generalizes to datasets smaller than 300 samples.
 <img src="./docs/figures/tabiclv2_perf_vs_n_samples.png" width="70%" alt="Average rank vs. number of samples" style="display: block; margin: auto;">
 
 **What about the number of columns?**
-TabICLv2 is pre-trained on datasets between 2 and 100 columns. 
-We see good generalization to more columns and don't know where the limit is.
+TabICLv2 is pre-trained on datasets between 2 and 100 columns. It can degrade when going much beyond 100 features.
 
 <img src="./docs/figures/tabiclv2_perf_vs_n_features.png" width="70%" alt="Average rank vs. number of features" style="display: block; margin: auto;">
 
