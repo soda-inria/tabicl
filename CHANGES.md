@@ -53,6 +53,8 @@ Bug fixes
 
 - Fix `early_stopping=False` silently discarding all fine-tuning updates: `best_state` was only updated inside the early-stopping branch, so disabling early stopping caused the pretrained weights to be restored after training. ([PR#151](https://github.com/soda-inria/tabicl/pull/151), @dholzmueller)
 
+- Fix `IndexError: Cannot choose from an empty sequence` crash when all input features are constant. The `UniqueFeatureFilter` now preserves at least one feature when all would otherwise be removed, allowing the model to gracefully degrade to predicting the target's marginal distribution instead of crashing. ([PR#150](https://github.com/soda-inria/tabicl/pull/150), @klemens-floege)
+
 Documentation
 -------------
 

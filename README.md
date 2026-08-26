@@ -293,6 +293,8 @@ Pre-training code (including synthetic data generation) is available for **both 
 > to use AMP with float16 as in the original pre-training runs. 
 > While the code has been vibe-migrated from the original
 > (private) pre-training codebase, users have been able to achieve good performance with it.
+> On systems with fewer CPU cores, it might speed up the training to reduce n_jobs. 
+> On 4xH100, it should be possible to reach 0.7-0.8s/step for stage 1.
 
 The easiest way to pre-train is to run the stage scripts in the `scripts` folder, which contain
 the full recipes (they launch `python -m tabicl.train` under `torchrun` with all arguments set).
