@@ -3,8 +3,8 @@
 import numpy as np
 import pandas as pd
 import pytest
+import shap  # noqa: F401
 
-pytest.importorskip("shap", reason="shap extra not installed")
 from tabicl import TabICLClassifier
 from tabicl.shap import get_shap_values
 

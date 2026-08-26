@@ -2,8 +2,8 @@
 
 import numpy as np
 import pytest
+import transformers  # noqa: F401
 
-pytest.importorskip("transformers", reason="finetune extra not installed")
 from tabicl import FinetunedTabICLClassifier, FinetunedTabICLRegressor
 
 from conftest import model_path

@@ -3,8 +3,8 @@
 import numpy as np
 import pandas as pd
 import pytest
+import statsmodels  # noqa: F401
 
-pytest.importorskip("statsmodels", reason="forecast extra not installed")
 from tabicl.forecast.transforms._calendar import DatetimeEncoder
 
 

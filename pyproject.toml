@@ -73,6 +73,9 @@ finetune = [
 test = [
     "pandas",
     "pytest",
+    "transformers",  # needed for fine-tuning tests
+    "statsmodels",  # needed for forecast/datetime tests
+    "shap>=0.42",  # needed for SHAP tests
 ]
 all = [
     "tabicl[doc,forecast,shap,pretrain,finetune,test]",
