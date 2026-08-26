@@ -91,3 +91,37 @@ class TestDatetimeEncoderNoDuplicateAngles:
             actual_cos = result.iloc[i]["day_of_week_cos"]
             assert np.isclose(actual_sin, expected_sin), f"day {i}: sin mismatch"
             assert np.isclose(actual_cos, expected_cos), f"day {i}: cos mismatch"
+
+    def test_leap_year_day_of_year_no_collision(self):
+        """First and last day of leap year must NOT collide."""
+        # 2024 is a leap year (366 days)
+        dates = pd.date_range("2024-01-01", periods=366, freq="D")
+        idx = pd.MultiIndex.from_arrays([dates], names=["timestamp"])
+        df = pd.DataFrame({"value": range(366)}, index=idx)
+        enc = DatetimeEncoder(
+            components=[],
+            seasonal_features={"day_of_year": [366]},
+        )
+        result = enc.generate(df)
+        day_1 = result.iloc[0][["day_of_year_sin", "day_of_year_cos"]].values
+        day_366 = result.iloc[365][["day_of_year_sin", "day_of_year_cos"]].values
+        assert not np.allclose(day_1, day_366, atol=1e-10), (
+            f"Day 1 and day 366 have identical encodings: {day_1}"
+        )
+
+    def test_iso_week_53_no_collision(self):
+        """First and last ISO week must NOT collide in week-53 years."""
+        # 2020 has ISO week 53
+        dates = pd.date_range("2020-01-06", "2021-01-03", freq="W-MON")  # Week 1 to week 53
+        idx = pd.MultiIndex.from_arrays([dates], names=["timestamp"])
+        df = pd.DataFrame({"value": range(len(dates))}, index=idx)
+        enc = DatetimeEncoder(
+            components=[],
+            seasonal_features={"week_of_year": [53]},
+        )
+        result = enc.generate(df)
+        week_1 = result.iloc[0][["week_of_year_sin", "week_of_year_cos"]].values
+        week_53 = result.iloc[-1][["week_of_year_sin", "week_of_year_cos"]].values
+        assert not np.allclose(week_1, week_53, atol=1e-10), (
+            f"Week 1 and week 53 have identical encodings: {week_1}"
+        )

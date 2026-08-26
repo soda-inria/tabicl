@@ -400,7 +400,7 @@ class FinetunedTabICLClassifier(ClassifierMixin, FinetunedTabICLBase):
             given by :attr:`classes_`.
         """
         check_is_fitted(self, "_final_estimator_")
-        return self._final_estimator_.predict_proba(X)
+        return self._final_estimator_.predict_proba(self._transform_X_for_inference(X))
 
     @property
     def classes_(self):

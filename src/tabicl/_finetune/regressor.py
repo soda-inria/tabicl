@@ -381,4 +381,6 @@ class FinetunedTabICLRegressor(RegressorMixin, FinetunedTabICLBase):
         ``"quantiles"``, ``"raw_quantiles"``).
         """
         check_is_fitted(self, "_final_estimator_")
-        return self._final_estimator_.predict(X, output_type=output_type, alphas=alphas)
+        return self._final_estimator_.predict(
+            self._transform_X_for_inference(X), output_type=output_type, alphas=alphas
+        )

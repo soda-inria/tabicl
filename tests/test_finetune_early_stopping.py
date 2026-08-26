@@ -2,8 +2,8 @@
 
 import numpy as np
 import pytest
+import transformers  # noqa: F401
 
-pytest.importorskip("transformers", reason="finetune extra not installed")
 from tabicl import TabICLClassifier, FinetunedTabICLClassifier, FinetunedTabICLRegressor
 
 from conftest import model_path
@@ -62,8 +62,14 @@ def test_early_stopping_false_with_nan_validation_classifier():
     )
 
 
-def test_early_stopping_true_with_nan_validation_raises():
-    """Verify early_stopping=True raises error when validation metric is NaN."""
+def test_early_stopping_true_with_baseline_nan_raises():
+    """Verify early_stopping=True raises error when baseline validation metric is NaN.
+
+    Note: If a metric becomes NaN mid-training (after some valid epochs), the
+    training loop stops gracefully with a warning instead of raising. This
+    handles training instability (e.g., high learning rate, exploding gradients).
+    Baseline NaN indicates a validation setup issue that must be fixed.
+    """
     rng = np.random.default_rng(42)
 
     # Create normal multi-class training data
@@ -86,8 +92,8 @@ def test_early_stopping_true_with_nan_validation_raises():
         **model_path("classifier"),
     )
 
-    # Should raise ValueError about incompatible validation metric
-    with pytest.raises(ValueError, match="could not be computed"):
+    # Should raise ValueError immediately when baseline metric is NaN
+    with pytest.raises(ValueError, match="Early stopping enabled but validation metric.*is NaN"):
         clf.fit(X_train, y_train, X_val=X_val, y_val=y_val)
 
 
