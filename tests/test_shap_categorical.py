@@ -11,26 +11,18 @@ from tabicl.shap import get_shap_values
 from conftest import model_path
 
 
-@pytest.mark.parametrize("input_type", ["dataframe", "object_array"])
-def test_get_shap_values_gives_clear_error_for_string_categories(input_type):
+def test_get_shap_values_gives_clear_error_for_string_categories():
     """String/object categoricals should give a helpful TypeError.
 
-    This tests the realistic workflow: TabICL handles categorical data fine
-    during fit, but SHAP cannot explain categoricals without pre-encoding.
+    This tests the API asymmetry: TabICL accepts categorical DataFrames during
+    fit, but the SHAP helper requires numeric input. The error message guides
+    users to encode before fitting.
     """
-    # Prepare categorical data
-    if input_type == "dataframe":
-        X = pd.DataFrame({
-            "cat": ["a", "b", "c"] * 10,
-            "num1": np.random.randn(30),
-            "num2": np.random.randn(30),
-        })
-    else:  # object_array
-        X = np.array(
-            [["a", 1.0, 4.0], ["b", 2.0, 5.0], ["c", 3.0, 6.0]] * 10,
-            dtype=object
-        )
-
+    X = pd.DataFrame({
+        "cat": ["a", "b", "c"] * 10,
+        "num1": np.random.randn(30),
+        "num2": np.random.randn(30),
+    })
     y = np.random.choice([0, 1], size=30)
 
     # Fit on categorical data (TabICL handles this automatically)

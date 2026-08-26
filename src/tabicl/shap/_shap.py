@@ -57,9 +57,10 @@ def get_shap_values(estimator: Any, X_test: np.ndarray, attribute_names: list[st
         X_np = np.asarray(X_test, dtype=np.float64)
     except (TypeError, ValueError) as exc:
         raise TypeError(
-            "SHAP values require numeric input. Categorical features must be "
-            "encoded before calling get_shap_values (e.g., via pd.get_dummies "
-            "or OrdinalEncoder). See tutorials/interpretability.py for an example."
+            "SHAP values require numeric input. When using categorical features, "
+            "encode them before fitting the estimator and pass data using the same "
+            "numeric representation to get_shap_values. "
+            "See tutorials/interpretability.py for an example."
         ) from exc
 
     predict_fn = "predict_proba" if hasattr(estimator, "predict_proba") else "predict"
