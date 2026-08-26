@@ -467,7 +467,7 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         from sklearn.utils.validation import check_is_fitted
 
         check_is_fitted(self, "_final_estimator_")
-        return self._final_estimator_.predict(X)
+        return self._final_estimator_.predict(self._transform_X_for_inference(X))
 
     def _transform_X_for_inference(self, X):
         """Transform input through the fine-tuning encoder.

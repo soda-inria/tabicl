@@ -73,9 +73,6 @@ finetune = [
 test = [
     "pandas",
     "pytest",
-    "transformers",  # needed for fine-tuning tests
-    "statsmodels",  # needed for forecast/datetime tests
-    "shap>=0.42",  # needed for SHAP tests
 ]
 all = [
     "tabicl[doc,forecast,shap,pretrain,finetune,test]",
@@ -101,7 +98,7 @@ features = []
 [tool.hatch.envs.hatch-test]
 default-args = ["tests"]
 installer = "uv"
-features = ["test"]
+features = ["test", "forecast", "shap", "finetune"]
 
 [tool.hatch.envs.types]
 extra-dependencies = [
