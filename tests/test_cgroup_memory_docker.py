@@ -105,6 +105,11 @@ def _assert_capped_at(payload: dict, cap_bytes: int) -> None:
 
 
 def test_docker_private_cgroupns_uses_memory_max(probe_image: str):
+    """Default ``docker run --memory`` remounts the cap at ``/sys/fs/cgroup/memory.max``.
+
+    ``psutil`` still reports host RAM; headroom must follow the 256 MiB cgroup
+    limit instead.
+    """
     payload = _parse_probe(
         _run_container(
             probe_image,
@@ -127,6 +132,11 @@ def test_docker_private_cgroupns_uses_memory_max(probe_image: str):
 
 
 def test_docker_host_cgroupns_uses_nested_path(probe_image: str):
+    """With ``--cgroupns=host`` the cap is on a nested path, not the cgroup root.
+
+    This is the layout Kubernetes and many GPU clouds expose. Reading only
+    ``/sys/fs/cgroup/memory.max`` would miss the 256 MiB limit.
+    """
     result = _run_container(
         probe_image,
         [
@@ -155,6 +165,11 @@ def test_docker_host_cgroupns_uses_nested_path(probe_image: str):
 
 
 def test_docker_unlimited_is_not_a_cgroup_cap(probe_image: str):
+    """A container without ``--memory`` must not invent a tight cgroup cap.
+
+    Headroom is ``None`` (psutil stands) or, if the host still wraps Docker,
+    far above the 256 MiB fixture used by the other cases.
+    """
     payload = _parse_probe(_run_container(probe_image, []))
     if payload["headroom_bytes"] is None:
         assert payload["effective_available_bytes"] == payload["psutil_available_bytes"], payload

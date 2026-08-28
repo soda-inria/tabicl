@@ -18,6 +18,7 @@ import psutil
 import pytest
 
 from tabicl._model._cgroup_memory import _cgroup_memory_headroom
+from tabicl._model.inference import InferenceManager, _cgroup_memory_headroom as _exported_headroom
 
 PHYSICAL = 32 * 10**9
 LIMIT = 8_000_000_000
@@ -85,9 +86,7 @@ def test_detection_never_raises(monkeypatch):
 
 
 def test_available_memory_is_the_minimum_of_psutil_and_cgroup(monkeypatch):
-    pytest.importorskip("torch")
     from tabicl._model import inference
-    from tabicl._model.inference import InferenceManager
 
     mgr = InferenceManager.__new__(InferenceManager)
     monkeypatch.setattr(inference, "_cgroup_memory_headroom", lambda: 1024 ** 3)
@@ -99,7 +98,12 @@ def test_available_memory_is_the_minimum_of_psutil_and_cgroup(monkeypatch):
 
 
 def test_nested_cgroup_path_is_used(tmp_path):
-    """``docker run --cgroupns=host`` stores the limit under docker/<id>, not the root."""
+    """The limit lives on the process cgroup, not ``/sys/fs/cgroup/memory.max``.
+
+    ``docker run --cgroupns=host`` (and Kubernetes) nest the container under
+    ``docker/<id>`` while the cgroup root stays ``max``. Reading only the root
+    file would report unlimited host RAM.
+    """
     cg = tmp_path / "cg"
     nested = cg / "docker" / "abc123"
     _write(cg / "memory.max", "max")
@@ -110,6 +114,11 @@ def test_nested_cgroup_path_is_used(tmp_path):
 
 
 def test_leaf_unlimited_parent_limit_wins(tmp_path):
+    """A child cgroup with ``memory.max = max`` still inherits a parent's cap.
+
+    systemd scopes and in-container helpers often have no limit of their own;
+    the pod or slice above them does.
+    """
     cg = tmp_path / "cg"
     leaf = cg / "pod" / "ctr"
     _write(cg / "memory.max", str(LIMIT))
@@ -120,6 +129,12 @@ def test_leaf_unlimited_parent_limit_wins(tmp_path):
 
 
 def test_tightest_ancestor_headroom_wins(tmp_path):
+    """When several ancestors publish a limit, remaining budget is the minimum.
+
+    A container may look like it has 7 GB free while the pod, shared with
+    sidecars, only has 500 MB left. Using the leaf alone would overstate
+    headroom and skip disk offload.
+    """
     cg = tmp_path / "cg"
     leaf = cg / "pod" / "ctr"
     parent_limit, parent_usage = 4_000_000_000, 3_500_000_000
@@ -133,6 +148,7 @@ def test_tightest_ancestor_headroom_wins(tmp_path):
 
 
 def test_missing_leaf_files_walk_to_parent(tmp_path):
+    """If the leaf has no memory files (controller not delegated), use the parent."""
     cg = tmp_path / "cg"
     (cg / "docker" / "abc").mkdir(parents=True)
     _write(cg / "docker" / "memory.max", str(LIMIT))
@@ -141,6 +157,9 @@ def test_missing_leaf_files_walk_to_parent(tmp_path):
 
 
 def test_v1_nested_memory_controller(tmp_path):
+    """cgroup v1 uses ``memory:/rel`` in ``/proc/self/cgroup`` and files under
+    ``/sys/fs/cgroup/memory/<rel>``, not the v2 root.
+    """
     mem = tmp_path / "memory"
     nested = mem / "docker" / "abc123"
     _write(mem / "memory.limit_in_bytes", "9223372036854771712")
@@ -151,6 +170,7 @@ def test_v1_nested_memory_controller(tmp_path):
 
 
 def test_dotdot_in_cgroup_path_is_ignored(tmp_path):
+    """A ``..`` segment in the cgroup path must not escape the controller root."""
     cg = tmp_path / "cg"
     _write(cg / "memory.max", "max")
     _write(cg / "memory.current", "0")
@@ -160,7 +180,5 @@ def test_dotdot_in_cgroup_path_is_ignored(tmp_path):
 
 
 def test_inference_reexports_the_helper():
-    pytest.importorskip("torch")
-    from tabicl._model.inference import _cgroup_memory_headroom as exported
-
-    assert exported is _cgroup_memory_headroom
+    """``InferenceManager`` must keep using the same helper tests import."""
+    assert _exported_headroom is _cgroup_memory_headroom
