@@ -778,11 +778,9 @@ class InferenceManager:
         killer sends SIGKILL, so the process dies with **no Python traceback and no CUDA
         error**, which from the outside is indistinguishable from a clean exit.
 
-        The cgroup headroom is intersected with psutil's figure rather than replacing it,
-        so this can only ever be more conservative than the previous behaviour. The process
-        cgroup is resolved from ``/proc/self/cgroup`` and ancestors are walked, so nested
-        layouts (Kubernetes, ``docker run --cgroupns=host``) are handled rather than only
-        ``/sys/fs/cgroup/memory.max``.
+        Under the hood, this methods intersects the value returned by
+        ``psutil.virtual_memory().available`` with cgroup memory constraints for the current
+        process, if any.
         """
         available = psutil.virtual_memory().available
         headroom = _cgroup_memory_headroom()
