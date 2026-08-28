@@ -44,7 +44,7 @@ pytestmark = pytest.mark.skipif(
 
 @pytest.fixture(scope="module")
 def probe_image() -> str:
-    dockerfile = "FROM python:3.12-slim\nRUN pip install --no-cache-dir psutil\n"
+    dockerfile = "FROM python:3.14-slim\nRUN pip install --no-cache-dir psutil\n"
     with tempfile.TemporaryDirectory() as tmp:
         build = subprocess.run(
             ["docker", "build", "-t", IMAGE, "-f", "-", tmp],
