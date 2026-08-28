@@ -32,7 +32,7 @@ def _cgroup_memory_headroom() -> int | None:
     value v1 uses to mean unlimited -- in all of which cases psutil's figure stands.
 
     Never raises: a memory estimate is not worth crashing an inference call over, and
-    every failure path here simply falls back to the previous behaviour.
+    every failure path here simply falls back to the unconstrained behavior.
     """
     pairs = (("/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory.current"),
              ("/sys/fs/cgroup/memory/memory.limit_in_bytes",
@@ -810,7 +810,9 @@ class InferenceManager:
         error**, which from the outside is indistinguishable from a clean exit.
 
         The cgroup headroom is intersected with psutil's figure rather than replacing it,
-        so this can only ever be more conservative than the previous behaviour.
+        Under the hood, this methods intersects the value returned
+        by ``psutil.virtual_memory().available`` with cgroup
+        memory constraints for the current process, if any.
         """
         available = psutil.virtual_memory().available
         headroom = _cgroup_memory_headroom()
