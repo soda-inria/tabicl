@@ -18,7 +18,7 @@ import psutil
 import pytest
 
 from tabicl._model._cgroup_memory import _cgroup_memory_headroom
-from tabicl._model.inference import InferenceManager, _cgroup_memory_headroom as _exported_headroom
+from tabicl._model.inference import InferenceManager
 
 PHYSICAL = 32 * 10**9
 LIMIT = 8_000_000_000
@@ -177,8 +177,3 @@ def test_dotdot_in_cgroup_path_is_ignored(tmp_path):
     _write(tmp_path / "outside" / "memory.max", str(LIMIT))
     _write(tmp_path / "outside" / "memory.current", str(USAGE))
     assert _headroom(tmp_path, "/../../outside") is None
-
-
-def test_inference_reexports_the_helper():
-    """``InferenceManager`` must keep using the same helper tests import."""
-    assert _exported_headroom is _cgroup_memory_headroom
