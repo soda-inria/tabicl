@@ -53,7 +53,16 @@ def _join(root: Path, rel: str) -> Path:
     return root.joinpath(*parts) if parts else root
 
 
-def _walk(start: Path, stop: Path, limit_name: str, usage_name: str, physical: int) -> int | None:
+def _min_headroom_along_ancestors(
+    start: Path, stop: Path, limit_name: str, usage_name: str, physical: int
+) -> int | None:
+    """Smallest ``limit - usage`` on ``start`` and its parents up to ``stop``.
+
+    Levels with no file, ``"max"``, a non-positive limit, or a limit at or
+    above ``physical`` are skipped. Returns None if no ancestor has a real cap.
+    The walk stays under ``stop`` and is bounded so a malformed tree cannot
+    loop.
+    """
     best: int | None = None
     path = start
     for _ in range(64):
@@ -70,7 +79,13 @@ def _walk(start: Path, stop: Path, limit_name: str, usage_name: str, physical: i
     return best
 
 
-def _relpath(proc_cgroup: Path, *, v2: bool) -> str | None:
+def _process_cgroup_relpath(proc_cgroup: Path, *, v2: bool) -> str | None:
+    """Relative cgroup path for this process, from a ``cgroup`` proc file.
+
+    For v2, that is the suffix of the ``0::/foo`` line. For v1, the path on
+    the ``memory:`` controller line (``4:memory:/foo``). Returns None if the
+    file is unreadable or has no matching line.
+    """
     try:
         text = proc_cgroup.read_text()
     except OSError:
@@ -95,20 +110,30 @@ def _cgroup_memory_headroom(
 ) -> int | None:
     """Bytes this process may still allocate under its cgroup, or None if unlimited.
 
-    v2: ``memory.max`` / ``memory.current``. v1: ``memory.limit_in_bytes`` /
-    ``memory.usage_in_bytes``. ``"max"``, v1's ~2**63 sentinel, and any limit at
-    or above physical RAM are treated as unlimited.
+    Reads ``proc_cgroup`` (``/proc/self/cgroup`` by default), joins the relative
+    path onto ``v2_root`` (``memory.max`` / ``memory.current``) or, if there is
+    no v2 line, ``v1_root`` (``memory.limit_in_bytes`` / ``memory.usage_in_bytes``),
+    then walks parents to that root and returns the smallest ``limit - usage``.
 
-    Optional path arguments are for tests (a fake sysfs tree).
+    ``"max"``, a v1 ~2**63 unlimited sentinel, and any limit at or above
+    physical RAM are treated as no cap at that level. If ``proc_cgroup`` is
+    missing, the v2/v1 root files are tried (Docker's private cgroup namespace).
+
+    Optional path arguments inject a fake sysfs tree in tests.
+
+    Never raises: any error falls through to None so callers can keep using
+    psutil's host figure.
     """
     try:
         physical = physical_bytes if physical_bytes is not None else psutil.virtual_memory().total
-        rel = _relpath(proc_cgroup, v2=True)
+        rel = _process_cgroup_relpath(proc_cgroup, v2=True)
         if rel is not None:
-            return _walk(_join(v2_root, rel), v2_root, "memory.max", "memory.current", physical)
-        rel = _relpath(proc_cgroup, v2=False)
+            return _min_headroom_along_ancestors(
+                _join(v2_root, rel), v2_root, "memory.max", "memory.current", physical
+            )
+        rel = _process_cgroup_relpath(proc_cgroup, v2=False)
         if rel is not None:
-            return _walk(
+            return _min_headroom_along_ancestors(
                 _join(v1_root, rel), v1_root, "memory.limit_in_bytes", "memory.usage_in_bytes", physical
             )
         # /proc/self/cgroup missing: last try, Docker private-namespace root files.
