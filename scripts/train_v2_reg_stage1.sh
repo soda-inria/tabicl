@@ -19,10 +19,12 @@
 # (--norm_type layernorm_nobias), whereas the classifier uses LayerNorm with biases.
 #
 # Common: Muon optimizer, cautious weight decay parameter 0.01 (see note below),
-# cosine schedule, AMP, per-micro-batch train/test sizes (--seq_len_per_gp), up to
-# 100 features, 8 attention heads everywhere, graph_scm prior. AMP is always used.
-# v2 uses standard residual init (--zero_init False; v1 zero-initializes residual
-# branches) and enables FlashAttention-3 only in stages 2 & 3 (--use_flash_attn3).
+# cosine schedule, per-micro-batch train/test sizes (--seq_len_per_gp), up to
+# 100 features, 8 attention heads everywhere, graph_scm prior. The default dtype
+# is float32; float16 can be used for speedup (--dtype float16) but may lead to
+# training instabilities. v2 uses standard residual init (--zero_init False; v1
+# zero-initializes residual branches) and enables FlashAttention-3 only in stages
+# 2 & 3 (--use_flash_attn3).
 #
 # Adjust the placeholder paths and --nproc_per_node / --n_jobs for your hardware.
 

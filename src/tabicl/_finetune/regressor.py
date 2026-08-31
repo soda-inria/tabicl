@@ -151,13 +151,14 @@ class FinetunedTabICLRegressor(RegressorMixin, FinetunedTabICLBase):
     **Freezing**
 
     freeze_col : bool, default=False
-        Freeze the column-embedding sub-module (weights and dropout/BN).
+        Freeze parameters in the column-embedding sub-module (requires_grad=False).
+        The module remains in train mode to avoid dtype mismatches.
 
     freeze_row : bool, default=False
-        Freeze the row-interaction sub-module.
+        Freeze parameters in the row-interaction sub-module.
 
     freeze_icl : bool, default=False
-        Freeze the in-context-learning predictor.
+        Freeze parameters in the in-context-learning predictor.
 
     **Device & logging**
 
@@ -380,4 +381,6 @@ class FinetunedTabICLRegressor(RegressorMixin, FinetunedTabICLBase):
         ``"quantiles"``, ``"raw_quantiles"``).
         """
         check_is_fitted(self, "_final_estimator_")
-        return self._final_estimator_.predict(X, output_type=output_type, alphas=alphas)
+        return self._final_estimator_.predict(
+            self._transform_X_for_inference(X), output_type=output_type, alphas=alphas
+        )

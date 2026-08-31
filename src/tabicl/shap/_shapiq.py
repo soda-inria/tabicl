@@ -4,9 +4,13 @@
 indices — richer than plain SHAP values because they also capture feature
 interactions.
 
-TabICL natively treats NaN columns as absent features, so we provide a
-custom :class:`_NaNImputer` that replaces masked features with NaN instead
-of drawing from the marginal distribution.
+We provide a custom :class:`_NaNImputer` that replaces masked features with
+NaN instead of drawing from the marginal distribution. TabICL's preprocessing
+handles NaN through mean imputation (numeric) or missing-category encoding
+(numerically-encoded categoricals), providing a natural missing-value baseline.
+
+Note: Categorical features must be numerically encoded before computing ShapIQ
+values. See the SHAP module documentation and tutorials/interpretability.py.
 
 Example::
 
@@ -34,12 +38,11 @@ from sklearn.base import BaseEstimator
 
 
 class _NaNImputer(MarginalImputer):
-    """Replace absent features with NaN for TabICL's native missing-feature handling.
+    """Replace absent features with NaN for TabICL's missing-value baseline.
 
     When shapiq evaluates a coalition (subset of features), absent features are
-    set to NaN.  TabICL recognises NaN columns as genuinely missing by giving
-    semantically correct "remove-and-recontextualize" explanations without any
-    sampling noise.
+    set to NaN. TabICL's preprocessing handles these through normal imputation,
+    providing a deterministic baseline without sampling noise.
 
     Parameters
     ----------
@@ -102,8 +105,8 @@ def get_shapiq_explainer(
         How absent features are handled when evaluating coalitions:
 
         - ``"nan"`` (default) — uses :class:`_NaNImputer` so that absent
-          features become NaN, exploiting TabICL's native missing-feature
-          handling.  Deterministic, no sampling noise.
+          features become NaN, handled by TabICL's normal preprocessing
+          (imputation).  Deterministic, no sampling noise.
         - ``"marginal"`` — standard marginal-sampling imputation.
         - ``"baseline"`` — replace absent features with a fixed baseline
           value (typically the mean of `data`).

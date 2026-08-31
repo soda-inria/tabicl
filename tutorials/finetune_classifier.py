@@ -75,7 +75,7 @@ def _metrics(proba: np.ndarray, y_true: np.ndarray) -> tuple[float, float, float
 # ---------------------------
 #
 # Expected: draws the vertical split, smears the island.
-base = TabICLClassifier(n_estimators=4, random_state=0)
+base = TabICLClassifier(n_estimators=2, random_state=0)
 base.fit(X_train, y_train)
 base_proba = base.predict_proba(X_test)
 base_auc, base_ll, base_acc = _metrics(base_proba, y_test)
@@ -120,14 +120,16 @@ class _HistoryLogger:
         pass
 
 
+# n_estimators and epochs are kept low for fast doc builds;
+# for best results use n_estimators_inference=8, epochs=50+, patience=10.
 clf = FinetunedTabICLClassifier(
-    epochs=60,
+    epochs=30,
     learning_rate=1e-5,
     n_estimators_finetune=2,
     n_estimators_validation=2,
-    n_estimators_inference=4,
+    n_estimators_inference=2,
     early_stopping=True,
-    patience=10,
+    patience=5,
     eval_metric="roc_auc",
     random_state=0,
     verbose=True,

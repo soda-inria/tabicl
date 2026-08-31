@@ -223,9 +223,7 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
     **Freezing**
 
     freeze_col : bool, default=False
-        Freeze the column-embedding sub-module. Its parameters retain
-        ``requires_grad=False`` and its dropout / batch-norm stay in eval mode
-        across the entire training loop.
+        Freeze the column-embedding sub-module.
 
     freeze_row : bool, default=False
         Freeze the row-interaction sub-module.
@@ -371,6 +369,21 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
     @abstractmethod
     def _initial_best_metric(self) -> float: ...
 
+    def _is_best_metric(self, current: float, best: float) -> bool:
+        """Check if current metric is better than best.
+
+        Returns
+        -------
+        bool
+            True if current is finite and either best is NaN (no valid metric yet)
+            or current is an improvement over best.
+        """
+        if np.isnan(current):
+            return False
+        if np.isnan(best):
+            return True
+        return self._metric_improved(current, best)
+
     @property
     @abstractmethod
     def _metric_name(self) -> str: ...
@@ -454,7 +467,29 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         from sklearn.utils.validation import check_is_fitted
 
         check_is_fitted(self, "_final_estimator_")
-        return self._final_estimator_.predict(X)
+        return self._final_estimator_.predict(self._transform_X_for_inference(X))
+
+    def _transform_X_for_inference(self, X):
+        """Transform input through the fine-tuning encoder.
+
+        The encoder fitted during fine-tuning is authoritative for the
+        lifetime of this model, ensuring consistent categorical encoding
+        between training and inference.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Input data.
+
+        Returns
+        -------
+        np.ndarray
+            Encoded input ready for the inner estimator.
+        """
+        from sklearn.utils.validation import check_is_fitted
+
+        check_is_fitted(self, "_X_encoder_")
+        return np.asarray(self._X_encoder_.transform(X), dtype=np.float64)
 
     # ---------------- internal helpers ----------------
 
@@ -496,9 +531,10 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
     def _apply_freezing(self, model: TabICL) -> bool:
         """Zero ``requires_grad`` on frozen sub-modules.
 
-        Mode (train/eval) is handled separately by :meth:`_set_training_mode`
-        so that calling ``model.train()`` elsewhere doesn't silently re-enable
-        dropout / BN updates on the frozen parts.
+        Frozen modules are kept in train mode alongside unfrozen ones by
+        :meth:`_set_training_mode`. This avoids dtype mismatches at the
+        frozen→unfrozen boundary that would occur if frozen submodules were
+        in eval mode (inference path with autocast).
 
         Returns
         -------
@@ -512,17 +548,15 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         return bool(frozen_modules)
 
     def _set_training_mode(self, training: bool) -> None:
-        """Switch ``self.model_`` between train/eval while honoring freezes.
+        """Switch ``self.model_`` between train/eval.
 
-        ``nn.Module.train()`` is recursive, so naively calling
-        ``self.model_.train()`` flips frozen sub-modules (and their dropout /
-        BN) back into training mode. We first toggle the whole model, then
-        snap frozen sub-modules back to ``eval()``.
+        Frozen sub-modules are kept in train mode alongside unfrozen ones.
+        Their parameters already have requires_grad=False so they won't
+        accumulate gradients. Putting them in eval() would route through the
+        inference forward path (InferenceManager with autocast), causing dtype
+        mismatches at the frozen→unfrozen boundary.
         """
         self.model_.train(training)
-        if training:
-            for sub in self._frozen_submodules(self.model_):
-                sub.eval()
 
     def _load_pretrained(self, device: torch.device) -> None:
         """Compose with the sklearn estimator's ``_load_model`` to pull the
@@ -687,6 +721,8 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         """
         from sklearn.utils.validation import check_X_y, check_array
 
+        from tabicl._sklearn.preprocessing import TransformToNumerical
+
         # 1. DDP setup
         using_ddp, rank, world_size, local_rank, master, device = _ddp_env(self._resolve_device())
         self._is_master_ = master
@@ -702,6 +738,11 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
                 _logger = NullLogger()
 
         # 3. Input validation / stash
+        # Preserve the original input container (DataFrame or array) so the
+        # final inner estimator can run its own TransformToNumerical in .fit().
+        X_original = X
+        y_original = y
+
         ensure_numeric_y = self._model_type == "regressor"
         X, y = check_X_y(
             X,
@@ -710,8 +751,6 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
             y_numeric=ensure_numeric_y,
             dtype=None,
         )
-        self.X_raw_ = X
-        self.y_raw_ = y  # original labels; the final estimator re-encodes internally
 
         # 3b. Label-encode classification targets. The meta-batch builder uses
         # raw labels as array indices and class counts (see data.py), which
@@ -724,22 +763,29 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         else:
             y_fit = y
 
-        # 4. Val split
+        # 4. Val split — done BEFORE encoding so the encoder is fit on train
+        # only and validation categories/values don't leak into preprocessing.
         if X_val is not None and y_val is not None:
-            X_train_arr, y_train_arr = X, y_fit
-            X_val_arr = check_array(X_val, ensure_all_finite=False, dtype=None)
+            X_train_orig, X_val_orig = X_original, X_val
+            y_train_arr = y_fit
             y_val_arr = np.asarray(y_val)
             if self._model_type == "classifier":
                 y_val_arr = self._label_encoder_.transform(y_val_arr).astype(np.int64)
         else:
             stratify = y_fit if self._model_type == "classifier" else None
-            X_train_arr, X_val_arr, y_train_arr, y_val_arr = train_test_split(
-                X,
+            X_train_orig, X_val_orig, y_train_arr, y_val_arr = train_test_split(
+                X_original,
                 y_fit,
                 test_size=self.validation_split_ratio,
                 random_state=self.random_state,
                 stratify=stratify,
             )
+
+        # 4b. Encode categorical/string features to numeric. Fit on training
+        # portion only so validation data doesn't leak into the encoder.
+        self._X_encoder_ = TransformToNumerical()
+        X_train_arr = np.asarray(self._X_encoder_.fit_transform(X_train_orig), dtype=np.float64)
+        X_val_arr = np.asarray(self._X_encoder_.transform(X_val_orig), dtype=np.float64)
 
         # 5. Load pretrained model
         self._load_pretrained(device)
@@ -777,7 +823,16 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
             best_metric = self._initial_best_metric()
         best_metric = self._broadcast_metric(best_metric, using_ddp, device)
 
+        if self.early_stopping and np.isnan(best_metric):
+            raise ValueError(
+                f"Early stopping enabled but validation metric '{self._metric_name}' is NaN. "
+                f"This usually means the validation set is incompatible with the chosen metric "
+                f"(e.g., single-class validation with ROC-AUC), or validation produced invalid "
+                f"predictions. Fix the validation setup or disable early stopping."
+            )
+
         best_state = {k: v.detach().cpu().clone() for k, v in self.model_.state_dict().items()}
+        has_valid_metric = not np.isnan(best_metric)
 
         # 9. Estimate steps per epoch for scheduler. Under DDP the count is
         # per-rank (drop_last sharding), so ``total_steps`` matches the
@@ -925,11 +980,7 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
                 # to avoid printing each epoch's line twice.
                 logger.info(summary)
                 if show_bar:
-                    display_best = (
-                        primary
-                        if not np.isnan(primary) and self._metric_improved(primary, best_metric)
-                        else best_metric
-                    )
+                    display_best = primary if self._is_best_metric(primary, best_metric) else best_metric
                     epoch_iter.set_postfix(
                         {
                             "train_loss": train_loss_str,
@@ -943,8 +994,19 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
 
             primary = self._broadcast_metric(primary, using_ddp, device)
 
+            if self.early_stopping and np.isnan(primary):
+                if master:
+                    logger.warning(
+                        "Validation metric '%s' became NaN after epoch %d (possible training "
+                        "instability). Stopping early and restoring best weights from epoch with "
+                        "valid metric.",
+                        self._metric_name,
+                        epoch + 1,
+                    )
+                break
+
             # 10.4  Decide whether to checkpoint (best or interval-aligned).
-            is_best = not np.isnan(primary) and self._metric_improved(primary, best_metric)
+            is_best = self._is_best_metric(primary, best_metric)
             save_this_interval = (
                 output_dir is not None and self.save_interval > 0 and ((epoch + 1) % self.save_interval == 0)
             )
@@ -960,22 +1022,29 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
                 )
 
             # 10.5  Update best-state / patience, maybe early-stop.
-            if self.early_stopping and not np.isnan(primary):
-                if is_best:
-                    best_metric = primary
-                    patience_counter = 0
-                    best_state = {k: v.detach().cpu().clone() for k, v in self.model_.state_dict().items()}
-                else:
+            if is_best:
+                best_metric = primary
+                best_state = {k: v.detach().cpu().clone() for k, v in self.model_.state_dict().items()}
+                has_valid_metric = True
+                patience_counter = 0
+            elif np.isnan(primary):
+                # NaN evaluations before first valid metric don't consume patience
+                if has_valid_metric:
                     patience_counter += 1
-                if patience_counter >= self.patience:
-                    if master:
-                        logger.info(
-                            "Early stopping at epoch %d (best %s=%.4f)",
-                            epoch,
-                            self._metric_name,
-                            best_metric,
-                        )
-                    break
+            else:
+                # Finite but not best - consume patience
+                has_valid_metric = True
+                patience_counter += 1
+
+            if self.early_stopping and patience_counter >= self.patience:
+                if master:
+                    logger.info(
+                        "Early stopping at epoch %d (best %s=%.4f)",
+                        epoch,
+                        self._metric_name,
+                        best_metric,
+                    )
+                break
 
             # 10.6  Wall-clock time-budget check — stop if the *next* epoch
             #       would push us past ``self.time_limit``. Decision is made
@@ -1001,9 +1070,22 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
                         )
                     break
 
-        # 11. Restore best weights
-        self.model_.load_state_dict(best_state)
-        self._best_metric_ = best_metric
+        # 11. Restore best weights, unless early_stopping=False and no valid metrics
+        if not has_valid_metric:
+            # Keep final trained weights when early stopping is disabled and metric is NaN
+            # (early_stopping=True with NaN would have raised immediately, so we only reach
+            # here when early_stopping=False)
+            if master:
+                logger.warning(
+                    "Validation metric '%s' was NaN for all epochs. "
+                    "Keeping final trained weights (early_stopping=False).",
+                    self._metric_name,
+                )
+            self._best_metric_ = float("nan")
+        else:
+            # Normal case: restore best observed checkpoint
+            self.model_.load_state_dict(best_state)
+            self._best_metric_ = best_metric
 
         # 11b. Always write a final best checkpoint so users have a single file
         # to point TabICLClassifier(model_path=...) at. If no epoch ever
@@ -1028,10 +1110,15 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         # underlying module to eval mode so `_final_estimator_.predict` routes
         # through the inference forward (which emits n_classes-wide logits /
         # proper quantile tensors), not the training forward.
+        # Transform X_original through the fine-tuning encoder to ensure the
+        # inner estimator uses the same categorical encoding that was used
+        # during fine-tuning. This makes _X_encoder_ authoritative for the
+        # lifetime of this fitted model.
         if master:
             self.model_.eval()
             self._final_estimator_ = self._build_inner_estimator(self.model_, self.n_estimators_inference, device)
-            self._final_estimator_.fit(self.X_raw_, self.y_raw_)
+            X_full_encoded = np.asarray(self._X_encoder_.transform(X_original), dtype=np.float64)
+            self._final_estimator_.fit(X_full_encoded, y_original)
             # Make the final estimator self-contained on pickle. Two reasons:
             # (a) ``model_`` holds the fine-tuned weights, which aren't in any
             #     on-disk checkpoint by default — the inner's pickle default

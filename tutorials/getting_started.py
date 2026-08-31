@@ -22,7 +22,7 @@ X, y = make_classification(
     n_samples=300, n_features=10, n_informative=5, random_state=42
 )
 
-clf = TabICLClassifier(n_estimators=4, device="cpu")
+clf = TabICLClassifier(n_estimators=2, device="cpu")  # use n_estimators=8 for best results
 scores = cross_val_score(clf, X, y, cv=5, scoring="accuracy")
 print(f"Classification accuracy: {scores.mean():.3f} (+/- {scores.std():.3f})")
 
@@ -41,7 +41,7 @@ X, y = make_regression(
     n_samples=300, n_features=10, n_informative=5, noise=0.5, random_state=42
 )
 
-reg = TabICLRegressor(n_estimators=4, device="cpu")
+reg = TabICLRegressor(n_estimators=2, device="cpu")  # use n_estimators=8 for best results
 scores = cross_val_score(reg, X, y, cv=5, scoring="r2")
 print(f"Regression R² score: {scores.mean():.3f} (+/- {scores.std():.3f})")
 
@@ -62,7 +62,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
 
-clf = TabICLClassifier(n_estimators=4, kv_cache=True, device="cpu")
+clf = TabICLClassifier(n_estimators=2, kv_cache=True, device="cpu")  # use n_estimators=8 for best results
 clf.fit(X_train, y_train)
 
 # Subsequent predict calls reuse the cached context

@@ -60,7 +60,7 @@ def _metrics(pred: np.ndarray, y_true: np.ndarray) -> tuple[float, float, float]
 # ---------------------------
 #
 # Expected: draws the sine, smears the spike.
-base = TabICLRegressor(n_estimators=4, random_state=0)
+base = TabICLRegressor(n_estimators=2, random_state=0)
 base.fit(X_train, y_train)
 base_pred = base.predict(X_test)
 base_mse, base_mae, base_r2 = _metrics(base_pred, y_test)
@@ -105,14 +105,16 @@ class _HistoryLogger:
         pass
 
 
+# n_estimators and epochs are kept low for fast doc builds;
+# for best results use n_estimators_inference=8, epochs=50+, patience=10.
 reg = FinetunedTabICLRegressor(
-    epochs=60,
+    epochs=30,
     learning_rate=1e-5,
     n_estimators_finetune=2,
     n_estimators_validation=2,
-    n_estimators_inference=4,
+    n_estimators_inference=2,
     early_stopping=True,
-    patience=10,
+    patience=5,
     random_state=0,
     verbose=True,
 )

@@ -1,6 +1,6 @@
 """
 Model interpretability with TabICL
-============================
+======================================
 
 TabICL comes with a fast approximations of SHAP values. It is much
 faster than using black-box shape routines on TabICL which is slow.
@@ -12,9 +12,11 @@ Here we demo it on dataset on wages
 # The dataset: wages
 # ---------------------
 
+import tempfile
 from sklearn.datasets import fetch_openml
 
-survey = fetch_openml(data_id=534, as_frame=True)
+# Use a fresh data_home to avoid md5 mismatches from stale cached downloads
+survey = fetch_openml(data_id=534, as_frame=True, data_home=tempfile.mkdtemp())
 
 X = survey.data[survey.feature_names]
 
@@ -46,7 +48,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y)
 #
 from tabicl import TabICLRegressor
 
-clf = TabICLRegressor(n_estimators=4, device="cpu")
+clf = TabICLRegressor(n_estimators=2, device="cpu")  # use n_estimators=8 for best results
 clf.fit(X_train, y_train)
 
 # %%
@@ -56,7 +58,7 @@ clf.fit(X_train, y_train)
 # Use TabICL's fast approximations of shap-like values and plot them
 #
 # This part of the example requires to install the shap extra:
-# pip install 'tabicl[shap]
+# pip install 'tabicl[shap]'
 
 from tabicl.shap import get_shap_values, plot_shap
 
