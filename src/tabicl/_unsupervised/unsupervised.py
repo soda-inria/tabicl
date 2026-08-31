@@ -48,7 +48,7 @@ class TabICLUnsupervised(BaseEstimator):
         Random seed for reproducibility.
 
     device : str or None, default=None
-        Device for inference. None auto-selects CUDA or CPU.
+        Device for inference. None auto-selects CUDA → XPU → MPS → CPU.
 
     estimator_params : dict or None, default=None
         Additional keyword arguments forwarded to the inner

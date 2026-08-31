@@ -121,6 +121,9 @@ It also plugs directly into scikit-learn pipelines:
    pipeline.fit(X_train, y_train)
    pipeline.predict(X_test)
 
+See more in the tutorial :ref:`tabicl_with_skrub` on how to create a pipeline
+with good parameters.
+
 For **time-series forecasting**, install the extra dependencies and use
 :class:`tabicl.TabICLForecaster`:
 

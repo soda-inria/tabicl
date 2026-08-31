@@ -101,7 +101,7 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
         cat_tfm = OrdinalEncoder(
             dtype=np.int64, handle_unknown="use_encoded_value", unknown_value=-1, encoded_missing_value=-1
         )
-        num_tfm = SimpleImputer()
+        num_tfm = SimpleImputer(keep_empty_features=True)
 
         if not hasattr(X, "columns"):  # proxy way to check whether X is a dataframe without importing pandas
             # no dataframe, so we can't do column-wise transformations. Instead, we check if it's already numeric and if not, raise an error.
@@ -208,6 +208,8 @@ class UniqueFeatureFilter(TransformerMixin, BaseEstimator):
 
        - With few samples, it's difficult to reliably assess feature variability.
        - A feature might appear constant in few samples but vary in the complete dataset.
+    3. If every feature would be removed, the first one is kept so that the output
+       always has at least one column.
     """
 
     def __init__(self, threshold: int = 1):
@@ -239,6 +241,13 @@ class UniqueFeatureFilter(TransformerMixin, BaseEstimator):
             self.features_to_keep_ = np.array(
                 [len(np.unique(X[:, i])) > self.threshold for i in range(self.n_features_in_)]
             )
+
+            # Every feature is constant. Dropping all of them leaves a zero-column
+            # matrix that downstream steps cannot handle, so keep the first one: the
+            # model then sees a single uninformative feature and falls back to the
+            # marginal distribution of the target.
+            if not self.features_to_keep_.any():
+                self.features_to_keep_[0] = True
 
         self.n_features_out_ = np.sum(self.features_to_keep_)
 

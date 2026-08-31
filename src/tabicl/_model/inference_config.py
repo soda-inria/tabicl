@@ -58,7 +58,8 @@ class MgrConfig:
 
     **Async transfer:**
 
-    - ``use_async``: Use async CUDA streams for GPU-to-CPU transfers.
+    - ``use_async``: Use async device-to-host transfers with backend stream/event
+      primitives when available (falls back to synchronous copy otherwise).
     - ``async_depth``: Max pending async copies before blocking.
     """
 

@@ -5,6 +5,7 @@ import uuid
 import math
 import shutil
 import psutil
+import warnings
 import weakref
 import itertools
 from enum import Enum, auto
@@ -21,6 +22,20 @@ from torch import Tensor
 from .kv_cache import KVCache
 from .attention import flash_attn3_toggle
 from ._cgroup_memory import _cgroup_memory_headroom
+from .._torch_devices import resolve_torch_device
+
+
+def devices_match(a: torch.device, b: torch.device) -> bool:
+    """Return whether two devices refer to the same backend placement.
+
+    ``torch.device("cuda")`` (index ``None``) matches ``cuda:0``, and likewise
+    for MPS/XPU. When both sides carry an explicit index they must agree.
+    """
+    if a.type != b.type:
+        return False
+    if a.index is None or b.index is None:
+        return True
+    return a.index == b.index
 
 
 class MemoryEstimator:
@@ -385,12 +400,13 @@ class DiskTensor:
 
 
 class AsyncCopyManager:
-    """Manages asynchronous GPU-to-CPU copies using CUDA streams.
+    """Manages asynchronous device-to-CPU copies using backend streams.
 
-    Uses a dedicated CUDA stream for device-to-host (D2H) transfers, allowing
-    GPU computation to overlap with data movement. The workflow is:
+    Uses a dedicated backend stream (when available) for device-to-host (D2H)
+    transfers, allowing device computation to overlap with data movement.
+    The workflow is:
 
-    1. GPU tensor is copied to a pinned buffer on the copy stream
+    1. Device tensor is copied to a pinned buffer on the copy stream
     2. An event is recorded to track completion
     3. When the event completes, data is written to final target (CPU/disk)
     4. The pinned buffer is returned to the pool for reuse
@@ -398,7 +414,7 @@ class AsyncCopyManager:
     Parameters
     ----------
     device : torch.device
-        The CUDA device to use for transfers.
+        The execution device to use for transfers.
 
     max_pending : int, default=4
         Maximum number of pending async copies before blocking. Higher values
@@ -409,7 +425,8 @@ class AsyncCopyManager:
 
     Notes
     -----
-    - Only works with CUDA devices; falls back to sync copy for CPU
+    - Uses async copy when backend stream/event APIs are available
+    - Falls back to sync copy for backends without async stream support
     - Pending copies are automatically drained when max_pending is reached
     - Call ``drain_all()`` to ensure all copies complete before using the data
     """
@@ -419,27 +436,70 @@ class AsyncCopyManager:
         self.max_pending = max_pending
         self.buffer_pool = buffer_pool or PinnedBufferPool(max_buffers_per_shape=8)
 
-        # Create dedicated copy stream
-        self._copy_stream: Optional[torch.cuda.Stream] = None
-        if device.type == "cuda":
-            self._copy_stream = torch.cuda.Stream(device=device)
+        backend_name = getattr(device, "type", None)
+        self._backend_api = getattr(torch, backend_name, None) if backend_name is not None else None
+
+        is_available = getattr(self._backend_api, "is_available", None)
+        backend_available = callable(is_available) and is_available() if self._backend_api is not None else False
+
+        # Create dedicated copy stream when backend exposes stream/event primitives.
+        self._copy_stream: Optional[Any] = None
+        stream_ctor = getattr(self._backend_api, "Stream", None)
+        if backend_available and callable(stream_ctor):
+            try:
+                self._copy_stream = stream_ctor(device=device)
+            except Exception:
+                self._copy_stream = None
 
         # Pending copies: (pinned_buffer, target, indices, event)
-        self._pending: List[Tuple[Tensor, Any, tuple, Optional[torch.cuda.Event]]] = []
+        self._pending: List[Tuple[Tensor, Any, tuple, Optional[Any]]] = []
         self._bytes_written: float = 0.0  # Track bytes in MB for flush control
+        self._warned_sync_fallback = False
+
+    def _warn_sync_fallback(self, reason: str) -> None:
+        """Warn once per manager when async copy is unavailable for this backend.
+
+        MPS has no stream/event D2H APIs, so the sync fallback is expected and
+        stays silent there. Unexpected backends still warn once.
+        """
+        if self._warned_sync_fallback:
+            return
+
+        if self.device.type == "mps":
+            return
+
+        warnings.warn(
+            f"AsyncCopyManager falling back to synchronous copy on backend '{self.device.type}': {reason}.",
+            RuntimeWarning,
+            stacklevel=3,
+        )
+        self._warned_sync_fallback = True
+
+    def _sync_copy(
+        self,
+        device_tensor: Tensor,
+        target: Union[Tensor, DiskTensor],
+        indices: tuple,
+        reason: Optional[str] = None,
+    ) -> None:
+        """Fallback synchronous copy path used when async primitives are unavailable."""
+        if reason is not None:
+            self._warn_sync_fallback(reason)
+        target[indices] = device_tensor.cpu()
+        self._bytes_written += device_tensor.numel() * device_tensor.element_size() / (1024 * 1024)
 
     def submit_copy(
         self,
-        gpu_tensor: Tensor,
+        device_tensor: Tensor,
         target: Union[Tensor, DiskTensor],
         indices: tuple,
     ) -> None:
-        """Submit an async copy from GPU to target storage.
+        """Submit an async copy from the execution device to target storage.
 
         Parameters
         ----------
-        gpu_tensor : Tensor
-            Source tensor on GPU.
+        device_tensor : Tensor
+            Source tensor on the execution device.
 
         target : Union[Tensor, DiskTensor]
             Target storage (CPU tensor or disk tensor).
@@ -448,27 +508,42 @@ class AsyncCopyManager:
             Indices where to write in the target.
         """
         if self._copy_stream is None:
-            # Fallback to sync copy if no CUDA
-            target[indices] = gpu_tensor.cpu()
-            self._bytes_written += gpu_tensor.numel() * gpu_tensor.element_size() / (1024 * 1024)
+            self._sync_copy(device_tensor, target, indices, reason="backend does not provide async stream support")
+            return
+
+        current_stream_fn = getattr(self._backend_api, "current_stream", None)
+        stream_ctx_fn = getattr(self._backend_api, "stream", None)
+        event_ctor = getattr(self._backend_api, "Event", None)
+        if (
+            not callable(current_stream_fn)
+            or not callable(stream_ctx_fn)
+            or not callable(event_ctor)
+            or not hasattr(device_tensor, "record_stream")
+        ):
+            self._sync_copy(
+                device_tensor,
+                target,
+                indices,
+                reason="backend does not provide full async stream/event primitives",
+            )
             return
 
         # Get a pinned buffer
-        pinned_buf = self.buffer_pool.get(tuple(gpu_tensor.shape), gpu_tensor.dtype)
+        pinned_buf = self.buffer_pool.get(tuple(device_tensor.shape), device_tensor.dtype)
 
         # Capture compute stream before switching context
-        compute_stream = torch.cuda.current_stream(device=self.device)
+        compute_stream = current_stream_fn(device=self.device)
 
-        # Tell the caching allocator that copy_stream is also using gpu_tensor's memory,
+        # Tell the caching allocator that copy_stream is also using device_tensor's memory,
         # so it won't be reclaimed until the copy completes.
-        gpu_tensor.record_stream(self._copy_stream)
+        device_tensor.record_stream(self._copy_stream)
 
-        # Async copy GPU -> pinned buffer on dedicated stream
-        with torch.cuda.stream(self._copy_stream):
-            # Wait for compute stream to finish producing gpu_tensor
+        # Async copy device -> pinned buffer on dedicated stream
+        with stream_ctx_fn(self._copy_stream):
+            # Wait for compute stream to finish producing device_tensor
             self._copy_stream.wait_stream(compute_stream)
-            pinned_buf.copy_(gpu_tensor, non_blocking=True)
-            event = torch.cuda.Event()
+            pinned_buf.copy_(device_tensor, non_blocking=True)
+            event = event_ctor()
             event.record(self._copy_stream)
 
         self._pending.append((pinned_buf, target, indices, event))
@@ -534,8 +609,8 @@ class InferenceManager:
     4. OOM Recovery: Automatically reduces batch size when out-of-memory errors
        occur, retrying until inference succeeds or minimum batch size is reached.
 
-    5. Async Data Transfer: Uses dedicated CUDA streams for overlapping
-       computation with GPU-to-CPU data movement.
+    5. Async Data Transfer: Uses backend stream/event primitives for
+       overlapping computation with device-to-CPU data movement when available.
 
     6. Result Merging: Combines outputs from multiple batches into a single
        contiguous tensor.
@@ -632,7 +707,7 @@ class InferenceManager:
 
         device : Optional[str or torch.device], default=None
             Device to use for computation. If None, defaults to CUDA if available,
-            otherwise CPU.
+            otherwise XPU, then MPS, and falls back to CPU.
 
         use_amp : bool, default=True
             Whether to use automatic mixed precision (AMP) during inference.
@@ -687,8 +762,9 @@ class InferenceManager:
             Set to 0 to disable pinned memory entirely.
 
         use_async : bool, default=True
-            Whether to use async D2H (device-to-host) copy with CUDA streams.
-            Enables overlapping computation with data transfer for better throughput.
+            Whether to use async D2H (device-to-host) copy with backend stream/event
+            primitives when available. Enables overlapping computation with data
+            transfer for better throughput.
 
         async_depth : int, default=4
             Maximum number of pending async copies before blocking. Higher values
@@ -722,12 +798,7 @@ class InferenceManager:
         self.offload_mode = self._normalize_offload(offload)
 
         # Setup device
-        if device is None:
-            self.exe_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        elif isinstance(device, str):
-            self.exe_device = torch.device(device)
-        else:
-            self.exe_device = device
+        self.exe_device = resolve_torch_device(device)
 
         # Initialize buffer pool
         self._buffer_pool = PinnedBufferPool()
@@ -788,23 +859,88 @@ class InferenceManager:
             available = min(available, headroom)
         return available / (1024 * 1024)
 
+    def _get_device_backend_api(self) -> Optional[Any]:
+        """Return torch backend module matching the execution device type.
+
+        This relies on common backend naming conventions where
+        ``torch.device("<backend>").type == "<backend>"`` and backend-specific
+        APIs live under ``torch.<backend>`` (e.g. ``torch.cuda``, ``torch.xpu``).
+        """
+        backend_name = self.exe_device.type
+        backend_api = getattr(torch, backend_name, None)
+        if backend_api is None:
+            return None
+
+        is_available = getattr(backend_api, "is_available", None)
+        if callable(is_available) and not is_available():
+            return None
+
+        return backend_api
+
+    def _empty_backend_cache(self, backend_api: Optional[Any] = None) -> None:
+        """Best-effort cache clearing for the current execution backend."""
+        if backend_api is None:
+            backend_api = self._get_device_backend_api()
+        if backend_api is None:
+            return
+
+        empty_cache = getattr(backend_api, "empty_cache", None)
+        if callable(empty_cache):
+            empty_cache()
+
+    def _is_tensor_on_exe_device(self, tensor: Tensor) -> bool:
+        """Return whether the tensor is already on the configured execution device."""
+        return isinstance(tensor, torch.Tensor) and devices_match(tensor.device, self.exe_device)
+
     def get_available_gpu_memory(self) -> float:
         """Get available GPU memory in MB.
 
-        Synchronizes CUDA operations and clears cache before checking to get
+        Synchronizes device operations and clears cache before checking to get
         an accurate reading of available memory.
+
+        Backends that expose ``mem_get_info`` (CUDA, XPU) use that API. On MPS,
+        which does not provide ``mem_get_info``, free memory is approximated as
+        ``recommended_max_memory - current_allocated_memory`` so that
+        auto-batching can still run.
 
         Returns
         -------
         float
-            Available GPU memory in megabytes, or 0.0 if CUDA is not
-            available or execution device is CPU.
+            Available GPU memory in megabytes, or 0.0 if the selected backend
+            does not expose memory information.
         """
-        if not torch.cuda.is_available() or self.exe_device.type != "cuda":
+        backend_api = self._get_device_backend_api()
+        if backend_api is None:
             return 0.0
-        torch.cuda.synchronize()
-        torch.cuda.empty_cache()
-        return torch.cuda.mem_get_info(self.exe_device)[0] / (1024 * 1024)
+
+        synchronize = getattr(backend_api, "synchronize", None)
+        if callable(synchronize):
+            synchronize()
+
+        self._empty_backend_cache(backend_api)
+
+        mem_get_info = getattr(backend_api, "mem_get_info", None)
+        if callable(mem_get_info):
+            try:
+                free_mem, _ = mem_get_info(self.exe_device)
+            except TypeError:
+                # Some backends may expose mem_get_info() without a device argument.
+                free_mem, _ = mem_get_info()
+            except Exception:
+                return 0.0
+            return free_mem / (1024 * 1024)
+
+        # MPS (and similar) fallback without mem_get_info.
+        recommended = getattr(backend_api, "recommended_max_memory", None)
+        current = getattr(backend_api, "current_allocated_memory", None)
+        if callable(recommended) and callable(current):
+            try:
+                free_mem = recommended() - current()
+            except Exception:
+                return 0.0
+            return max(0.0, free_mem) / (1024 * 1024)
+
+        return 0.0
 
     def get_available_disk_space(self, path: Optional[str]) -> float:
         """Get available disk space at the specified path in MB.
@@ -826,7 +962,7 @@ class InferenceManager:
         try:
             os.makedirs(path, exist_ok=True)
             return shutil.disk_usage(path).free / (1024 * 1024)
-        except Exception:
+        except OSError:
             return 0.0
 
     def _estimate_tensor_mb(self, shape: Tuple[int, ...], dtype: torch.dtype, repeat: int = 1) -> float:
@@ -1063,9 +1199,11 @@ class InferenceManager:
         -------
         Tensor
             Tensor on the execution device. If already on the correct
-            device, returns the same tensor without copying.
+            device, returns the original tensor.
         """
-        if isinstance(tensor, torch.Tensor) and self.exe_device.type == "cuda" and not tensor.is_cuda:
+        if self._is_tensor_on_exe_device(tensor):
+            return tensor
+        if isinstance(tensor, torch.Tensor):
             return tensor.to(self.exe_device, non_blocking=True)
         return tensor
 
@@ -1088,8 +1226,8 @@ class InferenceManager:
     def _run_forward(self, forward_fn: Callable[..., Tensor], inputs: Dict[str, Any]) -> Tensor:
         """Execute forward function with no_grad and optional AMP."""
         with torch.no_grad(), flash_attn3_toggle(self.use_fa3):
-            if self.use_amp and self.exe_device.type == "cuda":
-                with torch.autocast(device_type="cuda"):
+            if self.use_amp:
+                with torch.autocast(device_type=self.exe_device.type):
                     return forward_fn(**inputs)
             return forward_fn(**inputs)
 
@@ -1139,8 +1277,10 @@ class InferenceManager:
 
         Notes
         -----
-        - For CPU execution (no CUDA), batching is not supported and the forward
-          function is called once with all inputs.
+        - For CPU execution, batching is not supported and the forward runs once
+          via ``_run_forward`` (optional AMP + input preparation).
+        - Accelerator backends with a usable memory query (CUDA, XPU, and MPS via
+          an approximate free-memory estimate) use auto-batching and OOM recovery.
         - When OOM occurs, batch size is halved and inference is retried.
         - Async copy is used when ``use_async=True`` and offloading to CPU/disk.
         """
@@ -1152,9 +1292,10 @@ class InferenceManager:
         if not auto_batch:
             return self._run_forward(forward_fn, self._prepare_inputs(inputs))
 
-        # CPU/MPS execution: batching not supported (requires CUDA memory APIs)
-        if self.exe_device.type in ("cpu", "mps"):
-            return forward_fn(**inputs)
+        # CPU: no accelerator memory APIs for safe batch sizing; still route
+        # through _run_forward so AMP/no_grad wrapping stays consistent.
+        if self.exe_device.type == "cpu":
+            return self._run_forward(forward_fn, self._prepare_inputs(inputs))
 
         # Extract shape/dtype info
         first_value = next(iter(inputs.values()))
@@ -1165,11 +1306,11 @@ class InferenceManager:
 
         *batch_dims, seq_len, in_dim = first_value.shape
         input_dtype = first_value.dtype
-        inputs_on_cuda = first_value.is_cuda
+        inputs_on_device = self._is_tensor_on_exe_device(first_value)
         total_bs = math.prod(batch_dims)
 
         # Estimate batch size
-        gpu_mem, batch_size = self.estimate_safe_batch_size(seq_len, include_inputs=not inputs_on_cuda, in_dim=in_dim)
+        gpu_mem, batch_size = self.estimate_safe_batch_size(seq_len, include_inputs=not inputs_on_device, in_dim=in_dim)
 
         if self.verbose:
             print(
@@ -1223,7 +1364,7 @@ class InferenceManager:
 
         # Setup async copy manager if using async and offloading
         async_copy: Optional[AsyncCopyManager] = None
-        if self.use_async and self.exe_device.type == "cuda" and mode != OffloadMode.GPU:
+        if self.use_async and mode != OffloadMode.GPU:
             async_copy = AsyncCopyManager(
                 self.exe_device,
                 max_pending=self.async_depth,
@@ -1301,7 +1442,7 @@ class InferenceManager:
 
                 return outputs
 
-            except torch.cuda.OutOfMemoryError as e:
+            except torch.OutOfMemoryError as e:
                 if async_copy is not None:
                     async_copy.clear()
 
@@ -1317,8 +1458,7 @@ class InferenceManager:
                 if self.verbose:
                     print(f"OOM with batch_size={batch_size}, reducing to {max(self.min_batch_size, batch_size // 2)}")
 
-                if self.exe_device.type == "cuda":
-                    torch.cuda.empty_cache()
+                self._empty_backend_cache()
 
                 batch_size = max(self.min_batch_size, batch_size // 2)
 

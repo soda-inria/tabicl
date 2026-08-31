@@ -7,7 +7,7 @@
 This repository is the official implementation of **TabICLv2** ([ICML 2026](https://arxiv.org/abs/2602.11139)) 
 and **TabICL** ([ICML 2025](https://arxiv.org/abs/2502.05564)).
 
-**State-of-the-art accuracy even without hyperparameter tuning:** 
+**State-of-the-art performance even without hyperparameter tuning:** 
 TabICLv2 is the new state-of-the-art model for tabular classification and regression 
 on the [TabArena](https://tabarena.ai) and [TALENT](https://arxiv.org/abs/2407.00956) benchmarks. 
 It does not require hyperparameter tuning 
@@ -111,7 +111,7 @@ clf = TabICLClassifier(
     model_path=None,  # path to checkpoint, None downloads from Hugging Face
     allow_auto_download=True,  # auto-download checkpoint if not found locally
     checkpoint_version="tabicl-classifier-v2-20260212.ckpt",  # pretrained checkpoint version
-    device=None,  # inference device, None auto-selects CUDA or CPU; specify "mps" for Apple Silicon
+    device=None,  # inference device: None auto-selects CUDA → XPU → MPS → CPU
     use_amp="auto",  # automatic mixed precision for faster inference
     use_fa3="auto",  # Flash Attention 3 for Hopper GPUs (e.g. H100)
     offload_mode="auto",  # automatically decide when to use cpu/disk offloading
@@ -444,4 +444,4 @@ please cite our papers for **[TabICL](https://arxiv.org/abs/2502.05564)** and **
 
 ## Star history
 
-[![Star History Chart](https://api.star-history.com/svg?repos=soda-inria/tabicl&type=date&legend=top-left)](https://www.star-history.com/#soda-inria/tabicl&type=date&legend=top-left)
+[![Star History Chart](https://star-history.dera.page/svg?repos=soda-inria/tabicl&type=date&legend=top-left)](https://star-history.dera.page/#soda-inria/tabicl&type=date&legend=top-left)
