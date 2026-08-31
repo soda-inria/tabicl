@@ -289,12 +289,15 @@ plot_shap(shap_values)
 
 Pre-training code (including synthetic data generation) is available for **both TabICLv1 and TabICLv2**.
 
-> **Note:** We updated the TabICLv2 pre-training code 
-> to use AMP with float16 as in the original pre-training runs. 
+> **Note:** The original pre-training likely used AMP with float16, but this can lead to instabilities 
+> (https://github.com/soda-inria/tabicl/pull/151#discussion_r3869087460), 
+> so we're leaving float32 as the default value in the scripts.
 > While the code has been vibe-migrated from the original
 > (private) pre-training codebase, users have been able to achieve good performance with it.
-> On systems with fewer CPU cores, it might speed up the training to reduce n_jobs. 
-> On 4xH100, it should be possible to reach 0.7-0.8s/step for stage 1.
+> On systems with fewer CPU cores, it might speed up the training to reduce n_jobs 
+> (e.g., to 12 on a 64-core system). 
+> On 4xH100, it should be possible to reach 0.7-0.8s/step 
+> for stage 1 with float16 and 1s/step with float32.
 
 The easiest way to pre-train is to run the stage scripts in the `scripts` folder, which contain
 the full recipes (they launch `python -m tabicl.train` under `torchrun` with all arguments set).
@@ -324,7 +327,7 @@ Training supports classification (cross-entropy) and quantile regression (pinbal
 `--regression_method quantile`), and both the **AdamW** (default) and **Muon** (`--muon True`)
 optimizers. See `python -m tabicl.train --help` for the full set of options.
 
-A note on the v2 training entry point: the paper reports using cautious weight decay, which is
+A note on the v2 training: the paper reports using cautious weight decay, which is
 available via `--use_cautious_wd`, but the released checkpoints were trained with it left `False`
 (it was not wired into Muon during the reference runs), so the v2 scripts keep it `False` to
 reproduce that behavior.

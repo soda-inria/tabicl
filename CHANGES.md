@@ -16,8 +16,7 @@ New features
   automatically disabled during training (slower than Flash Attention on Hopper). `--dtype` now
   supports `bfloat16` in addition to `float16`/`float32`; the GradScaler is only enabled for
   `float16`. All CLI defaults reproduce the TabICLv1 model configuration; resuming a run
-  re-seeds the data stream with the current step. The v2 curriculum scripts
-  (`scripts/train_v2_{clf,reg}_stage{1,2,3}.sh`) now use `--dtype float16` for faster training.
+  re-seeds the data stream with the current step.
   ([PR#135](https://github.com/soda-inria/tabicl/pull/135))
 
 - Remove the GluonTS dependency from the forecasting module. ([PR#108](https://github.com/soda-inria/tabicl/pull/108), @daidahao)

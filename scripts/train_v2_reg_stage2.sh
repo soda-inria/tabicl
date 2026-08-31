@@ -4,8 +4,8 @@
 #
 # Stage 2: 40K steps on datasets with 400-10,240 samples (log-uniform), 79-81% of
 # samples for training, max LR 1e-4, gradient clipping 10. Continues from the Stage 1
-# checkpoint (weights only). FlashAttention-3 is enabled (--use_flash_attn3 True; used
-# when installed, runs attention in fp16) for stages 2 & 3 only.
+# checkpoint (weights only). FlashAttention-3 is enabled (--use_flash_attn3 True)
+# for stages 2 & 3 only.
 #
 # Adjust the placeholder paths and --nproc_per_node / --n_jobs for your hardware.
 
@@ -28,7 +28,7 @@ torchrun --standalone --nproc_per_node=$NUM_GPUS -m tabicl.train \
             --wandb_project TabICLv2 \
             --wandb_name tabiclv2_reg_stage2 \
             --device cuda \
-            --dtype float16 \
+            --dtype float32 \
             --np_seed 43 \
             --torch_seed 43 \
             --max_steps 40000 \
