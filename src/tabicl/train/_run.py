@@ -23,7 +23,7 @@ from tqdm import tqdm
 import wandb
 
 from tabicl._model.tabicl import TabICL
-from tabicl._model.attention import set_flash_attn3_enabled
+from tabicl._model.attention import HAS_FLASH_ATTN3, set_flash_attn3_enabled
 from tabicl.prior._dataset import PriorDataset
 from tabicl.prior._genload import LoadPriorDataset, seed_worker
 from tabicl.prior.graph_lib._config import PriorConfig
@@ -373,8 +373,25 @@ class Trainer:
         amp_dtype = dtypes[self.config.dtype]
 
         self.amp = self.config.amp and "cuda" in self.config.device
-        # Only float16 needs loss scaling; bfloat16 has the dynamic range of float32.
-        self.scaler = torch.GradScaler("cuda", enabled=self.amp and amp_dtype == torch.float16)
+
+        # Loss scaling is needed whenever the computation graph contains a differentiable
+        # float16 path, which is not fully described by the autocast dtype:
+        #   - global float16 autocast, and
+        #   - FlashAttention-3, which casts Q/K/V to float16 whenever the incoming dtype is
+        #     neither float16 nor bfloat16 (see _model/attention.py). Its backward then runs
+        #     in float16, and casting the result back to float32 cannot recover gradients
+        #     that already underflowed.
+        # bfloat16 needs no scaling: it has the dynamic range of float32, and FA3 keeps it.
+        model_compute_dtype = amp_dtype if self.amp else torch.float32
+        uses_fp16_autocast = self.amp and amp_dtype == torch.float16
+        uses_fp16_fa3 = (
+            HAS_FLASH_ATTN3
+            and self.config.use_flash_attn3
+            and "cuda" in self.config.device
+            and model_compute_dtype == torch.float32
+        )
+        self.scaler = torch.GradScaler("cuda", enabled=uses_fp16_autocast or uses_fp16_fa3)
+
         if self.amp:
             if self.master_process:
                 print(f"Automatic Mixed Precision is enabled with dtype {self.config.dtype}.")
