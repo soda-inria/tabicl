@@ -13,7 +13,7 @@
 # Common: Muon optimizer, cautious weight decay parameter 0.01 (see note below),
 # cosine schedule, per-micro-batch train/test sizes (--seq_len_per_gp),
 # up to 100 features, 8 attention heads everywhere, graph_scm prior. The default
-# dtype is float32; float16 can be used for speedup (--dtype float16) but may lead
+# dtype is float32; float16 can be used for speedup (--dtype float16 --amp True) but may lead
 # to training instabilities.
 #
 # The classifier uses LayerNorm WITH biases (the --norm_type default; paper Table A.1),

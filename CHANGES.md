@@ -14,9 +14,11 @@ New features
   (`--zero_init`; v2 uses `False`), FlashAttention-3 during training (`--use_flash_attn3`;
   the v2 recipe enables it for stages 2 and 3 only). The cuDNN SDPA backend is now
   automatically disabled during training (slower than Flash Attention on Hopper). `--dtype` now
-  supports `bfloat16` in addition to `float16`/`float32`; the GradScaler is only enabled for
-  `float16`. All CLI defaults reproduce the TabICLv1 model configuration; resuming a run
-  re-seeds the data stream with the current step.
+  supports `bfloat16` in addition to `float16`/`float32`; the GradScaler is only enabled when the
+  computation graph contains a float16 path (either float16, 
+  or float32 with FlashAttention-3 enabled since it runs in float16 then). 
+  All CLI defaults reproduce the TabICLv1 model
+  configuration; resuming a run re-seeds the data stream with the current step.
   ([PR#135](https://github.com/soda-inria/tabicl/pull/135))
 
 - Remove the GluonTS dependency from the forecasting module. ([PR#108](https://github.com/soda-inria/tabicl/pull/108), @daidahao)
@@ -25,6 +27,8 @@ New features
 
 Bug fixes
 ---------
+
+- Fix the pre-training `GradScaler` being disabled for `--dtype float32 --use_flash_attn3 True` (the TabICLv2 stage 2 and 3 recipes), which degraded pre-training quality: FlashAttention-3 runs its backward pass in `float16` there, so loss scaling is still needed. (reported by @wangzhengli in [#153](https://github.com/soda-inria/tabicl/issues/153))
 
 - Finetuning now supports string/categorical features in DataFrames, matching the behavior of the base `TabICLClassifier` and `TabICLRegressor`. Previously, `FinetunedTabICLClassifier` and `FinetunedTabICLRegressor` would raise `ValueError: could not convert string to float` when the input contained categorical columns. ([PR#151](https://github.com/soda-inria/tabicl/pull/151); reported by @zehua-jerry-yu in [#118](https://github.com/soda-inria/tabicl/issues/118))
 
