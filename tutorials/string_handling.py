@@ -1,6 +1,6 @@
 """
 Handling strings and dates with skrub
-============================
+======================================
 
 This example demonstrates how skrub can be used to preprocess datasets with strings or dates for TabICL
 to make better predictions.

@@ -1,9 +1,13 @@
 """SHAP explanations for TabICL.
 
-TabICL treats NaN columns as absent features. This module exploits that
-by using a single all-NaN row as the SHAP background, so that masked
-features are genuinely removed from the model's perspective rather than
-replaced by some reference value.
+This module uses a single all-NaN row as the SHAP background. NaN values
+are handled by TabICL's normal preprocessing (mean imputation for numeric
+features, missing-category encoding for numerically-encoded categoricals),
+providing a natural missing-value baseline for feature attribution.
+
+Note: String/object categorical features must be numerically encoded before
+calling get_shap_values (e.g., via pandas' get_dummies or sklearn's
+OrdinalEncoder). See tutorials/interpretability.py for an example.
 
 Example::
 
@@ -48,7 +52,16 @@ def get_shap_values(estimator: Any, X_test: np.ndarray, attribute_names: list[st
     """
     if hasattr(X_test, "columns") and attribute_names is None:
         attribute_names = list(X_test.columns)
-    X_np = np.asarray(X_test, dtype=np.float64)
+
+    try:
+        X_np = np.asarray(X_test, dtype=np.float64)
+    except (TypeError, ValueError) as exc:
+        raise TypeError(
+            "SHAP values require numeric input. When using categorical features, "
+            "encode them before fitting the estimator and pass data using the same "
+            "numeric representation to get_shap_values. "
+            "See tutorials/interpretability.py for an example."
+        ) from exc
 
     predict_fn = "predict_proba" if hasattr(estimator, "predict_proba") else "predict"
     explainer = get_shap_explainer(estimator, X_np, predict_fn=predict_fn, **kwargs)

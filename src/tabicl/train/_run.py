@@ -23,7 +23,7 @@ from tqdm import tqdm
 import wandb
 
 from tabicl._model.tabicl import TabICL
-from tabicl._model.attention import set_flash_attn3_enabled
+from tabicl._model.attention import HAS_FLASH_ATTN3, set_flash_attn3_enabled
 from tabicl.prior._dataset import PriorDataset
 from tabicl.prior._genload import LoadPriorDataset, seed_worker
 from tabicl.prior.graph_lib._config import PriorConfig
@@ -198,6 +198,14 @@ class Trainer:
         # FlashAttention-3 runs attention in fp16; the v2 recipe enables it only for stages 2 & 3.
         set_flash_attn3_enabled(self.config.use_flash_attn3)
 
+        # PyTorch >= 2.4 may route fp16/bf16 attention to the cuDNN SDPA backend,
+        # whose backward is slower than Flash Attention for TabICL's attention
+        # patterns and warns about mismatched grad_output strides. Disabled for
+        # the training forward via sdpa_kernel (see configure_amp).
+        self._disable_cudnn_sdp = (
+            hasattr(torch.backends.cuda, "enable_cudnn_sdp") and "cuda" in self.config.device
+        )
+
         self.model_config = {
             "max_classes": 0 if self.regression else self.config.max_classes,
             "num_quantiles": self.config.num_quantiles,
@@ -359,16 +367,45 @@ class Trainer:
     def configure_amp(self):
         """Configure automatic mixed precision (AMP) for training."""
 
+        dtypes = {"float32": torch.float32, "float16": torch.float16, "bfloat16": torch.bfloat16}
+        if self.config.dtype not in dtypes:
+            raise ValueError(f"dtype='{self.config.dtype}' is not supported. Use one of {sorted(dtypes)}.")
+        amp_dtype = dtypes[self.config.dtype]
+
         self.amp = self.config.amp and "cuda" in self.config.device
-        self.scaler = torch.GradScaler("cuda", enabled=self.amp)
+
+        # Loss scaling is needed whenever the computation graph contains a differentiable
+        # float16 path, which is not fully described by the autocast dtype:
+        #   - global float16 autocast, and
+        #   - FlashAttention-3, which casts Q/K/V to float16 whenever the incoming dtype is
+        #     neither float16 nor bfloat16 (see _model/attention.py). Its backward then runs
+        #     in float16, and casting the result back to float32 cannot recover gradients
+        #     that already underflowed.
+        # bfloat16 needs no scaling: it has the dynamic range of float32, and FA3 keeps it.
+        model_compute_dtype = amp_dtype if self.amp else torch.float32
+        uses_fp16_autocast = self.amp and amp_dtype == torch.float16
+        uses_fp16_fa3 = (
+            HAS_FLASH_ATTN3
+            and self.config.use_flash_attn3
+            and "cuda" in self.config.device
+            and model_compute_dtype == torch.float32
+        )
+        self.scaler = torch.GradScaler("cuda", enabled=uses_fp16_autocast or uses_fp16_fa3)
+
         if self.amp:
             if self.master_process:
-                print(f"Automatic Mixed Precision is enabled.")
-            self.amp_ctx = torch.autocast(
-                device_type="cuda", dtype=torch.float16 if self.config.dtype == "float16" else torch.float32
-            )
+                print(f"Automatic Mixed Precision is enabled with dtype {self.config.dtype}.")
+            self.amp_ctx = torch.autocast(device_type="cuda", dtype=amp_dtype)
         else:
             self.amp_ctx = nullcontext()
+
+    def _sdpa_ctx(self):
+        """Context manager that disables cuDNN SDPA for the training forward."""
+        if self._disable_cudnn_sdp:
+            from torch.nn.attention import sdpa_kernel, SDPBackend
+
+            return sdpa_kernel([SDPBackend.FLASH_ATTENTION, SDPBackend.EFFICIENT_ATTENTION, SDPBackend.MATH])
+        return nullcontext()
 
     def get_latest_checkpoint(self):
         """Returns the latest checkpoint from `checkpoint_dir`
@@ -668,7 +705,7 @@ class Trainer:
         # variable-feature priors (e.g. graph_scm).
         model_d = None if self.config.ignore_d else micro_d
 
-        with self.amp_ctx:
+        with self.amp_ctx, self._sdpa_ctx():
             if self.regression:
                 # (B, test_size, num_quantiles) predicted quantiles at levels
                 # linspace(0, 1, num_quantiles + 2)[1:-1] (matches inference / QuantileDistribution)

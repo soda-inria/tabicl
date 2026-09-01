@@ -6,8 +6,7 @@
 # samples for training, max LR 2e-5, gradient clipping 1. Continues from the Stage 2
 # checkpoint (weights only). Gradient checkpointing is off (--recompute False; the
 # reference run on H200s did not need it) -- set it to True if the largest datasets
-# do not fit in your GPU memory. FlashAttention-3 is enabled (--use_flash_attn3 True;
-# used when installed, runs attention in fp16).
+# do not fit in your GPU memory. FlashAttention-3 is enabled (--use_flash_attn3 True).
 #
 # Adjust the placeholder paths and --nproc_per_node / --n_jobs for your hardware.
 

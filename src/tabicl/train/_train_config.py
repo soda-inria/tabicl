@@ -62,7 +62,12 @@ def build_parser():
     ###########################################################################
     parser.add_argument("--device", default="cuda", type=str, help="Device for training: cpu, cuda, cuda:0")
     parser.add_argument(
-        "--dtype", default="float32", type=str, help="Data type (supported for float16, float32) used for training"
+        "--dtype",
+        default="float32",
+        type=str,
+        help="Autocast data type used for training when --amp is on. 'float16' enables the gradient "
+        "scaler; 'bfloat16' needs no loss scaling; 'float32' makes autocast a no-op. Parameters are "
+        "always kept in float32.",
     )
     parser.add_argument("--np_seed", type=int, default=42, help="Random seed for numpy")
     parser.add_argument("--torch_seed", type=int, default=42, help="Random seed for torch")

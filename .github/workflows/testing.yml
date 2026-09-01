@@ -33,10 +33,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9  # v9.0.0
         with:
-          # Install a specific version of uv.
-          version: "0.5.4"
+          version: "0.12.1"
       - name: Install hatch
         run: uv pip install --system hatch
       - name: Show installed package versions
@@ -45,12 +44,35 @@ jobs:
           hatch env create "hatch-test.py${{ matrix.python-version }}"
           uv pip list --python "$(hatch env find "hatch-test.py${{ matrix.python-version }}")"
       - name: Run tests
+        env:
+          # Disable oneDNN/MKLDNN on Windows to avoid flaky "could not create
+          # a primitive" errors on some GitHub Actions hosts. Linux still
+          # exercises the optimized MKLDNN path.
+          TABICL_DISABLE_MKLDNN: ${{ runner.os == 'Windows' && '1' || '0' }}
         run: hatch test
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.5.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: soda-inria/tabicl
+
+  test-optional-extras:
+    # Run tests that require optional extras (finetune, forecast).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9  # v9.0.0
+        with:
+          version: "0.12.1"
+      - name: Install package with all extras
+        run: uv pip install --system -e ".[all]"
+      - name: Run tests
+        run: python -m pytest tests/ -x
 
   test-dev-deps:
     # Only run on scheduled builds or manual triggers to avoid causing random
@@ -64,9 +86,9 @@ jobs:
         with:
           python-version: '3.13'
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9  # v9.0.0
         with:
-          version: "0.5.4"
+          version: "0.12.1"
       - name: Install hatch
         run: uv pip install --system hatch
       - name: Create hatch test environment

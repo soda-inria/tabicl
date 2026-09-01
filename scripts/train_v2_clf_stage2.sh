@@ -4,8 +4,8 @@
 #
 # Stage 2: 40K steps on datasets with 400-10,240 samples (log-uniform), 79-81% of
 # samples for training, max LR 1e-4, gradient clipping 10. Continues from the Stage 1
-# checkpoint (weights only). FlashAttention-3 is enabled (--use_flash_attn3 True; used
-# when installed, runs attention in fp16) for stages 2 & 3 only.
+# checkpoint (weights only). FlashAttention-3 is enabled (--use_flash_attn3 True)
+# for stages 2 & 3 only.
 #
 # Adjust the placeholder paths and --nproc_per_node / --n_jobs for your hardware.
 

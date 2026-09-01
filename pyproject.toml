@@ -1,7 +1,7 @@
 [project]
 name = "tabicl"
 dynamic = ["version"]
-description = "TabICL: A state-of-the-art tabular foundation model"
+description = "TabICL: An open tabular foundation model"
 readme = "README.md"
 authors = [
     { name = "Jingang Qu" },
@@ -98,7 +98,7 @@ features = []
 [tool.hatch.envs.hatch-test]
 default-args = ["tests"]
 installer = "uv"
-features = ["test"]
+features = ["test", "forecast", "shap", "finetune"]
 
 [tool.hatch.envs.types]
 extra-dependencies = [
