@@ -177,3 +177,107 @@ def test_dotdot_in_cgroup_path_is_ignored(tmp_path):
     _write(tmp_path / "outside" / "memory.max", str(LIMIT))
     _write(tmp_path / "outside" / "memory.current", str(USAGE))
     assert _headroom(tmp_path, "/../../outside") is None
+
+
+def test_hybrid_v2_line_without_memory_controller_uses_v1(tmp_path):
+    """A ``0::`` line does not mean the memory controller lives on v2.
+
+    Hybrid hosts list both a v2 hierarchy and a v1 ``memory:`` controller. If
+    v2 has no ``memory.max`` (controller still on v1), headroom must come from
+    the v1 files rather than falling back to host-wide psutil.
+    """
+    v2 = tmp_path / "unified"
+    v1 = tmp_path / "memory"
+    (v2 / "user.slice").mkdir(parents=True)
+    nested = v1 / "docker" / "abc"
+    _write(nested / "memory.limit_in_bytes", str(LIMIT))
+    _write(nested / "memory.usage_in_bytes", str(USAGE))
+    proc = tmp_path / "proc_cgroup"
+    _write(proc, "0::/user.slice\n4:memory:/docker/abc\n")
+    assert (
+        _cgroup_memory_headroom(
+            proc_cgroup=proc, v2_root=v2, v1_root=v1, physical_bytes=PHYSICAL
+        )
+        == HEADROOM
+    )
+
+
+def test_missing_usage_does_not_assume_empty_cgroup(tmp_path):
+    """A readable limit with unreadable usage must not look like a free cgroup."""
+    cg = tmp_path / "cg"
+    _write(cg / "memory.max", str(LIMIT))
+    assert _headroom(tmp_path, "/") == 0
+
+
+def test_v2_mount_is_read_from_mountinfo(tmp_path):
+    """cgroup v2 is not always at ``/sys/fs/cgroup`` (systemd hybrid uses unified/)."""
+    unified = tmp_path / "sys" / "fs" / "cgroup" / "unified"
+    _write(unified / "memory.max", str(LIMIT))
+    _write(unified / "memory.current", str(USAGE))
+    proc = tmp_path / "cgroup"
+    _write(proc, "0::/\n")
+    mountinfo = tmp_path / "mountinfo"
+    _write(mountinfo, f"36 35 0:0 / {unified} rw - cgroup2 cgroup2 rw,nsdelegate\n")
+    assert (
+        _cgroup_memory_headroom(
+            proc_cgroup=proc, proc_mountinfo=mountinfo, physical_bytes=PHYSICAL
+        )
+        == HEADROOM
+    )
+
+
+def test_v1_memory_mount_is_read_from_mountinfo(tmp_path):
+    """v1 memory may be co-mounted with cpu, not at ``/sys/fs/cgroup/memory``."""
+    comount = tmp_path / "sys" / "fs" / "cgroup" / "cpu,memory"
+    nested = comount / "docker" / "abc"
+    _write(nested / "memory.limit_in_bytes", str(LIMIT))
+    _write(nested / "memory.usage_in_bytes", str(USAGE))
+    proc = tmp_path / "cgroup"
+    _write(proc, "4:cpu,memory:/docker/abc\n")
+    mountinfo = tmp_path / "mountinfo"
+    _write(mountinfo, f"32 26 0:0 / {comount} rw - cgroup cgroup rw,cpu,memory\n")
+    assert (
+        _cgroup_memory_headroom(
+            proc_cgroup=proc, proc_mountinfo=mountinfo, physical_bytes=PHYSICAL
+        )
+        == HEADROOM
+    )
+
+
+def test_mountinfo_bind_mount_strips_hierarchy_root(tmp_path):
+    """A subtree bind-mount's field 4 is not ``/``; strip that prefix from the path."""
+    mount = tmp_path / "sys" / "fs" / "cgroup" / "system.slice"
+    nested = mount / "docker-abc.scope"
+    _write(nested / "memory.max", str(LIMIT))
+    _write(nested / "memory.current", str(USAGE))
+    proc = tmp_path / "cgroup"
+    _write(proc, "0::/system.slice/docker-abc.scope\n")
+    mountinfo = tmp_path / "mountinfo"
+    _write(
+        mountinfo,
+        f"36 35 0:0 /system.slice {mount} rw - cgroup2 cgroup2 rw,nsdelegate\n",
+    )
+    assert (
+        _cgroup_memory_headroom(
+            proc_cgroup=proc, proc_mountinfo=mountinfo, physical_bytes=PHYSICAL
+        )
+        == HEADROOM
+    )
+
+
+def test_mountinfo_octal_escapes_in_mountpoint(tmp_path):
+    """Kernel mountinfo encodes spaces as ``\\040``; decode before joining."""
+    mount = tmp_path / "cgroup dir"
+    _write(mount / "memory.max", str(LIMIT))
+    _write(mount / "memory.current", str(USAGE))
+    proc = tmp_path / "cgroup"
+    _write(proc, "0::/\n")
+    escaped = str(mount).replace(" ", "\\040")
+    mountinfo = tmp_path / "mountinfo"
+    _write(mountinfo, f"36 35 0:0 / {escaped} rw - cgroup2 cgroup2 rw\n")
+    assert (
+        _cgroup_memory_headroom(
+            proc_cgroup=proc, proc_mountinfo=mountinfo, physical_bytes=PHYSICAL
+        )
+        == HEADROOM
+    )
