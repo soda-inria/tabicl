@@ -849,7 +849,7 @@ class InferenceManager:
         killer sends SIGKILL, so the process dies with **no Python traceback and no CUDA
         error**, which from the outside is indistinguishable from a clean exit.
 
-        Under the hood, this methods intersects the value returned by
+        Under the hood, this method intersects the value returned by
         ``psutil.virtual_memory().available`` with cgroup memory constraints for the current
         process, if any.
         """

@@ -20,6 +20,10 @@ New features
 Bug fixes
 ---------
 
+- Respect cgroup memory limits when estimating available CPU memory at inference, so
+  ``offload="auto"`` inside Docker or Kubernetes does not treat host RAM as free and get
+  OOM-killed with no traceback. ([PR#152](https://github.com/soda-inria/tabicl/pull/152))
+
 - When unpickling a TabICL estimator, the fitted attributes `device_`, `model_`, etc. are only state if the pickled model was fitted. ([PR#121](https://github.com/soda-inria/tabicl/pull/121))
 
 - Improve non-CUDA GPU inference reliability and performance (including XPU): inference now consistently runs on the configured backend device, uses backend-appropriate autocast, and queries available memory plus async stream/event primitives through backend-agnostic `torch.<backend>` APIs (with safe synchronous fallbacks when async is unavailable). This fixes pathological auto-batch sizing (e.g. batch size forced to 1) and restores expected accelerated inference behavior on supported non-CUDA GPU backends. When `device=None`, estimators now default to CUDA when available, otherwise XPU, then MPS, and then CPU. ([PR#144](https://github.com/soda-inria/tabicl/pull/144))
