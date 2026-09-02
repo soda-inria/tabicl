@@ -28,6 +28,10 @@ New features
 Bug fixes
 ---------
 
+- Respect cgroup memory limits when estimating available CPU memory at inference, so
+  ``offload="auto"`` inside Docker or Kubernetes does not treat host RAM as free and get
+  OOM-killed with no traceback. ([PR#152](https://github.com/soda-inria/tabicl/pull/152))
+
 - Fix the pre-training `GradScaler` being disabled for `--dtype float32 --use_flash_attn3 True` (the TabICLv2 stage 2 and 3 recipes), which degraded pre-training quality: FlashAttention-3 runs its backward pass in `float16` there, so loss scaling is still needed. (reported by @wangzhengli in [#153](https://github.com/soda-inria/tabicl/issues/153))
 
 - Finetuning now supports string/categorical features in DataFrames, matching the behavior of the base `TabICLClassifier` and `TabICLRegressor`. Previously, `FinetunedTabICLClassifier` and `FinetunedTabICLRegressor` would raise `ValueError: could not convert string to float` when the input contained categorical columns. ([PR#151](https://github.com/soda-inria/tabicl/pull/151); reported by @zehua-jerry-yu in [#118](https://github.com/soda-inria/tabicl/issues/118))

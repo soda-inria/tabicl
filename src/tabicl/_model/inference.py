@@ -21,7 +21,8 @@ from torch import Tensor
 
 from .kv_cache import KVCache
 from .attention import flash_attn3_toggle
-from tabicl._torch_devices import resolve_torch_device
+from ._cgroup_memory import _cgroup_memory_headroom
+from .._torch_devices import resolve_torch_device
 
 
 def devices_match(a: torch.device, b: torch.device) -> bool:
@@ -825,15 +826,38 @@ class InferenceManager:
         raise ValueError(f"Invalid offload={offload!r}. Expected bool or one of 'auto', 'gpu', 'cpu', 'disk'.")
 
     def get_available_cpu_memory(self) -> float:
-        """Get available CPU memory in MB.
+        """Get available CPU memory in MB, respecting any cgroup limit.
 
         Returns
         -------
         float
             Available CPU memory in megabytes. This is the amount of memory
-            that can be allocated without causing swap.
+            that can be allocated without causing swap -- or, inside a
+            memory-limited container, without being killed.
+
+        Notes
+        -----
+        ``psutil.virtual_memory().available`` reports the **host's** free memory and is
+        blind to cgroup limits, so inside a memory-limited container (Docker, Kubernetes,
+        most GPU clouds) it can substantially overstate what this process may actually
+        allocate. Measured on one such container: psutil reported **450.8 GB available**
+        against a real headroom of **102.4 GB**, an overestimate of 4.4x.
+
+        This value feeds ``_resolve_offload_mode``, which decides whether ``offload="auto"``
+        keeps outputs in CPU memory or escalates to disk. Overestimating it means never
+        escalating, and the resulting failure is unusually hard to diagnose: the cgroup OOM
+        killer sends SIGKILL, so the process dies with **no Python traceback and no CUDA
+        error**, which from the outside is indistinguishable from a clean exit.
+
+        Under the hood, this method intersects the value returned by
+        ``psutil.virtual_memory().available`` with cgroup memory constraints for the current
+        process, if any.
         """
-        return psutil.virtual_memory().available / (1024 * 1024)
+        available = psutil.virtual_memory().available
+        headroom = _cgroup_memory_headroom()
+        if headroom is not None:
+            available = min(available, headroom)
+        return available / (1024 * 1024)
 
     def _get_device_backend_api(self) -> Optional[Any]:
         """Return torch backend module matching the execution device type.
