@@ -4,6 +4,8 @@ import sys
 import copy
 import pickle
 import warnings
+import multiprocessing as mp
+from functools import wraps
 from pathlib import Path
 from typing import Optional
 from collections import OrderedDict
@@ -18,6 +20,37 @@ from sklearn.utils.validation import check_is_fitted
 from tabicl import InferenceConfig
 from tabicl._model.tabicl import TabICL
 from tabicl._torch_devices import resolve_torch_device
+
+
+def _with_n_jobs(method):
+    """Apply an estimator's thread limit and restore the caller's setting on exit."""
+
+    @wraps(method)
+    def wrapped(self, *args, **kwargs):
+        if self.n_jobs is None:
+            return method(self, *args, **kwargs)
+
+        assert self.n_jobs != 0
+        old_n_threads = torch.get_num_threads()
+        n_logical_cores = mp.cpu_count()
+        if self.n_jobs > 0:
+            if self.n_jobs > n_logical_cores:
+                warnings.warn(
+                    f"TabICL got n_jobs={self.n_jobs} but there are only {n_logical_cores} logical cores available."
+                    f" Only {n_logical_cores} threads will be used.",
+                    stacklevel=2,
+                )
+            n_threads = min(n_logical_cores, self.n_jobs)
+        else:
+            n_threads = max(1, n_logical_cores + 1 + self.n_jobs)
+
+        torch.set_num_threads(n_threads)
+        try:
+            return method(self, *args, **kwargs)
+        finally:
+            torch.set_num_threads(old_n_threads)
+
+    return wrapped
 
 
 def _check_version_compatibility(metadata: dict) -> None:
