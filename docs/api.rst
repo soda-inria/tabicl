@@ -63,6 +63,19 @@ Pre-training data
 SHAP interpretability
 ---------------------
 
+By default, SHAP explanations use a single all-NaN row as their reference.
+To explain predictions relative to a representative dataset, pass a numeric
+background with the same feature order and encoding as the training data:
+
+.. code-block:: python
+
+   from tabicl.shap import get_shap_values
+
+   shap_values = get_shap_values(estimator, X_test, X_background=X_train[:20])
+
+The background changes the reference prediction and feature attributions.
+Choose samples representative of the population you want to compare against.
+
 .. autofunction:: tabicl.shap.get_shap_explainer
 .. autofunction:: tabicl.shap.get_shap_values
 .. autofunction:: tabicl.shap.get_shapiq_explainer
