@@ -408,3 +408,20 @@ a.sk-btn-orange:hover {
   border: 2px solid #DA7007; /* Border remains the same on hover */
 }
 
+
+/* -------------------------------------------------------------------------
+   Responsive plotly figures: swap desktop (1-row) / mobile (1-col) layouts
+   by viewport width. The embed snippets contain both variants wrapped in
+   .plotly-desktop / .plotly-mobile divs; only one is visible at a time.
+   ------------------------------------------------------------------------- */
+.plotly-mobile {
+  display: none;
+}
+@media (max-width: 576px) {
+  .plotly-desktop {
+    display: none;
+  }
+  .plotly-mobile {
+    display: block;
+  }
+}
