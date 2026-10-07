@@ -23,33 +23,32 @@ device choice and use of the KV cache.
 #
 # At the core of ``tabicl``'s architecture are transformer-like components, and
 # much like other transformer-based systems, it can benefit from temporarily
-# storing intermediary objects computed on the way to the final output, so
-# they can be reused later to speed up throughput for similar inputs, or
-# even, in some cases, to reduce the memory footprint.
+# storing intermediate objects computed on the way to the final output, so
+# they can be reused later to speed up predictions on similar inputs, or even,
+# in some cases, to reduce the memory footprint.
 #
 # These objects are called, in transformer terminology, *keys* and *values*,
-# hence the name given to the system designed for memoization: the
-# *kv*-cache.
+# hence the name of the memoization system: the *kv*-cache.
 #
 # Tabular foundational models encode the *entire* training dataset along with
 # the training labels. In this case, enabling the key-value cache means that
 # all the operations on the training data that do not depend on the target
-# dataset will be stored and available for reuse to speed up the prediction
-# on future never-seen-before target datasets.
+# dataset are stored and available for reuse to speed up prediction on
+# previously unseen target datasets.
 #
 # By default, the :meth:`.fit <tabicl.TabICLClassifier.fit>` method of
 # ``tabicl`` estimators does not run any compute-heavy operations. It merely
-# downloads (if not already saved) and loads the model weights, and stores the
+# downloads (if not already present) and loads the model weights, and stores the
 # training data after applying some light pre-processing. At predict time,
 # both the training data and the input dataset are jointly forwarded to the
 # actual compute machinery.
 #
 # With kv-cache enabled, :meth:`.fit <tabicl.TabICLClassifier.fit>` additionally
-# computes some of the intermediary outputs that only depend on the training
-# data, and stores them in host memory if ``device='cpu'``, else on device
+# computes some of the intermediate outputs that only depend on the training
+# data, and stores them in host memory if ``device='cpu'``, otherwise on device
 # memory.
 #
-# The ``tabicl`` API exposes several levels of caching, as one can set:
+# The ``tabicl`` API exposes several caching levels:
 #
 # - ``kv_cache=False`` (the default) to disable caching
 # - ``kv_cache=True`` or ``kv_cache='kv'`` for aggressive caching
@@ -57,7 +56,7 @@ device choice and use of the KV cache.
 #   later layers
 #
 # The :doc:`Getting Started <getting_started>` gallery already showcases usage
-# of this parameter. The present gallery presents an in-depth analysis of its
+# of this parameter. The present gallery provides an in-depth analysis of its
 # effects on a range of workloads.
 
 # %%
@@ -106,7 +105,7 @@ device choice and use of the KV cache.
 # as the number of features increases. This means kv-caching is especially
 # beneficial for wide tables.
 #
-# In a nutshell, enabling ``kv-caching`` has **no downside** on compute time,
+# In a nutshell, enabling ``kv-caching`` has **no downside** on compute time;
 # the effect is negligible at worst. The trade-off is a higher memory
 # footprint, which the next section quantifies.
 
@@ -114,13 +113,51 @@ device choice and use of the KV cache.
 # Effects of ``kv_cache`` on memory
 # ---------------------------------
 #
-# The previous figure showed the compute-time side of the KV-cache trade-off;
-# this one shows the memory side. Peak memory usage is recorded separately for
-# the fit and predict phases. The peak memory allocated during
-# :meth:`.fit <tabicl.TabICLClassifier.fit>` when kv-caching is disabled is
-# always negligible, and is not displayed. When kv-caching is enabled, the
-# peak memory reported during :meth:`.predict <tabicl.TabICLClassifier.predict>`
-# includes the overhead of the cache.
+# The previous figure displays the compute-time side of the KV-cache trade-off;
+# this one displays the memory side. Peak memory usage is recorded separately
+# for the fit and predict phases. The peak memory allocated during :meth:`.fit
+# <tabicl.TabICLClassifier.fit>` when kv-caching is disabled is always
+# negligible, and is not displayed. When kv-caching is enabled, the peak memory
+# reported during :meth:`.predict <tabicl.TabICLClassifier.predict>` includes
+# the cache overhead.
 #
 # .. raw:: html
 #    :file: ../_static/compute_tradeoffs/fig2.html
+# 
+# Somewhat surprisingly, the memory footprint of
+# :meth:`.predict <tabicl.TabICLClassifier.predict>` is uniformly lower
+# when the key-value cache is enabled, so caching also appears to have **no
+# downside** with respect to memory usage. In fact, the
+# :meth:`.predict <tabicl.TabICLClassifier.predict>` memory curves are
+# remarkably similar in shape to the compute-time plots, and the same
+# conclusions apply. The reason is that the overhead added by the cache is 
+# more than offset by the memory saved by skipping the computation of intermediate 
+# hidden activations.
+#
+# The left and right plots, however, suggest that for very large training data
+# (or very small test data), the peak memory needed to build the key-value
+# cache (during :meth:`.fit <tabicl.TabICLClassifier.fit>`) surpasses the peak
+# memory of :meth:`.predict <tabicl.TabICLClassifier.predict>` without the
+# cache. In those cases, there may be a genuine trade-off: caching is
+# worthwhile only if enough memory is available to build the cache.
+#
+# The particularly high peak memory observed during
+# :meth:`.fit <tabicl.TabICLClassifier.fit>` is the sum of the peak memory
+# needed to compute the intermediate activations in the later layers, and the
+# memory held by the objects from earlier layers that are retained in the cache
+# being built.
+
+# %%
+# Practical summary
+# -----------------
+#
+# In short, a good rule overall is to *always activate the kv-cache* unless the
+# available memory is too limited to build the cache.
+
+# %%
+# Other limitations
+# -----------------
+#
+# One important limitation is that caching is not implemented for
+# classification problems with more than 10 classes. In this case, the
+# :meth:`.fit <tabicl.TabICLClassifier.fit>` call raises an exception instead.
