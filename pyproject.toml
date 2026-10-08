@@ -33,7 +33,8 @@ dependencies = [
     "einops>=0.7",  # this is only used for rope, so it could be replaced
     "psutil",  # used for memory calculation at inference
     "tqdm>=4.64.0",
-    "huggingface-hub<2",
+    "huggingface-hub",
+    "tokenizers>=0.20" # only to prevent uv solver bugged backtracking
 ]
 
 [project.optional-dependencies]
