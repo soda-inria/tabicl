@@ -74,6 +74,9 @@ html_favicon = "TabICL.ico"
 
 html_static_path = ['_static']
 html_css_files = ["css/custom.css"]
+# Resize plotly figures once the DOM/CSS layout is loaded; works around a known
+# crop bug between plotly and the pydata-sphinx-theme secondary sidebar.
+html_js_files = ["js/sg_plotly_resize.js"]
 
 # -- Theme Options -----------------------------------------------------------
 

@@ -33,7 +33,7 @@ dependencies = [
     "einops>=0.7",  # this is only used for rope, so it could be replaced
     "psutil",  # used for memory calculation at inference
     "tqdm>=4.64.0",
-    "huggingface-hub",
+    "huggingface-hub<2",  # transformers/tokenizers require huggingface-hub<2; 2.0 breaks resolution
 ]
 
 [project.optional-dependencies]
@@ -50,7 +50,7 @@ doc = [
   "shapiq>=1.0",
   "numba",  # Add it here to facilitate the life of the installer
 ]
-forecast = [                                                                                                                                                                                                        
+forecast = [
     "pandas>=2.1.2",
     "statsmodels>=0.14.5",  # seasonal detection
     "matplotlib>=3.10.3",  # plotting
@@ -130,7 +130,6 @@ exclude_lines = [
 exclude-newer = "7 days"
 # Must resolve dependencies for major platforms in uv.lock
 required-environments = [
-    "sys_platform == 'darwin'",
     "sys_platform == 'linux'",
     "sys_platform == 'win32'",
 ]
