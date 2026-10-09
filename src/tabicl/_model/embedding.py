@@ -220,6 +220,15 @@ class ColEmbedding(nn.Module):
         -------
         Tensor
             Grouped tensor of shape (B, T, G, feature_group_size) where G is the number of groups.
+
+        Notes
+        -----
+        In ``"same"`` mode, groups are generated using circular shifts with offsets
+        ``2**i - 1`` (e.g. ``0, 1, 3`` for groups of size 3). These offsets form a
+        Golomb ruler: all pairwise differences between marks are distinct. Applied
+        cyclically modulo the number of features, this is closely related to a
+        modular Golomb-ruler construction and ensures that feature pairs are not
+        repeated across groups.
         """
         if not self.feature_group:
             return X.unsqueeze(-1)  # (B, T, H, 1)
