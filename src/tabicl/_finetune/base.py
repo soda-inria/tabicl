@@ -684,7 +684,7 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
 
         AMP is only engaged on CUDA with ``self.amp=True``; in every other
         case (``amp=False``, CPU, MPS) ``scaler`` becomes a disabled
-        :class:`torch.GradScaler` whose scale/step/update operations are
+        gradient scaler whose scale/step/update operations are
         no-ops, and ``amp_ctx_factory`` returns :class:`contextlib.nullcontext`
         so the training loop stays branch-free.
 
@@ -695,7 +695,11 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
             zero-arg callable that produces a fresh context manager per batch.
         """
         use_amp = self.amp and device.type == "cuda" and torch.cuda.is_available()
-        scaler = torch.GradScaler("cuda", enabled=use_amp)
+        if hasattr(torch, "GradScaler"):
+            scaler = torch.GradScaler("cuda", enabled=use_amp)
+        else:
+            # PyTorch 2.2 supports CUDA AMP but predates the top-level alias.
+            scaler = torch.cuda.amp.GradScaler(enabled=use_amp)
         if use_amp:
             amp_ctx_factory = lambda: torch.autocast(  # noqa: E731
                 device_type="cuda",
