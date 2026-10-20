@@ -15,7 +15,7 @@ uv venv --python 3.12 .venv
 source .venv/bin/activate
 uv export --locked --all-extras --group ci --no-emit-project --no-hashes \
   --output-file .venv/ci-constraints.txt
-export UV_CONSTRAINT="$(python -c 'from pathlib import Path; print(Path(".venv/ci-constraints.txt").resolve())')"
+export UV_CONSTRAINT=.venv/ci-constraints.txt
 export UV_BUILD_CONSTRAINT="$UV_CONSTRAINT"
 uv pip install hatch
 hatch env remove hatch-test.py3.12
