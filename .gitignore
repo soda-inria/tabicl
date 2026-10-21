@@ -135,6 +135,8 @@ dmypy.json
 # sphinx-gallery generated files
 docs/sg_execution_times.rst
 docs/tutorials/
+# Gallery figures rendered at build time from docs/_data/ (see docs/_ext/)
+docs/_static/compute_tradeoffs/
 # Claude Code local sandbox/workflow artifacts
 .venv/
 .claude/settings.local.json

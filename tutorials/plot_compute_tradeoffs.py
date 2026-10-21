@@ -7,8 +7,10 @@ compute time and memory footprints (host and device memory), covering
 device choice and use of the KV cache.
 
 .. note::
-   The figures in the gallery are generated in the
-   `tabicl-benchmarks <https://github.com/probabl/tabicl-benchmarks>`_
+   The figures in the gallery are rendered when the documentation is built,
+   from a snapshot of benchmark results committed alongside the docs in
+   ``docs/_data/tabicl_benchmarks_data.csv``. The runs themselves are produced
+   by the `tabicl-benchmarks <https://github.com/probabl/tabicl-benchmarks>`_
    project repository. The version of ``tabicl`` displayed in figure footnotes
    may not match the latest ``tabicl`` release.
 
