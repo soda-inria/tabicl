@@ -65,7 +65,7 @@ N_NUMERIC = N_FEATURES - N_CATEGORICAL
 QUANTILE_ALPHAS = [0.1, 0.5, 0.9]
 
 # CPU + MPS are exercised in CI; other accelerators can be checked locally.
-_DEVICES = ["cpu", "mps"]
+_DEVICES = ["cpu", "mps", "cuda", "xpu"]
 
 DATA_DIR = Path(__file__).resolve().parent / "data" / "prediction_consistency"
 
