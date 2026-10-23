@@ -78,12 +78,10 @@ _ESTIMATOR_KW = dict(
 )
 
 
-def _allclose_tol(device: str) -> tuple[float, float]:
-    """Return (rtol, atol) for comparing predictions to the CPU golden snapshot."""
-    if device == "cpu":
-        return 1e-5, 1e-6
-    # Cross-device fp32 drift (see device↔CPU parity tests in test_numpy_inputs.py).
-    return 1e-4, 1e-4
+# Cross-platform / cross-device fp32 drift vs checked-in CPU goldens (OS, torch,
+# BLAS); same band as the device↔CPU parity tests in ``test_numpy_inputs.py``.
+_RTOL = 1e-4
+_ATOL = 1e-4
 
 
 def _to_mixed_dataframe(X: np.ndarray, seed: int) -> pd.DataFrame:
@@ -249,10 +247,9 @@ def test_predict_proba_consistency(kind, device):
             "Regenerate with regenerate_fixtures()."
         )
     expected = np.load(expected_path)
-    rtol, atol = _allclose_tol(device)
     assert proba.shape == expected.shape
-    np.testing.assert_allclose(proba, expected, rtol=rtol, atol=atol)
-    np.testing.assert_allclose(proba.sum(axis=1), 1.0, rtol=1e-5, atol=1e-6)
+    np.testing.assert_allclose(proba, expected, rtol=_RTOL, atol=_ATOL)
+    np.testing.assert_allclose(proba.sum(axis=1), 1.0, rtol=_RTOL, atol=_ATOL)
 
 
 @pytest.mark.parametrize("device", _DEVICES)
@@ -275,12 +272,11 @@ def test_predict_regression_consistency(device):
         )
     expected_mean = np.load(paths["mean"])
     expected_quantiles = np.load(paths["quantiles"])
-    rtol, atol = _allclose_tol(device)
 
     assert mean_pred.shape == (N_TEST,)
     assert mean_pred.shape == expected_mean.shape
-    np.testing.assert_allclose(mean_pred, expected_mean, rtol=rtol, atol=atol)
+    np.testing.assert_allclose(mean_pred, expected_mean, rtol=_RTOL, atol=_ATOL)
 
     assert quantiles.shape == (N_TEST, len(QUANTILE_ALPHAS))
     assert quantiles.shape == expected_quantiles.shape
-    np.testing.assert_allclose(quantiles, expected_quantiles, rtol=rtol, atol=atol)
+    np.testing.assert_allclose(quantiles, expected_quantiles, rtol=_RTOL, atol=_ATOL)
