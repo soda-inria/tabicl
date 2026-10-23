@@ -7,18 +7,20 @@ categoricals come from binning informative numerics with light noise.
 
 Tests always load existing fixtures (and raise if any are missing). To rebuild
 data and CPU prediction snapshots after intentional changes, call
-:func:`regenerate_fixtures` manually, e.g.::
+:func:`regenerate_fixtures` manually from the repo root, e.g.::
 
-    python -c "from tests.test_prediction_consistency import regenerate_fixtures; regenerate_fixtures()"
-
-or run this file as a script::
-
-    python tests/test_prediction_consistency.py
+    python -c "import sys; sys.path[:0] = ['.', 'tests']; from tests.test_prediction_consistency import regenerate_fixtures; regenerate_fixtures()"
 """
 
 from __future__ import annotations
 
 from pathlib import Path
+
+import torch
+# Windows CI disables oneDNN/MKLDNN (TABICL_DISABLE_MKLDNN=1) to avoid flaky
+# "could not create a primitive" errors. Force the same here, so snapshots and CPU 
+# assertions share one portable backend; Linux would otherwise use oneDNN by default.
+torch.backends.mkldnn.enabled = False
 
 import numpy as np
 import pandas as pd
@@ -37,11 +39,10 @@ N_FEATURES = 10
 NUMERIC_SCALES = (0.01, 1.0, 25.0, 1e3, 1e5)
 # Categoricals cycle through these cardinalities after binning.
 CAT_CARDINALITIES = (2, 3, 5, 8)
-N_CATEGORICAL = 4
-N_NUMERIC = N_FEATURES - N_CATEGORICAL
-
+N_CATEGORICAL = len(CAT_CARDINALITIES)
 # Noise std relative to each column's std before binning into categoricals.
 CAT_NOISE_SCALE = 0.15
+N_NUMERIC = N_FEATURES - N_CATEGORICAL
 QUANTILE_ALPHAS = [0.1, 0.5, 0.9]
 
 # CPU + MPS are exercised in CI; other accelerators can be checked locally.
@@ -53,7 +54,7 @@ _ESTIMATOR_KW = dict(
     n_estimators=8,
     use_amp=False,
     use_fa3=False,
-    random_state=0,
+    random_state=42,
     verbose=False,
 )
 
@@ -110,7 +111,7 @@ def _generate_synthetic_task(kind: str) -> tuple[pd.DataFrame, pd.DataFrame, np.
             n_informative=N_FEATURES,
             n_redundant=0,
             n_repeated=0,
-            n_classes=4,
+            n_classes=11, # >10 to also include a case for the mixed-radix encoding
             n_clusters_per_class=1,
             random_state=1,
         )
@@ -173,7 +174,8 @@ def _load_task(kind: str) -> tuple[pd.DataFrame, pd.DataFrame, np.ndarray]:
         raise FileNotFoundError(
             f"Missing prediction-consistency fixtures: {missing}. "
             "Regenerate with regenerate_fixtures() "
-            '(e.g. python -c "from tests.test_prediction_consistency import regenerate_fixtures; '
+            '(e.g. python -c "import sys; sys.path[:0] = [\'.\', \'tests\']; '
+            "from tests.test_prediction_consistency import regenerate_fixtures; "
             'regenerate_fixtures()").'
         )
     X_train = pd.read_parquet(paths["X_train"])
@@ -185,9 +187,10 @@ def _load_task(kind: str) -> tuple[pd.DataFrame, pd.DataFrame, np.ndarray]:
 def regenerate_fixtures() -> None:
     """Generate parquet tables and CPU golden predictions for all tasks.
 
-    Call manually after changing generation knobs or when fixtures are missing::
+    Call manually from the repo root after changing generation knobs or when
+    fixtures are missing::
 
-        python -c "from tests.test_prediction_consistency import regenerate_fixtures; regenerate_fixtures()"
+        python -c "import sys; sys.path[:0] = ['.', 'tests']; from tests.test_prediction_consistency import regenerate_fixtures; regenerate_fixtures()"
     """
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -263,7 +266,3 @@ def test_predict_regression_consistency(device):
     np.testing.assert_allclose(quantiles, expected_quantiles, rtol=rtol, atol=atol)
     assert np.all(quantiles[:, 0] <= quantiles[:, 1])
     assert np.all(quantiles[:, 1] <= quantiles[:, 2])
-
-
-if __name__ == "__main__":
-    regenerate_fixtures()
