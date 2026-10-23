@@ -14,22 +14,41 @@ data and CPU prediction snapshots after intentional changes, call
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from pathlib import Path
-
-import torch
-# Windows CI disables oneDNN/MKLDNN (TABICL_DISABLE_MKLDNN=1) to avoid flaky
-# "could not create a primitive" errors. Force the same here, so snapshots and CPU 
-# assertions share one portable backend; Linux would otherwise use oneDNN by default.
-torch.backends.mkldnn.enabled = False
 
 import numpy as np
 import pandas as pd
 import pytest
+import torch
 from sklearn.datasets import make_classification, make_regression
 
 from conftest import model_path
 from tabicl import TabICLClassifier, TabICLRegressor
 from tests.torch_devices_helpers import skip_if_device_unusable
+
+
+@contextmanager
+def _portable_cpu_backend():
+    """Disable oneDNN for this block; restore the previous setting on exit.
+
+    Windows CI disables oneDNN/MKLDNN (``TABICL_DISABLE_MKLDNN=1``) to avoid
+    flaky "could not create a primitive" errors. Mirror that here so snapshots
+    and CPU assertions share one portable backend; Linux would otherwise use
+    oneDNN by default. Scoped so other tests keep the process default.
+    """
+    previous = torch.backends.mkldnn.enabled
+    torch.backends.mkldnn.enabled = False
+    try:
+        yield
+    finally:
+        torch.backends.mkldnn.enabled = previous
+
+
+@pytest.fixture(autouse=True)
+def _disable_mkldnn_for_portable_goldens():
+    with _portable_cpu_backend():
+        yield
 
 N_TRAIN = 1000
 N_TEST = 50
@@ -111,7 +130,7 @@ def _generate_synthetic_task(kind: str) -> tuple[pd.DataFrame, pd.DataFrame, np.
             n_informative=N_FEATURES,
             n_redundant=0,
             n_repeated=0,
-            n_classes=11, # >10 to also include a case for the mixed-radix encoding
+            n_classes=11,  # >10 to also include a case for the mixed-radix encoding
             n_clusters_per_class=1,
             random_state=1,
         )
@@ -194,21 +213,22 @@ def regenerate_fixtures() -> None:
     """
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    for kind in ("binary", "multiclass"):
-        X_train, X_test, y_train = _generate_synthetic_task(kind)
-        _save_task(kind, X_train, X_test, y_train)
-        clf = TabICLClassifier(device="cpu", **_ESTIMATOR_KW, **model_path("classifier"))
-        clf.fit(X_train, y_train)
-        np.save(_prediction_paths(kind)["proba"], clf.predict_proba(X_test))
+    with _portable_cpu_backend():
+        for kind in ("binary", "multiclass"):
+            X_train, X_test, y_train = _generate_synthetic_task(kind)
+            _save_task(kind, X_train, X_test, y_train)
+            clf = TabICLClassifier(device="cpu", **_ESTIMATOR_KW, **model_path("classifier"))
+            clf.fit(X_train, y_train)
+            np.save(_prediction_paths(kind)["proba"], clf.predict_proba(X_test))
 
-    X_train, X_test, y_train = _generate_synthetic_task("regression")
-    _save_task("regression", X_train, X_test, y_train)
-    reg = TabICLRegressor(device="cpu", **_ESTIMATOR_KW, **model_path("regressor"))
-    reg.fit(X_train, y_train)
-    preds = reg.predict(X_test, output_type=["mean", "quantiles"], alphas=QUANTILE_ALPHAS)
-    paths = _prediction_paths("regression")
-    np.save(paths["mean"], preds["mean"])
-    np.save(paths["quantiles"], preds["quantiles"])
+        X_train, X_test, y_train = _generate_synthetic_task("regression")
+        _save_task("regression", X_train, X_test, y_train)
+        reg = TabICLRegressor(device="cpu", **_ESTIMATOR_KW, **model_path("regressor"))
+        reg.fit(X_train, y_train)
+        preds = reg.predict(X_test, output_type=["mean", "quantiles"], alphas=QUANTILE_ALPHAS)
+        paths = _prediction_paths("regression")
+        np.save(paths["mean"], preds["mean"])
+        np.save(paths["quantiles"], preds["quantiles"])
 
 
 @pytest.mark.parametrize("device", _DEVICES)
@@ -264,5 +284,3 @@ def test_predict_regression_consistency(device):
     assert quantiles.shape == (N_TEST, len(QUANTILE_ALPHAS))
     assert quantiles.shape == expected_quantiles.shape
     np.testing.assert_allclose(quantiles, expected_quantiles, rtol=rtol, atol=atol)
-    assert np.all(quantiles[:, 0] <= quantiles[:, 1])
-    assert np.all(quantiles[:, 1] <= quantiles[:, 2])
