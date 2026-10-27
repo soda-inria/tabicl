@@ -24,7 +24,6 @@ from importlib.metadata import version as pkg_version
 
 import numpy as np
 import pandas as pd
-import torch
 from sklearn.datasets import make_classification, make_regression
 
 # Allow ``from conftest import model_path`` when run as a script from the repo root.
