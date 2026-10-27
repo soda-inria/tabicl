@@ -79,7 +79,13 @@ def prediction_paths(kind: str) -> dict[str, str]:
 
 
 def _to_mixed_dataframe(X: np.ndarray, seed: int) -> pd.DataFrame:
-    """Keep the first columns numeric; bin the rest into predictive categoricals."""
+    """Keep the first columns numeric; bin the rest into predictive categoricals.
+    
+    Numerical features are further scaled and offset with scales on
+    different magnitudes to make the problem harder and ensure that an
+    unintended change in the internal numeric feature preprocessing has
+    a good chance to make the non-regression test fail.
+    """
     rng = np.random.RandomState(seed)
     assert X.shape[1] == N_FEATURES
     data: dict[str, pd.Series | np.ndarray] = {}
