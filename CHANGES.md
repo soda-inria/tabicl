@@ -87,6 +87,8 @@ New features
 
 - Add fine-tuning support for TabICL via `FinetunedTabICLClassifier` and `FinetunedTabICLRegressor`: full PyTorch training loop with AdamW, cosine-warmup schedule, early stopping, gradient clipping, AMP, DDP, partial module freezing, and checkpointing in the pre-training schema. ([PR#101](https://github.com/soda-inria/tabicl/pull/101), @JingangQu)
 
+- Use chunking to improve memory efficiency at inference time, both for CPU and accelerators.
+
 
 2.1.0
 =====

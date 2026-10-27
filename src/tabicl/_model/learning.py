@@ -274,7 +274,24 @@ class ICLearning(nn.Module):
             R = R.detach()
         R[:, :train_size] = R[:, :train_size] + Ry_train
 
-        src = self.tf_icl(R, train_size=train_size)
+        use_query_chunks = not self.training and self.inference_mgr._is_configured
+        if use_query_chunks:
+            batch_size = math.prod(R.shape[:-2])
+            elem_size = R.element_size()
+            budget_bytes = self.inference_mgr.cpu_memory_budget_mb * 1024 * 1024
+            bytes_per_query_row = (
+                self.inference_mgr.cpu_activation_factor
+                * batch_size
+                * R.shape[-1]
+                * elem_size
+            )
+            query_chunk_size = max(1, int(budget_bytes // max(bytes_per_query_row, 1)))
+            if query_chunk_size < R.shape[-2]:
+                src = self.tf_icl.forward_query_chunked(R, train_size, query_chunk_size)
+            else:
+                src = self.tf_icl(R, train_size=train_size)
+        else:
+            src = self.tf_icl(R, train_size=train_size)
         if self.norm_first:
             src = self.ln(src)
         out = self.decoder(src)
