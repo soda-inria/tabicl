@@ -16,10 +16,7 @@ from tabicl._torch_devices import (
     resolve_default_device,
     resolve_torch_device,
 )
-from tests.torch_devices_helpers import skip_if_device_unusable
-
-
-_DEVICES = ["cpu", "cuda", "xpu", "mps"]
+from tests.torch_devices_helpers import skip_if_device_unusable, DEVICES
 
 
 def _patch_backend_availability(
@@ -113,7 +110,7 @@ def test_tabicl_supports_nans(estimator):
         TabICLRegressor(random_state=0),
     ],
 )
-@pytest.mark.parametrize("device", _DEVICES)
+@pytest.mark.parametrize("device", DEVICES)
 def test_tabicl_supports_bool_object_and_string_inputs(estimator, X, device):
     skip_if_device_unusable(device)
 
@@ -325,7 +322,7 @@ def test_resolve_fa3_explicit_true_preserved_off_cuda():
     assert use_fa3 is True
 
 
-@pytest.mark.parametrize("device", _DEVICES)
+@pytest.mark.parametrize("device", DEVICES)
 @pytest.mark.parametrize("kv_cache", [False, True])
 @pytest.mark.parametrize("use_amp", [False, True])
 def test_tabicl_regressor_device_cpu_r2_parity(device, kv_cache, use_amp):

@@ -10,6 +10,7 @@ from tabicl._torch_devices import (
     mps_possibly_faulty,
 )
 
+DEVICES = ["cpu", "cuda", "xpu", "mps"]
 
 def device_available(device: str | torch.device | None) -> bool:
     """Return whether a torch device backend is available on this host.
