@@ -309,8 +309,8 @@ class TreeSCM(nn.Module):
         # Handle outputs based on causality
         X, y = self.handle_outputs(causes, outputs)
 
-        # Check for NaNs and handle them by setting to default values
-        if torch.any(torch.isnan(X)) or torch.any(torch.isnan(y)):
+        # Check for NaNs/Infs and handle them by setting to default values
+        if not torch.isfinite(X).all() or not torch.isfinite(y).all():
             X[:] = 0.0
             y[:] = -100.0
 
