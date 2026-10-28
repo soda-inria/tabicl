@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import warnings
 from pathlib import Path
-import multiprocessing as mp
 from collections import OrderedDict
 from typing import Optional, List, Dict
 
@@ -17,7 +15,7 @@ from sklearn.preprocessing import LabelEncoder
 from huggingface_hub import hf_hub_download
 from huggingface_hub.utils import LocalEntryNotFoundError
 
-from .base import TabICLBaseEstimator
+from .base import TabICLBaseEstimator, _with_n_jobs
 from .preprocessing import TransformToNumerical, EnsembleGenerator
 from .sklearn_utils import validate_data, _num_samples
 
@@ -663,6 +661,7 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
             outputs.append(out.float().cpu().numpy())
         return np.concatenate(outputs, axis=0)
 
+    @_with_n_jobs
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         """Predict class probabilities for test samples.
 
@@ -705,23 +704,6 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
                 "Re-fit the estimator or load from a file saved with save_training_data=True or "
                 "save_kv_cache=True."
             )
-
-        if self.n_jobs is not None:
-            assert self.n_jobs != 0
-            old_n_threads = torch.get_num_threads()
-            n_logical_cores = mp.cpu_count()
-
-            if self.n_jobs > 0:
-                if self.n_jobs > n_logical_cores:
-                    warnings.warn(
-                        f"TabICL got n_jobs={self.n_jobs} but there are only {n_logical_cores} logical cores available."
-                        f" Only {n_logical_cores} threads will be used."
-                    )
-                n_threads = min(n_logical_cores, self.n_jobs)
-            else:
-                n_threads = max(1, n_logical_cores + 1 + self.n_jobs)
-
-            torch.set_num_threads(n_threads)
 
         # Preserve DataFrame structure to retain column names and types for correct feature transformation
         X = validate_data(self, X, reset=False, dtype=None, skip_check_array=True)
@@ -767,9 +749,6 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         # Convert logits to probabilities
         if self.average_logits:
             avg = self.softmax(avg, axis=-1, temperature=self.softmax_temperature)
-
-        if self.n_jobs is not None:
-            torch.set_num_threads(old_n_threads)
 
         # Normalize probabilities
         return avg / avg.sum(axis=1, keepdims=True)
