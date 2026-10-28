@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections.abc import Callable
 from typing import Optional, Tuple, Union
 
 import torch
@@ -336,7 +337,7 @@ class MultiheadAttentionBlock(nn.TransformerEncoderLayer):
         nhead: int,
         dim_feedforward: int,
         dropout: float = 0.0,
-        activation: str | callable = "gelu",
+        activation: str | Callable = "gelu",
         norm_first: bool = True,
         bias_free_ln: bool = False,
         ssmax: Union[bool, str] = False,
@@ -596,7 +597,7 @@ class InducedSelfAttentionBlock(nn.Module):
         dim_feedforward: int,
         num_inds: int,
         dropout: float = 0.0,
-        activation: str | callable = "gelu",
+        activation: str | Callable = "gelu",
         norm_first: bool = True,
         bias_free_ln: bool = False,
         ssmax: Union[bool, str] = False,
