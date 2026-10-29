@@ -408,3 +408,24 @@ a.sk-btn-orange:hover {
   border: 2px solid #DA7007; /* Border remains the same on hover */
 }
 
+
+/* -------------------------------------------------------------------------
+   Responsive plotly figures: each embed snippet carries four pre-rendered
+   variants (desktop/mobile x light/dark). The layout is swapped by viewport
+   width and the colours by the page theme, so a figure always matches its
+   surroundings without re-rendering in the browser. Exactly one variant of
+   each figure is visible at a time; the others are display:none.
+   ------------------------------------------------------------------------- */
+.plotly-mobile,
+html[data-theme="dark"] .plotly-light,
+html[data-theme="light"] .plotly-dark {
+  display: none;
+}
+@media (max-width: 576px) {
+  .plotly-desktop {
+    display: none;
+  }
+  .plotly-mobile {
+    display: block;
+  }
+}
