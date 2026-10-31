@@ -237,6 +237,15 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         Compute device. ``None`` auto-selects ``cuda`` when available,
         otherwise ``cpu``.
 
+    n_jobs : int or None, default=None
+        Number of threads to use for PyTorch in case the model is run on CPU.
+        Forwarded to the inner estimator used for validation and
+        prediction, with the same semantics. None means using the PyTorch default,
+        which is the number of physical CPU cores. Negative numbers mean that
+        :math:`\\max(1, n_{\\text{logical\\_cores}} + 1 + \\text{n\\_jobs})` threads
+        will be used. In particular, ``n_jobs=-1`` means that all logical cores
+        will be used.
+
     random_state : int, default=42
         Seed for data splits, shuffle-pattern generation, and per-epoch
         chunking.
@@ -289,6 +298,7 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         freeze_icl: bool = False,
         # Device & logging
         device: Optional[str | torch.device] = None,
+        n_jobs: Optional[int] = None,
         random_state: int = 42,
         verbose: bool = False,
         wandb_kwargs: Optional[dict[str, Any]] = None,
@@ -328,6 +338,7 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         self.freeze_icl = freeze_icl
         # Device & logging
         self.device = device
+        self.n_jobs = n_jobs
         self.random_state = random_state
         self.verbose = verbose
         self.wandb_kwargs = wandb_kwargs
