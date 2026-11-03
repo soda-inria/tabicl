@@ -7,17 +7,17 @@ from sklearn.datasets import make_classification, make_regression
 from sklearn.utils.estimator_checks import parametrize_with_checks
 
 from tabicl import TabICLClassifier, TabICLRegressor
-from tests.torch_devices_helpers import skip_if_device_unusable
+from tests.torch_devices_helpers import skip_if_device_unusable, DEVICES
 
 
 # n_estimators=2 ensures the full preprocessing and ensembling pipeline is tested:
 # n_estimators=1 skips shuffling and uses only one norm method, while n_estimators=2
 # exercises feature/class shuffling, multiple normalization methods, and ensemble averaging.
 #
-_DEVICES = ["cpu", "cuda", "xpu", "mps"]
+
 _SKLEARN_ESTIMATORS = [
     est
-    for device in _DEVICES
+    for device in DEVICES
     for est in (
         TabICLClassifier(n_estimators=2, device=device),
         TabICLRegressor(n_estimators=2, device=device),
@@ -31,7 +31,7 @@ def test_sklearn_compatible_estimator(estimator, check):
     check(estimator)
 
 
-@pytest.mark.parametrize("device", _DEVICES)
+@pytest.mark.parametrize("device", DEVICES)
 def test_serialization(device):
     skip_if_device_unusable(device)
     clf = TabICLClassifier(n_estimators=2, device=device)
@@ -62,7 +62,7 @@ def test_all_nan_column():
 
 
 class TestClassifierKVCache:
-    @pytest.mark.parametrize("device", _DEVICES)
+    @pytest.mark.parametrize("device", DEVICES)
     @pytest.mark.parametrize("kv_cache", ["kv", "repr"])
     def test_kv_cache(self, device, kv_cache):
         """Predictions with kv cache should match predictions without cache."""
@@ -82,7 +82,7 @@ class TestClassifierKVCache:
 
 
 class TestRegressorKVCache:
-    @pytest.mark.parametrize("device", _DEVICES)
+    @pytest.mark.parametrize("device", DEVICES)
     @pytest.mark.parametrize("kv_cache", ["kv", "repr"])
     def test_kv_cache(self, device, kv_cache):
         """Predictions with kv cache should match predictions without cache."""
