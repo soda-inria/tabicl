@@ -15,8 +15,8 @@ import torch
 DEFAULT_DEVICE_PREFERENCE = ("cuda", "xpu", "mps", "cpu")
 
 # Backend-specific names for "this GPU shares host DRAM".
-# CUDA uses ``integrated``; Intel XPU uses ``is_integrated_gpu``.
-_INTEGRATED_GPU_ATTRS = ("is_integrated_gpu", "integrated", "is_integrated")
+# CUDA uses ``is_integrated``; Intel XPU uses ``is_integrated_gpu``.
+_INTEGRATED_GPU_ATTRS = ("is_integrated", "is_integrated_gpu")
 
 # Fallback when the backend does not expose a flag: iGPUs typically advertise
 # a "device" pool that is nearly all of host RAM. A discrete 24 GB card on a
@@ -157,7 +157,7 @@ def device_uses_unified_host_memory(device: Union[str, torch.device]) -> bool:
     that cannot run Metal).
 
     CUDA and XPU use the backend's integrated-GPU property when present
-    (``integrated`` / ``is_integrated_gpu``). If that flag is absent, a device
+    (``is_integrated`` / ``is_integrated_gpu``). If that flag is absent, a device
     whose reported ``total_memory`` is at least 90% of host RAM is treated as
     unified — the usual iGPU accounting where the whole DRAM pool is exposed
     as device memory.

@@ -89,7 +89,7 @@ def test_live_unified_detection_matches_device_properties(device_backend):
     backend_api = getattr(torch, device_backend)
     device_props = backend_api.get_device_properties(0)
     flagged = None
-    for name in ("is_integrated_gpu", "integrated", "is_integrated"):
+    for name in ("is_integrated", "is_integrated_gpu"):
         if hasattr(device_props, name):
             flagged = bool(getattr(device_props, name))
             break
