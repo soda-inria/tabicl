@@ -27,16 +27,15 @@ New features
 
 Bug fixes
 ---------
+- On unified-memory accelerators (Apple Silicon MPS, integrated Intel XPU and CUDA GPUs),
+  available device memory used for auto-batching is now capped at the host's available RAM, and
+  the auto-batch target is capped at the new `memory_budget_mb` inference option (default 512 MB)
+  because driver's free-memory figure on an iGPU ignores RAM used by other processes, which led to
+  oversized batches and system-wide OOMs. ([PR#179](https://github.com/soda-inria/tabicl/pull/179))
 
 - Respect cgroup memory limits when estimating available CPU memory at inference, so
   ``offload="auto"`` inside Docker or Kubernetes does not treat host RAM as free and get
   OOM-killed with no traceback. ([PR#152](https://github.com/soda-inria/tabicl/pull/152))
-
-- On unified-memory accelerators (Apple Silicon MPS, integrated Intel XPU and CUDA GPUs),
-  cap the available device memory used for auto-batching at the host's available RAM, and cap
-  the auto-batch target at the new `memory_budget_mb` inference option (default 512 MB).
-  The driver's free-memory figure on an iGPU ignores RAM used by other processes, which led to
-  oversized batches and system-wide OOMs.
 
 - Fix the pre-training `GradScaler` being disabled for `--dtype float32 --use_flash_attn3 True` (the TabICLv2 stage 2 and 3 recipes), which degraded pre-training quality: FlashAttention-3 runs its backward pass in `float16` there, so loss scaling is still needed. (reported by @wangzhengli in [#153](https://github.com/soda-inria/tabicl/issues/153))
 
