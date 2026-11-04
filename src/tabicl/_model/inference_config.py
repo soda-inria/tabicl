@@ -23,6 +23,11 @@ class MgrConfig:
     - ``min_batch_size``: Minimum batch size to try before raising an error.
     - ``safety_factor``: Factor to multiply estimated batch size by for conservative
       memory usage.
+    - ``memory_budget_mb``: Target peak transient activation memory (MB) per
+      inference chunk. On unified-memory accelerators (MPS, integrated XPU/CUDA
+      iGPUs) it caps the auto-batch target so a long sequence does not try to
+      fill all remaining host RAM. Discrete GPUs still size batches from device
+      free memory.
 
     **Offloading:**
 
@@ -72,6 +77,7 @@ class MgrConfig:
         # Batching
         "min_batch_size",
         "safety_factor",
+        "memory_budget_mb",
         # Offloading
         "offload",
         "auto_offload_threshold",
@@ -110,6 +116,11 @@ class MgrConfig:
             "expected_type": float,
             "validator": lambda x: 0.0 <= x <= 1.0,
             "error_msg": "safety_factor must be a float between 0 and 1",
+        },
+        "memory_budget_mb": {
+            "expected_type": (int, float),
+            "validator": lambda x: x > 0,
+            "error_msg": "memory_budget_mb must be a positive number",
         },
         # Offloading
         "offload": {
@@ -262,6 +273,7 @@ class InferenceConfig:
                 # Batching
                 min_batch_size=1,
                 safety_factor=0.8,
+                memory_budget_mb=512.0,
                 # Offloading
                 offload="auto",
                 auto_offload_threshold=0.5,
@@ -295,6 +307,7 @@ class InferenceConfig:
                 # Batching
                 min_batch_size=1,
                 safety_factor=0.8,
+                memory_budget_mb=512.0,
                 # Offloading
                 offload=False,
                 auto_offload_threshold=0.5,
@@ -328,6 +341,7 @@ class InferenceConfig:
                 # Batching
                 min_batch_size=1,
                 safety_factor=0.8,
+                memory_budget_mb=512.0,
                 # Offloading
                 offload=False,
                 auto_offload_threshold=0.5,

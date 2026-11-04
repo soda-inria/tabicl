@@ -22,7 +22,7 @@ from torch import Tensor
 from .kv_cache import KVCache
 from .attention import flash_attn3_toggle
 from ._cgroup_memory import _cgroup_memory_headroom
-from .._torch_devices import resolve_torch_device
+from .._torch_devices import device_uses_unified_host_memory, resolve_torch_device
 
 
 def devices_match(a: torch.device, b: torch.device) -> bool:
@@ -657,6 +657,7 @@ class InferenceManager:
         self,
         min_batch_size: int = 1,
         safety_factor: float = 0.8,
+        memory_budget_mb: float = 512.0,
         offload: Union[bool, Literal["auto", "gpu", "cpu", "disk"], OffloadMode] = "auto",
         auto_offload_threshold: float = 0.5,
         device: Optional[Union[str, torch.device]] = None,
@@ -689,6 +690,14 @@ class InferenceManager:
         safety_factor : float, default=0.8
             Factor (0-1) to multiply estimated batch size by for conservative memory
             usage. Lower values are safer but may result in more batches.
+
+        memory_budget_mb : float, default=512.0
+            Target peak (in MB) for the transient activation memory of a single
+            inference chunk. On unified-memory accelerators (Apple Silicon MPS,
+            integrated XPU/CUDA iGPUs), this caps the auto-batch target used by
+            ``estimate_safe_batch_size``, so a long sequence does not try to fill
+            all remaining host RAM. Discrete GPUs still size batches from device
+            free memory. Lower values use less memory but produce more chunks.
 
         offload : Union[bool, str, OffloadMode], default="auto"
             Where to store output tensors during inference:
@@ -772,6 +781,7 @@ class InferenceManager:
         """
         self.min_batch_size = int(min_batch_size)
         self.safety_factor = float(safety_factor)
+        self.memory_budget_mb = float(memory_budget_mb)
         self.auto_offload_threshold = float(auto_offload_threshold)
         self.use_amp = bool(use_amp)
         self.use_fa3 = bool(use_fa3)
@@ -804,6 +814,16 @@ class InferenceManager:
         self._buffer_pool = PinnedBufferPool()
 
         self._is_configured = True
+
+    def _uses_unified_host_memory(self) -> bool:
+        """Return whether execution memory is the same physical pool as host RAM.
+
+        True on Apple Silicon MPS and on integrated GPUs (Intel XPU iGPU, CUDA
+        ``integrated`` devices). Sizing batches from a device memory query that
+        is really host DRAM over-counts free memory. See
+        :func:`tabicl._torch_devices.device_uses_unified_host_memory`.
+        """
+        return device_uses_unified_host_memory(self.exe_device)
 
     def _normalize_offload(self, offload: Any) -> OffloadMode:
         """Normalize various offload specifications to OffloadMode."""
@@ -901,7 +921,9 @@ class InferenceManager:
         Backends that expose ``mem_get_info`` (CUDA, XPU) use that API. On MPS,
         which does not provide ``mem_get_info``, free memory is approximated as
         ``recommended_max_memory - current_allocated_memory`` so that
-        auto-batching can still run.
+        auto-batching can still run. On unified-memory devices the result is
+        also capped by host available RAM, so a driver that reports most of
+        DRAM as "device" free memory cannot over-count against other processes.
 
         Returns
         -------
@@ -928,19 +950,24 @@ class InferenceManager:
                 free_mem, _ = mem_get_info()
             except Exception:
                 return 0.0
-            return free_mem / (1024 * 1024)
-
-        # MPS (and similar) fallback without mem_get_info.
-        recommended = getattr(backend_api, "recommended_max_memory", None)
-        current = getattr(backend_api, "current_allocated_memory", None)
-        if callable(recommended) and callable(current):
+            free_mb = free_mem / (1024 * 1024)
+        else:
+            # MPS (and similar) fallback without mem_get_info.
+            recommended = getattr(backend_api, "recommended_max_memory", None)
+            current = getattr(backend_api, "current_allocated_memory", None)
+            if not (callable(recommended) and callable(current)):
+                return 0.0
             try:
                 free_mem = recommended() - current()
             except Exception:
                 return 0.0
-            return max(0.0, free_mem) / (1024 * 1024)
+            free_mb = max(0.0, free_mem) / (1024 * 1024)
 
-        return 0.0
+        # Unified-memory backends share the host pool: never claim more
+        # "device" free memory than the OS still has available.
+        if self._uses_unified_host_memory():
+            free_mb = min(max(0.0, free_mb), self.get_available_cpu_memory())
+        return max(0.0, free_mb)
 
     def get_available_disk_space(self, path: Optional[str]) -> float:
         """Get available disk space at the specified path in MB.
@@ -1020,6 +1047,9 @@ class InferenceManager:
         """
         available_mem = self.get_available_gpu_memory()
         target_mem = available_mem * self.safety_factor
+        if self._uses_unified_host_memory():
+            # Do not fill all remaining unified RAM with one activation wave.
+            target_mem = min(target_mem, self.memory_budget_mb)
 
         estimated_bs = MemoryEstimator.estimate_batch_size(seq_len, target_mem, self.enc_name, include_inputs, in_dim)
 

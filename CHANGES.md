@@ -32,6 +32,12 @@ Bug fixes
   ``offload="auto"`` inside Docker or Kubernetes does not treat host RAM as free and get
   OOM-killed with no traceback. ([PR#152](https://github.com/soda-inria/tabicl/pull/152))
 
+- On unified-memory accelerators (Apple Silicon MPS, integrated Intel XPU and CUDA GPUs),
+  cap the available device memory used for auto-batching at the host's available RAM, and cap
+  the auto-batch target at the new `memory_budget_mb` inference option (default 512 MB).
+  The driver's free-memory figure on an iGPU ignores RAM used by other processes, which led to
+  oversized batches and system-wide OOMs.
+
 - Fix the pre-training `GradScaler` being disabled for `--dtype float32 --use_flash_attn3 True` (the TabICLv2 stage 2 and 3 recipes), which degraded pre-training quality: FlashAttention-3 runs its backward pass in `float16` there, so loss scaling is still needed. (reported by @wangzhengli in [#153](https://github.com/soda-inria/tabicl/issues/153))
 
 - Finetuning now supports string/categorical features in DataFrames, matching the behavior of the base `TabICLClassifier` and `TabICLRegressor`. Previously, `FinetunedTabICLClassifier` and `FinetunedTabICLRegressor` would raise `ValueError: could not convert string to float` when the input contained categorical columns. ([PR#151](https://github.com/soda-inria/tabicl/pull/151); reported by @zehua-jerry-yu in [#118](https://github.com/soda-inria/tabicl/issues/118))
