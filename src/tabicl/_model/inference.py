@@ -699,6 +699,13 @@ class InferenceManager:
             all remaining host RAM. Discrete GPUs still size batches from device
             free memory. Lower values use less memory but produce more chunks.
 
+            The default is a speed/memory trade-off, not a safety limit (the
+            available-memory cap already bounds batches). On an Apple M4 and an
+            Intel Arc iGPU, larger budgets did not speed up inference but raised
+            peak memory several times over, while budgets of 128 MB or less were
+            much slower: the estimator's fixed overhead (~140 MB) leaves almost
+            nothing for the batch.
+
         offload : Union[bool, str, OffloadMode], default="auto"
             Where to store output tensors during inference:
 
