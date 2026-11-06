@@ -47,7 +47,7 @@ def test_xpu_discrete_flag(monkeypatch):
 def test_cuda_integrated_flag(monkeypatch):
     monkeypatch.setattr(
         "tabicl._torch_devices._accelerator_device_properties",
-        lambda device: SimpleNamespace(integrated=True, total_memory=8 * 1024**3),
+        lambda device: SimpleNamespace(is_integrated=True, total_memory=8 * 1024**3),
     )
     assert device_uses_unified_host_memory("cuda") is True
 
@@ -55,7 +55,7 @@ def test_cuda_integrated_flag(monkeypatch):
 def test_cuda_discrete_flag(monkeypatch):
     monkeypatch.setattr(
         "tabicl._torch_devices._accelerator_device_properties",
-        lambda device: SimpleNamespace(integrated=False, total_memory=24 * 1024**3),
+        lambda device: SimpleNamespace(is_integrated=False, total_memory=24 * 1024**3),
     )
     assert device_uses_unified_host_memory("cuda") is False
 
