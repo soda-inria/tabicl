@@ -61,7 +61,10 @@ class TestRegressorKVCache:
 
 @pytest.mark.parametrize("device", DEVICES)
 def test_repr_cache_from_offloaded_representations(device):
-    """Predictions match those with the representations kept on the device."""
+    """Predictions match those with the representations kept on the device.
+
+    Non-regression test for https://github.com/soda-inria/tabicl/pull/181.
+    """
     skip_if_device_unusable(device)
     torch.manual_seed(0)
     model = TabICL().eval().to(device)
