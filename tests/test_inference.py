@@ -76,16 +76,7 @@ def test_is_tensor_on_exe_device_accepts_unindexed_and_indexed(device_backend):
 @pytest.mark.parametrize("device_backend", ["cuda", "xpu", "mps"])
 def test_get_available_gpu_memory_non_zero_for_available_backends(device_backend):
     """Check that device memory inspection works and always returns positive values."""
-    backend_api = getattr(torch, device_backend, None)
-    if (
-        backend_api is None
-        or not callable(getattr(backend_api, "is_available", None))
-        or not backend_api.is_available()
-    ):
-        pytest.skip(f"{device_backend} backend is not available on this host")
-
-    if device_backend == "mps" and not torch.backends.mps.is_available():
-        pytest.skip("MPS backend is not available on this host")
+    skip_if_device_unusable(device_backend)
 
     mgr = InferenceManager(enc_name="tf_col", out_dim=16)
     mgr.configure(device=device_backend)
@@ -102,7 +93,7 @@ def test_get_available_gpu_memory_non_zero_for_available_backends(device_backend
     else:
         # Discrete device: the figure is the backend's own free memory, not
         # capped by host RAM.
-        free_bytes, _ = backend_api.mem_get_info(mgr.exe_device)
+        free_bytes, _ = getattr(torch, device_backend).mem_get_info(mgr.exe_device)
         assert available_mb == pytest.approx(free_bytes / 2**20, rel=0.05)
 
 
@@ -292,13 +283,9 @@ def test_mps_memory_estimate_uses_recommended_minus_current(monkeypatch):
     mgr.configure(device="mps")
 
     fake_api = MagicMock()
-    fake_api.is_available.return_value = True
     fake_api.mem_get_info = None
     fake_api.recommended_max_memory.return_value = 8 * 1024 * 1024 * 1024
     fake_api.current_allocated_memory.return_value = 2 * 1024 * 1024 * 1024
-    fake_api.synchronize = MagicMock()
-    fake_api.empty_cache = MagicMock()
-
     monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
 
     # Host RAM larger than the recommended-minus-current estimate.
@@ -326,7 +313,6 @@ def test_mem_get_info_failure_in_no_arg_retry_returns_zero(monkeypatch):
     mgr = InferenceManager(enc_name="tf_col", out_dim=4)
     mgr.configure(device="cuda", use_amp=False, use_fa3=False)
     fake_api = MagicMock()
-    fake_api.is_available.return_value = True
     fake_api.mem_get_info = mem_get_info
     monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
     assert mgr.get_available_gpu_memory() == 0.0
@@ -347,21 +333,21 @@ def test_memory_budget_caps_batch_target_only_on_unified_memory(device_backend):
     """
     skip_if_device_unusable(device_backend)
     unified = device_uses_unified_host_memory(device_backend)
-    seq_len = 4096
-    tight_budget_mb, wide_budget_mb = 256.0, 1 << 20
+    seq_len, tight_budget_mb = 4096, 256.0
 
     mgr = InferenceManager(enc_name="tf_col", out_dim=4)
     mgr.configure(device=device_backend, memory_budget_mb=tight_budget_mb, use_amp=False, use_fa3=False)
     avail_tight, bs_tight = mgr.estimate_safe_batch_size(seq_len, include_inputs=False)
-    mgr.memory_budget_mb = wide_budget_mb
+    mgr.memory_budget_mb = float("inf")  # a budget that never binds
     avail_wide, bs_wide = mgr.estimate_safe_batch_size(seq_len, include_inputs=False)
 
     if min(avail_tight, avail_wide) * mgr.safety_factor <= 2 * tight_budget_mb:
         pytest.skip(f"{device_backend} has too little free memory to exercise the budget cap")
 
+    # Without a binding budget, every device sizes the batch from its free memory.
+    assert bs_wide == _expected_safe_batch_size(mgr, seq_len, avail_wide * mgr.safety_factor)
     if unified:
         assert bs_tight == _expected_safe_batch_size(mgr, seq_len, tight_budget_mb)
         assert bs_tight < bs_wide
     else:
         assert bs_tight == _expected_safe_batch_size(mgr, seq_len, avail_tight * mgr.safety_factor)
-    assert bs_wide == _expected_safe_batch_size(mgr, seq_len, avail_wide * mgr.safety_factor)

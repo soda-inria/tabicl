@@ -9,17 +9,23 @@ from tabicl._torch_devices import _integrated_flag, device_uses_unified_host_mem
 from tests.torch_devices_helpers import skip_if_device_unusable
 
 
-def test_cpu_is_not_unified_host_memory():
-    assert device_uses_unified_host_memory("cpu") is False
-    assert device_uses_unified_host_memory(torch.device("cpu")) is False
+@pytest.mark.parametrize(
+    ("device", "expected"),
+    [
+        ("cpu", False),
+        (torch.device("cpu"), False),
+        ("mps", True),
+        (torch.device("mps"), True),
+        (torch.device("mps:0"), True),
+    ],
+)
+def test_unified_detection_by_device_type(device, expected):
+    """CPU is never unified; MPS always is, decided from the type alone.
 
-
-def test_mps_is_always_unified_host_memory():
-    # Classified by backend type so Linux CI can exercise the unified-memory
-    # policy without Metal, and so MPS stays True even without device properties.
-    assert device_uses_unified_host_memory("mps") is True
-    assert device_uses_unified_host_memory(torch.device("mps")) is True
-    assert device_uses_unified_host_memory(torch.device("mps:0")) is True
+    Deciding MPS by type keeps it classifiable without Metal (device
+    properties are unavailable there), so Linux CI can exercise the policy.
+    """
+    assert device_uses_unified_host_memory(device) is expected
 
 
 @pytest.mark.parametrize(
