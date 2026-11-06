@@ -18,8 +18,7 @@ import torch
 
 from tabicl._model.inference import AsyncCopyManager, InferenceManager, MemoryEstimator, devices_match
 from tabicl._torch_devices import device_uses_unified_host_memory
-
-GiB = 1024**3
+from tests.torch_devices_helpers import skip_if_device_unusable
 
 
 @pytest.mark.parametrize(
@@ -97,7 +96,14 @@ def test_get_available_gpu_memory_non_zero_for_available_backends(device_backend
         f"got {available_mb} MB"
     )
     if device_uses_unified_host_memory(device_backend):
+        # Unified memory: the device pool is host RAM, so never report more
+        # than the OS still has available.
         assert available_mb <= mgr.get_available_cpu_memory() + 1.0
+    else:
+        # Discrete device: the figure is the backend's own free memory, not
+        # capped by host RAM.
+        free_bytes, _ = backend_api.mem_get_info(mgr.exe_device)
+        assert available_mb == pytest.approx(free_bytes / 2**20, rel=0.05)
 
 
 class _FakeNoAsyncBackend:
@@ -306,60 +312,56 @@ def test_mps_memory_estimate_uses_recommended_minus_current(monkeypatch):
     assert available_mb == pytest.approx(1024.0)
 
 
-def _manager_with_fake_mem_get_info(monkeypatch, device, mem_get_info, unified, host_available_mb=1024.0):
-    """Configure a manager whose backend API is a mock exposing ``mem_get_info``."""
-    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
-    mgr.configure(device=device, use_amp=False, use_fa3=False)
-    fake_api = MagicMock()
-    fake_api.is_available.return_value = True
-    fake_api.mem_get_info = mem_get_info
-    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
-    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: unified)
-    monkeypatch.setattr(mgr, "get_available_cpu_memory", lambda: host_available_mb)
-    return mgr
-
-
-@pytest.mark.parametrize(
-    ("device", "unified", "expected_mb"),
-    [
-        pytest.param("xpu", True, 1024.0, id="unified-capped-by-host-available"),
-        pytest.param("cuda", False, 20 * 1024.0, id="discrete-uses-device-free"),
-    ],
-)
-def test_mem_get_info_host_cap_only_on_unified_memory(monkeypatch, device, unified, expected_mb):
-    mem_get_info = MagicMock(return_value=(20 * GiB, 32 * GiB))
-    mgr = _manager_with_fake_mem_get_info(monkeypatch, device, mem_get_info, unified)
-    assert mgr.get_available_gpu_memory() == pytest.approx(expected_mb)
-
-
 def test_mem_get_info_failure_in_no_arg_retry_returns_zero(monkeypatch):
-    """A backend error from the no-argument mem_get_info() retry must degrade to 0.0."""
+    """A backend error from the no-argument mem_get_info() retry must degrade to 0.0.
+
+    This path cannot be reached on a real backend, so the backend API is faked.
+    """
 
     def mem_get_info(device=None):
         if device is not None:
             raise TypeError("mem_get_info() takes no arguments")
         raise RuntimeError("driver not initialised")
 
-    mgr = _manager_with_fake_mem_get_info(monkeypatch, "cuda", mem_get_info, unified=False)
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="cuda", use_amp=False, use_fa3=False)
+    fake_api = MagicMock()
+    fake_api.is_available.return_value = True
+    fake_api.mem_get_info = mem_get_info
+    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
     assert mgr.get_available_gpu_memory() == 0.0
 
 
-def test_unified_batch_target_is_capped_by_memory_budget(monkeypatch):
-    """Only unified-memory devices cap the auto-batch target at ``memory_budget_mb``."""
+def _expected_safe_batch_size(mgr, seq_len, target_mb):
+    estimated = MemoryEstimator.estimate_batch_size(seq_len, target_mb, mgr.enc_name, include_inputs=False)
+    return min(max(mgr.min_batch_size, estimated), 50000)
+
+
+@pytest.mark.parametrize("device_backend", ["cuda", "xpu", "mps"])
+def test_memory_budget_caps_batch_target_only_on_unified_memory(device_backend):
+    """``memory_budget_mb`` caps the auto-batch target on unified memory and is ignored elsewhere.
+
+    Runs against the real backend: on MPS and integrated XPU/CUDA the tight
+    budget must shrink the batch and define the target exactly; on a discrete
+    GPU the batch must follow free device memory whatever the budget says.
+    """
+    skip_if_device_unusable(device_backend)
+    unified = device_uses_unified_host_memory(device_backend)
+    seq_len = 4096
+    tight_budget_mb, wide_budget_mb = 256.0, 1 << 20
+
     mgr = InferenceManager(enc_name="tf_col", out_dim=4)
-    mgr.configure(device="cpu", safety_factor=0.5, memory_budget_mb=128.0, use_amp=False, use_fa3=False)
-    monkeypatch.setattr(mgr, "get_available_gpu_memory", lambda: 8192.0)
+    mgr.configure(device=device_backend, memory_budget_mb=tight_budget_mb, use_amp=False, use_fa3=False)
+    avail_tight, bs_tight = mgr.estimate_safe_batch_size(seq_len, include_inputs=False)
+    mgr.memory_budget_mb = wide_budget_mb
+    avail_wide, bs_wide = mgr.estimate_safe_batch_size(seq_len, include_inputs=False)
 
-    targets = []
-    monkeypatch.setattr(
-        MemoryEstimator,
-        "estimate_batch_size",
-        lambda seq_len, target_memory, *args, **kwargs: targets.append(target_memory) or 8,
-    )
+    if min(avail_tight, avail_wide) * mgr.safety_factor <= 2 * tight_budget_mb:
+        pytest.skip(f"{device_backend} has too little free memory to exercise the budget cap")
 
-    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: True)
-    mgr.estimate_safe_batch_size(seq_len=4096, include_inputs=False)
-    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: False)
-    mgr.estimate_safe_batch_size(seq_len=4096, include_inputs=False)
-
-    assert targets == [128.0, 8192.0 * 0.5]
+    if unified:
+        assert bs_tight == _expected_safe_batch_size(mgr, seq_len, tight_budget_mb)
+        assert bs_tight < bs_wide
+    else:
+        assert bs_tight == _expected_safe_batch_size(mgr, seq_len, avail_tight * mgr.safety_factor)
+    assert bs_wide == _expected_safe_batch_size(mgr, seq_len, avail_wide * mgr.safety_factor)

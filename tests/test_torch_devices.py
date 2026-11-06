@@ -8,9 +8,6 @@ import torch
 from tabicl._torch_devices import _integrated_flag, device_uses_unified_host_memory
 from tests.torch_devices_helpers import skip_if_device_unusable
 
-GiB = 1024**3
-HOST_TOTAL = 32 * GiB
-
 
 def test_cpu_is_not_unified_host_memory():
     assert device_uses_unified_host_memory("cpu") is False
@@ -26,33 +23,30 @@ def test_mps_is_always_unified_host_memory():
 
 
 @pytest.mark.parametrize(
-    ("device", "props", "expected"),
+    ("pool_ratio", "expected"),
     [
-        pytest.param("xpu", SimpleNamespace(is_integrated_gpu=True, total_memory=8 * GiB), True, id="xpu-integrated"),
-        # An explicit discrete flag wins over a host-sized memory pool.
-        pytest.param(
-            "xpu",
-            SimpleNamespace(is_integrated_gpu=False, total_memory=int(0.95 * HOST_TOTAL)),
-            False,
-            id="xpu-discrete",
-        ),
-        pytest.param("cuda", SimpleNamespace(is_integrated=True, total_memory=8 * GiB), True, id="cuda-integrated"),
-        pytest.param("cuda", SimpleNamespace(is_integrated=False, total_memory=24 * GiB), False, id="cuda-discrete"),
-        # Without a flag, fall back to the device-pool / host-RAM ratio.
-        pytest.param("xpu", SimpleNamespace(total_memory=int(0.95 * HOST_TOTAL)), True, id="no-flag-host-sized-pool"),
-        pytest.param("xpu", SimpleNamespace(total_memory=int(0.75 * HOST_TOTAL)), False, id="no-flag-small-pool"),
-        pytest.param("xpu", None, False, id="xpu-no-properties"),
-        pytest.param("cuda", None, False, id="cuda-no-properties"),
+        pytest.param(0.95, True, id="host-sized-pool"),
+        pytest.param(0.75, False, id="partial-pool"),
     ],
 )
-def test_unified_detection_from_device_properties(monkeypatch, device, props, expected):
-    monkeypatch.setattr("tabicl._torch_devices._host_total_memory_bytes", lambda: HOST_TOTAL)
-    monkeypatch.setattr("tabicl._torch_devices._accelerator_device_properties", lambda _: props)
-    assert device_uses_unified_host_memory(device) is expected
+def test_missing_flag_falls_back_to_host_ram_ratio(monkeypatch, pool_ratio, expected):
+    """Without an integrated-GPU flag, a device pool of >= 90% host RAM counts as unified.
+
+    Real CUDA and XPU builds expose the flag, so this last-resort path can only
+    be exercised with faked device properties.
+    """
+    host_total = 32 * 1024**3
+    monkeypatch.setattr("tabicl._torch_devices._host_total_memory_bytes", lambda: host_total)
+    monkeypatch.setattr(
+        "tabicl._torch_devices._accelerator_device_properties",
+        lambda _: SimpleNamespace(total_memory=int(pool_ratio * host_total)),
+    )
+    assert device_uses_unified_host_memory("xpu") is expected
 
 
 @pytest.mark.parametrize("device_backend", ["xpu", "cuda"])
-def test_live_unified_detection_matches_device_properties(device_backend):
+def test_unified_detection_matches_device_properties(device_backend):
+    """On a real XPU/CUDA device the classification follows the backend's integrated-GPU flag."""
     skip_if_device_unusable(device_backend)
     flagged = _integrated_flag(getattr(torch, device_backend).get_device_properties(0))
     if flagged is None:
