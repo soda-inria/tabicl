@@ -951,10 +951,11 @@ class InferenceManager:
         mem_get_info = getattr(backend_api, "mem_get_info", None)
         if callable(mem_get_info):
             try:
-                free_mem, _ = mem_get_info(self.exe_device)
-            except TypeError:
-                # Some backends may expose mem_get_info() without a device argument.
-                free_mem, _ = mem_get_info()
+                try:
+                    free_mem, _ = mem_get_info(self.exe_device)
+                except TypeError:
+                    # Some backends may expose mem_get_info() without a device argument.
+                    free_mem, _ = mem_get_info()
             except Exception:
                 return 0.0
             free_mb = free_mem / (1024 * 1024)

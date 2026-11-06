@@ -340,6 +340,32 @@ def test_discrete_mem_get_info_not_capped_by_host_available(monkeypatch):
     assert available_mb == pytest.approx(8 * 1024.0)
 
 
+def test_mem_get_info_failure_in_no_arg_retry_returns_zero(monkeypatch):
+    """A backend error from the no-argument mem_get_info() retry must degrade to 0.0.
+
+    Some backends reject the device argument with TypeError; if the no-argument
+    form then fails too (e.g. the driver is not initialised), the query must
+    fall back to "no memory information" instead of propagating the error.
+    """
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="cuda", use_amp=False, use_fa3=False)
+
+    def mem_get_info(device=None):
+        if device is not None:
+            raise TypeError("mem_get_info() takes no arguments")
+        raise RuntimeError("driver not initialised")
+
+    fake_api = MagicMock()
+    fake_api.is_available.return_value = True
+    fake_api.mem_get_info = mem_get_info
+    fake_api.synchronize = MagicMock()
+    fake_api.empty_cache = MagicMock()
+
+    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
+    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: False)
+    assert mgr.get_available_gpu_memory() == 0.0
+
+
 @pytest.mark.parametrize("device_backend", ["mps", "xpu", "cuda"])
 def test_unified_batch_size_respects_activation_budget(device_backend):
     skip_if_device_unusable(device_backend)
