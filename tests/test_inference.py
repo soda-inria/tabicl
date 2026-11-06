@@ -16,9 +16,10 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 
-from tabicl._model.inference import AsyncCopyManager, InferenceManager, devices_match
+from tabicl._model.inference import AsyncCopyManager, InferenceManager, MemoryEstimator, devices_match
 from tabicl._torch_devices import device_uses_unified_host_memory
-from tests.torch_devices_helpers import skip_if_device_unusable
+
+GiB = 1024**3
 
 
 @pytest.mark.parametrize(
@@ -305,82 +306,60 @@ def test_mps_memory_estimate_uses_recommended_minus_current(monkeypatch):
     assert available_mb == pytest.approx(1024.0)
 
 
-def test_unified_mem_get_info_capped_by_host_available(monkeypatch):
-    """XPU-style mem_get_info must still be capped on unified-memory devices."""
+def _manager_with_fake_mem_get_info(monkeypatch, device, mem_get_info, unified, host_available_mb=1024.0):
+    """Configure a manager whose backend API is a mock exposing ``mem_get_info``."""
     mgr = InferenceManager(enc_name="tf_col", out_dim=4)
-    mgr.configure(device="xpu", use_amp=False, use_fa3=False)
-
+    mgr.configure(device=device, use_amp=False, use_fa3=False)
     fake_api = MagicMock()
     fake_api.is_available.return_value = True
-    fake_api.mem_get_info.return_value = (20 * 1024 * 1024 * 1024, 32 * 1024 * 1024 * 1024)
-    fake_api.synchronize = MagicMock()
-    fake_api.empty_cache = MagicMock()
-
+    fake_api.mem_get_info = mem_get_info
     monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
-    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: True)
-    monkeypatch.setattr(mgr, "get_available_cpu_memory", lambda: 1024.0)
-    available_mb = mgr.get_available_gpu_memory()
-    assert available_mb == pytest.approx(1024.0)
+    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: unified)
+    monkeypatch.setattr(mgr, "get_available_cpu_memory", lambda: host_available_mb)
+    return mgr
 
 
-def test_discrete_mem_get_info_not_capped_by_host_available(monkeypatch):
-    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
-    mgr.configure(device="cuda", use_amp=False, use_fa3=False)
-
-    fake_api = MagicMock()
-    fake_api.is_available.return_value = True
-    fake_api.mem_get_info.return_value = (8 * 1024 * 1024 * 1024, 24 * 1024 * 1024 * 1024)
-    fake_api.synchronize = MagicMock()
-    fake_api.empty_cache = MagicMock()
-
-    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
-    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: False)
-    monkeypatch.setattr(mgr, "get_available_cpu_memory", lambda: 1024.0)
-    available_mb = mgr.get_available_gpu_memory()
-    assert available_mb == pytest.approx(8 * 1024.0)
+@pytest.mark.parametrize(
+    ("device", "unified", "expected_mb"),
+    [
+        pytest.param("xpu", True, 1024.0, id="unified-capped-by-host-available"),
+        pytest.param("cuda", False, 20 * 1024.0, id="discrete-uses-device-free"),
+    ],
+)
+def test_mem_get_info_host_cap_only_on_unified_memory(monkeypatch, device, unified, expected_mb):
+    mem_get_info = MagicMock(return_value=(20 * GiB, 32 * GiB))
+    mgr = _manager_with_fake_mem_get_info(monkeypatch, device, mem_get_info, unified)
+    assert mgr.get_available_gpu_memory() == pytest.approx(expected_mb)
 
 
 def test_mem_get_info_failure_in_no_arg_retry_returns_zero(monkeypatch):
-    """A backend error from the no-argument mem_get_info() retry must degrade to 0.0.
-
-    Some backends reject the device argument with TypeError; if the no-argument
-    form then fails too (e.g. the driver is not initialised), the query must
-    fall back to "no memory information" instead of propagating the error.
-    """
-    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
-    mgr.configure(device="cuda", use_amp=False, use_fa3=False)
+    """A backend error from the no-argument mem_get_info() retry must degrade to 0.0."""
 
     def mem_get_info(device=None):
         if device is not None:
             raise TypeError("mem_get_info() takes no arguments")
         raise RuntimeError("driver not initialised")
 
-    fake_api = MagicMock()
-    fake_api.is_available.return_value = True
-    fake_api.mem_get_info = mem_get_info
-    fake_api.synchronize = MagicMock()
-    fake_api.empty_cache = MagicMock()
-
-    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
-    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: False)
+    mgr = _manager_with_fake_mem_get_info(monkeypatch, "cuda", mem_get_info, unified=False)
     assert mgr.get_available_gpu_memory() == 0.0
 
 
-@pytest.mark.parametrize("device_backend", ["mps", "xpu", "cuda"])
-def test_unified_batch_size_respects_activation_budget(device_backend):
-    skip_if_device_unusable(device_backend)
-    if not device_uses_unified_host_memory(device_backend):
-        pytest.skip(f"{device_backend} is a discrete accelerator on this host")
+def test_unified_batch_target_is_capped_by_memory_budget(monkeypatch):
+    """Only unified-memory devices cap the auto-batch target at ``memory_budget_mb``."""
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="cpu", safety_factor=0.5, memory_budget_mb=128.0, use_amp=False, use_fa3=False)
+    monkeypatch.setattr(mgr, "get_available_gpu_memory", lambda: 8192.0)
 
-    mgr = InferenceManager(enc_name="tf_col", out_dim=128)
-    mgr.configure(
-        device=device_backend,
-        memory_budget_mb=128.0,
-        use_amp=False,
-        use_fa3=False,
+    targets = []
+    monkeypatch.setattr(
+        MemoryEstimator,
+        "estimate_batch_size",
+        lambda seq_len, target_memory, *args, **kwargs: targets.append(target_memory) or 8,
     )
-    _, bs_tight = mgr.estimate_safe_batch_size(seq_len=4096, include_inputs=False, in_dim=128)
-    mgr.memory_budget_mb = 4096.0
-    _, bs_wide = mgr.estimate_safe_batch_size(seq_len=4096, include_inputs=False, in_dim=128)
-    assert bs_tight < bs_wide
-    assert bs_tight <= mgr.min_batch_size or bs_tight < 32
+
+    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: True)
+    mgr.estimate_safe_batch_size(seq_len=4096, include_inputs=False)
+    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: False)
+    mgr.estimate_safe_batch_size(seq_len=4096, include_inputs=False)
+
+    assert targets == [128.0, 8192.0 * 0.5]
