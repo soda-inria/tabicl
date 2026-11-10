@@ -1,3 +1,14 @@
+2.2.1
+=====
+
+Bug fixes
+---------
+
+- Fix storing a `kv_cache="repr"` cache on an accelerator when the row representations are
+  offloaded to CPU memory or disk (`ROW_CONFIG` offload settings, or the fallback when they do not
+  fit on the device), which failed with a device mismatch error. ([PR#181](https://github.com/soda-inria/tabicl/pull/181))
+
+
 2.2.0
 =====
 
