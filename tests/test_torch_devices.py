@@ -28,26 +28,14 @@ def test_unified_detection_by_device_type(device, expected):
     assert device_uses_unified_host_memory(device) is expected
 
 
-@pytest.mark.parametrize(
-    ("pool_ratio", "expected"),
-    [
-        pytest.param(0.95, True, id="host-sized-pool"),
-        pytest.param(0.75, False, id="partial-pool"),
-    ],
-)
-def test_missing_flag_falls_back_to_host_ram_ratio(monkeypatch, pool_ratio, expected):
-    """Without an integrated-GPU flag, a device pool of >= 90% host RAM counts as unified.
-
-    Real CUDA and XPU builds expose the flag, so this last-resort path can only
-    be exercised with faked device properties.
-    """
-    host_total = 32 * 1024**3
-    monkeypatch.setattr("tabicl._torch_devices._host_total_memory_bytes", lambda: host_total)
+def test_missing_flag_raises(monkeypatch):
+    """Device properties without an integrated-GPU flag raise instead of guessing."""
     monkeypatch.setattr(
         "tabicl._torch_devices._accelerator_device_properties",
-        lambda _: SimpleNamespace(total_memory=int(pool_ratio * host_total)),
+        lambda _: SimpleNamespace(total_memory=32 * 1024**3),
     )
-    assert device_uses_unified_host_memory("xpu") is expected
+    with pytest.raises(RuntimeError, match="shares memory with the host"):
+        device_uses_unified_host_memory("xpu")
 
 
 @pytest.mark.parametrize("device_backend", ["xpu", "cuda"])

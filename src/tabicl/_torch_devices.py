@@ -8,7 +8,6 @@ import sys
 import warnings
 from typing import Any, Optional, Union
 
-import psutil
 import torch
 
 # Preference order when ``device=None``: CUDA → XPU → MPS → CPU.
@@ -17,11 +16,6 @@ DEFAULT_DEVICE_PREFERENCE = ("cuda", "xpu", "mps", "cpu")
 # Backend-specific names for "this GPU shares host DRAM".
 # CUDA uses ``is_integrated``; Intel XPU uses ``is_integrated_gpu``.
 _INTEGRATED_GPU_ATTRS = ("is_integrated", "is_integrated_gpu")
-
-# Fallback when the backend does not expose a flag: iGPUs typically advertise
-# a "device" pool that is nearly all of host RAM. A discrete 24 GB card on a
-# 32 GB machine is 0.75, so 0.9 is high enough to avoid that false positive.
-_UNIFIED_MEMORY_TOTAL_RATIO = 0.9
 
 # Virtualized Apple Silicon can silently corrupt MPS ``F.linear`` on 3D inputs.
 MPS_NUMERICS_ISSUE_URL = "https://github.com/pytorch/pytorch/issues/192934"
@@ -135,10 +129,6 @@ def _accelerator_device_properties(device: torch.device) -> Any | None:
         return None
 
 
-def _host_total_memory_bytes() -> int:
-    return int(psutil.virtual_memory().total)
-
-
 def _integrated_flag(props: Any) -> bool | None:
     """Return the backend integrated-GPU flag, or None if the backend has none."""
     for name in _INTEGRATED_GPU_ATTRS:
@@ -156,11 +146,9 @@ def device_uses_unified_host_memory(device: Union[str, torch.device]) -> bool:
     missing on MPS, and ``device='mps'`` must stay classifiable on machines
     that cannot run Metal).
 
-    CUDA and XPU use the backend's integrated-GPU property when present
-    (``is_integrated`` / ``is_integrated_gpu``). If that flag is absent, a device
-    whose reported ``total_memory`` is at least 90% of host RAM is treated as
-    unified — the usual iGPU accounting where the whole DRAM pool is exposed
-    as device memory.
+    CUDA and XPU use the backend's integrated-GPU property
+    (``is_integrated`` / ``is_integrated_gpu``) and raise ``RuntimeError`` if
+    the device properties do not have it.
     """
     resolved = torch.device(device) if isinstance(device, str) else device
     if resolved.type == "cpu":
@@ -173,13 +161,10 @@ def device_uses_unified_host_memory(device: Union[str, torch.device]) -> bool:
         return False
 
     flagged = _integrated_flag(props)
-    if flagged is not None:
-        return flagged
-
-    total_memory = getattr(props, "total_memory", None)
-    if not isinstance(total_memory, (int, float)) or total_memory <= 0:
-        return False
-    host_total = _host_total_memory_bytes()
-    if host_total <= 0:
-        return False
-    return (float(total_memory) / float(host_total)) >= _UNIFIED_MEMORY_TOTAL_RATIO
+    if flagged is None:
+        raise RuntimeError(
+            f"Cannot tell whether {resolved} shares memory with the host: its device "
+            f"properties have none of {_INTEGRATED_GPU_ATTRS}. Please report this at "
+            "https://github.com/soda-inria/tabicl/issues."
+        )
+    return flagged
