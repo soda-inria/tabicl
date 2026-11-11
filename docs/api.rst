@@ -63,6 +63,18 @@ Pre-training data
 SHAP interpretability
 ---------------------
 
+For classifiers, :meth:`tabicl.TabICLClassifier.predict_logits` exposes scores
+before the final softmax. To explain these scores with SHAP, select the prediction
+method explicitly::
+
+    explainer = get_shap_explainer(clf, X_train, predict_fn="predict_logits")
+    explanations = explainer(X_test)
+
+ShapIQ automatically prefers ``predict_logits`` when it is available, so its
+classifier explanations are now in logit space. The SHAP helper's default
+``predict_proba`` behavior is unchanged. See ``predict_logits`` for the temperature
+and ensemble-averaging conventions.
+
 .. autofunction:: tabicl.shap.get_shap_explainer
 .. autofunction:: tabicl.shap.get_shap_values
 .. autofunction:: tabicl.shap.get_shapiq_explainer
