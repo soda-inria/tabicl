@@ -26,8 +26,8 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    "torch>=2.2",  # to enjoy Flash Attention v2
-    "scikit-learn>=1.3.0",
+    "torch>=2.3",  # torch.GradScaler in finetuning and pre-training
+    "scikit-learn>=1.6",
     "numpy",
     "scipy",
     "einops>=0.7",  # this is only used for rope, so it could be replaced
