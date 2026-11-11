@@ -48,7 +48,7 @@ doc = [
   "skrub",
   "pandas",
   "shap>=0.42",
-  "shapiq>=1.0",
+  "shapiq>=1.4",
   "numba",  # Add it here to facilitate the life of the installer
 ]
 forecast = [
@@ -58,7 +58,7 @@ forecast = [
 ]
 shap = [
     "shap>=0.42",
-    "shapiq>=1.0",
+    "shapiq>=1.4",
     "matplotlib>=3.10.3",
     "numba",  # Add it here to facilitate the life of the installer
 ]
