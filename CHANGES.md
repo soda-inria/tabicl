@@ -12,8 +12,8 @@ Maintenance
 -----------
 
 - Add a CI job that runs the tests with the minimum dependency versions declared in
-  `pyproject.toml`. It showed that the code needs `torch>=2.3`, `scikit-learn>=1.6` and
-  `shapiq>=1.4`, so the declared minimums are raised accordingly. ([PR#182](https://github.com/soda-inria/tabicl/pull/182))
+  `pyproject.toml`, and raise the `shap` extra's requirement to `shapiq>=1.4`, which
+  `tabicl.shap` needs. ([PR#182](https://github.com/soda-inria/tabicl/pull/182))
 
 
 2.2.0
