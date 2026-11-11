@@ -575,7 +575,9 @@ class ICLearning(nn.Module):
             Ry_train = self.y_encoder(y_train.float())
         else:
             Ry_train = self.y_encoder(y_train.unsqueeze(-1))
-        R[:, :train_size] = R[:, :train_size] + Ry_train
+        # R is wherever the row-wise interaction's InferenceManager put it, e.g. in
+        # CPU memory when it was offloaded, whereas the label embedding is on the device.
+        R[:, :train_size] = R[:, :train_size] + Ry_train.to(R.device)
 
         return R
 
