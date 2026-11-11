@@ -12,8 +12,8 @@ Maintenance
 -----------
 
 - Add a CI job that runs the tests with the minimum dependency versions declared in
-  `pyproject.toml`, and raise the `shap` extra's requirement to `shapiq>=1.4`, which
-  `tabicl.shap` needs. ([PR#182](https://github.com/soda-inria/tabicl/pull/182))
+  `pyproject.toml`. It showed that finetuning was broken with torch 2.2 and scikit-learn 1.3
+  and SHAP explanations with shapiq 1.0, which are now supported. ([PR#182](https://github.com/soda-inria/tabicl/pull/182))
 
 
 2.2.0

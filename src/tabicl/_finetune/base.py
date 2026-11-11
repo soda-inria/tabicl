@@ -42,6 +42,7 @@ from tabicl._finetune.data import (
     move_meta_batch,
 )
 from tabicl._finetune.logging import FinetuningLogger, NullLogger, WandbLogger
+from tabicl._sklearn.sklearn_utils import allow_non_finite
 from tabicl.train._optim import get_scheduler
 
 logger = logging.getLogger(__name__)
@@ -684,7 +685,7 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
 
         AMP is only engaged on CUDA with ``self.amp=True``; in every other
         case (``amp=False``, CPU, MPS) ``scaler`` becomes a disabled
-        :class:`torch.GradScaler` whose scale/step/update operations are
+        gradient scaler whose scale/step/update operations are
         no-ops, and ``amp_ctx_factory`` returns :class:`contextlib.nullcontext`
         so the training loop stays branch-free.
 
@@ -695,7 +696,11 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
             zero-arg callable that produces a fresh context manager per batch.
         """
         use_amp = self.amp and device.type == "cuda" and torch.cuda.is_available()
-        scaler = torch.GradScaler("cuda", enabled=use_amp)
+        if hasattr(torch, "GradScaler"):
+            scaler = torch.GradScaler("cuda", enabled=use_amp)
+        else:
+            # PyTorch 2.2 supports CUDA AMP but predates the top-level alias.
+            scaler = torch.cuda.amp.GradScaler(enabled=use_amp)
         if use_amp:
             amp_ctx_factory = lambda: torch.autocast(  # noqa: E731
                 device_type="cuda",
@@ -747,7 +752,7 @@ class FinetunedTabICLBase(BaseEstimator, ABC):
         X, y = check_X_y(
             X,
             y,
-            ensure_all_finite=False,
+            **allow_non_finite(),
             y_numeric=ensure_numeric_y,
             dtype=None,
         )
