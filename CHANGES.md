@@ -8,6 +8,13 @@ Bug fixes
   offloaded to CPU memory or disk (`ROW_CONFIG` offload settings, or the fallback when they do not
   fit on the device), which failed with a device mismatch error. ([PR#181](https://github.com/soda-inria/tabicl/pull/181))
 
+Maintenance
+-----------
+
+- Add a CI job that runs the tests with the minimum dependency versions declared in
+  `pyproject.toml`, and raise the `shap` extra's requirement to `shapiq>=1.4`, which
+  `tabicl.shap` needs. ([PR#182](https://github.com/soda-inria/tabicl/pull/182))
+
 
 2.2.0
 =====
