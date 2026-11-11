@@ -28,14 +28,14 @@ def test_unified_detection_by_device_type(device, expected):
     assert device_uses_unified_host_memory(device) is expected
 
 
-def test_missing_flag_raises(monkeypatch):
-    """Device properties without an integrated-GPU flag raise instead of guessing."""
+def test_missing_flag_is_unknown(monkeypatch):
+    """Device properties without an integrated-GPU flag (XPU before torch 2.13) give None and a warning."""
     monkeypatch.setattr(
         "tabicl._torch_devices._accelerator_device_properties",
         lambda _: SimpleNamespace(total_memory=32 * 1024**3),
     )
-    with pytest.raises(RuntimeError, match="shares memory with the host"):
-        device_uses_unified_host_memory("xpu")
+    with pytest.warns(RuntimeWarning, match="shares memory with the host"):
+        assert device_uses_unified_host_memory("xpu") is None
 
 
 @pytest.mark.parametrize("device_backend", ["xpu", "cuda"])

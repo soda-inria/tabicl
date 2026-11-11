@@ -137,34 +137,31 @@ def _integrated_flag(props: Any) -> bool | None:
     return None
 
 
-def device_uses_unified_host_memory(device: Union[str, torch.device]) -> bool:
+def device_uses_unified_host_memory(device: Union[str, torch.device]) -> bool | None:
     """Return whether accelerator memory is the same physical pool as host RAM.
 
-    CPU is not an accelerator and returns ``False`` (it already has its own
-    budgeted path). MPS on Apple Silicon always shares DRAM with the process,
-    so it returns ``True`` without querying device properties (those APIs are
-    missing on MPS, and ``device='mps'`` must stay classifiable on machines
-    that cannot run Metal).
-
-    CUDA and XPU use the backend's integrated-GPU property
-    (``is_integrated`` / ``is_integrated_gpu``) and raise ``RuntimeError`` if
-    the device properties do not have it.
+    Uses the backend's integrated-GPU flag when the device properties have one.
+    Otherwise MPS is always unified and CPU never is. Returns ``None`` with a
+    warning when a CUDA or XPU device has no such flag (XPU before torch 2.13).
     """
     resolved = torch.device(device) if isinstance(device, str) else device
     if resolved.type == "cpu":
         return False
-    if resolved.type == "mps":
-        return True
 
     props = _accelerator_device_properties(resolved)
+    flagged = None if props is None else _integrated_flag(props)
+    if flagged is not None:
+        return flagged
+    if resolved.type == "mps":
+        return True
     if props is None:
         return False
 
-    flagged = _integrated_flag(props)
-    if flagged is None:
-        raise RuntimeError(
-            f"Cannot tell whether {resolved} shares memory with the host: its device "
-            f"properties have none of {_INTEGRATED_GPU_ATTRS}. Please report this at "
-            "https://github.com/soda-inria/tabicl/issues."
-        )
-    return flagged
+    warnings.warn(
+        f"Cannot tell whether {resolved} shares memory with the host: its device properties "
+        f"have none of {_INTEGRATED_GPU_ATTRS}. Batch sizes are limited by both device and "
+        "host memory. Upgrade torch (2.13 or later for XPU) to lift this limit on discrete GPUs.",
+        RuntimeWarning,
+        stacklevel=2,
+    )
+    return None
