@@ -3,11 +3,10 @@ Compute time and memory footprint trade-offs
 ============================================
 
 This gallery explores how TabICL's computational parameters affect
-compute time and memory footprints (host and device memory), covering
-device choice and use of the KV cache.
+compute time, covering the use of the KV cache.
 
 .. note::
-   The figures in the gallery are rendered when the documentation is built,
+   The figure in the gallery is rendered when the documentation is built,
    from a snapshot of benchmark results committed alongside the docs in
    ``docs/_data/tabicl_benchmarks_data.csv``. The runs themselves are produced
    by the `tabicl-benchmarks <https://github.com/probabl/tabicl-benchmarks>`_
@@ -108,46 +107,7 @@ device choice and use of the KV cache.
 # beneficial for wide tables.
 #
 # In a nutshell, enabling ``kv-caching`` has **no downside** on compute time;
-# the effect is negligible at worst. The trade-off is a higher memory
-# footprint, which the next section quantifies.
-
-# %%
-# Effects of ``kv_cache`` on memory
-# ---------------------------------
-#
-# The previous figure displays the compute-time side of the KV-cache trade-off;
-# this one displays the memory side. Peak memory usage is recorded separately
-# for the fit and predict phases. The peak memory allocated during :meth:`.fit
-# <tabicl.TabICLClassifier.fit>` when kv-caching is disabled is always
-# negligible, and is not displayed. When kv-caching is enabled, the peak memory
-# reported during :meth:`.predict <tabicl.TabICLClassifier.predict>` includes
-# the cache overhead.
-#
-# .. raw:: html
-#    :file: ../_static/compute_tradeoffs/fig2.html
-# 
-# Somewhat surprisingly, the memory footprint of
-# :meth:`.predict <tabicl.TabICLClassifier.predict>` is uniformly lower
-# when the key-value cache is enabled, so caching also appears to have **no
-# downside** with respect to memory usage. In fact, the
-# :meth:`.predict <tabicl.TabICLClassifier.predict>` memory curves are
-# remarkably similar in shape to the compute-time plots, and the same
-# conclusions apply. The reason is that the overhead added by the cache is 
-# more than offset by the memory saved by skipping the computation of intermediate 
-# hidden activations.
-#
-# The left and right plots, however, suggest that for very large training data
-# (or very small test data), the peak memory needed to build the key-value
-# cache (during :meth:`.fit <tabicl.TabICLClassifier.fit>`) surpasses the peak
-# memory of :meth:`.predict <tabicl.TabICLClassifier.predict>` without the
-# cache. In those cases, there may be a genuine trade-off: caching is
-# worthwhile only if enough memory is available to build the cache.
-#
-# The particularly high peak memory observed during
-# :meth:`.fit <tabicl.TabICLClassifier.fit>` is the sum of the peak memory
-# needed to compute the intermediate activations in the later layers, and the
-# memory held by the objects from earlier layers that are retained in the cache
-# being built.
+# the effect is negligible at worst.
 
 # %%
 # Practical summary
@@ -163,3 +123,16 @@ device choice and use of the KV cache.
 # One important limitation is that caching is not implemented for
 # classification problems with more than 10 classes. In this case, the
 # :meth:`.fit <tabicl.TabICLClassifier.fit>` call raises an exception instead.
+
+# %%
+# WIP
+# ---
+#
+# .. raw:: html
+#    :file: ../_static/compute_tradeoffs/fig2.html
+#
+# .. raw:: html
+#    :file: ../_static/compute_tradeoffs/fig3.html
+#
+# .. raw:: html
+#    :file: ../_static/compute_tradeoffs/fig4.html
