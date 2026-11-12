@@ -17,6 +17,8 @@ import pytest
 import torch
 
 from tabicl._model.inference import AsyncCopyManager, InferenceManager, devices_match
+from tabicl._torch_devices import device_uses_unified_host_memory
+from tests.torch_devices_helpers import skip_if_device_unusable
 
 
 @pytest.mark.parametrize(
@@ -74,16 +76,7 @@ def test_is_tensor_on_exe_device_accepts_unindexed_and_indexed(device_backend):
 @pytest.mark.parametrize("device_backend", ["cuda", "xpu", "mps"])
 def test_get_available_gpu_memory_non_zero_for_available_backends(device_backend):
     """Check that device memory inspection works and always returns positive values."""
-    backend_api = getattr(torch, device_backend, None)
-    if (
-        backend_api is None
-        or not callable(getattr(backend_api, "is_available", None))
-        or not backend_api.is_available()
-    ):
-        pytest.skip(f"{device_backend} backend is not available on this host")
-
-    if device_backend == "mps" and not torch.backends.mps.is_available():
-        pytest.skip("MPS backend is not available on this host")
+    skip_if_device_unusable(device_backend)
 
     mgr = InferenceManager(enc_name="tf_col", out_dim=16)
     mgr.configure(device=device_backend)
@@ -93,6 +86,15 @@ def test_get_available_gpu_memory_non_zero_for_available_backends(device_backend
         f"Expected non-zero available memory for backend '{device_backend}', "
         f"got {available_mb} MB"
     )
+    if device_uses_unified_host_memory(device_backend) is not False:
+        # Unified memory: the device pool is host RAM, so never report more
+        # than the OS still has available, minus the reserve.
+        assert available_mb <= mgr.get_available_cpu_memory() - mgr._host_memory_reserve_mb() + 1.0
+    else:
+        # Discrete device: the figure is the backend's own free memory, not
+        # capped by host RAM.
+        free_bytes, _ = getattr(torch, device_backend).mem_get_info(mgr.exe_device)
+        assert available_mb == pytest.approx(free_bytes / 2**20, rel=0.05)
 
 
 class _FakeNoAsyncBackend:
@@ -269,25 +271,96 @@ def test_mps_auto_batch_uses_memory_estimate(monkeypatch):
     assert out.shape == (4, 2, 8, 4)
 
 
-@pytest.mark.skipif(not torch.backends.mps.is_available(), reason="MPS not available")
 def test_mps_memory_estimate_uses_recommended_minus_current(monkeypatch):
     """The MPS memory inspection API is specific compared to CUDA/XPU.
 
     In particular, it does not expose mem_get_info, and the available memory is
     therefore estimated as recommended_max_memory minus
-    current_allocated_memory.
+    current_allocated_memory. On unified memory that estimate is then capped
+    by the host RAM still available minus a reserve, so both sides of the min() must be mocked.
     """
     mgr = InferenceManager(enc_name="tf_col", out_dim=4)
     mgr.configure(device="mps")
 
     fake_api = MagicMock()
-    fake_api.is_available.return_value = True
     fake_api.mem_get_info = None
     fake_api.recommended_max_memory.return_value = 8 * 1024 * 1024 * 1024
     fake_api.current_allocated_memory.return_value = 2 * 1024 * 1024 * 1024
-    fake_api.synchronize = MagicMock()
-    fake_api.empty_cache = MagicMock()
-
     monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
-    available_mib = mgr.get_available_gpu_memory()
-    assert available_mib == pytest.approx(6 * 1024.0)
+    monkeypatch.setattr(mgr, "_host_memory_reserve_mb", lambda: 1024.0)
+
+    # Host RAM larger than the recommended-minus-current estimate.
+    monkeypatch.setattr(mgr, "get_available_cpu_memory", lambda: 16 * 1024.0)
+    available_mb = mgr.get_available_gpu_memory()
+    assert available_mb == pytest.approx(6 * 1024.0)
+
+    # Host RAM smaller than the estimate: the unified-memory cap wins.
+    monkeypatch.setattr(mgr, "get_available_cpu_memory", lambda: 2 * 1024.0)
+    available_mb = mgr.get_available_gpu_memory()
+    assert available_mb == pytest.approx(1024.0)
+
+
+def test_mem_get_info_failure_in_no_arg_retry_returns_zero(monkeypatch):
+    """A backend error from the no-argument mem_get_info() retry must degrade to 0.0.
+
+    This path cannot be reached on a real backend, so the backend API is faked.
+    """
+
+    def mem_get_info(device=None):
+        if device is not None:
+            raise TypeError("mem_get_info() takes no arguments")
+        raise RuntimeError("driver not initialised")
+
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="cuda", use_amp=False, use_fa3=False)
+    fake_api = MagicMock()
+    fake_api.mem_get_info = mem_get_info
+    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
+    assert mgr.get_available_gpu_memory() == 0.0
+
+
+def test_allocator_cap_on_integrated_gpu(monkeypatch):
+    """On an integrated GPU, inference caps the allocator at the host RAM left after the reserve.
+
+    With 1 GiB already reserved, 8 GiB of host RAM available and a 2 GiB reserve,
+    a 16 GiB device may use (1 + 8 - 2) / 16 of its memory. The previous cap is
+    restored afterwards. The backend is faked so this runs without the device.
+    """
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="cuda", use_amp=False, use_fa3=False)
+    fake_api = MagicMock()
+    fake_api.get_per_process_memory_fraction.return_value = 1.0
+    fake_api.memory_reserved.return_value = 1024**3
+    fake_api.get_device_properties.return_value.total_memory = 16 * 1024**3
+    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
+    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: True)
+    monkeypatch.setattr(mgr, "get_available_cpu_memory", lambda: 8 * 1024.0)
+    monkeypatch.setattr(mgr, "_host_memory_reserve_mb", lambda: 2 * 1024.0)
+
+    with mgr._cap_allocator_to_host_memory():
+        fake_api.set_per_process_memory_fraction.assert_called_once_with(7 / 16, mgr.exe_device)
+    fake_api.set_per_process_memory_fraction.assert_called_with(1.0, mgr.exe_device)
+
+
+def test_allocator_cap_not_set_on_mps(monkeypatch):
+    """MPS has no way to read its allocator cap back, so inference leaves it untouched."""
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="mps", use_amp=False, use_fa3=False)
+    fake_api = MagicMock()
+    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
+
+    with mgr._cap_allocator_to_host_memory():
+        pass
+    fake_api.set_per_process_memory_fraction.assert_not_called()
+
+
+def test_allocator_cap_warns_without_torch_support(monkeypatch):
+    """Torch versions without get/set_per_process_memory_fraction (CUDA < 2.6, XPU < 2.10) only warn."""
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="cuda", use_amp=False, use_fa3=False)
+    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: MagicMock(spec=[]))
+    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: True)
+
+    with pytest.warns(RuntimeWarning, match="cannot limit"):
+        with mgr._cap_allocator_to_host_memory():
+            pass
