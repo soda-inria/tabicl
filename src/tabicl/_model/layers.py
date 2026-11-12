@@ -285,6 +285,30 @@ class MultiheadAttention(nn.MultiheadAttention):
             need_kv=need_kv,
         )
 
+    def project_kv(
+        self,
+        key: Tensor,
+        rope: Optional[RotaryEmbedding] = None,
+    ) -> KVCacheEntry:
+        """Project keys and values without computing queries or attention.
+
+        This is used by exact sequence-query chunking: K/V for the complete
+        training context are projected once, then bounded chunks of queries
+        attend to that shared context.  It is algebraically equivalent to the
+        packed K/V branch in ``multi_head_attention_forward``.
+        """
+        embed_dim = self.embed_dim
+        head_dim = embed_dim // self.num_heads
+        kv_weight = self.in_proj_weight[embed_dim:]
+        kv_bias = self.in_proj_bias[embed_dim:] if self.in_proj_bias is not None else None
+        k, v = F.linear(key, kv_weight, kv_bias).chunk(2, dim=-1)
+        *batch_shape, src_len, _ = key.shape
+        k = k.view(*batch_shape, src_len, self.num_heads, head_dim).transpose(-3, -2)
+        v = v.view(*batch_shape, src_len, self.num_heads, head_dim).transpose(-3, -2)
+        if rope is not None:
+            k = rope.rotate_queries_or_keys(k)
+        return KVCacheEntry(key=k, value=v)
+
 
 class MultiheadAttentionBlock(nn.TransformerEncoderLayer):
     """Attention block supporting RoPE, scalable softmax, and KV caching.

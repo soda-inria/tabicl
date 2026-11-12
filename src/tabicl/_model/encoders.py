@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional, Union
 from functools import partial
 
+import torch
 from torch import nn, Tensor
 from torch.utils.checkpoint import checkpoint
 
@@ -143,6 +144,54 @@ class Encoder(nn.Module):
                 out = checkpoint(partial(block, **kwargs), out, use_reentrant=False)
             else:
                 out = block(q=out, train_size=train_size, rope=self.rope)
+
+        return out
+
+    def forward_query_chunked(self, src: Tensor, train_size: int, chunk_size: int) -> Tensor:
+        """Run exact encoder attention with bounded query chunks.
+
+        At every layer, keys and values for the full training context are
+        projected once. Query rows are then processed independently in chunks
+        and streamed into a preallocated output tensor. This preserves the
+        standard ICL semantics (all rows attend only to training rows) while
+        replacing the large per-layer query/FFN activation peak with a bounded
+        chunk. Persistent memory is reduced to the layer input/output plus one
+        layer's training K/V.
+
+        Notes
+        -----
+        This path is intended for inference. It deliberately does not use
+        checkpointing, since no autograd graph is built under ``no_grad``.
+        """
+        if train_size <= 0:
+            raise ValueError("train_size must be positive for query-chunked attention")
+        if chunk_size <= 0:
+            raise ValueError("chunk_size must be positive")
+        if self.rope is not None:
+            # Chunk-local RoPE positions would need an explicit offset. The ICL
+            # encoder does not use RoPE; fail loudly if this method is reused by
+            # a positional encoder in the future.
+            raise NotImplementedError("Query chunking with RoPE requires position offsets")
+
+        out = src
+        total_len = src.shape[-2]
+        for block in self.blocks:
+            context = out[..., :train_size, :]
+            if block.norm_first:
+                context = block.norm1(context)
+            cached_kv = block.attn.project_kv(context, rope=None)
+            del context
+
+            next_out = torch.empty_like(out)
+            for start in range(0, total_len, chunk_size):
+                stop = min(start + chunk_size, total_len)
+                next_out[..., start:stop, :] = block(
+                    q=out[..., start:stop, :],
+                    cached_kv=cached_kv,
+                    rope=None,
+                )
+            out = next_out
+            del cached_kv
 
         return out
 
