@@ -43,6 +43,7 @@ doc = [
   "sphinx-copybutton",
   "sphinx-gallery",
   "matplotlib>=3.10.3",
+  "plotly>=6",  # figures of the compute-time/memory gallery are rendered at build
   "pydata-sphinx-theme",
   "sphinxext-opengraph",
   "skrub",
