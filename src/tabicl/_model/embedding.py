@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import List, Optional, Union, Literal
 from collections import OrderedDict
 import math
@@ -127,7 +128,7 @@ class ColEmbedding(nn.Module):
         dim_feedforward: int,
         num_inds: int,
         dropout: float = 0.0,
-        activation: str | callable = "gelu",
+        activation: str | Callable = "gelu",
         norm_first: bool = True,
         bias_free_ln: bool = False,
         affine: bool = True,
