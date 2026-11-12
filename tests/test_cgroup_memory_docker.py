@@ -12,6 +12,7 @@ import json
 import shutil
 import subprocess
 import tempfile
+from importlib.metadata import version
 from pathlib import Path
 
 import pytest
@@ -44,7 +45,8 @@ pytestmark = pytest.mark.skipif(
 
 @pytest.fixture(scope="module")
 def probe_image() -> str:
-    dockerfile = "FROM python:3.14-slim\nRUN pip install --no-cache-dir psutil\n"
+    # Use the same psutil as the test environment, including its CI lock.
+    dockerfile = f"FROM python:3.14-slim\nRUN pip install --no-cache-dir psutil=={version('psutil')}\n"
     with tempfile.TemporaryDirectory() as tmp:
         build = subprocess.run(
             ["docker", "build", "-t", IMAGE, "-f", "-", tmp],

@@ -80,6 +80,23 @@ all = [
     "tabicl[doc,forecast,shap,pretrain,finetune,test]",
 ]
 
+[dependency-groups]
+# Keep Hatch and its default test dependencies in the CI lock. When upgrading
+# Hatch, update this list to match hatch.env.internal.test.get_default_config.
+ci = [
+    "hatch==1.18.1",
+    "uv==0.12.1",
+    "coverage-enable-subprocess==1.0",
+    "coverage[toml]~=7.11",
+    "pytest~=9.0",
+    "pytest-mock~=3.12",
+    "pytest-randomly~=3.15",
+    "pytest-rerunfailures~=14.0",
+    "pytest-xdist[psutil]~=3.5",
+    # Hatchling also requests editables when building an editable install.
+    "editables~=0.3",
+]
+
 [build-system]
 requires = ["hatchling>=1.26.1"]  # https://github.com/pypa/hatch/issues/1818
 build-backend = "hatchling.build"
