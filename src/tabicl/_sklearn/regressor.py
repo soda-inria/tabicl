@@ -759,6 +759,9 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
 
         return final_results
 
+    def _more_tags(self):  # scikit-learn < 1.6
+        return dict(allow_nan=True)
+
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
         tags.input_tags.allow_nan = True

@@ -390,7 +390,12 @@ class Trainer:
             and "cuda" in self.config.device
             and model_compute_dtype == torch.float32
         )
-        self.scaler = torch.GradScaler("cuda", enabled=uses_fp16_autocast or uses_fp16_fa3)
+        scaler_enabled = uses_fp16_autocast or uses_fp16_fa3
+        if hasattr(torch, "GradScaler"):
+            self.scaler = torch.GradScaler("cuda", enabled=scaler_enabled)
+        else:
+            # PyTorch 2.2 supports CUDA AMP but predates the top-level alias.
+            self.scaler = torch.cuda.amp.GradScaler(enabled=scaler_enabled)
 
         if self.amp:
             if self.master_process:
