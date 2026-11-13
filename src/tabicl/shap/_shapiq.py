@@ -33,7 +33,10 @@ from typing import Any
 
 import numpy as np
 import shapiq
-from shapiq.imputer import MarginalImputer
+try:
+    from shapiq.imputer import MarginalImputer
+except ImportError:  # shapiq < 1.4
+    from shapiq.games.imputer import MarginalImputer
 from sklearn.base import BaseEstimator
 
 
