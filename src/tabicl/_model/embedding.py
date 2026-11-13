@@ -376,6 +376,9 @@ class ColEmbedding(nn.Module):
         else:
             assert y_train is not None, "y_train must be provided when target_aware=True."
 
+            # Reserved (all-skip_value) slots must stay exactly skip_value so InducedSelfAttentionBlock can skip them.
+            skip_mask = (src == self.in_linear.skip_value).all(dim=(-2, -1))[..., None, None]  # (..., 1, 1)
+
             # Determine if mixed-radix ensemble is needed
             num_classes = int(y_train.max().item()) + 1
             needs_mixed_radix = self.max_classes > 0 and num_classes > self.max_classes
@@ -386,7 +389,7 @@ class ColEmbedding(nn.Module):
                     y_emb = self.y_encoder(y_train.float())
                 else:
                     y_emb = self.y_encoder(y_train.unsqueeze(-1))
-                src[..., :train_size, :] = src[..., :train_size, :] + y_emb
+                src[..., :train_size, :] = src[..., :train_size, :] + y_emb.masked_fill(skip_mask, 0.0)
                 src = self.tf_col(src, train_size=None if embed_with_test else train_size)
             else:
                 # Mixed-radix ensembling for many-class classification
@@ -406,7 +409,7 @@ class ColEmbedding(nn.Module):
                 for digit_idx in range(num_digits):
                     y_digit = self._extract_mixed_radix_digit(y_train, digit_idx, bases)
                     y_emb = self.y_encoder(y_digit.float())
-                    src_with_y[..., :train_size, :] = src[..., :train_size, :] + y_emb
+                    src_with_y[..., :train_size, :] = src[..., :train_size, :] + y_emb.masked_fill(skip_mask, 0.0)
                     src_accum = src_accum + self.tf_col(src_with_y, train_size=None if embed_with_test else train_size)
 
                 src = src_accum / num_digits
