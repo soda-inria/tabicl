@@ -6,16 +6,12 @@ import functools
 import subprocess
 import sys
 import warnings
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 import torch
 
 # Preference order when ``device=None``: CUDA → XPU → MPS → CPU.
 DEFAULT_DEVICE_PREFERENCE = ("cuda", "xpu", "mps", "cpu")
-
-# Backend-specific names for "this GPU shares host DRAM".
-# CUDA uses ``is_integrated``; Intel XPU uses ``is_integrated_gpu``.
-_INTEGRATED_GPU_ATTRS = ("is_integrated", "is_integrated_gpu")
 
 # Virtualized Apple Silicon can silently corrupt MPS ``F.linear`` on 3D inputs.
 MPS_NUMERICS_ISSUE_URL = "https://github.com/pytorch/pytorch/issues/192934"
@@ -111,56 +107,33 @@ def resolve_torch_device(device: Optional[Union[str, torch.device]] = None) -> t
     return resolved
 
 
-def _accelerator_device_properties(device: torch.device) -> Any | None:
-    """Return ``torch.<backend>.get_device_properties`` for ``device``, or None."""
-    backend_api = getattr(torch, device.type, None)
-    getter = getattr(backend_api, "get_device_properties", None)
-    if not callable(getter):
-        return None
-    index = 0 if device.index is None else device.index
-    try:
-        return getter(index)
-    except TypeError:
-        try:
-            return getter(device)
-        except Exception:
-            return None
-    except Exception:
-        return None
-
-
-def _integrated_flag(props: Any) -> bool | None:
-    """Return the backend integrated-GPU flag, or None if the backend has none."""
-    for name in _INTEGRATED_GPU_ATTRS:
-        if hasattr(props, name):
-            return bool(getattr(props, name))
-    return None
-
-
 def device_uses_unified_host_memory(device: Union[str, torch.device]) -> bool | None:
     """Return whether accelerator memory is the same physical pool as host RAM.
 
-    Uses the backend's integrated-GPU flag when the device properties have one.
-    Otherwise MPS is always unified and CPU never is. Returns ``None`` with a
-    warning when a CUDA or XPU device has no such flag (XPU before torch 2.13).
+    MPS always is, and CPU or unavailable backends never are. CUDA and XPU use the
+    device's integrated-GPU flag. Returns ``None`` with a warning when that flag is
+    missing (XPU before torch 2.13).
     """
-    resolved = torch.device(device) if isinstance(device, str) else device
-    if resolved.type == "cpu":
+    device = torch.device(device)
+    if device.type == "mps":
+        return True
+    if device.type not in ("cuda", "xpu"):
         return False
 
-    props = _accelerator_device_properties(resolved)
-    flagged = None if props is None else _integrated_flag(props)
-    if flagged is not None:
-        return flagged
-    if resolved.type == "mps":
-        return True
-    if props is None:
+    try:
+        props = getattr(torch, device.type).get_device_properties(device)
+    except Exception:  # backend not built or not available
         return False
+
+    # CUDA names the flag ``is_integrated``, XPU ``is_integrated_gpu``.
+    for name in ("is_integrated", "is_integrated_gpu"):
+        if hasattr(props, name):
+            return bool(getattr(props, name))
 
     warnings.warn(
-        f"Cannot tell whether {resolved} shares memory with the host: its device properties "
-        f"have none of {_INTEGRATED_GPU_ATTRS}. Batch sizes are limited by both device and "
-        "host memory. Upgrade torch (2.13 or later for XPU) to lift this limit on discrete GPUs.",
+        f"Cannot tell whether {device} shares memory with the host: its device properties "
+        "have no integrated-GPU flag. Batch sizes are limited by both device and host "
+        "memory. Upgrade torch (2.13 or later for XPU) to lift this limit on discrete GPUs.",
         RuntimeWarning,
         stacklevel=2,
     )
