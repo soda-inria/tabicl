@@ -267,8 +267,9 @@ class ICLearning(nn.Module):
             Ry_train = self.y_encoder(y_train.float())
         else:  # Regression
             Ry_train = self.y_encoder(y_train.unsqueeze(-1))
-        # Not in place: R can be a view of the caller's tensor, which an OOM retry reuses.
-        R = torch.cat([R[:, :train_size] + Ry_train, R[:, train_size:]], dim=1)
+        # Copy first: R can be a view of the caller's tensor, which an OOM retry reuses.
+        R = R.clone()
+        R[:, :train_size] += Ry_train
 
         src = self.tf_icl(R, train_size=train_size)
         if self.norm_first:
@@ -716,8 +717,9 @@ class ICLearning(nn.Module):
                 Ry_train = self.y_encoder(y_train.float())
             else:  # Regression
                 Ry_train = self.y_encoder(y_train.unsqueeze(-1))
-            # Not in place: R can be a view of the caller's tensor, which an OOM retry reuses.
-            R = torch.cat([R[:, :train_size] + Ry_train, R[:, train_size:]], dim=1)
+            # Copy first: R can be a view of the caller's tensor, which an OOM retry reuses.
+            R = R.clone()
+            R[:, :train_size] += Ry_train
 
         src = self.tf_icl.forward_with_cache(
             R,
