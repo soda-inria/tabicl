@@ -267,7 +267,7 @@ class ICLearning(nn.Module):
             Ry_train = self.y_encoder(y_train.float())
         else:  # Regression
             Ry_train = self.y_encoder(y_train.unsqueeze(-1))
-        # Copy first: R can be a view of the caller's tensor, which an OOM retry reuses.
+        # Don't change R in-place, as the labels would be added again in case of an OOM retry.
         R = R.clone()
         R[:, :train_size] += Ry_train
 
@@ -717,7 +717,7 @@ class ICLearning(nn.Module):
                 Ry_train = self.y_encoder(y_train.float())
             else:  # Regression
                 Ry_train = self.y_encoder(y_train.unsqueeze(-1))
-            # Copy first: R can be a view of the caller's tensor, which an OOM retry reuses.
+                # Don't change R in-place, as the labels would be added again in case of an OOM retry.
             R = R.clone()
             R[:, :train_size] += Ry_train
 
