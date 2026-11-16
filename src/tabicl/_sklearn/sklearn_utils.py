@@ -400,3 +400,17 @@ def validate_data(
         _check_n_features(_estimator, X, reset=reset)
 
     return out
+
+
+def allow_non_finite() -> dict[str, bool]:
+    """Keyword argument for ``check_array``/``check_X_y`` that accepts NaN and inf.
+
+    scikit-learn 1.6 renamed ``force_all_finite`` to ``ensure_all_finite``.
+    """
+    import inspect
+
+    from sklearn.utils.validation import check_array
+
+    if "ensure_all_finite" in inspect.signature(check_array).parameters:
+        return {"ensure_all_finite": False}
+    return {"force_all_finite": False}

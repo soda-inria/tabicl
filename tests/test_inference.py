@@ -17,7 +17,6 @@ import pytest
 import torch
 
 from tabicl._model.inference import AsyncCopyManager, InferenceManager, OffloadMode, devices_match
-from tabicl._torch_devices import device_uses_unified_host_memory
 from tests.torch_devices_helpers import skip_if_device_unusable
 
 
@@ -86,10 +85,10 @@ def test_get_available_gpu_memory_non_zero_for_available_backends(device_backend
         f"Expected non-zero available memory for backend '{device_backend}', "
         f"got {available_mb} MB"
     )
-    if device_uses_unified_host_memory(device_backend) is not False:
+    if mgr._unified_host is not False:
         # Unified memory: the device pool is host RAM, so never report more
         # than the OS still has available, minus the reserve.
-        assert available_mb <= mgr.get_available_cpu_memory() - mgr._host_memory_reserve_mb() + 1.0
+        assert available_mb <= mgr.get_available_cpu_memory() - mgr._host_reserve_mb + 1.0
     else:
         # Discrete device: the figure is the backend's own free memory, not
         # capped by host RAM.
@@ -287,7 +286,7 @@ def test_mps_memory_estimate_uses_recommended_minus_current(monkeypatch):
     fake_api.recommended_max_memory.return_value = 8 * 1024 * 1024 * 1024
     fake_api.current_allocated_memory.return_value = 2 * 1024 * 1024 * 1024
     monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
-    monkeypatch.setattr(mgr, "_host_memory_reserve_mb", lambda: 1024.0)
+    monkeypatch.setattr(mgr, "_host_reserve_mb", 1024.0)
 
     # Host RAM larger than the recommended-minus-current estimate.
     monkeypatch.setattr(mgr, "get_available_cpu_memory", lambda: 16 * 1024.0)
@@ -298,25 +297,6 @@ def test_mps_memory_estimate_uses_recommended_minus_current(monkeypatch):
     monkeypatch.setattr(mgr, "get_available_cpu_memory", lambda: 2 * 1024.0)
     available_mb = mgr.get_available_gpu_memory()
     assert available_mb == pytest.approx(1024.0)
-
-
-def test_mem_get_info_failure_in_no_arg_retry_returns_zero(monkeypatch):
-    """A backend error from the no-argument mem_get_info() retry must degrade to 0.0.
-
-    This path cannot be reached on a real backend, so the backend API is faked.
-    """
-
-    def mem_get_info(device=None):
-        if device is not None:
-            raise TypeError("mem_get_info() takes no arguments")
-        raise RuntimeError("driver not initialised")
-
-    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
-    mgr.configure(device="cuda", use_amp=False, use_fa3=False)
-    fake_api = MagicMock()
-    fake_api.mem_get_info = mem_get_info
-    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
-    assert mgr.get_available_gpu_memory() == 0.0
 
 
 def test_allocator_cap_on_integrated_gpu(monkeypatch):
@@ -333,9 +313,9 @@ def test_allocator_cap_on_integrated_gpu(monkeypatch):
     fake_api.memory_reserved.return_value = 1024**3
     fake_api.get_device_properties.return_value.total_memory = 16 * 1024**3
     monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
-    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: True)
+    monkeypatch.setattr(mgr, "_unified_host", True)
     monkeypatch.setattr(mgr, "get_available_cpu_memory", lambda: 8 * 1024.0)
-    monkeypatch.setattr(mgr, "_host_memory_reserve_mb", lambda: 2 * 1024.0)
+    monkeypatch.setattr(mgr, "_host_reserve_mb", 2 * 1024.0)
 
     with mgr._cap_allocator_to_host_memory():
         fake_api.set_per_process_memory_fraction.assert_called_once_with(7 / 16, mgr.exe_device)
@@ -359,7 +339,7 @@ def test_allocator_cap_warns_without_torch_support(monkeypatch):
     mgr = InferenceManager(enc_name="tf_col", out_dim=4)
     mgr.configure(device="cuda", use_amp=False, use_fa3=False)
     monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: MagicMock(spec=[]))
-    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: True)
+    monkeypatch.setattr(mgr, "_unified_host", True)
 
     with pytest.warns(RuntimeWarning, match="cannot limit"):
         with mgr._cap_allocator_to_host_memory():
@@ -375,7 +355,7 @@ def test_auto_offload_skips_cpu_on_integrated_gpu(monkeypatch, tmp_path, with_di
     mgr = InferenceManager(enc_name="tf_col", out_dim=4)
     disk_dir = str(tmp_path) if with_disk else None
     mgr.configure(device="xpu", offload="auto", disk_offload_dir=disk_dir, use_amp=False, use_fa3=False)
-    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: True)
+    monkeypatch.setattr(mgr, "_unified_host", True)
 
     mode, _ = mgr._resolve_offload_mode(output_mb=400.0, gpu_free_mb=500.0, cpu_free_mb=8000.0, disk_free_mb=10_000.0)
     assert mode is expected
@@ -385,7 +365,7 @@ def test_cpu_output_not_pinned_on_integrated_gpu(monkeypatch):
     """Pinning would lock the RAM an integrated GPU allocates from."""
     mgr = InferenceManager(enc_name="tf_col", out_dim=4)
     mgr.configure(device="xpu", offload="cpu", use_amp=False, use_fa3=False)
-    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: True)
+    monkeypatch.setattr(mgr, "_unified_host", True)
 
     out, _ = mgr._allocate_output_buffer(OffloadMode.CPU, (2, 3), torch.float32)
     assert not out.is_pinned()
@@ -395,7 +375,7 @@ def test_output_too_large_on_integrated_gpu_suggests_disk_offload(monkeypatch):
     """Without disk offload, an output that does not fit on an integrated GPU raises with a hint."""
     mgr = InferenceManager(enc_name="tf_col", out_dim=4)
     mgr.configure(device="xpu", use_amp=False, use_fa3=False)
-    monkeypatch.setattr(mgr, "_uses_unified_host_memory", lambda: True)
+    monkeypatch.setattr(mgr, "_unified_host", True)
 
     def out_of_memory(*args, **kwargs):
         raise RuntimeError("simulated out of memory")

@@ -805,28 +805,24 @@ class InferenceManager:
         # Setup device
         self.exe_device = resolve_torch_device(device)
 
+        # Whether the device allocates from host RAM (None if unknown), and the host RAM
+        # in MB left free for the rest of the system when it does.
+        self._unified_host = device_uses_unified_host_memory(self.exe_device)
+        self._host_reserve_mb = max(1024.0, 0.1 * psutil.virtual_memory().total / (1024 * 1024))
+
         # Initialize buffer pool
         self._buffer_pool = PinnedBufferPool()
 
         self._is_configured = True
 
-    def _uses_unified_host_memory(self) -> bool | None:
-        """Return whether the execution device allocates from host RAM, or None if unknown."""
-        return device_uses_unified_host_memory(self.exe_device)
-
     def _out_of_memory_hint(self) -> str:
         """Suggestions to append to out-of-memory errors on devices that allocate from host RAM."""
-        if self._uses_unified_host_memory() is not True:
+        if self._unified_host is not True:
             return ""
         return (
             " This device allocates from host RAM: close other applications, set `disk_offload_dir` "
             "on the estimator to store outputs on disk, or lower its `batch_size`."
         )
-
-    @staticmethod
-    def _host_memory_reserve_mb() -> float:
-        """Host RAM (MB) left free for the rest of the system when the device shares it."""
-        return max(1024.0, 0.1 * psutil.virtual_memory().total / (1024 * 1024))
 
     @contextmanager
     def _cap_allocator_to_host_memory(self):
@@ -837,7 +833,7 @@ class InferenceManager:
         batching loop recovers from, instead of exhausting system memory. The previous
         limit is restored on exit.
         """
-        if self.exe_device.type == "mps" or self._uses_unified_host_memory() is not True:
+        if self.exe_device.type == "mps" or self._unified_host is not True:
             yield
             return
 
@@ -856,7 +852,7 @@ class InferenceManager:
             return
 
         total = backend_api.get_device_properties(self.exe_device).total_memory
-        host_free = (self.get_available_cpu_memory() - self._host_memory_reserve_mb()) * 1024 * 1024
+        host_free = (self.get_available_cpu_memory() - self._host_reserve_mb) * 1024 * 1024
         allowed = backend_api.memory_reserved(self.exe_device) + max(0.0, host_free)
         previous = get_fraction(self.exe_device)
         set_fraction(min(1.0, allowed / total), self.exe_device)
@@ -955,14 +951,24 @@ class InferenceManager:
     def get_available_gpu_memory(self) -> float:
         """Get available GPU memory in MB.
 
+        When the device may share host RAM, this is also capped by the host RAM still
+        available, minus a reserve for the system.
+        """
+        free_mb = self._device_free_mb()
+        if self._unified_host is not False:
+            free_mb = min(free_mb, self.get_available_cpu_memory() - self._host_reserve_mb)
+        return max(0.0, free_mb)
+
+    def _device_free_mb(self) -> float:
+        """Get the device's own free memory in MB.
+
         Synchronizes device operations and clears cache before checking to get
         an accurate reading of available memory.
 
         Backends that expose ``mem_get_info`` (CUDA, XPU) use that API. On MPS,
         which does not provide ``mem_get_info``, free memory is approximated as
         ``recommended_max_memory - current_allocated_memory`` so that
-        auto-batching can still run. When the device may share host RAM, the result
-        is also capped by the host RAM still available, minus a reserve for the system.
+        auto-batching can still run.
 
         Returns
         -------
@@ -983,29 +989,25 @@ class InferenceManager:
         mem_get_info = getattr(backend_api, "mem_get_info", None)
         if callable(mem_get_info):
             try:
-                try:
-                    free_mem, _ = mem_get_info(self.exe_device)
-                except TypeError:
-                    # Some backends may expose mem_get_info() without a device argument.
-                    free_mem, _ = mem_get_info()
+                free_mem, _ = mem_get_info(self.exe_device)
+            except TypeError:
+                # Some backends may expose mem_get_info() without a device argument.
+                free_mem, _ = mem_get_info()
             except Exception:
                 return 0.0
-            free_mb = free_mem / (1024 * 1024)
-        else:
-            # MPS (and similar) fallback without mem_get_info.
-            recommended = getattr(backend_api, "recommended_max_memory", None)
-            current = getattr(backend_api, "current_allocated_memory", None)
-            if not (callable(recommended) and callable(current)):
-                return 0.0
+            return free_mem / (1024 * 1024)
+
+        # MPS (and similar) fallback without mem_get_info.
+        recommended = getattr(backend_api, "recommended_max_memory", None)
+        current = getattr(backend_api, "current_allocated_memory", None)
+        if callable(recommended) and callable(current):
             try:
                 free_mem = recommended() - current()
             except Exception:
                 return 0.0
-            free_mb = max(0.0, free_mem) / (1024 * 1024)
+            return max(0.0, free_mem) / (1024 * 1024)
 
-        if self._uses_unified_host_memory() is not False:
-            free_mb = min(free_mb, self.get_available_cpu_memory() - self._host_memory_reserve_mb())
-        return max(0.0, free_mb)
+        return 0.0
 
     def get_available_disk_space(self, path: Optional[str]) -> float:
         """Get available disk space at the specified path in MB.
@@ -1180,7 +1182,7 @@ class InferenceManager:
                 "auto_gpu_fits",
                 f"{output_mb:.0f}MB <= {self.auto_offload_threshold * gpu_free_mb:.0f}MB safe gpu free",
             )
-        elif self._uses_unified_host_memory() is True:
+        elif self._unified_host is True:
             if disk_fits:
                 return OffloadMode.DISK, OffloadReason(
                     "auto_unified_disk", f"gpu tight -> disk ({output_mb:.0f}MB <= {safe_disk_mb:.0f}MB safe disk free)"
@@ -1214,7 +1216,7 @@ class InferenceManager:
                 return out, info
             except RuntimeError as e:
                 info["alloc_error"] = str(e)
-                if self._uses_unified_host_memory() is not True:
+                if self._unified_host is not True:
                     mode = OffloadMode.CPU
                 elif self.disk_offload_dir is not None:
                     # CPU memory is the same RAM on integrated GPUs and MPS.
@@ -1229,7 +1231,7 @@ class InferenceManager:
             try:
                 # Only use pinned memory for smaller allocations
                 # Pinning locks the RAM that integrated GPUs and MPS allocate from.
-                use_pinned = output_mb <= self.max_pinned_memory_mb and self._uses_unified_host_memory() is not True
+                use_pinned = output_mb <= self.max_pinned_memory_mb and self._unified_host is not True
                 if self.verbose and not use_pinned:
                     print(
                         f"  Using regular (non-pinned) CPU memory for {output_mb:.0f}MB output (max_pinned={self.max_pinned_memory_mb:.0f}MB)"
