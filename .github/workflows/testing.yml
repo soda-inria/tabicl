@@ -74,6 +74,45 @@ jobs:
       - name: Run tests
         run: python -m pytest tests/ -x
 
+  test-min-deps:
+    # Run the tests with every dependency pinned to the lowest version that
+    # pyproject.toml declares (its ">=" bounds), on the oldest supported Python.
+    # Dependencies without a lower bound are left at their latest compatible version.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9  # v9.0.0
+        with:
+          version: "0.12.1"
+      - name: Pin dependencies to their declared minimum versions
+        run: |
+          uv pip install --system packaging tomli
+          python - <<'EOF' > min-constraints.txt
+          import tomli
+          from packaging.requirements import Requirement
+
+          project = tomli.load(open("pyproject.toml", "rb"))["project"]
+          requirements = project["dependencies"] + sum(project["optional-dependencies"].values(), [])
+          pins = set()
+          for requirement in map(Requirement, requirements):
+              for spec in requirement.specifier:
+                  if spec.operator == ">=":
+                      pins.add(f"{requirement.name}=={spec.version}")
+          print("\n".join(sorted(pins)))
+          EOF
+          cat min-constraints.txt
+      - name: Install package with minimum dependency versions
+        run: uv pip install --system -c min-constraints.txt -e ".[test,forecast,shap,finetune]"
+      - name: Show installed package versions
+        run: uv pip list --system
+      - name: Run tests
+        run: python -m pytest tests/ -x
+
   test-dev-deps:
     # Only run on scheduled builds or manual triggers to avoid causing random
     # failure in regular CI run on PRs.

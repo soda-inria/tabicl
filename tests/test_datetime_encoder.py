@@ -52,7 +52,7 @@ class TestDatetimeEncoderNoDuplicateAngles:
         assert len(unique_pairs) == 24
 
     def test_month_of_year_all_distinct(self):
-        dates = pd.date_range("2026-01-15", periods=12, freq="ME")
+        dates = pd.date_range("2026-01-01", periods=12, freq="MS")
         idx = pd.MultiIndex.from_arrays([dates], names=["timestamp"])
         df = pd.DataFrame({"value": range(12)}, index=idx)
         enc = DatetimeEncoder(
