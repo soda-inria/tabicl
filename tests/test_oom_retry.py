@@ -10,6 +10,8 @@ def test_icl_predictions_leave_their_input_unchanged():
     When a forward pass raises ``torch.OutOfMemoryError``, ``InferenceManager`` halves
     the batch size and runs the forward function again on the same inputs, so the
     forward function must leave its inputs unchanged.
+
+    Non-regression test for https://github.com/soda-inria/tabicl/pull/185.
     """
     icl = TabICL().eval().icl_predictor
     torch.manual_seed(0)

@@ -8,6 +8,10 @@ Bug fixes
   offloaded to CPU memory or disk (`ROW_CONFIG` offload settings, or the fallback when they do not
   fit on the device), which failed with a device mismatch error. ([PR#181](https://github.com/soda-inria/tabicl/pull/181))
 
+- Fix predictions changing when inference retries with smaller batches after running out of GPU
+  memory: the label embeddings were added in place to the in-context learning inputs, so batches
+  that had already run got them added a second time. ([PR#185](https://github.com/soda-inria/tabicl/pull/185))
+
 Maintenance
 -----------
 
