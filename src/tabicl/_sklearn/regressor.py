@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
-import multiprocessing as mp
 from collections import OrderedDict
 from typing import Optional, List, Dict
 
@@ -16,7 +15,7 @@ from sklearn.utils.validation import check_is_fitted
 from huggingface_hub import hf_hub_download
 from huggingface_hub.utils import LocalEntryNotFoundError
 
-from .base import TabICLBaseEstimator
+from .base import TabICLBaseEstimator, _with_n_jobs
 from .preprocessing import TransformToNumerical, EnsembleGenerator
 from .sklearn_utils import validate_data, _num_samples
 
@@ -618,6 +617,7 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
 
         return results
 
+    @_with_n_jobs
     def predict(
         self, X: np.ndarray, output_type: str | list[str] = "mean", alphas: Optional[List[float]] = None
     ) -> np.ndarray | dict[str, np.ndarray]:
@@ -685,23 +685,6 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
                 "save_kv_cache=True."
             )
 
-        if self.n_jobs is not None:
-            assert self.n_jobs != 0
-            old_n_threads = torch.get_num_threads()
-            n_logical_cores = mp.cpu_count()
-
-            if self.n_jobs > 0:
-                if self.n_jobs > n_logical_cores:
-                    warnings.warn(
-                        f"TabICL got n_jobs={self.n_jobs} but there are only {n_logical_cores} logical cores available."
-                        f" Only {n_logical_cores} threads will be used."
-                    )
-                n_threads = min(n_logical_cores, self.n_jobs)
-            else:
-                n_threads = max(1, n_logical_cores + 1 + self.n_jobs)
-
-            torch.set_num_threads(n_threads)
-
         # Preserve DataFrame structure to retain column names and types for correct feature transformation
         X = validate_data(self, X, reset=False, dtype=None, skip_check_array=True)
 
@@ -750,9 +733,6 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
                 n_quantiles = arr.shape[2]
                 arr = self.y_scaler_.inverse_transform(arr.reshape(-1, 1)).reshape(n_estimators, n_samples, n_quantiles)
                 final_results[key] = np.mean(arr, axis=0)
-
-        if self.n_jobs is not None:
-            torch.set_num_threads(old_n_threads)
 
         if len(output_type) == 1:
             return final_results[output_type[0]]
