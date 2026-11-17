@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import uuid
 import math
+import mmap
 import shutil
 import psutil
 import warnings
@@ -22,7 +23,7 @@ from torch import Tensor
 from .kv_cache import KVCache
 from .attention import flash_attn3_toggle
 from ._cgroup_memory import _cgroup_memory_headroom
-from .._torch_devices import resolve_torch_device
+from .._torch_devices import device_uses_unified_host_memory, resolve_torch_device
 
 
 def devices_match(a: torch.device, b: torch.device) -> bool:
@@ -36,6 +37,17 @@ def devices_match(a: torch.device, b: torch.device) -> bool:
     if a.index is None or b.index is None:
         return True
     return a.index == b.index
+
+
+def _get_disk_tensor_owner(tensor: Tensor) -> Optional["DiskTensor"]:
+    """Find a disk owner through a chain of tensor views."""
+    current = tensor
+    while isinstance(current, torch.Tensor):
+        owner = getattr(current, "_tabicl_disk_tensor", None)
+        if owner is not None:
+            return owner
+        current = getattr(current, "_base", None)
+    return None
 
 
 class MemoryEstimator:
@@ -377,6 +389,11 @@ class DiskTensor:
     @property
     def tensor(self) -> Tensor:
         """Get the torch tensor view of this disk tensor."""
+        # Keep the mmap owner reachable from downstream stages. Tensor slices
+        # do not retain arbitrary Python attributes, so ``InferenceManager``
+        # consults this attribute on the original input and can evict pages
+        # after consuming each chunk.
+        self._tensor._tabicl_disk_tensor = self
         return self._tensor
 
     def __getitem__(self, indices) -> Tensor:
@@ -392,6 +409,24 @@ class DiskTensor:
     def flush(self) -> None:
         """Flush changes to disk."""
         self._memmap.flush()
+
+    def release_pages(self) -> None:
+        """Flush and evict resident pages while keeping the mapping usable.
+
+        A memory map only reduces RSS when the operating system is allowed to
+        reclaim its pages.  After a stage writes the complete output, Linux
+        otherwise tends to keep all dirty pages resident, making disk offload
+        look like ordinary RAM. ``MADV_DONTNEED`` drops those clean pages; a
+        downstream chunk faults back only the range it actually consumes.
+
+        On platforms without ``madvise`` support, flushing still preserves the
+        previous behavior and correctness.
+        """
+        self.flush()
+        try:
+            self._memmap._mmap.madvise(mmap.MADV_DONTNEED)
+        except (AttributeError, OSError, ValueError):
+            pass
 
     @property
     def nbytes(self) -> int:
@@ -657,6 +692,8 @@ class InferenceManager:
         self,
         min_batch_size: int = 1,
         safety_factor: float = 0.8,
+        cpu_memory_budget_mb: float = 512.0,
+        cpu_activation_factor: float = 12.0,
         offload: Union[bool, Literal["auto", "gpu", "cpu", "disk"], OffloadMode] = "auto",
         auto_offload_threshold: float = 0.5,
         device: Optional[Union[str, torch.device]] = None,
@@ -690,6 +727,22 @@ class InferenceManager:
             Factor (0-1) to multiply estimated batch size by for conservative memory
             usage. Lower values are safer but may result in more batches.
 
+        cpu_memory_budget_mb : float, default=512.0
+            Target peak (in MB) for the transient activation memory of a single
+            inference chunk. On CPU, inputs are split over their leading batch
+            dimensions so that each chunk stays near this budget. On unified-memory
+            accelerators (Apple Silicon MPS, integrated XPU/CUDA iGPUs), the same
+            budget caps the auto-batch target used by ``estimate_safe_batch_size``,
+            so a long sequence does not try to fill all remaining host RAM.
+            Discrete GPUs still size batches from device free memory. Lower values
+            use less memory but produce more chunks.
+
+        cpu_activation_factor : float, default=12.0
+            Multiplier approximating how many hidden-sized activation copies are
+            live simultaneously while processing one batch element on CPU. Used
+            together with ``cpu_memory_budget_mb`` to size CPU chunks. Also used
+            to size ICL query chunks on CPU and unified-memory accelerators.
+
         offload : Union[bool, str, OffloadMode], default="auto"
             Where to store output tensors during inference:
 
@@ -699,6 +752,8 @@ class InferenceManager:
             - ``"disk"``: Offload to memory-mapped files. Supports outputs larger than RAM.
             - ``"auto"``: Automatically choose based on available memory. Uses
               ``auto_offload_threshold`` to decide when to offload from GPU.
+              On unified-memory devices, CPU is skipped as an offload tier
+              because a host copy does not free physical RAM.
 
         auto_offload_threshold : float, default=0.5
             GPU memory threshold (0-1) for automatic offloading. Only used when
@@ -772,6 +827,8 @@ class InferenceManager:
         """
         self.min_batch_size = int(min_batch_size)
         self.safety_factor = float(safety_factor)
+        self.cpu_memory_budget_mb = float(cpu_memory_budget_mb)
+        self.cpu_activation_factor = float(cpu_activation_factor)
         self.auto_offload_threshold = float(auto_offload_threshold)
         self.use_amp = bool(use_amp)
         self.use_fa3 = bool(use_fa3)
@@ -804,6 +861,17 @@ class InferenceManager:
         self._buffer_pool = PinnedBufferPool()
 
         self._is_configured = True
+
+    def _uses_unified_host_memory(self) -> bool:
+        """Return whether execution memory is the same physical pool as host RAM.
+
+        True on Apple Silicon MPS and on integrated GPUs (Intel XPU iGPU, CUDA
+        ``integrated`` devices). Treating ``tensor.cpu()`` as an offload, or
+        sizing batches from a device memory query that is really host DRAM,
+        over-counts free memory. See
+        :func:`tabicl._torch_devices.device_uses_unified_host_memory`.
+        """
+        return device_uses_unified_host_memory(self.exe_device)
 
     def _normalize_offload(self, offload: Any) -> OffloadMode:
         """Normalize various offload specifications to OffloadMode."""
@@ -901,7 +969,9 @@ class InferenceManager:
         Backends that expose ``mem_get_info`` (CUDA, XPU) use that API. On MPS,
         which does not provide ``mem_get_info``, free memory is approximated as
         ``recommended_max_memory - current_allocated_memory`` so that
-        auto-batching can still run.
+        auto-batching can still run. On unified-memory devices the result is
+        also capped by host available RAM, so a driver that reports most of
+        DRAM as "device" free memory cannot over-count against other processes.
 
         Returns
         -------
@@ -928,19 +998,24 @@ class InferenceManager:
                 free_mem, _ = mem_get_info()
             except Exception:
                 return 0.0
-            return free_mem / (1024 * 1024)
-
-        # MPS (and similar) fallback without mem_get_info.
-        recommended = getattr(backend_api, "recommended_max_memory", None)
-        current = getattr(backend_api, "current_allocated_memory", None)
-        if callable(recommended) and callable(current):
+            free_mb = free_mem / (1024 * 1024)
+        else:
+            # MPS (and similar) fallback without mem_get_info.
+            recommended = getattr(backend_api, "recommended_max_memory", None)
+            current = getattr(backend_api, "current_allocated_memory", None)
+            if not (callable(recommended) and callable(current)):
+                return 0.0
             try:
                 free_mem = recommended() - current()
             except Exception:
                 return 0.0
-            return max(0.0, free_mem) / (1024 * 1024)
+            free_mb = max(0.0, free_mem) / (1024 * 1024)
 
-        return 0.0
+        # Unified-memory backends share the host pool: never claim more
+        # "device" free memory than the OS still has available.
+        if self._uses_unified_host_memory():
+            free_mb = min(max(0.0, free_mb), self.get_available_cpu_memory())
+        return max(0.0, free_mb)
 
     def get_available_disk_space(self, path: Optional[str]) -> float:
         """Get available disk space at the specified path in MB.
@@ -1020,6 +1095,11 @@ class InferenceManager:
         """
         available_mem = self.get_available_gpu_memory()
         target_mem = available_mem * self.safety_factor
+        if self._uses_unified_host_memory():
+            # Same policy as CPU budgeted batching: do not fill all remaining
+            # unified RAM with one activation wave. ``cpu_memory_budget_mb``
+            # already exists for that purpose.
+            target_mem = min(target_mem, self.cpu_memory_budget_mb)
 
         estimated_bs = MemoryEstimator.estimate_batch_size(seq_len, target_mem, self.enc_name, include_inputs, in_dim)
 
@@ -1040,8 +1120,13 @@ class InferenceManager:
         For user-requested modes, the requested mode is used if it fits.
         Otherwise, modes fall back: GPU -> CPU -> DISK -> CPU(swap as last resort).
 
-        For AUTO mode, the priority is:
+        AUTO mode on discrete accelerators (dedicated CUDA / XPU):
             GPU (if within threshold) -> CPU -> DISK -> CPU(swap as last resort).
+
+        AUTO mode on unified-memory devices (MPS, integrated XPU/CUDA iGPUs):
+            GPU (if within threshold) -> DISK -> GPU.
+            A CPU copy does not free physical RAM, so it is not used as a
+            distinct offload tier.
 
         Note: CPU mode can use either pinned or non-pinned memory.
         - Pinned memory: faster for async GPU-CPU transfers, but locks physical memory
@@ -1113,6 +1198,18 @@ class InferenceManager:
                 "auto_gpu_fits",
                 f"{output_mb:.0f}MB <= {self.auto_offload_threshold * gpu_free_mb:.0f}MB safe gpu free",
             )
+        if self._uses_unified_host_memory():
+            # Host RAM and device RAM are the same pages. A CPU copy would
+            # raise the peak, not lower it.
+            if disk_fits:
+                return OffloadMode.DISK, OffloadReason(
+                    "auto_unified_disk",
+                    f"gpu tight -> disk ({output_mb:.0f}MB <= {safe_disk_mb:.0f}MB safe disk free)",
+                )
+            return OffloadMode.GPU, OffloadReason(
+                "auto_unified_gpu",
+                "gpu tight and no disk; staying on device (CPU offload is not a second pool)",
+            )
         elif cpu_fits:
             return OffloadMode.CPU, OffloadReason(
                 "auto_cpu_fits", f"gpu tight -> cpu ({output_mb:.0f}MB <= {safe_cpu_mb:.0f}MB safe cpu free)"
@@ -1146,8 +1243,12 @@ class InferenceManager:
 
         if mode == OffloadMode.CPU:
             try:
-                # Only use pinned memory for smaller allocations
-                use_pinned = output_mb <= self.max_pinned_memory_mb
+                # Pinning locks unified RAM on iGPUs and is useless on CPU.
+                use_pinned = (
+                    output_mb <= self.max_pinned_memory_mb
+                    and self.exe_device.type != "cpu"
+                    and not self._uses_unified_host_memory()
+                )
                 if self.verbose and not use_pinned:
                     print(
                         f"  Using regular (non-pinned) CPU memory for {output_mb:.0f}MB output (max_pinned={self.max_pinned_memory_mb:.0f}MB)"
@@ -1277,10 +1378,15 @@ class InferenceManager:
 
         Notes
         -----
-        - For CPU execution, batching is not supported and the forward runs once
-          via ``_run_forward`` (optional AMP + input preparation).
+        - For CPU execution, batching is driven by ``cpu_memory_budget_mb``
+          instead of accelerator memory queries; a single pass is used when the
+          inputs already fit within the budget.
+        - On unified-memory accelerators (MPS, integrated XPU/CUDA iGPUs),
+          ``cpu_memory_budget_mb`` also caps the auto-batch target, and AUTO
+          offload skips CPU copies.
         - Accelerator backends with a usable memory query (CUDA, XPU, and MPS via
-          an approximate free-memory estimate) use auto-batching and OOM recovery.
+          an approximate free-memory estimate, capped by host RAM on unified
+          memory) use auto-batching and OOM recovery.
         - When OOM occurs, batch size is halved and inference is retried.
         - Async copy is used when ``use_async=True`` and offloading to CPU/disk.
         """
@@ -1292,10 +1398,10 @@ class InferenceManager:
         if not auto_batch:
             return self._run_forward(forward_fn, self._prepare_inputs(inputs))
 
-        # CPU: no accelerator memory APIs for safe batch sizing; still route
-        # through _run_forward so AMP/no_grad wrapping stays consistent.
+        # CPU execution: memory-budgeted batching over the leading batch dims,
+        # streaming each chunk into a preallocated (optionally disk-backed) buffer.
         if self.exe_device.type == "cpu":
-            return self._run_forward(forward_fn, self._prepare_inputs(inputs))
+            return self._call_cpu(forward_fn, inputs, output_repeat=output_repeat)
 
         # Extract shape/dtype info
         first_value = next(iter(inputs.values()))
@@ -1354,7 +1460,7 @@ class InferenceManager:
             outputs, _ = self._allocate_output_buffer(mode, tuple(out.shape), input_dtype)
             if isinstance(outputs, DiskTensor):
                 outputs[...] = out.cpu()
-                outputs.flush()
+                outputs.release_pages()
                 return outputs.tensor
             outputs.copy_(out.cpu())
             return outputs
@@ -1376,6 +1482,12 @@ class InferenceManager:
 
         # Identify store-mode caches that need to be accumulated back into the original inputs
         store_cache_keys = {name for name, v in inputs.items() if isinstance(v, KVCache) and not v.is_populated()}
+        disk_inputs = []
+        for value in inputs.values():
+            if isinstance(value, torch.Tensor):
+                owner = _get_disk_tensor_owner(value)
+                if owner is not None:
+                    disk_inputs.append(owner)
 
         # Main inference loop with OOM recovery
         while True:
@@ -1430,6 +1542,12 @@ class InferenceManager:
 
                     del out
                     del batch_dict
+                    if isinstance(outputs, DiskTensor):
+                        # Match the CPU path: drop dirty pages after each chunk
+                        # so a disk-backed buffer is an RSS bound, not a second copy.
+                        outputs.release_pages()
+                    for disk_input in disk_inputs:
+                        disk_input.release_pages()
 
                 # Drain async copies
                 if async_copy is not None:
@@ -1437,7 +1555,7 @@ class InferenceManager:
 
                 # Final flush
                 if isinstance(outputs, DiskTensor):
-                    outputs.flush()
+                    outputs.release_pages()
                     return outputs.tensor
 
                 return outputs
@@ -1461,6 +1579,155 @@ class InferenceManager:
                 self._empty_backend_cache()
 
                 batch_size = max(self.min_batch_size, batch_size // 2)
+
+    def _estimate_cpu_batch_size(self, seq_len: int, in_dim: int, dtype: torch.dtype) -> int:
+        """Estimate how many leading batch elements to process per CPU chunk.
+
+        Transient per-chunk activation memory scales roughly with
+        ``batch_elements x seq_len x width``, where ``width`` is the widest
+        hidden dimension involved. Keeping that product near
+        ``cpu_memory_budget_mb`` means the chunk size automatically shrinks as
+        the sequence length (e.g. the number of rows) grows, which is exactly
+        the regime where a single unsplit pass would blow up CPU memory.
+
+        Parameters
+        ----------
+        seq_len : int
+            Sequence length of the input data (the non-batch, non-feature dim).
+
+        in_dim : int
+            Input feature dimension of the first tensor.
+
+        dtype : torch.dtype
+            Data type of the activations (used for the per-element byte size).
+
+        Returns
+        -------
+        int
+            Number of leading batch elements to process together (>= 1).
+        """
+        budget_bytes = max(self.cpu_memory_budget_mb, 1.0) * 1024 * 1024
+        elem = torch.tensor([], dtype=dtype).element_size()
+        width = max(int(in_dim), int(self.out_dim), 1)
+        per_elem = max(1.0, self.cpu_activation_factor * seq_len * width * elem)
+        return max(1, int(budget_bytes // per_elem))
+
+    def _resolve_cpu_offload_mode(self, output_mb: float) -> OffloadMode:
+        """Choose CPU vs disk storage for the preallocated CPU output buffer.
+
+        The output buffer is the resident (non-transient) cost that chunking
+        cannot reduce, so moving it to a memory-mapped file is the only way to
+        keep the RAM footprint sub-linear in the number of rows/features.
+        """
+        has_disk = self.disk_offload_dir is not None
+        if self.offload_mode == OffloadMode.DISK:
+            if not has_disk:
+                raise ValueError(
+                    "Disk offload requested but disk_offload_dir is not configured. "
+                    "Please specify disk_offload_dir in the configuration."
+                )
+            return OffloadMode.DISK
+        if self.offload_mode == OffloadMode.AUTO and has_disk:
+            safe_cpu_mb = self.get_available_cpu_memory() * self.cpu_safety_factor
+            if output_mb > self.auto_offload_threshold * safe_cpu_mb:
+                return OffloadMode.DISK
+        return OffloadMode.CPU
+
+    def _call_cpu(
+        self,
+        forward_fn: Callable[..., Tensor],
+        inputs: OrderedDict[str, Any],
+        output_repeat: int = 1,
+    ) -> Tensor:
+        """Run a forward pass on CPU with memory-budgeted batching.
+
+        Splits the inputs over their leading batch dimensions so that each chunk
+        stays near ``cpu_memory_budget_mb`` of transient activation memory, and
+        streams the per-chunk results into a preallocated output buffer that can
+        optionally live on disk (memory-mapped). Because attention only mixes
+        information within the sequence dimension, splitting the batch dimensions
+        is exact: the concatenated result is identical to a single pass.
+        """
+        first_value = next(iter(inputs.values()))
+
+        # Cannot infer batch dims (e.g. non-tensor first input): single pass.
+        if not isinstance(first_value, torch.Tensor) or first_value.dim() < 3:
+            return self._run_forward(forward_fn, self._prepare_inputs(inputs))
+
+        *batch_dims, seq_len, in_dim = first_value.shape
+        input_dtype = first_value.dtype
+        total_bs = math.prod(batch_dims)
+
+        batch_size = self._estimate_cpu_batch_size(seq_len, in_dim, input_dtype)
+
+        if self.out_no_seq:
+            output_shape = (*batch_dims, self.out_dim)
+        else:
+            output_shape = (*batch_dims, seq_len, self.out_dim)
+        output_mb = self._estimate_tensor_mb(tuple(output_shape), input_dtype, repeat=output_repeat)
+        mode = self._resolve_cpu_offload_mode(output_mb)
+
+        if self.verbose:
+            print(
+                f"\n[CPU] {self.enc_name}: seq_len={seq_len}, batch_dims={tuple(batch_dims)}, "
+                f"batch_size={batch_size}, output={output_mb / 1024:.2f}GB, mode={mode.name}"
+            )
+
+        # Single-pass fast path for small inputs: preserves exact previous behavior
+        # and avoids the overhead of allocating a separate output buffer.
+        if batch_size >= total_bs and mode == OffloadMode.CPU:
+            return self._run_forward(forward_fn, self._prepare_inputs(inputs))
+
+        outputs, _ = self._allocate_output_buffer(mode, tuple(output_shape), input_dtype)
+        disk_inputs = []
+        for value in inputs.values():
+            if isinstance(value, torch.Tensor):
+                owner = _get_disk_tensor_owner(value)
+                if owner is not None:
+                    disk_inputs.append(owner)
+
+        # store-cache mode: forward_fn fills a fresh KVCache per chunk that we
+        # accumulate back into the caller's pre-allocated cache.
+        store_cache_keys = {
+            name for name, v in inputs.items() if isinstance(v, KVCache) and not v.is_populated()
+        }
+
+        split_sizes = self.compute_split_sizes(batch_dims, batch_size)
+        n_batches = self.compute_n_batches(batch_dims, split_sizes)
+        batch_iterator = self.create_multidim_batches(inputs, batch_dims, split_sizes)
+        if self.verbose:
+            batch_iterator = tqdm(
+                batch_iterator, total=n_batches, desc=f"Processing {self.enc_name} (cpu)", unit="batch"
+            )
+
+        for batch_dict, indices in batch_iterator:
+            out = self._run_forward(forward_fn, batch_dict)
+
+            for cache_key in store_cache_keys:
+                batch_cache = batch_dict[cache_key]
+                if batch_cache.is_populated():
+                    original_cache = inputs[cache_key]
+                    if not original_cache.is_populated():
+                        original_cache.preallocate(batch_cache, tuple(batch_dims), device=self.exe_device)
+                    original_cache[indices] = batch_cache
+
+            outputs[indices] = out
+            del out, batch_dict
+            if isinstance(outputs, DiskTensor):
+                # Do not let dirty pages from completed chunks accumulate until
+                # the full output has been produced.  Releasing after each
+                # chunk is what makes the disk-backed buffer an RSS bound rather
+                # than merely a file-backed copy of resident memory.
+                outputs.release_pages()
+            for disk_input in disk_inputs:
+                # The just-consumed input range may otherwise remain resident
+                # until the whole downstream stage completes.
+                disk_input.release_pages()
+
+        if isinstance(outputs, DiskTensor):
+            outputs.release_pages()
+            return outputs.tensor
+        return outputs
 
     @staticmethod
     def compute_split_sizes(batch_dims: Tuple[int], batch_size: int) -> List[int]:

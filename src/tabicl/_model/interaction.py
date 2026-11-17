@@ -136,6 +136,19 @@ class RowInteraction(nn.Module):
         Tensor
             Flattened class token outputs of shape (B*T, C*E).
         """
+        # Install CLS tokens inside the chunk, rather than before
+        # ``InferenceManager`` batches rows.  Besides avoiding a full-table
+        # write, this is essential for disk-backed column embeddings: touching
+        # every row up front would fault the entire memory map back into RAM.
+        cls_tokens = self.cls_tokens.expand(*embeddings.shape[:-2], self.num_cls, self.embed_dim)
+
+        # When col embedding is frozen (partial freezing, see #128), embeddings is a
+        # no-grad view whose in-place mutation would conflict with autograd. Detach
+        # gives a fresh autograd leaf sharing the same storage — zero-copy.
+        if torch.is_grad_enabled() and not embeddings.requires_grad:
+            embeddings = embeddings.detach()
+        embeddings[..., : self.num_cls, :] = cls_tokens.to(embeddings.device)
+
         rope = self.tf_row.rope
 
         # Process all blocks except the last
@@ -192,14 +205,6 @@ class RowInteraction(nn.Module):
         B, T, HC, E = embeddings.shape
         device = embeddings.device
 
-        cls_tokens = self.cls_tokens.expand(B, T, self.num_cls, self.embed_dim)
-        # When col embedding is frozen (partial freezing, see #128), embeddings is a
-        # no-grad view whose in-place mutation would conflict with autograd. Detach
-        # gives a fresh autograd leaf sharing the same storage — zero-copy.
-        if torch.is_grad_enabled() and not embeddings.requires_grad:
-            embeddings = embeddings.detach()
-        embeddings[:, :, : self.num_cls] = cls_tokens.to(device)
-
         # Create mask to prevent from attending to empty features
         if d is None:
             key_mask = None
@@ -238,14 +243,6 @@ class RowInteraction(nn.Module):
             mgr_config = InferenceConfig().ROW_CONFIG
         self.inference_mgr.configure(**mgr_config)
 
-        B, T = embeddings.shape[:2]
-        cls_tokens = self.cls_tokens.expand(B, T, self.num_cls, self.embed_dim)
-        # When col embedding is frozen (partial freezing, see #128), embeddings is a
-        # no-grad view whose in-place mutation would conflict with autograd. Detach
-        # gives a fresh autograd leaf sharing the same storage — zero-copy.
-        if torch.is_grad_enabled() and not embeddings.requires_grad:
-            embeddings = embeddings.detach()
-        embeddings[:, :, : self.num_cls] = cls_tokens.to(embeddings.device)
         representations = self.inference_mgr(
             self._aggregate_embeddings, inputs=OrderedDict([("embeddings", embeddings)])
         )
