@@ -4,6 +4,10 @@
 Bug fixes
 ---------
 
+- Fix datetime columns of a DataFrame being dropped without a warning, and timedelta columns
+  making `fit` fail. Both are now converted to seconds (since 1970-01-01 UTC for datetimes) and
+  treated as numeric features. ([PR#TBD](https://github.com/soda-inria/tabicl/pull/TBD))
+
 - Fix storing a `kv_cache="repr"` cache on an accelerator when the row representations are
   offloaded to CPU memory or disk (`ROW_CONFIG` offload settings, or the fallback when they do not
   fit on the device), which failed with a device mismatch error. ([PR#181](https://github.com/soda-inria/tabicl/pull/181))
