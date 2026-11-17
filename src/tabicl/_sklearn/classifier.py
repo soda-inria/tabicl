@@ -688,6 +688,51 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         np.ndarray of shape (n_samples, n_classes)
             Class probabilities for each test sample.
         """
+        avg = self._predict_ensemble(X)
+
+        if self.average_logits:
+            avg = self.softmax(avg, axis=-1, temperature=self.softmax_temperature)
+
+        return avg / avg.sum(axis=1, keepdims=True)
+
+    def predict_logits(self, X: np.ndarray) -> np.ndarray:
+        """Predict class logits for test samples.
+
+        With ``average_logits=True``, returns the ensemble's averaged logits
+        before temperature scaling, with columns ordered as in ``classes_``.
+        For hierarchical classification, these are the model's reconstructed
+        logits rather than raw decoder outputs.
+
+        With ``average_logits=False``, probabilities are averaged first, then
+        converted to logits as ``softmax_temperature * log(probabilities)``.
+        Probabilities are clipped to the smallest positive normal value of
+        their dtype before taking the logarithm, so zero probabilities produce
+        finite logits.
+
+        In both cases, applying softmax to ``logits / softmax_temperature``
+        recovers :meth:`predict_proba` up to floating-point precision and the
+        clipping described above. The returned scores can be used to explain
+        predictions in logit space, for example with SHAP or ShapIQ.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Test samples, with the same preprocessing as :meth:`predict_proba`.
+
+        Returns
+        -------
+        np.ndarray of shape (n_samples, n_classes)
+            Class logits for each test sample, in ``classes_`` order.
+        """
+        avg = self._predict_ensemble(X)
+        if self.average_logits:
+            return avg
+
+        probabilities = avg / avg.sum(axis=1, keepdims=True)
+        return self.softmax_temperature * np.log(np.maximum(probabilities, np.finfo(probabilities.dtype).tiny))
+
+    def _predict_ensemble(self, X: np.ndarray) -> np.ndarray:
+        """Average ensemble outputs in class order, before final postprocessing."""
         check_is_fitted(self)
         if isinstance(X, np.ndarray) and len(X.shape) == 1:
             # Reject 1D arrays to maintain sklearn compatibility
@@ -764,15 +809,10 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
         # Calculate ensemble average
         avg /= n_estimators
 
-        # Convert logits to probabilities
-        if self.average_logits:
-            avg = self.softmax(avg, axis=-1, temperature=self.softmax_temperature)
-
         if self.n_jobs is not None:
             torch.set_num_threads(old_n_threads)
 
-        # Normalize probabilities
-        return avg / avg.sum(axis=1, keepdims=True)
+        return avg
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """Predict class labels for test samples.
