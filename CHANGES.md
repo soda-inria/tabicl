@@ -6,8 +6,8 @@ Bug fixes
 
 - Keep inference on integrated GPUs (Intel XPU, CUDA) and Apple Silicon MPS from exhausting
   system memory. Batch sizes are limited by the host RAM still available minus a reserve, and on
-  integrated XPU/CUDA GPUs the torch allocator is capped the same way, so an oversized batch is
-  retried smaller instead of crashing the machine. ([PR#179](https://github.com/soda-inria/tabicl/pull/179))
+  integrated XPU/CUDA GPUs the torch allocator is capped the same way, so running out of memory
+  raises an error or retries with a smaller batch instead of crashing the machine. ([PR#179](https://github.com/soda-inria/tabicl/pull/179))
 
 - Fix storing a `kv_cache="repr"` cache on an accelerator when the row representations are
   offloaded to CPU memory or disk (`ROW_CONFIG` offload settings, or the fallback when they do not
@@ -54,6 +54,7 @@ New features
 
 Bug fixes
 ---------
+
 - Respect cgroup memory limits when estimating available CPU memory at inference, so
   ``offload="auto"`` inside Docker or Kubernetes does not treat host RAM as free and get
   OOM-killed with no traceback. ([PR#152](https://github.com/soda-inria/tabicl/pull/152))
