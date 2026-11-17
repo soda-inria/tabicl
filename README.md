@@ -1,11 +1,13 @@
 [![test](https://github.com/soda-inria/tabicl/actions/workflows/testing.yml/badge.svg)](https://github.com/soda-inria/tabicl/actions/workflows/testing.yml)
 [![PyPI version](https://badge.fury.io/py/tabicl.svg)](https://badge.fury.io/py/tabicl)
 [![Downloads](https://img.shields.io/pypi/dm/tabicl)](https://pypistats.org/packages/tabicl)
+[![Documentation](https://readthedocs.org/projects/tabicl/badge/?version=latest)](https://tabicl.readthedocs.io/en/latest/)
 
 # TabICLv2: An open tabular foundation model
 
 This repository is the official implementation of **TabICLv2** ([ICML 2026](https://arxiv.org/abs/2602.11139)) 
 and **TabICL** ([ICML 2025](https://arxiv.org/abs/2502.05564)).
+The documentation is available at [tabicl.readthedocs.io](https://tabicl.readthedocs.io/en/latest/).
 
 **Strong performance without hyperparameter tuning:** 
 TabICLv2 is a competitive model for tabular classification and regression 
