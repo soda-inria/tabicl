@@ -55,11 +55,28 @@ class RecursionLimitManager:
         return False  # Return False to propagate exceptions
 
 
+def _to_seconds(col):
+    """Seconds since 1970-01-01 (UTC if timezone-aware) for a datetime Series, total seconds for
+    a timedelta Series. Missing values (NaT) become NaN."""
+    if col.dtype.kind == "M":
+        if getattr(col.dt, "tz", None) is not None:
+            col = col.dt.tz_convert(None)
+        col = col - np.datetime64(0, "s")
+    return col.dt.total_seconds()
+
+
+def _temporal_to_seconds(X):
+    """Convert the datetime and timedelta columns of a DataFrame to float seconds, keeping its index."""
+    return X.apply(_to_seconds)
+
+
 class TransformToNumerical(TransformerMixin, BaseEstimator):
     """Transform non-numerical data in a DataFrame to numerical representations.
 
     This transformer automatically detects and converts categorical variables, text features,
     and boolean data types into numerical representations suitable for machine learning models.
+    Datetime and timedelta columns are converted to seconds (since 1970-01-01 UTC for datetimes)
+    and then treated as numeric columns.
 
     Parameters
     ----------
@@ -72,7 +89,8 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
         The fitted transformer that handles the conversion of different column types.
 
         - If input is a DataFrame: a ``ColumnTransformer`` with ``OrdinalEncoder``
-          for categorical columns and ``SimpleImputer`` for numeric columns.
+          for categorical columns, ``SimpleImputer`` for numeric columns, and a conversion
+          to seconds followed by ``SimpleImputer`` for datetime and timedelta columns.
         - If input is not a DataFrame: a ``FunctionTransformer`` that passes data
           through unchanged.
     """
@@ -141,11 +159,25 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
                     "e.g. Skrub's TableVectorizer for strings."
                 )
 
-            numeric_cols = make_column_selector(dtype_include="number")(X)
+            # pandas counts timedelta as "number", but SimpleImputer cannot handle it
+            numeric_cols = make_column_selector(dtype_include="number", dtype_exclude="timedelta")(X)
             numeric_pos = [X.columns.get_loc(col) for col in numeric_cols]
 
+            temporal_cols = make_column_selector(dtype_include=["datetime", "datetimetz", "timedelta"])(X)
+            temporal_pos = [X.columns.get_loc(col) for col in temporal_cols]
+            temporal_tfm = Pipeline(
+                [
+                    ("to_seconds", FunctionTransformer(_temporal_to_seconds, feature_names_out="one-to-one")),
+                    ("impute", SimpleImputer(keep_empty_features=True)),
+                ]
+            )
+
             self.tfm_ = ColumnTransformer(
-                transformers=[("categorical", cat_tfm, cat_pos), ("continuous", num_tfm, numeric_pos)]
+                transformers=[
+                    ("categorical", cat_tfm, cat_pos),
+                    ("continuous", num_tfm, numeric_pos),
+                    ("datetime", temporal_tfm, temporal_pos),
+                ]
             )
 
         self.tfm_.fit(X)

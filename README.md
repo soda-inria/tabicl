@@ -380,6 +380,7 @@ It applies the following preprocessing:
   all columns have the same datatype (the one of the array). 
   Columns with integers are detected as numerical.
 - Create a separate category for missing values in categorical features
+- Convert datetime and timedelta columns to seconds (since 1970-01-01 UTC for datetimes)
 - Perform mean imputation for missing numerical values (encoded as NaN)
 - Outlier detection and removal
 - Feature scaling and normalization
