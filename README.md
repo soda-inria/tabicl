@@ -1,7 +1,6 @@
 [![test](https://github.com/soda-inria/tabicl/actions/workflows/testing.yml/badge.svg)](https://github.com/soda-inria/tabicl/actions/workflows/testing.yml)
 [![PyPI version](https://badge.fury.io/py/tabicl.svg)](https://badge.fury.io/py/tabicl)
 [![Downloads](https://img.shields.io/pypi/dm/tabicl)](https://pypistats.org/packages/tabicl)
-[![Documentation](https://readthedocs.org/projects/tabicl/badge/?version=latest)](https://tabicl.readthedocs.io/en/latest/)
 
 # TabICLv2: An open tabular foundation model
 
