@@ -754,7 +754,8 @@ class InferenceManager:
 
         cpu_safety_factor : float, default=0.85
             Safety margin for CPU memory. Only this fraction of available CPU
-            memory will be considered usable for offloading.
+            memory will be considered usable for offloading, and, on devices that
+            share host RAM (integrated GPUs, MPS), for device allocations.
 
         disk_safety_factor : float, default=0.95
             Safety margin for disk space. Only this fraction of available disk
@@ -805,10 +806,8 @@ class InferenceManager:
         # Setup device
         self.exe_device = resolve_torch_device(device)
 
-        # Whether the device allocates from host RAM (None if unknown), and the host RAM
-        # in MB left free for the rest of the system when it does.
+        # Whether the device allocates from host RAM (None if unknown).
         self._unified_host = device_uses_unified_host_memory(self.exe_device)
-        self._host_reserve_mb = max(1024.0, 0.1 * psutil.virtual_memory().total / (1024 * 1024))
 
         # Initialize buffer pool
         self._buffer_pool = PinnedBufferPool()
@@ -826,7 +825,7 @@ class InferenceManager:
 
     @contextmanager
     def _cap_allocator_to_host_memory(self):
-        """Limit the device allocator to the host RAM still available, minus the reserve.
+        """Limit the device allocator to the usable host RAM (see ``cpu_safety_factor``).
 
         On integrated CUDA/XPU GPUs, device memory is host RAM. Capping the allocator
         makes an oversized allocation raise ``torch.OutOfMemoryError``, which the
@@ -852,8 +851,8 @@ class InferenceManager:
             return
 
         total = backend_api.get_device_properties(self.exe_device).total_memory
-        host_free = (self.get_available_cpu_memory() - self._host_reserve_mb) * 1024 * 1024
-        allowed = backend_api.memory_reserved(self.exe_device) + max(0.0, host_free)
+        host_free = self.get_available_cpu_memory() * self.cpu_safety_factor * 1024 * 1024
+        allowed = backend_api.memory_reserved(self.exe_device) + host_free
         previous = get_fraction(self.exe_device)
         set_fraction(min(1.0, allowed / total), self.exe_device)
         try:
@@ -951,12 +950,12 @@ class InferenceManager:
     def get_available_gpu_memory(self) -> float:
         """Get available GPU memory in MB.
 
-        When the device may share host RAM, this is also capped by the host RAM still
-        available, minus a reserve for the system.
+        When the device may share host RAM, this is also capped by the usable host RAM
+        (see ``cpu_safety_factor``).
         """
         free_mb = self._device_free_mb()
         if self._unified_host is not False:
-            free_mb = min(free_mb, self.get_available_cpu_memory() - self._host_reserve_mb)
+            free_mb = min(free_mb, self.get_available_cpu_memory() * self.cpu_safety_factor)
         return max(0.0, free_mb)
 
     def _device_free_mb(self) -> float:
