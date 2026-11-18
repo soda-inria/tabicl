@@ -854,7 +854,7 @@ class InferenceManager:
         host_free = self.get_available_cpu_memory() * self.cpu_safety_factor * 1024 * 1024
         allowed = backend_api.memory_reserved(self.exe_device) + host_free
         previous = get_fraction(self.exe_device)
-        set_fraction(min(1.0, allowed / total), self.exe_device)
+        set_fraction(min(previous, allowed / total), self.exe_device)
         try:
             yield
         finally:
@@ -1367,6 +1367,9 @@ class InferenceManager:
         - When OOM occurs, batch size is halved and inference is retried.
         - Async copy is used when ``use_async=True`` and offloading to CPU/disk.
         """
+        if not self._is_configured:
+            raise RuntimeError("InferenceManager must be configured before running inference. Call configure() first.")
+
         with self._cap_allocator_to_host_memory():
             return self._call(forward_fn, inputs, auto_batch, output_repeat)
 
@@ -1377,9 +1380,6 @@ class InferenceManager:
         auto_batch: bool,
         output_repeat: int,
     ) -> Tensor:
-        if not self._is_configured:
-            raise RuntimeError("InferenceManager must be configured before running inference. Call configure() first.")
-
         # Non-batched execution
         if not auto_batch:
             return self._run_forward(forward_fn, self._prepare_inputs(inputs))
