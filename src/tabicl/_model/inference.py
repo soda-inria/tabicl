@@ -823,7 +823,7 @@ class InferenceManager:
         batching loop recovers from, instead of exhausting system memory. The previous
         limit is restored on exit.
         """
-        if self.exe_device.type == "mps" or self._unified_host is not True:
+        if self.exe_device.type == "mps" or not self._unified_host:
             yield
             return
 
