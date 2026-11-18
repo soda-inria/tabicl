@@ -39,7 +39,11 @@ _SKLEARN_PRESCOTT_MEMMAP_BUG = parse_version(sklearn.__version__) < parse_versio
 @parametrize_with_checks(_SKLEARN_ESTIMATORS)
 def test_sklearn_compatible_estimator(estimator, check):
     skip_if_device_unusable(estimator.get_params()["device"])
-    if _SKLEARN_PRESCOTT_MEMMAP_BUG and getattr(check, "keywords", {}).get("readonly_memmap"):
+    if (
+        _SKLEARN_PRESCOTT_MEMMAP_BUG
+        and check.func.__name__ == "check_estimators_pickle"
+        and check.keywords.get("readonly_memmap")
+    ):
         pytest.skip("scikit-learn < 1.4 cannot memmap estimators with Prescott OpenBLAS")
     check(estimator)
 
