@@ -1408,22 +1408,36 @@ class InferenceManager:
                 f"Disk free (effective): {eff_disk / 1024:.2f}GB @ {self.disk_offload_dir}"
             )
 
+        # Identify store-mode caches that need to be accumulated back into the original inputs
+        store_cache_keys = {name for name, v in inputs.items() if isinstance(v, KVCache) and not v.is_populated()}
+
         # Single batch case
         if batch_size >= total_bs:
-            out = self._run_forward(forward_fn, self._prepare_inputs(inputs))
-
-            if mode == OffloadMode.GPU:
-                return out
-            if mode == OffloadMode.CPU:
-                return out.cpu()
-            # DISK
-            outputs, _ = self._allocate_output_buffer(mode, tuple(out.shape), input_dtype)
-            if isinstance(outputs, DiskTensor):
-                outputs[...] = out.cpu()
-                outputs.flush()
-                return outputs.tensor
-            outputs.copy_(out.cpu())
-            return outputs
+            try:
+                out = self._run_forward(forward_fn, self._prepare_inputs(inputs))
+            except _OutOfMemoryError as e:
+                if total_bs <= self.min_batch_size:
+                    raise RuntimeError(
+                        f"Failed to execute even with minimum batch size {self.min_batch_size}. Error: {e}"
+                    )
+                # Retry in the batched loop below with half the batch size.
+                for cache_key in store_cache_keys:
+                    inputs[cache_key].kv.clear()
+                self._empty_backend_cache()
+                batch_size = max(self.min_batch_size, total_bs // 2)
+            else:
+                if mode == OffloadMode.GPU:
+                    return out
+                if mode == OffloadMode.CPU:
+                    return out.cpu()
+                # DISK
+                outputs, _ = self._allocate_output_buffer(mode, tuple(out.shape), input_dtype)
+                if isinstance(outputs, DiskTensor):
+                    outputs[...] = out.cpu()
+                    outputs.flush()
+                    return outputs.tensor
+                outputs.copy_(out.cpu())
+                return outputs
 
         # Multi-batch execution
         outputs, _ = self._allocate_output_buffer(mode, tuple(output_shape), input_dtype)
@@ -1439,9 +1453,6 @@ class InferenceManager:
 
         # Track in MB for consistency with disk_flush_mb
         bytes_since_flush_mb = 0.0
-
-        # Identify store-mode caches that need to be accumulated back into the original inputs
-        store_cache_keys = {name for name, v in inputs.items() if isinstance(v, KVCache) and not v.is_populated()}
 
         # Main inference loop with OOM recovery
         while True:
