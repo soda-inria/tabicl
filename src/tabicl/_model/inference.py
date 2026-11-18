@@ -1341,6 +1341,9 @@ class InferenceManager:
         - When OOM occurs, batch size is halved and inference is retried.
         - Async copy is used when ``use_async=True`` and offloading to CPU/disk.
         """
+        if not self._is_configured:
+            raise RuntimeError("InferenceManager must be configured before running inference. Call configure() first.")
+
         with self._cap_allocator_to_host_memory():
             return self._call(forward_fn, inputs, auto_batch, output_repeat)
 
@@ -1351,9 +1354,6 @@ class InferenceManager:
         auto_batch: bool,
         output_repeat: int,
     ) -> Tensor:
-        if not self._is_configured:
-            raise RuntimeError("InferenceManager must be configured before running inference. Call configure() first.")
-
         # Non-batched execution
         if not auto_batch:
             return self._run_forward(forward_fn, self._prepare_inputs(inputs))

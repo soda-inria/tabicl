@@ -343,3 +343,10 @@ def test_allocator_cap_warns_without_torch_support(monkeypatch):
     with pytest.warns(RuntimeWarning, match="cannot limit"):
         with mgr._cap_allocator_to_host_memory():
             pass
+
+
+def test_call_before_configure_raises():
+    """Running inference on a manager that was never configured raises a clear error."""
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    with pytest.raises(RuntimeError, match="must be configured"):
+        mgr(forward_fn=None, inputs=None)
