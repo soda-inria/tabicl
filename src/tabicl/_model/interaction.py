@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Optional
 from functools import partial
 from collections import OrderedDict
@@ -73,7 +74,7 @@ class RowInteraction(nn.Module):
         rope_base: float = 100000,
         rope_interleaved: bool = True,
         dropout: float = 0.0,
-        activation: str | callable = "gelu",
+        activation: str | Callable = "gelu",
         norm_first: bool = True,
         bias_free_ln: bool = False,
         zero_init: bool = True,
