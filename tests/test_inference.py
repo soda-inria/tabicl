@@ -352,6 +352,20 @@ def test_call_before_configure_raises():
         mgr(forward_fn=None, inputs=None)
 
 
+def test_call_runs_forward_under_allocator_cap(monkeypatch):
+    """The forward pass runs while the allocator cap is active."""
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="cpu")
+    cap = MagicMock()
+    monkeypatch.setattr(mgr, "_cap_allocator_to_host_memory", cap)
+
+    def forward_fn(x):
+        cap.return_value.__enter__.assert_called_once()
+        return x
+
+    mgr(forward_fn, OrderedDict(x=torch.zeros(1, 1, 1)))
+
+
 @pytest.mark.parametrize(("with_disk", "expected"), [(False, OffloadMode.GPU), (True, OffloadMode.DISK)])
 def test_auto_offload_skips_cpu_on_integrated_gpu(monkeypatch, tmp_path, with_disk, expected):
     """On an integrated GPU a CPU copy uses the same RAM, so AUTO offload goes to disk or stays on the device.
