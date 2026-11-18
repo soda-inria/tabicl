@@ -845,7 +845,7 @@ class InferenceManager:
         host_free = self.get_available_cpu_memory() * self.cpu_safety_factor * 1024 * 1024
         allowed = backend_api.memory_reserved(self.exe_device) + host_free
         previous = get_fraction(self.exe_device)
-        set_fraction(min(1.0, allowed / total), self.exe_device)
+        set_fraction(min(previous, allowed / total), self.exe_device)
         try:
             yield
         finally:

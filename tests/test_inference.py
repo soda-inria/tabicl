@@ -297,18 +297,19 @@ def test_mps_memory_estimate_uses_recommended_minus_current(monkeypatch):
     assert available_mb == pytest.approx(1024.0)
 
 
-def test_allocator_cap_on_integrated_gpu(monkeypatch):
+@pytest.mark.parametrize(("previous", "expected"), [(1.0, 7 / 16), (0.25, 0.25)])
+def test_allocator_cap_on_integrated_gpu(monkeypatch, previous, expected):
     """On an integrated GPU, inference caps the allocator at the usable host RAM.
 
     With 1 GiB already reserved, 8 GiB of host RAM available and a
     ``cpu_safety_factor`` of 0.75, a 16 GiB device may use (1 + 8 * 0.75) / 16 of
-    its memory. The previous cap is restored afterwards. The backend is faked so
-    this runs without the device.
+    its memory, unless a stricter cap was already set. The previous cap is restored
+    afterwards. The backend is faked so this runs without the device.
     """
     mgr = InferenceManager(enc_name="tf_col", out_dim=4)
     mgr.configure(device="cuda", use_amp=False, use_fa3=False, cpu_safety_factor=0.75)
     fake_api = MagicMock()
-    fake_api.get_per_process_memory_fraction.return_value = 1.0
+    fake_api.get_per_process_memory_fraction.return_value = previous
     fake_api.memory_reserved.return_value = 1024**3
     fake_api.get_device_properties.return_value.total_memory = 16 * 1024**3
     monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
@@ -316,8 +317,8 @@ def test_allocator_cap_on_integrated_gpu(monkeypatch):
     monkeypatch.setattr(mgr, "get_available_cpu_memory", lambda: 8 * 1024.0)
 
     with mgr._cap_allocator_to_host_memory():
-        fake_api.set_per_process_memory_fraction.assert_called_once_with(7 / 16, mgr.exe_device)
-    fake_api.set_per_process_memory_fraction.assert_called_with(1.0, mgr.exe_device)
+        fake_api.set_per_process_memory_fraction.assert_called_once_with(expected, mgr.exe_device)
+    fake_api.set_per_process_memory_fraction.assert_called_with(previous, mgr.exe_device)
 
 
 def test_allocator_cap_not_set_on_mps(monkeypatch):
