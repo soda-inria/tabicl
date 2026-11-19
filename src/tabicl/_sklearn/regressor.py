@@ -746,16 +746,14 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
             if key == "variance":
                 # Var(scale * z + mean) = scale**2 * Var(z)
                 arr = arr * self.y_scaler_.scale_[0] ** 2
-                final_results[key] = np.mean(arr, axis=0)
             elif arr.ndim == 2:
                 # mean or median: (n_estimators, n_samples)
                 arr = self.y_scaler_.inverse_transform(arr.reshape(-1, 1)).reshape(n_estimators, n_samples)
-                final_results[key] = np.mean(arr, axis=0)
             else:
                 # quantiles: (n_estimators, n_samples, n_quantiles)
                 n_quantiles = arr.shape[2]
                 arr = self.y_scaler_.inverse_transform(arr.reshape(-1, 1)).reshape(n_estimators, n_samples, n_quantiles)
-                final_results[key] = np.mean(arr, axis=0)
+            final_results[key] = np.mean(arr, axis=0)
 
         if self.n_jobs is not None:
             torch.set_num_threads(old_n_threads)

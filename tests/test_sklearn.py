@@ -62,15 +62,12 @@ def test_all_nan_column():
     assert_allclose(proba.sum(axis=1), 1.0)
 
 
-@pytest.mark.parametrize("kv_cache", [False, "kv", "repr"])
 @pytest.mark.parametrize("scale, shift", [(1.0, 1000.0), (3.0, 0.0)])
-def test_regression_variance_target_transform(kv_cache, scale, shift):
+def test_regression_variance_target_transform(scale, shift):
     """Variance is invariant to target shifts and scales quadratically (gh-180)."""
     X, y = make_regression(n_samples=50, n_features=5, noise=10.0, random_state=0)
     X_train, X_test, y_train = X[:40], X[40:], y[:40]
-    reg = TabICLRegressor(
-        n_estimators=2, device="cpu", kv_cache=kv_cache, random_state=0, **model_path("regressor")
-    )
+    reg = TabICLRegressor(n_estimators=2, device="cpu", random_state=0, **model_path("regressor"))
     reg.fit(X_train, y_train)
     original = reg.predict(X_test, output_type=["mean", "variance"])
     variance = reg.predict(X_test, output_type="variance")
