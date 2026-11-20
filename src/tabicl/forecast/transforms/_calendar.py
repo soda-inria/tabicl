@@ -57,12 +57,14 @@ class DatetimeEncoder(TimeTransform):
     ----------
     components : list[str] | None, default=None
         Calendar components to extract (e.g., ``["year"]``). If ``None``,
-        defaults to ``["year"]``.
+        defaults to ``["year"]``. Pass an empty list to disable calendar
+        components.
 
     seasonal_features : dict[str, list[float]] | None, default=None
         Mapping of seasonal feature names to their natural periods. Each
         feature is encoded as sin/cosine pairs. If ``None``, uses default
-        temporal features (second, minute, hour, day, week, month).
+        temporal features (second, minute, hour, day, week, month). Pass an
+        empty dict to disable seasonal features.
     """
 
     def __init__(
@@ -70,17 +72,21 @@ class DatetimeEncoder(TimeTransform):
         components: list[str] | None = None,
         seasonal_features: dict[str, list[float]] | None = None,
     ):
-        self.components = components or ["year"]
-        self.seasonal_features = seasonal_features or {
-            "second_of_minute": [60],
-            "minute_of_hour": [60],
-            "hour_of_day": [24],
-            "day_of_week": [7],
-            "day_of_month": [30.5],
-            "day_of_year": [366],  # 366 to avoid collisions in leap years
-            "week_of_year": [53],  # 53 to avoid collisions in ISO week 53 years
-            "month_of_year": [12],
-        }
+        if components is None:
+            components = ["year"]
+        if seasonal_features is None:
+            seasonal_features = {
+                "second_of_minute": [60],
+                "minute_of_hour": [60],
+                "hour_of_day": [24],
+                "day_of_week": [7],
+                "day_of_month": [30.5],
+                "day_of_year": [366],  # 366 to avoid collisions in leap years
+                "week_of_year": [53],  # 53 to avoid collisions in ISO week 53 years
+                "month_of_year": [12],
+            }
+        self.components = components
+        self.seasonal_features = seasonal_features
 
     def generate(self, df: pd.DataFrame) -> pd.DataFrame:
         """Generate calendar features from timestamps.

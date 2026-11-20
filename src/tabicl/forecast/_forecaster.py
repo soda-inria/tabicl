@@ -13,7 +13,6 @@ from tabicl.forecast.transforms._base import TimeTransform
 from tabicl.forecast.transforms import (
     AutoPeriodicEncoder,
     DatetimeEncoder,
-    FourierEncoder,
     IndexEncoder,
     TimeTransformChain,
 )
@@ -24,7 +23,6 @@ logger = logging.getLogger(__name__)
 _TRANSFORM_REGISTRY: dict[str, type[TimeTransform]] = {
     "index": IndexEncoder,
     "datetime": DatetimeEncoder,
-    "fourier": FourierEncoder,
     "periodic": AutoPeriodicEncoder,
 }
 
@@ -36,6 +34,11 @@ def _resolve_transforms(features: list[str | TimeTransform]) -> list[TimeTransfo
     resolved = []
     for f in features:
         if isinstance(f, str):
+            if f == "fourier":
+                raise ValueError(
+                    "'fourier' cannot be used as a string because FourierEncoder requires 'periods'. "
+                    "Pass an instance instead, e.g. FourierEncoder(periods=[7])."
+                )
             if f not in _TRANSFORM_REGISTRY:
                 raise ValueError(f"Unknown temporal feature {f!r}. Available: {sorted(_TRANSFORM_REGISTRY)}")
             resolved.append(_TRANSFORM_REGISTRY[f]())
@@ -73,15 +76,14 @@ class TabICLForecaster:
         - ``"index"`` — :class:`IndexEncoder`: sequential position features.
         - ``"datetime"`` — :class:`DatetimeEncoder`: calendar features
           (day-of-week, month, etc.).
-        - ``"fourier"`` — :class:`FourierEncoder`: Fourier basis features for
-          periodicity.
         - ``"periodic"`` — :class:`AutoPeriodicEncoder`: automatically detected
           seasonal features via FFT.
 
         Strings and ``TimeTransform`` instances can be mixed freely, which is
-        useful when a built-in transform needs non-default parameters::
+        useful when a transform needs parameters, such as
+        :class:`FourierEncoder` which requires ``periods``::
 
-            temporal_features=["index", FourierEncoder(period=7)]
+            temporal_features=["index", FourierEncoder(periods=[7])]
 
     point_estimate : {"mean", "median"}, default="mean"
         Method to select the point prediction from TabICL output.
