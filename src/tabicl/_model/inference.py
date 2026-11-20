@@ -8,6 +8,7 @@ import psutil
 import warnings
 import weakref
 import itertools
+from contextlib import contextmanager
 from enum import Enum, auto
 from dataclasses import dataclass
 from collections import OrderedDict
@@ -22,7 +23,11 @@ from torch import Tensor
 from .kv_cache import KVCache
 from .attention import flash_attn3_toggle
 from ._cgroup_memory import _cgroup_memory_headroom
-from .._torch_devices import resolve_torch_device
+from .._torch_devices import device_uses_unified_host_memory, resolve_torch_device
+
+
+# torch.OutOfMemoryError only exists from torch 2.4; earlier versions name it torch.cuda.OutOfMemoryError.
+_OutOfMemoryError = getattr(torch, "OutOfMemoryError", torch.cuda.OutOfMemoryError)
 
 
 def devices_match(a: torch.device, b: torch.device) -> bool:
@@ -749,7 +754,8 @@ class InferenceManager:
 
         cpu_safety_factor : float, default=0.85
             Safety margin for CPU memory. Only this fraction of available CPU
-            memory will be considered usable for offloading.
+            memory will be considered usable for offloading, and, on devices that
+            share host RAM (integrated GPUs, MPS), for device allocations.
 
         disk_safety_factor : float, default=0.95
             Safety margin for disk space. Only this fraction of available disk
@@ -800,10 +806,50 @@ class InferenceManager:
         # Setup device
         self.exe_device = resolve_torch_device(device)
 
+        # Whether the device allocates from host RAM (None if unknown).
+        self._unified_host = device_uses_unified_host_memory(self.exe_device)
+
         # Initialize buffer pool
         self._buffer_pool = PinnedBufferPool()
 
         self._is_configured = True
+
+    @contextmanager
+    def _cap_allocator_to_host_memory(self):
+        """Limit the device allocator to the usable host RAM (see ``cpu_safety_factor``).
+
+        On integrated CUDA/XPU GPUs, device memory is host RAM. Capping the allocator
+        makes an oversized allocation raise ``torch.OutOfMemoryError``, which the
+        batching loop recovers from, instead of exhausting system memory. The previous
+        limit is restored on exit.
+        """
+        if self.exe_device.type == "mps" or not self._unified_host:
+            yield
+            return
+
+        backend_api = self._get_device_backend_api()
+        get_fraction = getattr(backend_api, "get_per_process_memory_fraction", None)
+        set_fraction = getattr(backend_api, "set_per_process_memory_fraction", None)
+        if not (callable(get_fraction) and callable(set_fraction)):
+            warnings.warn(
+                f"torch {torch.__version__} cannot limit {self.exe_device.type} allocations, so "
+                "inference on this integrated GPU can exhaust host memory. Upgrade torch "
+                "(2.6 or later for CUDA, 2.10 or later for XPU).",
+                RuntimeWarning,
+                stacklevel=3,
+            )
+            yield
+            return
+
+        total = backend_api.get_device_properties(self.exe_device).total_memory
+        host_free = self.get_available_cpu_memory() * self.cpu_safety_factor * 1024 * 1024
+        allowed = backend_api.memory_reserved(self.exe_device) + host_free
+        previous = get_fraction(self.exe_device)
+        set_fraction(min(previous, allowed / total), self.exe_device)
+        try:
+            yield
+        finally:
+            set_fraction(previous, self.exe_device)
 
     def _normalize_offload(self, offload: Any) -> OffloadMode:
         """Normalize various offload specifications to OffloadMode."""
@@ -894,6 +940,17 @@ class InferenceManager:
 
     def get_available_gpu_memory(self) -> float:
         """Get available GPU memory in MB.
+
+        When the device may share host RAM, this is also capped by the usable host RAM
+        (see ``cpu_safety_factor``).
+        """
+        free_mb = self._device_free_mb()
+        if self._unified_host is not False:
+            free_mb = min(free_mb, self.get_available_cpu_memory() * self.cpu_safety_factor)
+        return max(0.0, free_mb)
+
+    def _device_free_mb(self) -> float:
+        """Get the device's own free memory in MB.
 
         Synchronizes device operations and clears cache before checking to get
         an accurate reading of available memory.
@@ -1284,10 +1341,19 @@ class InferenceManager:
         - When OOM occurs, batch size is halved and inference is retried.
         - Async copy is used when ``use_async=True`` and offloading to CPU/disk.
         """
-
         if not self._is_configured:
             raise RuntimeError("InferenceManager must be configured before running inference. Call configure() first.")
 
+        with self._cap_allocator_to_host_memory():
+            return self._call(forward_fn, inputs, auto_batch, output_repeat)
+
+    def _call(
+        self,
+        forward_fn: Callable[..., Tensor],
+        inputs: OrderedDict[str, Any],
+        auto_batch: bool,
+        output_repeat: int,
+    ) -> Tensor:
         # Non-batched execution
         if not auto_batch:
             return self._run_forward(forward_fn, self._prepare_inputs(inputs))
@@ -1342,22 +1408,36 @@ class InferenceManager:
                 f"Disk free (effective): {eff_disk / 1024:.2f}GB @ {self.disk_offload_dir}"
             )
 
+        # Identify store-mode caches that need to be accumulated back into the original inputs
+        store_cache_keys = {name for name, v in inputs.items() if isinstance(v, KVCache) and not v.is_populated()}
+
         # Single batch case
         if batch_size >= total_bs:
-            out = self._run_forward(forward_fn, self._prepare_inputs(inputs))
-
-            if mode == OffloadMode.GPU:
-                return out
-            if mode == OffloadMode.CPU:
-                return out.cpu()
-            # DISK
-            outputs, _ = self._allocate_output_buffer(mode, tuple(out.shape), input_dtype)
-            if isinstance(outputs, DiskTensor):
-                outputs[...] = out.cpu()
-                outputs.flush()
-                return outputs.tensor
-            outputs.copy_(out.cpu())
-            return outputs
+            try:
+                out = self._run_forward(forward_fn, self._prepare_inputs(inputs))
+            except _OutOfMemoryError as e:
+                if total_bs <= self.min_batch_size:
+                    raise RuntimeError(
+                        f"Failed to execute even with minimum batch size {self.min_batch_size}. Error: {e}"
+                    )
+                # Retry in the batched loop below with half the batch size.
+                for cache_key in store_cache_keys:
+                    inputs[cache_key].kv.clear()
+                self._empty_backend_cache()
+                batch_size = max(self.min_batch_size, total_bs // 2)
+            else:
+                if mode == OffloadMode.GPU:
+                    return out
+                if mode == OffloadMode.CPU:
+                    return out.cpu()
+                # DISK
+                outputs, _ = self._allocate_output_buffer(mode, tuple(out.shape), input_dtype)
+                if isinstance(outputs, DiskTensor):
+                    outputs[...] = out.cpu()
+                    outputs.flush()
+                    return outputs.tensor
+                outputs.copy_(out.cpu())
+                return outputs
 
         # Multi-batch execution
         outputs, _ = self._allocate_output_buffer(mode, tuple(output_shape), input_dtype)
@@ -1373,9 +1453,6 @@ class InferenceManager:
 
         # Track in MB for consistency with disk_flush_mb
         bytes_since_flush_mb = 0.0
-
-        # Identify store-mode caches that need to be accumulated back into the original inputs
-        store_cache_keys = {name for name, v in inputs.items() if isinstance(v, KVCache) and not v.is_populated()}
 
         # Main inference loop with OOM recovery
         while True:
@@ -1442,7 +1519,7 @@ class InferenceManager:
 
                 return outputs
 
-            except torch.OutOfMemoryError as e:
+            except _OutOfMemoryError as e:
                 if async_copy is not None:
                     async_copy.clear()
 
