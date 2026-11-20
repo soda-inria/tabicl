@@ -4,10 +4,11 @@ import numpy as np
 import pytest
 import sklearn
 from numpy.testing import assert_allclose
-from sklearn.datasets import make_classification
+from sklearn.datasets import make_classification, make_regression
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from sklearn.utils.fixes import parse_version
 
+from conftest import model_path
 from tabicl import TabICLClassifier, TabICLRegressor
 from tests.torch_devices_helpers import skip_if_device_unusable, DEVICES
 
@@ -71,3 +72,24 @@ def test_all_nan_column():
     assert proba.shape == (10, 2)
     assert np.all(np.isfinite(proba))
     assert_allclose(proba.sum(axis=1), 1.0)
+
+
+@pytest.mark.parametrize("scale, shift", [(1.0, 1000.0), (3.0, 0.0)])
+def test_regression_variance_target_transform(scale, shift):
+    """Variance is invariant to target shifts and scales quadratically (gh-180)."""
+    X, y = make_regression(n_samples=50, n_features=5, noise=10.0, random_state=0)
+    X_train, X_test, y_train = X[:40], X[40:], y[:40]
+    reg = TabICLRegressor(n_estimators=2, device="cpu", random_state=0, **model_path("regressor"))
+    reg.fit(X_train, y_train)
+    original = reg.predict(X_test, output_type=["mean", "variance"])
+    variance = reg.predict(X_test, output_type="variance")
+    assert variance.shape == (len(X_test),)
+    assert_allclose(variance, original["variance"])
+
+    reg.fit(X_train, scale * y_train + shift)
+    transformed = reg.predict(X_test, output_type=["mean", "variance"])
+    assert_allclose(transformed["variance"], scale**2 * original["variance"], rtol=1e-4, atol=1e-4)
+    assert_allclose(transformed["mean"], scale * original["mean"] + shift, rtol=1e-4, atol=1e-4)
+    for prediction in (original, transformed):
+        assert np.all(np.isfinite(prediction["variance"]))
+        assert np.all(prediction["variance"] >= 0)
