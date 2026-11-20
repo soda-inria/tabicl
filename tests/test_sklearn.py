@@ -2,9 +2,11 @@ import copy
 
 import numpy as np
 import pytest
+import sklearn
 from numpy.testing import assert_allclose
 from sklearn.datasets import make_classification
 from sklearn.utils.estimator_checks import parametrize_with_checks
+from sklearn.utils.fixes import parse_version
 
 from tabicl import TabICLClassifier, TabICLRegressor
 from tests.torch_devices_helpers import skip_if_device_unusable, DEVICES
@@ -24,10 +26,20 @@ _SKLEARN_ESTIMATORS = [
     )
 ]
 
+# scikit-learn < 1.4 forces aligned memmaps when OpenBLAS may be the Prescott
+# architecture, and aligned memmaps reject estimator objects.
+_SKLEARN_MEMMAP_PICKLE_BUG = parse_version(sklearn.__version__) < parse_version("1.4")
+
 
 @parametrize_with_checks(_SKLEARN_ESTIMATORS)
 def test_sklearn_compatible_estimator(estimator, check):
     skip_if_device_unusable(estimator.get_params()["device"])
+    if (
+        _SKLEARN_MEMMAP_PICKLE_BUG
+        and check.func.__name__ == "check_estimators_pickle"
+        and check.keywords.get("readonly_memmap")
+    ):
+        pytest.skip("scikit-learn < 1.4 may fail to memmap estimators")
     check(estimator)
 
 
