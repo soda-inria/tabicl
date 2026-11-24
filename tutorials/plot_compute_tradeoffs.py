@@ -75,9 +75,9 @@ parameterization of caching mechanisms.
 #
 # The figure plots predict time and total ``.fit`` + ``.predict`` time for each
 # of the three cache levels, sweeping three dataset-size axes: the number of
-# rows, the number of features, and the size of the test set. All other
-# parameters are set to their default values, and the measurements are taken on
-# a discrete device (NVIDIA L4).
+# training rows, the number of features, and the size of the test set. All
+# other parameters are set to their default values, and the measurements are
+# taken on a discrete device (NVIDIA L4).
 #
 # .. note::
 #
