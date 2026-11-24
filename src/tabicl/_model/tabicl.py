@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections.abc import Callable
 from typing import Optional, List, Union, Literal
 
 import torch
@@ -193,7 +194,7 @@ class TabICL(nn.Module):
         ] = "qassmax-mlp-elementwise",
         ff_factor: int = 2,
         dropout: float = 0.0,
-        activation: str | callable = "gelu",
+        activation: str | Callable = "gelu",
         norm_first: bool = True,
         bias_free_ln: bool = False,
         zero_init: bool = True,
