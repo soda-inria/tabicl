@@ -4,6 +4,10 @@
 Bug fixes
 ---------
 
+- Fix numpy `bool` columns of a pandas DataFrame being silently dropped with pandas >= 3.1. They
+  are now ordinal-encoded like the other categorical columns, and columns that are dropped because
+  of their dtype now raise a warning listing their dtypes. ([PR#190](https://github.com/soda-inria/tabicl/pull/190))
+
 - Fix storing a `kv_cache="repr"` cache on an accelerator when the row representations are
   offloaded to CPU memory or disk (`ROW_CONFIG` offload settings, or the fallback when they do not
   fit on the device), which failed with a device mismatch error. ([PR#181](https://github.com/soda-inria/tabicl/pull/181))

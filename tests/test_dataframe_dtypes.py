@@ -5,7 +5,10 @@ from tabicl._sklearn.preprocessing import TransformToNumerical
 
 
 def test_categorical_dtype_columns_are_ordinal_encoded():
-    """String, object, category, and boolean columns are ordinal-encoded, not dropped."""
+    """String, object, category, and boolean columns are ordinal-encoded, not dropped.
+
+    Non-regression test for https://github.com/soda-inria/tabicl/pull/190.
+    """
 
     X = pd.DataFrame(
         {
