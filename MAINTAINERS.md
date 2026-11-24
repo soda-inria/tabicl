@@ -11,7 +11,7 @@ and joblib/threadpoolctl.
 
 The package version is `__version__` in `src/tabicl/__about__.py`. Hatch reads
 that file. Between releases the version is the next release number plus a
-`.dev0` suffix, currently `2.3.0.dev0`.
+`.dev0` suffix.
 
 ### Making a release
 
