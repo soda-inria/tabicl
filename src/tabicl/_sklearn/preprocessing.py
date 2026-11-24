@@ -148,7 +148,9 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
                 transformers=[("categorical", cat_tfm, cat_pos), ("continuous", num_tfm, numeric_pos)]
             )
 
-            dropped_cols = [col for col in X.columns if col not in cat_cols and col not in numeric_cols]
+            dropped_cols = {
+                col: str(dtype) for col, dtype in X.dtypes.items() if col not in cat_cols and col not in numeric_cols
+            }
             if dropped_cols:
                 warnings.warn(f"The following columns are not used due to their data type: {dropped_cols}")
 

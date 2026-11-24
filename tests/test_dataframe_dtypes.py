@@ -24,11 +24,11 @@ def test_categorical_dtype_columns_are_ordinal_encoded():
 
 
 def test_warns_about_columns_dropped_for_their_dtype():
-    """Columns that are neither categorical nor numeric are dropped with a warning."""
+    """Columns that are neither categorical nor numeric are dropped with a warning that lists their dtypes."""
 
-    X = pd.DataFrame({"num": [1.0, 2.0], "date": pd.to_datetime(["2020-01-01", "2020-01-02"])})
+    X = pd.DataFrame({"num": [1.0, 2.0], "date": pd.Series(["2020-01-01", "2020-01-02"], dtype="datetime64[ns]")})
 
-    with pytest.warns(UserWarning, match=r"not used due to their data type: \['date'\]"):
+    with pytest.warns(UserWarning, match=r"not used due to their data type: \{'date': 'datetime64\[ns\]'\}"):
         X_out = TransformToNumerical().fit_transform(X)
 
     assert X_out.tolist() == [[1.0], [2.0]]
