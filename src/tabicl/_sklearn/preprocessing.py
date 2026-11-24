@@ -129,17 +129,8 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
         else:
 
             import warnings
-
-            from pandas.api.types import is_bool_dtype, is_string_dtype
-
-            # Which boolean and string columns these dtype names select depends on the
-            # pandas version, so those columns are also checked one by one.
-            selected = make_column_selector(dtype_include=["string", "object", "category", "boolean"])(X)
-            cat_cols = [
-                col
-                for col, dtype in X.dtypes.items()
-                if col in selected or is_bool_dtype(dtype) or is_string_dtype(dtype)
-            ]
+            # pandas 3.1.1 selects on exact match, so we need to include "boolean" (pandas) and "bool" (numpy)
+            cat_cols = make_column_selector(dtype_include=["string", "object", "category", "boolean", "bool"])(X)
             cat_pos = [X.columns.get_loc(col) for col in cat_cols]
 
             high_cardinality_cols = [col for col in cat_cols if X[col].nunique() > 40]

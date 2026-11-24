@@ -1,24 +1,26 @@
 import pandas as pd
-import pyarrow as pa
 import pytest
 
 from tabicl._sklearn.preprocessing import TransformToNumerical
 
 
-def test_bool_and_pyarrow_string_columns_are_categorical():
-    """Boolean and pyarrow-backed string columns are ordinal-encoded, not dropped."""
+def test_categorical_dtype_columns_are_ordinal_encoded():
+    """String, object, category, and boolean columns are ordinal-encoded, not dropped."""
 
     X = pd.DataFrame(
         {
+            "inferred_string": ["a", "b"],
+            "string": pd.Series(["a", "b"], dtype="string"),
+            "object": pd.Series(["a", "b"], dtype=object),
+            "category": pd.Series(["a", "b"], dtype="category"),
             "numpy_bool": [True, False],
-            "pyarrow_bool": pd.Series([True, False], dtype="bool[pyarrow]"),
-            "pyarrow_string": pd.Series(["a", "b"], dtype=pd.ArrowDtype(pa.string())),
+            "pandas_boolean": pd.Series([True, False], dtype="boolean"),
         }
     )
 
     X_out = TransformToNumerical().fit_transform(X)
 
-    assert X_out.tolist() == [[1, 1, 0], [0, 0, 1]]
+    assert X_out.tolist() == [[0, 0, 0, 0, 1, 1], [1, 1, 1, 1, 0, 0]]
 
 
 def test_warns_about_columns_dropped_for_their_dtype():
