@@ -1,6 +1,24 @@
 2.2.1
 =====
 
+Behaviour changes
+-----------------
+
+- Auto-batching on accelerators sizes batches from a fixed memory budget:
+  `1024 MB + memory_fraction × total device memory`. `memory_fraction` is the share of
+  **total** device memory added to the 1024 MB base and defaults to `0.10`; the base is a
+  fixed overhead allowance and is not configurable. Total device memory is read once per
+  device from the backend's own API, so sizing no longer synchronizes the device, flushes
+  the allocator cache or reads free memory before each prediction. The budget does not
+  shrink when the device is already busy: an over-estimate is caught by the out-of-memory
+  retry, which halves the batch size down to one element, the 1024 MB base providing the
+  headroom that makes that floor workable. A sequence that exceeds the budget even as
+  a single element warns instead of silently overshooting.
+
+- `offload="auto"` compares the output size against the same static budget, with
+  `auto_offload_threshold` setting the share of the budget an output may occupy while it
+  stays on the device. Set `memory_fraction` (or an explicit `offload` mode) to tune both.
+
 Bug fixes
 ---------
 

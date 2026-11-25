@@ -16,7 +16,8 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 
-from tabicl._model.inference import AsyncCopyManager, InferenceManager, devices_match
+from tabicl._model.inference import AsyncCopyManager, InferenceManager, MemoryEstimator, devices_match
+from tabicl._model.inference_config import InferenceConfig, MgrConfig
 
 
 @pytest.mark.parametrize(
@@ -72,8 +73,8 @@ def test_is_tensor_on_exe_device_accepts_unindexed_and_indexed(device_backend):
 
 
 @pytest.mark.parametrize("device_backend", ["cuda", "xpu", "mps"])
-def test_get_available_gpu_memory_non_zero_for_available_backends(device_backend):
-    """Check that device memory inspection works and always returns positive values."""
+def test_total_device_memory_positive_for_available_backends(device_backend):
+    """The backend's total-memory API must be readable on real accelerators."""
     backend_api = getattr(torch, device_backend, None)
     if (
         backend_api is None
@@ -82,17 +83,216 @@ def test_get_available_gpu_memory_non_zero_for_available_backends(device_backend
     ):
         pytest.skip(f"{device_backend} backend is not available on this host")
 
-    if device_backend == "mps" and not torch.backends.mps.is_available():
-        pytest.skip("MPS backend is not available on this host")
-
     mgr = InferenceManager(enc_name="tf_col", out_dim=16)
     mgr.configure(device=device_backend)
-    available_mb = mgr.get_available_gpu_memory()
+    total_mb = mgr.get_total_device_memory()
 
-    assert available_mb > 0.0, (
-        f"Expected non-zero available memory for backend '{device_backend}', "
-        f"got {available_mb} MB"
+    assert total_mb > 0.0, (
+        f"Expected non-zero total memory for backend '{device_backend}', "
+        f"got {total_mb} MB"
     )
+
+
+class _FakeMemBackend:
+    """Stand-in for ``torch.<backend>`` exposing only the total-memory API.
+
+    ``mem_get_info`` returns a deliberately tiny free figure so that a test using
+    it fails loudly if batch sizing ever reads the free half again.
+    """
+
+    def __init__(self, total_mb: float, free_mb: float = 1.0, has_mem_get_info: bool = True):
+        self.total_bytes = int(total_mb * 1024**2)
+        self.free_bytes = int(free_mb * 1024**2)
+        self.calls = []
+        if has_mem_get_info:
+            self.mem_get_info = self._mem_get_info
+        else:
+            self.recommended_max_memory = self._recommended_max_memory
+
+    def _mem_get_info(self, *args):
+        self.calls.append(("mem_get_info", args))
+        return self.free_bytes, self.total_bytes
+
+    def _recommended_max_memory(self):
+        self.calls.append(("recommended_max_memory", ()))
+        return self.total_bytes
+
+
+class _RaisingMemBackend:
+    """Backend whose every memory operation raises: proves none of them is used."""
+
+    def __init__(self):
+        self.calls = []
+
+    def mem_get_info(self, *args):
+        self.calls.append("mem_get_info")
+        raise AssertionError("batch sizing must not query free memory")
+
+    def recommended_max_memory(self):
+        self.calls.append("recommended_max_memory")
+        raise AssertionError("batch sizing must not query free memory")
+
+    def synchronize(self):
+        self.calls.append("synchronize")
+        raise AssertionError("batch sizing must not synchronize the device")
+
+    def empty_cache(self):
+        self.calls.append("empty_cache")
+        raise AssertionError("batch sizing must not flush the allocator cache")
+
+
+def _cpu_manager(**kwargs) -> InferenceManager:
+    """An InferenceManager configured on CPU (no accelerator needed in CI)."""
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="cpu", use_amp=False, use_fa3=False, use_async=False, **kwargs)
+    return mgr
+
+
+def test_batch_budget_is_1024mb_plus_fraction_of_total_device_memory(monkeypatch):
+    """The budget is ``1024 + memory_fraction * total`` and the free half is ignored."""
+    total_mb = 24 * 1024.0
+    mgr = _cpu_manager(memory_fraction=0.10)
+    fake = _FakeMemBackend(total_mb=total_mb, free_mb=8.0)
+    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake)
+
+    budget_mb, batch_size = mgr.estimate_safe_batch_size(seq_len=64, include_inputs=True, in_dim=8)
+
+    target_mb = 1024.0 + 0.10 * total_mb
+    assert budget_mb == pytest.approx(target_mb)
+    assert batch_size == MemoryEstimator.estimate_batch_size(64, target_mb, "tf_col", True, 8)
+
+    # A nearly exhausted device does not change the budget: only the total was read.
+    fake.free_bytes = 1
+    budget_again, _ = mgr.estimate_safe_batch_size(seq_len=64, include_inputs=True, in_dim=8)
+    assert budget_again == pytest.approx(target_mb)
+
+    # Total memory is a static property: queried once, never per prediction.
+    assert fake.calls == [("mem_get_info", (mgr.exe_device,))]
+
+
+def test_batch_budget_falls_back_to_the_base_when_no_total_memory_api(monkeypatch):
+    """Backends exposing neither ``mem_get_info`` nor ``recommended_max_memory``."""
+    mgr = _cpu_manager(memory_fraction=0.10)
+    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: None)
+
+    assert mgr.get_total_device_memory() == 0.0
+    assert mgr.get_batch_memory_budget() == pytest.approx(1024.0)
+
+
+def test_mps_style_backend_uses_recommended_max_memory_as_total(monkeypatch):
+    """``recommended_max_memory`` is the total when ``mem_get_info`` is absent (MPS)."""
+    total_mb = 8 * 1024.0
+    mgr = _cpu_manager(memory_fraction=0.10)
+    fake = _FakeMemBackend(total_mb=total_mb, has_mem_get_info=False)
+    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake)
+
+    assert mgr.get_total_device_memory() == pytest.approx(total_mb)
+    assert mgr.get_batch_memory_budget() == pytest.approx(1024.0 + 0.10 * total_mb)
+
+
+def test_batch_sizing_never_synchronizes_flushes_or_queries_free_memory(monkeypatch):
+    """Batch sizing must not synchronize, empty the cache, or read free memory.
+
+    Every memory operation of the backend raises: the sizing path still completes
+    and degrades to the fixed 1024 MB base instead of calling any of them.
+    """
+    mgr = _cpu_manager(memory_fraction=0.10)
+    fake = _RaisingMemBackend()
+    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake)
+
+    budget_mb, batch_size = mgr.estimate_safe_batch_size(seq_len=64, include_inputs=True, in_dim=8)
+
+    assert budget_mb == pytest.approx(1024.0)
+    assert batch_size >= 1
+    # mem_get_info may be probed for its *total* half; sync/cache never run.
+    assert "synchronize" not in fake.calls
+    assert "empty_cache" not in fake.calls
+
+
+def test_memory_fraction_defaults_to_a_tenth_of_total_device_memory():
+    """``memory_fraction`` defaults to 0.10 for every manager configuration."""
+    assert "memory_fraction" in MgrConfig._ALLOWED_KEYS
+    assert InferenceConfig().COL_CONFIG.memory_fraction == pytest.approx(0.10)
+
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="cpu", use_amp=False, use_fa3=False, use_async=False)
+    assert mgr.memory_fraction == pytest.approx(0.10)
+
+
+def test_floor_case_warns_when_one_element_exceeds_the_budget(monkeypatch):
+    """A sequence that cannot fit warns instead of silently overshooting."""
+    mgr = _cpu_manager(memory_fraction=0.0)  # budget == 1024 MB
+    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: None)
+
+    seq_len = 400_000
+    with pytest.warns(RuntimeWarning, match="exceed the target budget"):
+        budget_mb, batch_size = mgr.estimate_safe_batch_size(seq_len=seq_len, include_inputs=True, in_dim=8)
+
+    assert budget_mb == pytest.approx(1024.0)
+    assert batch_size == 1
+    assert MemoryEstimator.estimate_peak_mem(1, seq_len, "tf_col", True, 8) > budget_mb
+
+
+def _cpu_batching_manager(monkeypatch) -> InferenceManager:
+    """A CPU-bound manager routed through the accelerator batching path.
+
+    ``exe_device`` is set to a non-CPU type so ``__call__`` takes the multi-batch
+    branch, while every tensor stays on CPU: no accelerator is needed.
+    """
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(
+        device="cpu",
+        use_amp=False,
+        use_fa3=False,
+        use_async=False,
+        offload="cpu",
+        max_pinned_memory_mb=0.0,  # pinned memory needs a CUDA driver, absent here
+    )
+    mgr.exe_device = torch.device("mps")
+    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: None)
+    monkeypatch.setattr(mgr, "_to_exe_device", lambda tensor: tensor)
+    monkeypatch.setattr(mgr, "estimate_safe_batch_size", lambda *args, **kwargs: (1024.0, 4))
+    return mgr
+
+
+def test_oom_retry_halves_the_batch_and_succeeds(monkeypatch):
+    """A batch that runs out of memory is retried at half its size."""
+    mgr = _cpu_batching_manager(monkeypatch)
+    tried = []
+
+    def _run_forward(forward_fn, inputs):
+        n = inputs["features"].shape[0]
+        tried.append(n)
+        if n > 1:
+            raise torch.OutOfMemoryError("simulated out of memory")
+        return torch.zeros(n, 3, 4)
+
+    monkeypatch.setattr(mgr, "_run_forward", _run_forward)
+    features = torch.randn(8, 3, 2)
+
+    out = mgr(lambda x: x, OrderedDict([("features", features)]))
+
+    assert tried[:3] == [4, 2, 1]
+    assert set(tried[2:]) == {1}
+    assert out.shape == (8, 3, 4)
+
+
+def test_oom_retry_raises_when_one_element_still_fails(monkeypatch):
+    """The retry stops at one element and raises, since nothing smaller can be tried."""
+    mgr = _cpu_batching_manager(monkeypatch)
+    tried = []
+
+    def _run_forward(forward_fn, inputs):
+        tried.append(inputs["features"].shape[0])
+        raise torch.OutOfMemoryError("simulated out of memory")
+
+    monkeypatch.setattr(mgr, "_run_forward", _run_forward)
+    features = torch.randn(8, 3, 2)
+
+    with pytest.raises(RuntimeError, match="batch size of one element"):
+        mgr(lambda x: x, OrderedDict([("features", features)]))
+
+    assert tried == [4, 2, 1]
 
 
 class _FakeNoAsyncBackend:
@@ -242,11 +442,9 @@ def test_mps_auto_batch_uses_memory_estimate(monkeypatch):
         use_fa3=False,
         use_async=False,
         offload="gpu",
-        min_batch_size=1,
     )
 
     # Force a tiny safe batch so the manager must split.
-    monkeypatch.setattr(mgr, "get_available_gpu_memory", lambda: 1.0)
     monkeypatch.setattr(
         mgr,
         "estimate_safe_batch_size",
@@ -364,3 +562,4 @@ def test_call_runs_forward_under_allocator_cap(monkeypatch):
         return x
 
     mgr(forward_fn, OrderedDict(x=torch.zeros(1, 1, 1)))
+

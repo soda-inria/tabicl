@@ -20,9 +20,9 @@ class MgrConfig:
 
     **Batching:**
 
-    - ``min_batch_size``: Minimum batch size to try before raising an error.
-    - ``safety_factor``: Factor to multiply estimated batch size by for conservative
-      memory usage.
+    - ``memory_fraction``: Fraction of the device's **total** memory added to a fixed
+      1024 MB base to form the auto-batching memory budget
+      (``1024 MB + memory_fraction * total device memory``). Default is 0.10.
     - ``unified_memory_safety_factor``: Fraction (0-1) of the available host RAM that
       device allocations may use on devices that share memory with the host
       (integrated GPUs, MPS).
@@ -38,8 +38,9 @@ class MgrConfig:
       - ``"auto"``: Automatically choose based on available memory (default).
         Uses ``auto_offload_threshold`` to decide when to offload from GPU.
 
-    - ``auto_offload_threshold``: GPU memory threshold (0-1) for automatic offloading.
-      When ``offload="auto"``, outputs exceeding this fraction of available GPU memory
+    - ``auto_offload_threshold``: Share of the auto-batching memory budget (0-1) that an
+      output may occupy while staying on the device. When ``offload="auto"``, outputs
+      larger than this fraction of ``1024 MB + memory_fraction * total device memory``
       are offloaded to CPU or disk. Default is 0.5 (50%).
 
     **CPU offloading:**
@@ -73,8 +74,7 @@ class MgrConfig:
         "use_fa3",
         "verbose",
         # Batching
-        "min_batch_size",
-        "safety_factor",
+        "memory_fraction",
         "unified_memory_safety_factor",
         # Offloading
         "offload",
@@ -105,15 +105,10 @@ class MgrConfig:
         "use_fa3": {"expected_type": bool, "validator": None, "error_msg": "use_fa3 must be a boolean"},
         "verbose": {"expected_type": bool, "validator": None, "error_msg": "verbose must be a boolean"},
         # Batching
-        "min_batch_size": {
-            "expected_type": int,
-            "validator": lambda x: x >= 1,
-            "error_msg": "min_batch_size must be an integer >= 1",
-        },
-        "safety_factor": {
+        "memory_fraction": {
             "expected_type": float,
             "validator": lambda x: 0.0 <= x <= 1.0,
-            "error_msg": "safety_factor must be a float between 0 and 1",
+            "error_msg": "memory_fraction must be a float between 0 and 1",
         },
         "unified_memory_safety_factor": {
             "expected_type": float,
@@ -252,7 +247,37 @@ class MgrConfig:
 
 @dataclass
 class InferenceConfig:
-    """Configuration class for inference."""
+    """Configuration class for inference.
+
+    Three per-component configurations are exposed: ``COL_CONFIG`` (column
+    embedding), ``ROW_CONFIG`` (row interaction) and ``ICL_CONFIG`` (in-context
+    learning). Each is a :class:`MgrConfig` accepting the keys described there.
+
+    Auto-batching on accelerators sizes batches from a **static memory budget**
+    rather than from the free device memory left at prediction time::
+
+        budget = 1024 MB + memory_fraction * total device memory
+
+    The 1024 MB base is a fixed overhead allowance and is not configurable;
+    ``memory_fraction`` (default ``0.10``) is the sizing knob. Total device memory is
+    read once per device from the backend's own API (``mem_get_info`` on CUDA/XPU,
+    ``recommended_max_memory`` on MPS) and cached. Backends exposing neither fall
+    back to the 1024 MB base alone.
+
+    A device that shares memory with the host (integrated GPU, MPS) caps that budget
+    at the memory actually available to it, of which device allocations may use the
+    ``unified_memory_safety_factor`` share (default ``0.5``).
+
+    Because the budget does not shrink when the device is already busy, an
+    over-estimate is handled by the out-of-memory retry, which halves the batch
+    size down to a single element. If even one element exceeds the budget, a
+    ``RuntimeWarning`` says so; the single element then runs and may still
+    succeed, since the 1024 MB base leaves headroom above the estimate.
+
+    The same budget figure is what ``offload="auto"`` compares the output size
+    against, so automatic offload decisions are budget-based rather than based on
+    live free memory.
+    """
 
     COL_CONFIG: MgrConfig = None
     ROW_CONFIG: MgrConfig = None
@@ -269,8 +294,7 @@ class InferenceConfig:
                 use_fa3=True,
                 verbose=False,
                 # Batching
-                min_batch_size=1,
-                safety_factor=0.8,
+                memory_fraction=0.10,
                 unified_memory_safety_factor=0.5,
                 # Offloading
                 offload="auto",
@@ -303,8 +327,7 @@ class InferenceConfig:
                 use_fa3=True,
                 verbose=False,
                 # Batching
-                min_batch_size=1,
-                safety_factor=0.8,
+                memory_fraction=0.10,
                 unified_memory_safety_factor=0.5,
                 # Offloading
                 offload=False,
@@ -337,8 +360,7 @@ class InferenceConfig:
                 use_fa3=True,
                 verbose=False,
                 # Batching
-                min_batch_size=1,
-                safety_factor=0.8,
+                memory_fraction=0.10,
                 unified_memory_safety_factor=0.5,
                 # Offloading
                 offload=False,
