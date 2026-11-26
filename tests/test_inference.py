@@ -398,10 +398,11 @@ def test_auto_offload_keeps_cpu_on_mps():
     assert mode is OffloadMode.CPU
 
 
-def test_cpu_output_not_pinned_on_integrated_gpu(monkeypatch):
-    """A pinned output would lock RAM that an integrated GPU allocates from."""
+@pytest.mark.parametrize("device", ["xpu", "mps"])
+def test_cpu_output_not_pinned_on_unified_memory(monkeypatch, device):
+    """A pinned output would take memory the device allocates from, on integrated GPUs and on MPS."""
     mgr = InferenceManager(enc_name="tf_col", out_dim=4)
-    mgr.configure(device="xpu")
+    mgr.configure(device=device)
     monkeypatch.setattr(mgr, "_unified_host", True)
 
     out, _ = mgr._allocate_output_buffer(OffloadMode.CPU, (2, 3), torch.float32)

@@ -1250,8 +1250,9 @@ class InferenceManager:
         if mode == OffloadMode.CPU:
             try:
                 # Only use pinned memory for smaller allocations
-                # A pinned output would lock RAM that integrated GPUs allocate from.
-                use_pinned = output_mb <= self.max_pinned_memory_mb and not self._may_share_host_ram
+                # A pinned output would lock RAM that integrated GPUs allocate from. On MPS,
+                # pinned memory is allocated from the device's own pool.
+                use_pinned = output_mb <= self.max_pinned_memory_mb and self._unified_host is False
                 if self.verbose and not use_pinned:
                     print(
                         f"  Using regular (non-pinned) CPU memory for {output_mb:.0f}MB output (max_pinned={self.max_pinned_memory_mb:.0f}MB)"
