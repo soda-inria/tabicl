@@ -133,7 +133,8 @@ def device_uses_unified_host_memory(device: Union[str, torch.device]) -> bool | 
     warnings.warn(
         f"Cannot tell whether {device} shares memory with the host: its device properties "
         "have no integrated-GPU flag. Batch sizes are limited by both device and host "
-        "memory. Upgrade torch (2.13 or later for XPU) to lift this limit on discrete GPUs.",
+        "memory, and outputs are not offloaded to CPU memory. Upgrade torch (2.13 or later "
+        "for XPU) to lift these limits on discrete GPUs.",
         RuntimeWarning,
         stacklevel=2,
     )

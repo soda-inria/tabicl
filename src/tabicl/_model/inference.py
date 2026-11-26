@@ -819,14 +819,19 @@ class InferenceManager:
 
         self._is_configured = True
 
+    @property
+    def _may_share_host_ram(self) -> bool:
+        """Whether the device is a CUDA/XPU GPU that is integrated or cannot be classified.
+
+        Such a device allocates, or may allocate, from host RAM.
+        """
+        return self._unified_host is not False and self.exe_device.type != "mps"
+
     def _out_of_memory_hint(self) -> str:
-        """Suggestions to append to out-of-memory errors on devices that allocate from host RAM."""
-        if self._unified_host is not True:
+        """Suggestion to append to out-of-memory errors on devices that may share host RAM."""
+        if not self._may_share_host_ram:
             return ""
-        return (
-            " This device allocates from host RAM: close other applications, set `disk_offload_dir` "
-            "on the estimator to store outputs on disk, or lower its `batch_size`."
-        )
+        return " An integrated GPU allocates from host RAM: close other applications to free memory."
 
     @contextmanager
     def _cap_allocator_to_host_memory(self):
@@ -836,9 +841,9 @@ class InferenceManager:
         use the ``unified_memory_safety_factor`` share. Capping the allocator
         makes an oversized allocation raise ``torch.OutOfMemoryError``, which the
         batching loop recovers from, instead of exhausting system memory. The previous
-        limit is restored on exit.
+        limit is restored on exit. Devices that cannot be classified are capped too.
         """
-        if self.exe_device.type == "mps" or not self._unified_host:
+        if not self._may_share_host_ram:
             yield
             return
 
@@ -848,7 +853,7 @@ class InferenceManager:
         if not (callable(get_fraction) and callable(set_fraction)):
             warnings.warn(
                 f"torch {torch.__version__} cannot limit {self.exe_device.type} allocations, so "
-                "inference on this integrated GPU can exhaust host memory. Upgrade torch "
+                "inference on an integrated GPU can exhaust host memory. Upgrade torch "
                 "(2.6 or later for CUDA, 2.10 or later for XPU).",
                 RuntimeWarning,
                 stacklevel=3,
@@ -1114,8 +1119,9 @@ class InferenceManager:
 
         For AUTO mode, the priority is:
             GPU (if within threshold) -> CPU -> DISK -> CPU(swap as last resort).
-        On integrated GPUs and MPS, a CPU copy uses the same RAM, so AUTO skips it:
-            GPU (if within threshold) -> DISK -> GPU.
+        On integrated CUDA/XPU GPUs a CPU copy uses the same RAM, so GPU and AUTO modes skip it
+        (also when the device cannot be classified):
+            GPU (if it fits) -> DISK -> GPU.
 
         Note: CPU mode can use either pinned or non-pinned memory.
         - Pinned memory: faster for async GPU-CPU transfers, but locks physical memory
@@ -1133,6 +1139,16 @@ class InferenceManager:
         cpu_fits = output_mb <= safe_cpu_mb
         disk_fits = has_disk and output_mb <= safe_disk_mb
 
+        # Fallback when the device is tight on an integrated GPU, where CPU memory is the same RAM.
+        if disk_fits:
+            integrated_fallback = OffloadMode.DISK, OffloadReason(
+                "integrated_gpu_disk", f"gpu tight -> disk ({output_mb:.0f}MB <= {safe_disk_mb:.0f}MB safe disk free)"
+            )
+        else:
+            integrated_fallback = OffloadMode.GPU, OffloadReason(
+                "integrated_gpu_stays", "gpu tight, no disk -> gpu (cpu is the same memory)"
+            )
+
         # User-requested mode with cascading fallback
         # If the requested mode fails, downgrade one tier at a time: GPU -> CPU -> DISK -> CPU (swap as last resort)
         if self.offload_mode != OffloadMode.AUTO:
@@ -1143,6 +1159,8 @@ class InferenceManager:
                     return OffloadMode.GPU, OffloadReason(
                         "user_gpu_fits", f"{output_mb:.0f}MB <= {gpu_free_mb:.0f}MB gpu free"
                     )
+                elif self._may_share_host_ram:
+                    return integrated_fallback
                 elif cpu_fits:
                     return OffloadMode.CPU, OffloadReason("user_gpu_fails", "gpu (requested) tight -> cpu")
                 elif disk_fits:
@@ -1187,12 +1205,8 @@ class InferenceManager:
                 "auto_gpu_fits",
                 f"{output_mb:.0f}MB <= {self.auto_offload_threshold * gpu_free_mb:.0f}MB safe gpu free",
             )
-        elif self._unified_host is True:
-            if disk_fits:
-                return OffloadMode.DISK, OffloadReason(
-                    "auto_unified_disk", f"gpu tight -> disk ({output_mb:.0f}MB <= {safe_disk_mb:.0f}MB safe disk free)"
-                )
-            return OffloadMode.GPU, OffloadReason("auto_unified_gpu", "gpu tight, no disk -> gpu (cpu is the same memory)")
+        elif self._may_share_host_ram:
+            return integrated_fallback
         elif cpu_fits:
             return OffloadMode.CPU, OffloadReason(
                 "auto_cpu_fits", f"gpu tight -> cpu ({output_mb:.0f}MB <= {safe_cpu_mb:.0f}MB safe cpu free)"
@@ -1221,22 +1235,23 @@ class InferenceManager:
                 return out, info
             except RuntimeError as e:
                 info["alloc_error"] = str(e)
-                if self._unified_host is not True:
+                if not self._may_share_host_ram:
                     mode = OffloadMode.CPU
                 elif self.disk_offload_dir is not None:
-                    # CPU memory is the same RAM on integrated GPUs and MPS.
+                    # CPU memory is the same RAM on integrated GPUs.
                     mode = OffloadMode.DISK
                 else:
                     raise RuntimeError(
                         f"Not enough memory for the {output_mb:.0f} MB {self.enc_name} output."
                         + self._out_of_memory_hint()
+                        + " Alternatively, set `disk_offload_dir` on the estimator to store outputs on disk."
                     ) from e
 
         if mode == OffloadMode.CPU:
             try:
                 # Only use pinned memory for smaller allocations
-                # Pinning locks the RAM that integrated GPUs and MPS allocate from.
-                use_pinned = output_mb <= self.max_pinned_memory_mb and self._unified_host is not True
+                # A pinned output would lock RAM that integrated GPUs allocate from.
+                use_pinned = output_mb <= self.max_pinned_memory_mb and not self._may_share_host_ram
                 if self.verbose and not use_pinned:
                     print(
                         f"  Using regular (non-pinned) CPU memory for {output_mb:.0f}MB output (max_pinned={self.max_pinned_memory_mb:.0f}MB)"
