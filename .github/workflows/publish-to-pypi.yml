@@ -1,0 +1,163 @@
+name: Publish tabicl distribution 📦 to PyPI
+# Taken from:
+# https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
+# Based on the joblib/loky and joblib/threadpoolctl workflows.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+# The test workflow in this repository sets explicit read permissions.
+# Jobs that publish or create a release replace these with their own.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build distribution 📦
+    # Don't run on forked repositories
+    if: github.event.repository.fork != true
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+    - name: Set up Python
+      uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      with:
+        python-version: "3.x"
+
+    - name: Check that the tag matches the package version
+      run: |
+        python - <<'PY'
+        import os
+        import pathlib
+        import re
+
+        about = pathlib.Path("src/tabicl/__about__.py").read_text()
+        match = re.search(r"""__version__\s*=\s*['"]([^'"]+)['"]""", about)
+        if match is None:
+            raise SystemExit("Could not read __version__ from src/tabicl/__about__.py")
+        version = match.group(1)
+        tag = os.environ["GITHUB_REF_NAME"]
+        print(f"package version: {version}")
+        print(f"git tag: {tag}")
+        if tag != f"v{version}":
+            raise SystemExit(
+                f"Package version {version} does not match tag {tag} "
+                f"(expected v{version})."
+            )
+        PY
+
+    - name: Write GitHub release notes
+      run: python scripts/release_notes.py --output release-notes.md
+
+    - name: Install pypa/build
+      run: python -m pip install build --user
+
+    - name: Build a binary wheel and a source tarball
+      run: python -m build
+
+    - name: Store the distribution packages
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: python-package-distributions
+        path: dist/
+        # Keep the built distributions long enough for a later security audit.
+        retention-days: 90
+
+    - name: Store the release notes
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: release-notes
+        path: release-notes.md
+        if-no-files-found: warn
+        retention-days: 90
+
+  publish-to-pypi:
+    name: >-
+      Publish tabicl distribution 📦 to PyPI
+    needs:
+    - build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/tabicl/
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Publish distribution 📦 to PyPI
+      uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+
+  github-release:
+    name: >-
+      Sign the tabicl distribution 📦 with Sigstore
+      and upload them to GitHub Release
+    needs:
+    - publish-to-pypi
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # IMPORTANT: mandatory for making GitHub Releases
+      id-token: write  # IMPORTANT: mandatory for sigstore
+
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Download the release notes
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      continue-on-error: true
+      with:
+        name: release-notes
+        path: .
+    - name: Sign the dists with Sigstore
+      uses: sigstore/gh-action-sigstore-python@790bc6befb9d733738f18d8f895854b453640ec9 # v3.5.0
+      with:
+        inputs: >-
+          ./dist/*.tar.gz
+          ./dist/*.whl
+    - name: Create GitHub Release
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          echo "GitHub Release $GITHUB_REF_NAME already exists"
+        elif [ -s release-notes.md ] && gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --notes-file release-notes.md; then
+          echo "Created GitHub Release $GITHUB_REF_NAME"
+        else
+          echo "Release notes could not be used; creating the release with a short summary"
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --notes "TabICL ${GITHUB_REF_NAME}"
+        fi
+    - name: Upload artifact signatures to GitHub Release
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      # dist/ contains the built packages and the sigstore signatures.
+      # Assets already on the release are left in place so a rerun can
+      # upload anything that was missed.
+      run: |
+        existing="$(gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')"
+        shopt -s nullglob
+        for file in dist/*; do
+          name="$(basename "$file")"
+          if printf '%s\n' "$existing" | grep -Fxq "$name"; then
+            echo "Asset $name is already on the release"
+            continue
+          fi
+          gh release upload "$GITHUB_REF_NAME" "$file" --repo "$GITHUB_REPOSITORY"
+        done
