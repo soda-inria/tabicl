@@ -37,6 +37,10 @@ dependencies = [
     "tokenizers>=0.20" # only to prevent uv solver bugged backtracking
 ]
 
+[project.urls]
+Documentation = "https://tabicl.readthedocs.io/en/latest/"
+Repository = "https://github.com/soda-inria/tabicl"
+
 [project.optional-dependencies]
 doc = [
   "sphinx",

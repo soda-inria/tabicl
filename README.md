@@ -6,6 +6,7 @@
 
 This repository is the official implementation of **TabICLv2** ([ICML 2026](https://arxiv.org/abs/2602.11139)) 
 and **TabICL** ([ICML 2025](https://arxiv.org/abs/2502.05564)).
+The documentation is available at [tabicl.readthedocs.io](https://tabicl.readthedocs.io/en/latest/).
 
 **Strong performance without hyperparameter tuning:** 
 TabICLv2 is a competitive model for tabular classification and regression 
@@ -197,7 +198,7 @@ Multi-GPU fine-tuning is auto-detected under `torchrun`:
 torchrun --nproc-per-node=2 finetune_script.py
 ```
 
-The tutorial [`tutorials/finetune_classifier.py`](tutorials/finetune_classifier.py)
+The [fine-tuning tutorial](https://tabicl.readthedocs.io/en/latest/tutorials/finetune_classifier.html)
 walks through the fine-tuning for a binary classification task.
 
 <img src="./docs/figures/finetune_decision_boundaries.png" width="85%" alt="Decision boundaries before and after fine-tuning" style="display: block; margin: auto;">

@@ -82,4 +82,16 @@ html_theme_options = {
         "image_light": "TabICL_logo.svg",
         "image_dark": "TabICL_logo_dark.svg",
     },
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/soda-inria/tabicl",
+            "icon": "fa-brands fa-github",
+        },
+        {
+            "name": "PyPI",
+            "url": "https://pypi.org/project/tabicl/",
+            "icon": "fa-brands fa-python",
+        },
+    ],
 }
