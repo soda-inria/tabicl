@@ -4,6 +4,10 @@
 Bug fixes
 ---------
 
+- Fix numpy `bool` columns of a pandas DataFrame being silently dropped with pandas >= 3.1. They
+  are now ordinal-encoded like the other categorical columns, and columns that are dropped because
+  of their dtype now raise a warning listing their dtypes. ([PR#190](https://github.com/soda-inria/tabicl/pull/190))
+
 - Keep inference on integrated GPUs (Intel XPU, CUDA) and Apple Silicon MPS from exhausting
   system memory. Batch sizes are limited by the available host RAM scaled by the new inference
   config option `unified_memory_safety_factor` (default 0.5), and on integrated XPU/CUDA GPUs the

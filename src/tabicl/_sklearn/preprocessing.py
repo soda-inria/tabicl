@@ -128,13 +128,13 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
 
         else:
 
-            cat_cols = make_column_selector(dtype_include=["string", "object", "category", "boolean"])(X)
+            import warnings
+            # pandas 3.1.1 selects on exact match, so we need to include "boolean" (pandas) and "bool" (numpy)
+            cat_cols = make_column_selector(dtype_include=["string", "object", "category", "boolean", "bool"])(X)
             cat_pos = [X.columns.get_loc(col) for col in cat_cols]
 
             high_cardinality_cols = [col for col in cat_cols if X[col].nunique() > 40]
             if high_cardinality_cols:
-                import warnings
-
                 warnings.warn(
                     f"The following categorical columns have a cardinality above 40: {high_cardinality_cols}. "
                     "High-cardinality columns might benefit from a better encoding than ordinal encoding, "
@@ -148,19 +148,18 @@ class TransformToNumerical(TransformerMixin, BaseEstimator):
                 transformers=[("categorical", cat_tfm, cat_pos), ("continuous", num_tfm, numeric_pos)]
             )
 
+            dropped_cols = {
+                col: str(dtype) for col, dtype in X.dtypes.items() if col not in cat_cols and col not in numeric_cols
+            }
+            if dropped_cols:
+                warnings.warn(f"The following columns are not used due to their data type: {dropped_cols}")
+
         self.tfm_.fit(X)
 
         if self.verbose and hasattr(self.tfm_, "transformers_"):
-            selected_cols = []
             for name, tfm, pos in self.tfm_.transformers_:
                 if tfm != "drop":
-                    cols = list(X.columns[pos])
-                    selected_cols.extend(cols)
-                    print(f"Columns classified as {name}: {cols}")
-
-            dropped_cols = set(X.columns).difference(set(selected_cols))
-            if len(dropped_cols) >= 1:
-                print(f"The following columns are not used due to their data type: {list(dropped_cols)}")
+                    print(f"Columns classified as {name}: {list(X.columns[pos])}")
 
         return self
 
