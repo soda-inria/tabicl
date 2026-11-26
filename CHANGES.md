@@ -30,6 +30,22 @@ Behaviour changes
   `auto_offload_threshold` setting the share of the budget an output may occupy while it
   stays on the device. Set `memory_fraction` (or an explicit `offload` mode) to tune both.
 
+- Auto-batching now also runs on CPU, with the same formula and no CPU-specific constant
+  or knob: `base_budget_mb + memory_fraction × CPU total memory`. `torch.cpu` exposes no
+  device memory API, so the CPU total is the physical RAM clipped to this process's
+  cgroup memory limit —
+  `min(psutil.virtual_memory().total, cgroup memory.max / memory.limit_in_bytes)`, read
+  once per process like any other device total. Both figures are static: the cgroup
+  *limit*, never its remaining headroom, so the CPU sizing path reads no free memory and
+  does not depend on how busy the machine is. CPU outputs are written into a plain host
+  tensor, and `offload` settings are ignored for CPU execution because a GPU→CPU copy, a
+  pinned buffer and disk offload have no meaning when the output is already in host
+  memory. A CPU allocation failure arrives as `MemoryError` rather than
+  `torch.OutOfMemoryError`, and the halving retry now catches both. As on
+  unified-memory accelerators, an allocation large enough to make the kernel OOM-kill the
+  process (SIGKILL) cannot be caught by any handler: static sizing plus the retry protect
+  a CPU run only up to that point.
+
 Bug fixes
 ---------
 

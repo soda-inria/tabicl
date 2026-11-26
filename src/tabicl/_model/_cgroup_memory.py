@@ -1,4 +1,11 @@
-"""Cgroup-aware CPU memory headroom for inference offload decisions.
+"""Cgroup-aware CPU memory figures for inference sizing and offload decisions.
+
+Two figures live here:
+
+- ``_cgroup_memory_headroom`` -- ``limit - usage`` for this process's cgroup.
+  Live, used only by offload resolution (``get_available_cpu_memory``).
+- ``_cgroup_memory_limit`` -- the static ``limit`` alone, used to clip the
+  physical RAM figure that feeds CPU auto-batch sizing.
 
 ``psutil.virtual_memory().available`` is the host's free RAM. The real cap for a
 container is ``limit - usage`` on this process's cgroup, which is often not
@@ -42,6 +49,62 @@ def _read_bytes(path: Path) -> int | None:
         return _parse_bytes(path.read_text())
     except OSError:
         return None
+
+
+def _limit_at(directory: Path, limit_name: str, physical: int) -> int | None:
+    """Static memory limit at ``directory``, or None if that level has no cap.
+
+    ``"max"``, an unreadable file, a non-positive limit and a v1 ~2**63
+    unlimited sentinel are all "no cap". A limit at or above physical RAM caps
+    nothing either, so it is dropped too: the caller's ``min(physical, limit)``
+    is the physical figure in that case.
+    """
+    limit = _read_bytes(directory / limit_name)
+    if limit is None or limit <= 0 or limit >= physical:
+        return None
+    return limit
+
+
+def _min_limit_along_ancestors(
+    start: Path, stop: Path, limit_name: str, physical: int
+) -> int | None:
+    """Tightest static limit on ``start`` and its parents up to ``stop``.
+
+    Same walk and bounds as ``_min_headroom_along_ancestors``, but reads only
+    the limit file -- no usage file is consulted, so the result is static.
+    """
+    best: int | None = None
+    path = start
+    for _ in range(64):
+        try:
+            path.relative_to(stop)
+        except ValueError:
+            break
+        limit = _limit_at(path, limit_name, physical)
+        if limit is not None:
+            best = limit if best is None else min(best, limit)
+        if path == stop or path.parent == path:
+            break
+        path = path.parent
+    return best
+
+
+def _limit_on_mounts(
+    rel: str,
+    mounts: list[tuple[Path, str]],
+    limit_name: str,
+    physical: int,
+) -> int | None:
+    """Tightest static limit among mounts that contain ``rel``."""
+    min_limit: int | None = None
+    for mountpoint, mount_root in mounts:
+        start = _under_mount(mountpoint, mount_root, rel)
+        if start is None:
+            continue
+        limit = _min_limit_along_ancestors(start, mountpoint, limit_name, physical)
+        if limit is not None:
+            min_limit = limit if min_limit is None else min(min_limit, limit)
+    return min_limit
 
 
 def _headroom_at(directory: Path, limit_name: str, usage_name: str, physical: int) -> int | None:
@@ -281,6 +344,77 @@ def _cgroup_memory_headroom(
             headroom = _headroom_at(root, limit_name, usage_name, physical)
             if headroom is not None:
                 return headroom
+        return None
+    except Exception:
+        return None
+
+
+def _cgroup_memory_limit(
+    *,
+    proc_cgroup: Path = _PROC_CGROUP,
+    proc_mountinfo: Path = _PROC_MOUNTINFO,
+    v2_root: Path | None = None,
+    v1_root: Path | None = None,
+    physical_bytes: int | None = None,
+) -> int | None:
+    """Static memory limit of this process's cgroup in bytes, or None if unlimited.
+
+    Same path resolution as ``_cgroup_memory_headroom`` (``/proc/self/cgroup``
+    joined onto the controller mount from ``/proc/self/mountinfo``, ancestors
+    walked to the mount, v2 ``memory.max`` first, then the v1 ``memory:``
+    controller), but it reads **only the limit file**. Usage is never read, so
+    the figure does not change while the process runs -- it is the static cap a
+    batch-size estimate may rely on, never the remaining headroom.
+
+    The tightest limit among ancestors wins. ``"max"``, the v1 ~2**63 sentinel,
+    a non-positive limit and any limit at or above ``physical`` count as no cap.
+
+    Never raises: any error falls through to None.
+    """
+    try:
+        physical = physical_bytes if physical_bytes is not None else psutil.virtual_memory().total
+        mountinfo_text = _read_text(proc_mountinfo)
+        rel_v2 = _process_cgroup_relpath(proc_cgroup, v2=True)
+        rel_v1 = _process_cgroup_relpath(proc_cgroup, v2=False)
+
+        if rel_v2 is not None:
+            limit = _limit_on_mounts(
+                rel_v2,
+                _controller_mounts(
+                    v2_root, mountinfo_text, fstype="cgroup2", default=_V2_ROOT
+                ),
+                "memory.max",
+                physical,
+            )
+            if limit is not None:
+                return limit
+        if rel_v1 is not None:
+            limit = _limit_on_mounts(
+                rel_v1,
+                _controller_mounts(
+                    v1_root,
+                    mountinfo_text,
+                    fstype="cgroup",
+                    default=_V1_ROOT,
+                    controller="memory",
+                ),
+                "memory.limit_in_bytes",
+                physical,
+            )
+            if limit is not None:
+                return limit
+        if rel_v2 is not None or rel_v1 is not None:
+            # A hierarchy line existed but published no cap ("max", v1 sentinel).
+            return None
+        # /proc/self/cgroup missing: last try, Docker private-namespace root files.
+        v2 = _controller_mounts(v2_root, mountinfo_text, fstype="cgroup2", default=_V2_ROOT)[0][0]
+        v1 = _controller_mounts(
+            v1_root, mountinfo_text, fstype="cgroup", default=_V1_ROOT, controller="memory"
+        )[0][0]
+        for root, limit_name in ((v2, "memory.max"), (v1, "memory.limit_in_bytes")):
+            limit = _limit_at(root, limit_name, physical)
+            if limit is not None:
+                return limit
         return None
     except Exception:
         return None

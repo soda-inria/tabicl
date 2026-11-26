@@ -155,10 +155,23 @@ def _cpu_manager(**kwargs) -> InferenceManager:
     return mgr
 
 
+def _accelerator_manager(device_type: str = "cuda", **kwargs) -> InferenceManager:
+    """An InferenceManager whose memory sizing runs the *accelerator* branch.
+
+    These budget tests need a device class that reads the backend memory API, and
+    no accelerator exists in CI. The manager is configured on CPU and its execution
+    device is swapped afterwards: only the sizing path is exercised, each test fakes
+    ``_get_device_backend_api`` itself, and no tensor is ever moved.
+    """
+    mgr = _cpu_manager(**kwargs)
+    mgr.exe_device = torch.device(device_type)
+    return mgr
+
+
 def test_batch_budget_is_1024mb_plus_fraction_of_total_device_memory(monkeypatch):
     """The budget is ``1024 + memory_fraction * total`` and the free half is ignored."""
     total_mb = 24 * 1024.0
-    mgr = _cpu_manager(memory_fraction=0.10)
+    mgr = _accelerator_manager(memory_fraction=0.10)
     fake = _FakeMemBackend(total_mb=total_mb, free_mb=8.0)
     monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake)
 
@@ -179,7 +192,7 @@ def test_batch_budget_is_1024mb_plus_fraction_of_total_device_memory(monkeypatch
 
 def test_batch_budget_falls_back_to_the_base_when_no_total_memory_api(monkeypatch):
     """Backends exposing neither ``mem_get_info`` nor ``recommended_max_memory``."""
-    mgr = _cpu_manager(memory_fraction=0.10)
+    mgr = _accelerator_manager(memory_fraction=0.10)
     monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: None)
 
     assert mgr.get_total_device_memory() == 0.0
@@ -189,7 +202,7 @@ def test_batch_budget_falls_back_to_the_base_when_no_total_memory_api(monkeypatc
 def test_mps_style_backend_uses_recommended_max_memory_as_total(monkeypatch):
     """``recommended_max_memory`` is the total when ``mem_get_info`` is absent (MPS)."""
     total_mb = 8 * 1024.0
-    mgr = _cpu_manager(memory_fraction=0.10)
+    mgr = _accelerator_manager(memory_fraction=0.10)
     fake = _FakeMemBackend(total_mb=total_mb, has_mem_get_info=False)
     monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake)
 
@@ -203,7 +216,7 @@ def test_batch_sizing_never_synchronizes_flushes_or_queries_free_memory(monkeypa
     Every memory operation of the backend raises: the sizing path still completes
     and degrades to the fixed 1024 MB base instead of calling any of them.
     """
-    mgr = _cpu_manager(memory_fraction=0.10)
+    mgr = _accelerator_manager(memory_fraction=0.10)
     fake = _RaisingMemBackend()
     monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake)
 
@@ -588,7 +601,7 @@ def test_batch_budget_is_static_for_unified_memory_devices(monkeypatch):
     synchronize / empty-cache entry points are never called.
     """
     total_mb = 16 * 1024.0
-    mgr = _cpu_manager(memory_fraction=0.10, base_budget_mb=2048.0)
+    mgr = _accelerator_manager(memory_fraction=0.10, base_budget_mb=2048.0)
     fake = MagicMock()
     fake.mem_get_info.return_value = (1, int(total_mb * 1024**2))  # (free, total)
     monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake)

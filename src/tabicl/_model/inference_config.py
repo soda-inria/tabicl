@@ -253,18 +253,19 @@ class InferenceConfig:
     embedding), ``ROW_CONFIG`` (row interaction) and ``ICL_CONFIG`` (in-context
     learning). Each is a :class:`MgrConfig` accepting the keys described there.
 
-    Auto-batching on accelerators sizes batches from a **static memory budget**
-    rather than from the free device memory left at prediction time::
+    Auto-batching on every device class sizes batches from a **static memory
+    budget** rather than from the free memory left at prediction time::
 
         budget = base_budget_mb + memory_fraction * total device memory
 
     The same formula applies to every device class -- discrete accelerators,
-    integrated GPUs and MPS alike. ``base_budget_mb`` (default ``1024.0`` MB) is the
-    flat overhead allowance; ``memory_fraction`` (default ``0.10``) is the
+    integrated GPUs, MPS and CPU alike. ``base_budget_mb`` (default ``1024.0`` MB) is
+    the flat overhead allowance; ``memory_fraction`` (default ``0.10``) is the
     device-scaled term. Total device memory is
     read once per device from the backend's own API (``mem_get_info`` on CUDA/XPU,
-    ``recommended_max_memory`` on MPS) and cached. Backends exposing neither fall
-    back to the flat base alone.
+    ``recommended_max_memory`` on MPS) and cached. On CPU it is
+    ``min(physical RAM, cgroup memory limit)``, since ``torch.cpu`` has no memory
+    API. Backends exposing neither fall back to the flat base alone.
 
     Because the budget does not shrink when the device is already busy, an
     over-estimate is handled by the out-of-memory retry, which halves the batch
@@ -274,7 +275,8 @@ class InferenceConfig:
 
     The same budget figure is what ``offload="auto"`` compares the output size
     against, so automatic offload decisions are budget-based rather than based on
-    live free memory.
+    live free memory. Offload settings are ignored for CPU execution: outputs are
+    already in host memory, so they are written into a plain host buffer.
     """
 
     COL_CONFIG: MgrConfig = None

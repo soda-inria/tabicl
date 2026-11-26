@@ -8,16 +8,23 @@ arrives as SIGKILL, with no Python traceback and no CUDA error.
 
 The process cgroup (from ``/proc/self/cgroup``) is often nested, not
 ``/sys/fs/cgroup/memory.max``. Walk ancestors and take the tightest ``limit - usage``.
+
+The second half of this module covers the *static* side: ``_cgroup_memory_limit``
+supplies the ``min(physical RAM, cgroup limit)`` figure that CPU auto-batching uses
+as its total device memory, and the tests below pin the CPU batching path -- split,
+static budget, ignored offload, ``MemoryError`` retry.
 """
 
 from __future__ import annotations
 
 import pathlib
+from collections import OrderedDict
 
 import psutil
 import pytest
+import torch
 
-from tabicl._model._cgroup_memory import _cgroup_memory_headroom
+from tabicl._model._cgroup_memory import _cgroup_memory_headroom, _cgroup_memory_limit
 from tabicl._model.inference import InferenceManager
 
 PHYSICAL = 32 * 10**9
@@ -281,3 +288,190 @@ def test_mountinfo_octal_escapes_in_mountpoint(tmp_path):
         )
         == HEADROOM
     )
+
+
+# ---------------------------------------------------------------------------
+# CPU auto-batching
+#
+# CPU execution goes through the same batching loop as accelerators. Its "total
+# device memory" is ``min(physical RAM, static cgroup limit)``, its sizing path
+# must never read free memory, offload settings are ignored because outputs are
+# already host tensors, and a CPU out-of-memory is a ``MemoryError``.
+# ---------------------------------------------------------------------------
+
+
+class _TotalOnlyVirtualMemory:
+    """``psutil.virtual_memory()`` stand-in that refuses to report free memory."""
+
+    def __init__(self, total: int):
+        self.total = total
+
+    @property
+    def available(self):  # pragma: no cover - only reached on a regression
+        raise AssertionError("the CPU batch-sizing path must not read free memory")
+
+
+def _cpu_inference_manager(**kwargs) -> InferenceManager:
+    mgr = InferenceManager(enc_name="tf_icl", out_dim=3)
+    mgr.configure(device="cpu", use_amp=False, use_fa3=False, use_async=False, **kwargs)
+    return mgr
+
+
+def _cgroup_limit(root: pathlib.Path, rel: str = "/") -> int | None:
+    proc = root / "proc_cgroup"
+    _write(proc, f"0::{rel}\n")
+    return _cgroup_memory_limit(
+        proc_cgroup=proc, v2_root=root / "cg", physical_bytes=PHYSICAL
+    )
+
+
+def test_cgroup_limit_is_the_static_limit_and_ignores_usage(tmp_path):
+    """The sizing figure is the limit itself, not ``limit - usage``."""
+    cg = tmp_path / "cg"
+    _write(cg / "memory.max", str(LIMIT))
+    _write(cg / "memory.current", str(USAGE))
+    assert _cgroup_limit(tmp_path) == LIMIT
+
+    # A cgroup that filled up (headroom would be negative) keeps the same static
+    # limit: usage is never read on this path.
+    _write(cg / "memory.current", str(LIMIT))
+    assert _cgroup_limit(tmp_path) == LIMIT
+
+
+def test_cgroup_limit_is_none_when_unlimited_or_at_least_physical(tmp_path):
+    cg = tmp_path / "cg"
+    _write(cg / "memory.max", "max")
+    assert _cgroup_limit(tmp_path) is None
+
+    _write(cg / "memory.max", str(PHYSICAL))
+    assert _cgroup_limit(tmp_path) is None
+
+
+def test_cgroup_limit_walks_ancestors_for_the_tightest_cap(tmp_path):
+    cg = tmp_path / "cg"
+    leaf = cg / "pod" / "ctr"
+    _write(cg / "memory.max", str(LIMIT))
+    _write(leaf / "memory.max", "max")
+    assert _cgroup_limit(tmp_path, "/pod/ctr") == LIMIT
+
+
+def test_cgroup_limit_never_raises(monkeypatch):
+    def boom(self, *a, **k):
+        raise PermissionError("denied")
+
+    monkeypatch.setattr(pathlib.Path, "read_text", boom)
+    assert _cgroup_memory_limit() is None
+
+
+def test_cpu_budget_is_1024_plus_fraction_of_min_physical_and_cgroup_limit(monkeypatch):
+    """CPU total memory is ``min(physical RAM, cgroup limit)``; the budget is unchanged."""
+    from tabicl._model import inference
+
+    monkeypatch.setattr(
+        inference.psutil, "virtual_memory", lambda: _TotalOnlyVirtualMemory(2 * LIMIT)
+    )
+    monkeypatch.setattr(inference, "_cgroup_memory_limit", lambda: LIMIT)
+
+    mgr = _cpu_inference_manager()
+
+    expected_total_mb = LIMIT / 1024**2
+    assert mgr.get_total_device_memory() == pytest.approx(expected_total_mb)
+    assert inference._TOTAL_DEVICE_MEM_MB[("cpu", 0)] == pytest.approx(expected_total_mb)
+    assert mgr.get_batch_memory_budget() == pytest.approx(1024.0 + 0.10 * expected_total_mb)
+
+
+def test_cpu_total_memory_is_physical_ram_without_a_cgroup_limit(monkeypatch):
+    from tabicl._model import inference
+
+    monkeypatch.setattr(
+        inference.psutil, "virtual_memory", lambda: _TotalOnlyVirtualMemory(PHYSICAL)
+    )
+    monkeypatch.setattr(inference, "_cgroup_memory_limit", lambda: None)
+
+    mgr = _cpu_inference_manager()
+
+    assert mgr.get_total_device_memory() == pytest.approx(PHYSICAL / 1024**2)
+    assert mgr.get_batch_memory_budget() == pytest.approx(1024.0 + 0.10 * PHYSICAL / 1024**2)
+
+
+def test_cpu_auto_batching_splits_an_over_budget_input_like_unbatched():
+    """A CPU input over the budget-derived batch size is split, with equal outputs.
+
+    ``seq_len`` is large enough that the static budget's estimate is a single
+    row, so the 8-row batch dimension must be split: a regression that
+    short-circuits CPU to one forward would leave ``calls == [8]``.
+    """
+    mgr = _cpu_inference_manager()
+    torch.manual_seed(0)
+
+    seq_len = 45_000
+    x = torch.randn(8, seq_len, 3)
+    _, batch_size = mgr.estimate_safe_batch_size(seq_len, include_inputs=False, in_dim=3)
+    assert 1 <= batch_size < x.shape[0]
+
+    calls = []
+
+    def forward(x):
+        calls.append(x.shape[0])
+        return x * 2
+
+    out = mgr(forward, OrderedDict(x=x))
+
+    assert len(calls) > 1
+    assert len(calls) == (x.shape[0] + batch_size - 1) // batch_size
+    assert out.shape == (8, seq_len, 3)
+    assert out.device.type == "cpu"
+    assert not out.is_pinned()
+
+    unbatched = mgr(lambda x: x * 2, OrderedDict(x=x), auto_batch=False)
+    torch.testing.assert_close(out, unbatched)
+
+
+def test_cpu_execution_ignores_offload_and_never_queries_free_memory(monkeypatch):
+    """Offload resolution -- and its free-memory reads -- is never reached on CPU."""
+    from tabicl._model import inference
+
+    monkeypatch.setattr(
+        inference.psutil, "virtual_memory", lambda: _TotalOnlyVirtualMemory(PHYSICAL)
+    )
+    monkeypatch.setattr(inference, "_cgroup_memory_limit", lambda: None)
+
+    def _must_not_be_called(*args, **kwargs):
+        raise AssertionError("CPU execution must not resolve offload or read free memory")
+
+    monkeypatch.setattr(InferenceManager, "get_available_cpu_memory", _must_not_be_called)
+    monkeypatch.setattr(InferenceManager, "get_available_disk_space", _must_not_be_called)
+    monkeypatch.setattr(InferenceManager, "_resolve_offload_mode", _must_not_be_called)
+
+    # ``offload="disk"`` without a directory would fail if it were honoured.
+    mgr = _cpu_inference_manager(offload="disk")
+    calls = []
+
+    def forward(x):
+        calls.append(x.shape[0])
+        return x * 2
+
+    x = torch.randn(8, 45_000, 3)
+    out = mgr(forward, OrderedDict(x=x))
+
+    assert len(calls) > 1
+    assert out.shape == (8, 45_000, 3)
+    assert out.device.type == "cpu"
+
+
+def test_memory_error_on_the_first_cpu_batch_is_retried_halved():
+    """CPU out-of-memory is ``MemoryError``; the halving retry covers it."""
+    mgr = _cpu_inference_manager()
+    batch_sizes = []
+
+    def forward(x):
+        batch_sizes.append(x.shape[0])
+        if len(batch_sizes) == 1:
+            raise MemoryError("simulated CPU out of memory")
+        return x * 2
+
+    x = torch.randn(4, 8, 3)
+    out = mgr(forward, OrderedDict(x=x))
+
+    assert batch_sizes == [4, 2, 2]
+    assert torch.equal(out, x * 2)

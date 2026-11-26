@@ -21,7 +21,7 @@ from torch import Tensor
 
 from .kv_cache import KVCache
 from .attention import flash_attn3_toggle
-from ._cgroup_memory import _cgroup_memory_headroom
+from ._cgroup_memory import _cgroup_memory_headroom, _cgroup_memory_limit
 from .._torch_devices import resolve_torch_device
 
 
@@ -933,7 +933,19 @@ class InferenceManager:
         MPS-style backends that do not. Total memory is a static property of the
         device, so this deliberately does **not** synchronize the device, flush
         the allocator cache, or ask how much is currently free.
+
+        CPU has no device memory API. The analogue of "total device memory" is
+        the physical RAM of the machine, clipped to this process's cgroup memory
+        limit when it has one: ``min(psutil total, cgroup limit)``. Both figures
+        are static -- the cgroup *limit*, never its remaining headroom -- so the
+        CPU sizing path does not depend on how much memory happens to be free.
         """
+        if self.exe_device.type == "cpu":
+            physical = psutil.virtual_memory().total
+            limit = _cgroup_memory_limit()
+            total = physical if limit is None else min(physical, limit)
+            return total / (1024 * 1024)
+
         backend_api = self._get_device_backend_api()
         if backend_api is None:
             return 0.0
@@ -971,7 +983,11 @@ class InferenceManager:
         process. ``configure()`` does not invalidate the entry; a different execution
         device is a different key and is queried on its own first use.
 
-        Returns 0.0 when the backend exposes no total-memory API.
+        For CPU, the cached figure is ``min(physical RAM, cgroup memory limit)`` in
+        MB -- see ``_query_total_device_memory_mb``.
+
+        Returns 0.0 when an accelerator backend exposes no total-memory API and is
+        never 0.0 for CPU, which always has a physical total.
         """
         key = _device_cache_key(self.exe_device)
         cached = _TOTAL_DEVICE_MEM_MB.get(key)
@@ -984,11 +1000,12 @@ class InferenceManager:
         """Memory budget (MB) the auto-batching estimate targets.
 
         ``base_budget_mb + memory_fraction * total device memory`` for every device
-        class -- discrete accelerators, integrated GPUs and MPS alike. The base term
-        leaves room for fixed overheads; the fraction term scales with the device.
-        The figure is static for a given device and configuration -- it is never
-        clamped against the free memory observed at prediction time, and the sizing
-        path never synchronizes the device or flushes the allocator cache.
+        class -- discrete accelerators, integrated GPUs, MPS and CPU alike. The base
+        term leaves room for fixed overheads; the fraction term scales with the
+        device (on CPU, ``total device memory`` is ``min(physical RAM, cgroup memory
+        limit)``). The figure is static for a given device and configuration -- it is
+        never clamped against the free memory observed at prediction time, and the
+        sizing path never synchronizes the device or flushes the allocator cache.
         """
         return self.base_budget_mb + self.memory_fraction * self.get_total_device_memory()
 
@@ -1365,14 +1382,24 @@ class InferenceManager:
 
         Notes
         -----
-        - For CPU execution, batching is not supported and the forward runs once
-          via ``_run_forward`` (optional AMP + input preparation).
-        - Accelerator backends use auto-batching and OOM recovery. Batch sizes come from
-          a static device memory budget (``base_budget_mb + memory_fraction * total device
-          memory``, total read once per device for the process), never from a live
-          free-memory query.
-        - When OOM occurs, batch size is halved and inference is retried.
-        - Async copy is used when ``use_async=True`` and offloading to CPU/disk.
+        - Every execution device -- CPU included -- goes through the same auto-batching
+          loop: one batch-size estimate, the same split planning and output write-back,
+          the same out-of-memory retry. Batch sizes come from a static device memory
+          budget (``base_budget_mb + memory_fraction * total device memory``, total read
+          once per device for the process), never from a live free-memory query. On CPU
+          the total is ``min(physical RAM, cgroup memory limit)``, since ``torch.cpu``
+          exposes no device memory API.
+        - Offload settings are ignored for CPU execution because GPU->CPU copies,
+          pinned buffers and disk offload have no meaning when outputs are already in
+          host memory: a CPU run writes into a plain host tensor, and no free-memory
+          query is made.
+        - When an out-of-memory error occurs -- ``torch.OutOfMemoryError`` on an
+          accelerator, ``MemoryError`` on CPU -- the batch size is halved and inference
+          is retried. An allocation that makes the kernel OOM-kill the process is
+          uncatchable by any handler: static sizing plus this retry only protect a CPU
+          run up to that point.
+        - Async copy is used when ``use_async=True`` and offloading to CPU/disk; a CPU
+          run never copies, so it never uses the async copy manager.
         """
         if not self._is_configured:
             raise RuntimeError("InferenceManager must be configured before running inference. Call configure() first.")
@@ -1388,11 +1415,6 @@ class InferenceManager:
     ) -> Tensor:
         # Non-batched execution
         if not auto_batch:
-            return self._run_forward(forward_fn, self._prepare_inputs(inputs))
-
-        # CPU: no accelerator memory APIs for safe batch sizing; still route
-        # through _run_forward so AMP/no_grad wrapping stays consistent.
-        if self.exe_device.type == "cpu":
             return self._run_forward(forward_fn, self._prepare_inputs(inputs))
 
         # Extract shape/dtype info
@@ -1424,21 +1446,32 @@ class InferenceManager:
 
         # Estimate output size
         output_mb = self._estimate_tensor_mb(tuple(output_shape), input_dtype, repeat=output_repeat)
-        cpu_free = self.get_available_cpu_memory()
-        disk_free = self.get_available_disk_space(self.disk_offload_dir)
 
-        # Resolve offload mode
-        mode, reason = self._resolve_offload_mode(output_mb, budget_mb, cpu_free, disk_free)
+        # CPU execution writes host tensors already, so offload settings are ignored:
+        # a GPU->CPU copy, a pinned staging buffer and disk offload have no meaning
+        # when the output never leaves host memory. In particular, the offload
+        # resolution -- which reads free CPU memory and free disk space at prediction
+        # time -- is not consulted, so the CPU path stays purely static.
+        cpu_exec = self.exe_device.type == "cpu"
+        if cpu_exec:
+            mode = OffloadMode.CPU
+            reason = OffloadReason("cpu_execution", "plain host output buffer")
+        else:
+            cpu_free = self.get_available_cpu_memory()
+            disk_free = self.get_available_disk_space(self.disk_offload_dir)
 
-        if self.verbose:
-            eff_disk = max(0, disk_free - self.disk_min_free_mb)
-            print(
-                f"Offload decision: mode={mode.name} (reason={reason})\n"
-                f"Output size: {output_mb / 1024:.2f}GB (repeat={output_repeat}), "
-                f"CPU free: {cpu_free / 1024:.2f}GB, "
-                f"Device budget: {budget_mb / 1024:.2f}GB, "
-                f"Disk free (effective): {eff_disk / 1024:.2f}GB @ {self.disk_offload_dir}"
-            )
+            # Resolve offload mode
+            mode, reason = self._resolve_offload_mode(output_mb, budget_mb, cpu_free, disk_free)
+
+            if self.verbose:
+                eff_disk = max(0, disk_free - self.disk_min_free_mb)
+                print(
+                    f"Offload decision: mode={mode.name} (reason={reason})\n"
+                    f"Output size: {output_mb / 1024:.2f}GB (repeat={output_repeat}), "
+                    f"CPU free: {cpu_free / 1024:.2f}GB, "
+                    f"Device budget: {budget_mb / 1024:.2f}GB, "
+                    f"Disk free (effective): {eff_disk / 1024:.2f}GB @ {self.disk_offload_dir}"
+                )
 
         # Identify store-mode caches that need to be accumulated back into the original inputs
         store_cache_keys = {name for name, v in inputs.items() if isinstance(v, KVCache) and not v.is_populated()}
@@ -1447,7 +1480,7 @@ class InferenceManager:
         if batch_size >= total_bs:
             try:
                 out = self._run_forward(forward_fn, self._prepare_inputs(inputs))
-            except _OutOfMemoryError as e:
+            except (MemoryError, _OutOfMemoryError) as e:
                 if total_bs <= 1:
                     raise RuntimeError(
                         f"Failed to execute even with a batch size of one element. Error: {e}"
@@ -1458,7 +1491,7 @@ class InferenceManager:
                 self._empty_backend_cache()
                 batch_size = max(1, total_bs // 2)
             else:
-                if mode == OffloadMode.GPU:
+                if cpu_exec or mode == OffloadMode.GPU:
                     return out
                 if mode == OffloadMode.CPU:
                     return out.cpu()
@@ -1472,11 +1505,17 @@ class InferenceManager:
                 return outputs
 
         # Multi-batch execution
-        outputs, _ = self._allocate_output_buffer(mode, tuple(output_shape), input_dtype)
+        if cpu_exec:
+            # Plain host buffer: never pinned, never memory-mapped (see the CPU
+            # offload note above).
+            outputs = torch.empty(tuple(output_shape), dtype=input_dtype, device="cpu")
+        else:
+            outputs, _ = self._allocate_output_buffer(mode, tuple(output_shape), input_dtype)
 
-        # Setup async copy manager if using async and offloading
+        # Setup async copy manager if using async and offloading. A CPU run never
+        # copies, so it has no use for the async staging machinery.
         async_copy: Optional[AsyncCopyManager] = None
-        if self.use_async and mode != OffloadMode.GPU:
+        if self.use_async and not cpu_exec and mode != OffloadMode.GPU:
             async_copy = AsyncCopyManager(
                 self.exe_device,
                 max_pending=self.async_depth,
@@ -1516,7 +1555,7 @@ class InferenceManager:
                                 original_cache.preallocate(batch_cache, tuple(batch_dims), device=self.exe_device)
                             original_cache[indices] = batch_cache
 
-                    if mode == OffloadMode.GPU:
+                    if cpu_exec or mode == OffloadMode.GPU:
                         outputs[indices] = out
                     else:
                         if async_copy is not None:
@@ -1551,7 +1590,11 @@ class InferenceManager:
 
                 return outputs
 
-            except _OutOfMemoryError as e:
+            except (MemoryError, _OutOfMemoryError) as e:
+                # CPU allocation failure surfaces as ``MemoryError``; an accelerator
+                # one as ``torch.OutOfMemoryError``. A kernel OOM kill (SIGKILL) is
+                # uncatchable by any handler: only the static batch sizing above and
+                # this halving retry protect a CPU run up to that point.
                 if async_copy is not None:
                     async_copy.clear()
 
