@@ -367,26 +367,30 @@ def test_call_runs_forward_under_allocator_cap(monkeypatch):
     mgr(forward_fn, OrderedDict(x=torch.zeros(1, 1, 1)))
 
 
-@pytest.mark.parametrize("offload", ["auto", "gpu"])
-@pytest.mark.parametrize(("with_disk", "expected"), [(False, OffloadMode.GPU), (True, OffloadMode.DISK)])
-def test_offload_skips_cpu_on_integrated_gpu(monkeypatch, tmp_path, offload, with_disk, expected):
-    """On an integrated GPU a CPU copy uses the same RAM, so a tight device offloads to disk or not at all."""
-    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
-    mgr.configure(device="xpu", offload=offload, disk_offload_dir=str(tmp_path) if with_disk else None)
-    monkeypatch.setattr(mgr, "_unified_host", True)
+@pytest.mark.parametrize(
+    ("unified_host", "offload", "disk_free_mb", "expected"),
+    [
+        (True, "auto", 0.0, OffloadMode.GPU),
+        (True, "auto", 10_000.0, OffloadMode.DISK),
+        (True, "gpu", 0.0, OffloadMode.GPU),
+        (True, "disk", 0.0, OffloadMode.GPU),
+        (True, "cpu", 0.0, OffloadMode.CPU),
+        (None, "auto", 0.0, OffloadMode.GPU),
+    ],
+)
+def test_offload_mode_on_shared_memory_gpu(monkeypatch, tmp_path, unified_host, offload, disk_free_mb, expected):
+    """On an integrated or unclassified GPU, CPU memory may be the same RAM and is only used on request.
 
-    mode, _ = mgr._resolve_offload_mode(output_mb=600.0, gpu_free_mb=500.0, cpu_free_mb=8000.0, disk_free_mb=10_000.0)
+    A tight device or a full disk therefore falls back to disk when there is room, or to the device.
+    """
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="xpu", offload=offload, disk_offload_dir=str(tmp_path))
+    monkeypatch.setattr(mgr, "_unified_host", unified_host)
+
+    mode, _ = mgr._resolve_offload_mode(
+        output_mb=600.0, gpu_free_mb=500.0, cpu_free_mb=8000.0, disk_free_mb=disk_free_mb
+    )
     assert mode is expected
-
-
-def test_offload_skips_cpu_on_unclassified_gpu(monkeypatch):
-    """A GPU that cannot be classified may share host RAM, so it does not offload to CPU memory either."""
-    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
-    mgr.configure(device="xpu")
-    monkeypatch.setattr(mgr, "_unified_host", None)
-
-    mode, _ = mgr._resolve_offload_mode(output_mb=600.0, gpu_free_mb=500.0, cpu_free_mb=8000.0, disk_free_mb=10_000.0)
-    assert mode is OffloadMode.GPU
 
 
 def test_auto_offload_keeps_cpu_on_mps():

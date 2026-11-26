@@ -1119,8 +1119,8 @@ class InferenceManager:
 
         For AUTO mode, the priority is:
             GPU (if within threshold) -> CPU -> DISK -> CPU(swap as last resort).
-        On integrated CUDA/XPU GPUs a CPU copy uses the same RAM, so GPU and AUTO modes skip it
-        (also when the device cannot be classified):
+        On integrated CUDA/XPU GPUs a CPU copy uses the same RAM, so only an explicit CPU
+        request uses it (also when the device cannot be classified). The other modes fall back:
             GPU (if it fits) -> DISK -> GPU.
 
         Note: CPU mode can use either pinned or non-pinned memory.
@@ -1139,14 +1139,14 @@ class InferenceManager:
         cpu_fits = output_mb <= safe_cpu_mb
         disk_fits = has_disk and output_mb <= safe_disk_mb
 
-        # Fallback when the device is tight on an integrated GPU, where CPU memory is the same RAM.
+        # Fallback on an integrated GPU, where CPU memory is the same RAM.
         if disk_fits:
             integrated_fallback = OffloadMode.DISK, OffloadReason(
                 "integrated_gpu_disk", f"gpu tight -> disk ({output_mb:.0f}MB <= {safe_disk_mb:.0f}MB safe disk free)"
             )
         else:
             integrated_fallback = OffloadMode.GPU, OffloadReason(
-                "integrated_gpu_stays", "gpu tight, no disk -> gpu (cpu is the same memory)"
+                "integrated_gpu_stays", "no room on disk -> gpu (cpu is the same memory)"
             )
 
         # User-requested mode with cascading fallback
@@ -1193,6 +1193,8 @@ class InferenceManager:
                     return OffloadMode.DISK, OffloadReason(
                         "user_disk_fits", f"{output_mb:.0f}MB <= {safe_disk_mb:.0f}MB safe disk free"
                     )
+                elif self._may_share_host_ram:
+                    return integrated_fallback
                 else:
                     return OffloadMode.CPU, OffloadReason("user_disk_fails", "disk (requested) tight -> cpu (swap)")
 
