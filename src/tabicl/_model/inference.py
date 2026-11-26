@@ -600,8 +600,8 @@ class InferenceManager:
     Key Features
     ------------
     1. Automatic Batch Size Estimation: Estimates safe batch sizes against a
-       device memory budget (a flat base plus a fraction of total device memory)
-       using pre-computed memory coefficients from profiling.
+       static memory budget -- the configured ``memory_budget``, used directly on
+       every device class -- using pre-computed memory coefficients from profiling.
 
     2. Multi-dimensional Batching: Splits large inputs into smaller batches
        across multiple batch dimensions, processing them sequentially.
@@ -1280,10 +1280,9 @@ class InferenceManager:
         - Every execution device -- CPU included -- goes through the same auto-batching
           loop: one batch-size estimate, the same split planning and output write-back,
           the same out-of-memory retry. Batch sizes come from a static device memory
-          budget (``memory_budget``, total read
-          once per device for the process), never from a live free-memory query. On CPU
-          the total is ``min(physical RAM, cgroup memory limit)``, since ``torch.cpu``
-          exposes no device memory API.
+          budget (``memory_budget``), never from a live free-memory query. ``torch.cpu``
+          exposes no device memory API, so CPU sizing uses the configured budget
+          directly, with no reads of physical RAM, cgroup limits, or free memory.
         - Offload settings are ignored for CPU execution because GPU->CPU copies,
           pinned buffers and disk offload have no meaning when outputs are already in
           host memory: a CPU run writes into a plain host tensor, and no free-memory
