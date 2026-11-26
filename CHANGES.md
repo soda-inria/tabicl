@@ -5,15 +5,26 @@ Behaviour changes
 -----------------
 
 - Auto-batching on accelerators sizes batches from a fixed memory budget:
-  `1024 MB + memory_fraction × total device memory`. `memory_fraction` is the share of
-  **total** device memory added to the 1024 MB base and defaults to `0.10`; the base is a
-  fixed overhead allowance and is not configurable. Total device memory is fetched once
-  per device for the whole process from the backend's own API, so sizing no longer
-  synchronizes the device, flushes the allocator cache or reads free memory before each
-  prediction. The budget does not shrink when the device is already busy: an over-estimate
-  is caught by the out-of-memory retry, which halves the batch size down to one element,
-  the 1024 MB base providing the headroom that makes that floor workable. A sequence that
-  exceeds the budget even as a single element warns instead of silently overshooting.
+  `base_budget_mb + memory_fraction × total device memory`, with the same formula on
+  every device class, including integrated GPUs (Intel XPU, CUDA) and Apple Silicon MPS.
+  `memory_fraction` is the share of **total** device memory added to the flat base and
+  defaults to `0.10`; the flat base itself is now the inference config option
+  `base_budget_mb` (default `1024.0` MB), accepted per stage alongside
+  `memory_fraction`. Total device memory is fetched once per device for the whole
+  process from the backend's own API, so sizing no longer synchronizes the device,
+  flushes the allocator cache or reads free memory before each prediction. The
+  unified-memory protections introduced by
+  [#179](https://github.com/soda-inria/tabicl/pull/179) are deliberately withdrawn here
+  and deferred to the larger overhaul: after this change the only protection on a
+  unified-memory device is the static budget plus the out-of-memory retry, which halves
+  the batch size down to one element. The dynamic clamp of the budget against the
+  currently available host RAM is gone, and so is the allocator ceiling that made an
+  oversized allocation raise `torch.OutOfMemoryError` -- `unified_memory_safety_factor`
+  is removed with it. On integrated GPUs an overshoot that the allocator would
+  previously have refused is now handled by the OS, up to and including the process
+  being killed without a traceback. That is the owner's accepted trade-off, recorded
+  here, not an oversight. A sequence that exceeds the budget even as a single element
+  warns instead of silently overshooting.
 
 - `offload="auto"` compares the output size against the same static budget, with
   `auto_offload_threshold` setting the share of the budget an output may occupy while it

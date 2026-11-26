@@ -20,12 +20,12 @@ class MgrConfig:
 
     **Batching:**
 
-    - ``memory_fraction``: Fraction of the device's **total** memory added to a fixed
-      1024 MB base to form the auto-batching memory budget
-      (``1024 MB + memory_fraction * total device memory``). Default is 0.10.
-    - ``unified_memory_safety_factor``: Fraction (0-1) of the available host RAM that
-      device allocations may use on devices that share memory with the host
-      (integrated GPUs, MPS).
+    - ``memory_fraction``: Fraction of the device's **total** memory added to the
+      ``base_budget_mb`` base to form the auto-batching memory budget
+      (``base_budget_mb + memory_fraction * total device memory``). Default is 0.10.
+    - ``base_budget_mb``: Flat term of the auto-batching memory budget, in MB.
+      Default is 1024.0. The same budget formula applies to every device class,
+      including integrated GPUs and MPS.
 
     **Offloading:**
 
@@ -40,8 +40,8 @@ class MgrConfig:
 
     - ``auto_offload_threshold``: Share of the auto-batching memory budget (0-1) that an
       output may occupy while staying on the device. When ``offload="auto"``, outputs
-      larger than this fraction of ``1024 MB + memory_fraction * total device memory``
-      are offloaded to CPU or disk. Default is 0.5 (50%).
+      larger than this fraction of ``base_budget_mb + memory_fraction * total device
+      memory`` are offloaded to CPU or disk. Default is 0.5 (50%).
 
     **CPU offloading:**
 
@@ -75,7 +75,7 @@ class MgrConfig:
         "verbose",
         # Batching
         "memory_fraction",
-        "unified_memory_safety_factor",
+        "base_budget_mb",
         # Offloading
         "offload",
         "auto_offload_threshold",
@@ -110,10 +110,10 @@ class MgrConfig:
             "validator": lambda x: 0.0 <= x <= 1.0,
             "error_msg": "memory_fraction must be a float between 0 and 1",
         },
-        "unified_memory_safety_factor": {
-            "expected_type": float,
-            "validator": lambda x: 0.0 <= x <= 1.0,
-            "error_msg": "unified_memory_safety_factor must be a float between 0 and 1",
+        "base_budget_mb": {
+            "expected_type": (int, float),
+            "validator": lambda x: x > 0,
+            "error_msg": "base_budget_mb must be a positive number",
         },
         # Offloading
         "offload": {
@@ -256,23 +256,21 @@ class InferenceConfig:
     Auto-batching on accelerators sizes batches from a **static memory budget**
     rather than from the free device memory left at prediction time::
 
-        budget = 1024 MB + memory_fraction * total device memory
+        budget = base_budget_mb + memory_fraction * total device memory
 
-    The 1024 MB base is a fixed overhead allowance and is not configurable;
-    ``memory_fraction`` (default ``0.10``) is the sizing knob. Total device memory is
+    The same formula applies to every device class -- discrete accelerators,
+    integrated GPUs and MPS alike. ``base_budget_mb`` (default ``1024.0`` MB) is the
+    flat overhead allowance; ``memory_fraction`` (default ``0.10``) is the
+    device-scaled term. Total device memory is
     read once per device from the backend's own API (``mem_get_info`` on CUDA/XPU,
     ``recommended_max_memory`` on MPS) and cached. Backends exposing neither fall
-    back to the 1024 MB base alone.
-
-    A device that shares memory with the host (integrated GPU, MPS) caps that budget
-    at the memory actually available to it, of which device allocations may use the
-    ``unified_memory_safety_factor`` share (default ``0.5``).
+    back to the flat base alone.
 
     Because the budget does not shrink when the device is already busy, an
     over-estimate is handled by the out-of-memory retry, which halves the batch
     size down to a single element. If even one element exceeds the budget, a
     ``RuntimeWarning`` says so; the single element then runs and may still
-    succeed, since the 1024 MB base leaves headroom above the estimate.
+    succeed, since the flat base leaves headroom above the estimate.
 
     The same budget figure is what ``offload="auto"`` compares the output size
     against, so automatic offload decisions are budget-based rather than based on
@@ -295,7 +293,7 @@ class InferenceConfig:
                 verbose=False,
                 # Batching
                 memory_fraction=0.10,
-                unified_memory_safety_factor=0.5,
+                base_budget_mb=1024.0,
                 # Offloading
                 offload="auto",
                 auto_offload_threshold=0.5,
@@ -328,7 +326,7 @@ class InferenceConfig:
                 verbose=False,
                 # Batching
                 memory_fraction=0.10,
-                unified_memory_safety_factor=0.5,
+                base_budget_mb=1024.0,
                 # Offloading
                 offload=False,
                 auto_offload_threshold=0.5,
@@ -361,7 +359,7 @@ class InferenceConfig:
                 verbose=False,
                 # Batching
                 memory_fraction=0.10,
-                unified_memory_safety_factor=0.5,
+                base_budget_mb=1024.0,
                 # Offloading
                 offload=False,
                 auto_offload_threshold=0.5,

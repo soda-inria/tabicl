@@ -313,6 +313,25 @@ def test_memory_fraction_defaults_to_a_tenth_of_total_device_memory():
     assert mgr.memory_fraction == pytest.approx(0.10)
 
 
+def test_base_budget_mb_defaults_to_1024_and_validates():
+    """``base_budget_mb`` defaults to 1024.0 in every per-stage config and validates."""
+    assert "base_budget_mb" in MgrConfig._ALLOWED_KEYS
+    config = InferenceConfig()
+    for stage_config in (config.COL_CONFIG, config.ROW_CONFIG, config.ICL_CONFIG):
+        assert stage_config.base_budget_mb == pytest.approx(1024.0)
+
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="cpu", use_amp=False, use_fa3=False, use_async=False)
+    assert mgr.base_budget_mb == pytest.approx(1024.0)
+    mgr.configure(base_budget_mb=2048.0)
+    assert mgr.base_budget_mb == pytest.approx(2048.0)
+
+    with pytest.raises(ValueError, match="base_budget_mb must be a positive number"):
+        MgrConfig(base_budget_mb=0)
+    with pytest.raises(TypeError, match="base_budget_mb must be a positive number"):
+        MgrConfig(base_budget_mb="1024")
+
+
 def test_floor_case_warns_when_one_element_exceeds_the_budget(monkeypatch):
     """A sequence that cannot fit warns instead of silently overshooting."""
     mgr = _cpu_manager(memory_fraction=0.0)  # budget == 1024 MB
@@ -561,80 +580,22 @@ def test_mps_auto_batch_uses_memory_estimate(monkeypatch):
     assert out.shape == (4, 2, 8, 4)
 
 
-def test_mps_memory_estimate_uses_recommended_minus_current(monkeypatch):
-    """The MPS memory inspection API is specific compared to CUDA/XPU.
+def test_batch_budget_is_static_for_unified_memory_devices(monkeypatch):
+    """A device that shares host RAM sizes from the same static budget.
 
-    In particular, it does not expose mem_get_info, and the available memory is
-    therefore estimated as recommended_max_memory minus
-    current_allocated_memory. On unified memory the estimate is also capped by host
-    RAM times ``unified_memory_safety_factor``.
+    The backend is faked as unified-memory with a tiny free figure: the budget
+    is still ``base_budget_mb + memory_fraction * total``, and the free-memory /
+    synchronize / empty-cache entry points are never called.
     """
-    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
-    mgr.configure(device="mps", unified_memory_safety_factor=0.5)
+    total_mb = 16 * 1024.0
+    mgr = _cpu_manager(memory_fraction=0.10, base_budget_mb=2048.0)
+    fake = MagicMock()
+    fake.mem_get_info.return_value = (1, int(total_mb * 1024**2))  # (free, total)
+    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake)
 
-    fake_api = MagicMock()
-    fake_api.mem_get_info = None
-    fake_api.recommended_max_memory.return_value = 8 * 1024 * 1024 * 1024
-    fake_api.current_allocated_memory.return_value = 2 * 1024 * 1024 * 1024
-    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
-
-    # Host RAM larger than the recommended-minus-current estimate.
-    monkeypatch.setattr(mgr, "get_available_cpu_memory", lambda: 16 * 1024.0)
-    available_mb = mgr.get_available_gpu_memory()
-    assert available_mb == pytest.approx(6 * 1024.0)
-
-    # Host RAM smaller than the estimate: the unified-memory cap wins.
-    monkeypatch.setattr(mgr, "get_available_cpu_memory", lambda: 2 * 1024.0)
-    available_mb = mgr.get_available_gpu_memory()
-    assert available_mb == pytest.approx(1024.0)
-
-
-@pytest.mark.parametrize(("previous", "expected"), [(1.0, 7 / 16), (0.25, 0.25)])
-def test_allocator_cap_on_integrated_gpu(monkeypatch, previous, expected):
-    """On an integrated GPU, inference caps the allocator at the usable host RAM.
-
-    With 1 GiB already reserved, 8 GiB of host RAM available and a
-    ``unified_memory_safety_factor`` of 0.75, a 16 GiB device may use (1 + 8 * 0.75) / 16 of
-    its memory, unless a stricter cap was already set. The previous cap is restored
-    afterwards. The backend is faked so this runs without the device.
-    """
-    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
-    mgr.configure(device="cuda", use_amp=False, use_fa3=False, unified_memory_safety_factor=0.75)
-    fake_api = MagicMock()
-    fake_api.get_per_process_memory_fraction.return_value = previous
-    fake_api.memory_reserved.return_value = 1024**3
-    fake_api.get_device_properties.return_value.total_memory = 16 * 1024**3
-    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
-    monkeypatch.setattr(mgr, "_unified_host", True)
-    monkeypatch.setattr(mgr, "get_available_cpu_memory", lambda: 8 * 1024.0)
-
-    with mgr._cap_allocator_to_host_memory():
-        fake_api.set_per_process_memory_fraction.assert_called_once_with(expected, mgr.exe_device)
-    fake_api.set_per_process_memory_fraction.assert_called_with(previous, mgr.exe_device)
-
-
-def test_allocator_cap_not_set_on_mps(monkeypatch):
-    """MPS has no way to read its allocator cap back, so inference leaves it untouched."""
-    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
-    mgr.configure(device="mps", use_amp=False, use_fa3=False)
-    fake_api = MagicMock()
-    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
-
-    with mgr._cap_allocator_to_host_memory():
-        pass
-    fake_api.set_per_process_memory_fraction.assert_not_called()
-
-
-def test_allocator_cap_warns_without_torch_support(monkeypatch):
-    """Torch versions without get/set_per_process_memory_fraction (CUDA < 2.6, XPU < 2.10) only warn."""
-    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
-    mgr.configure(device="cuda", use_amp=False, use_fa3=False)
-    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: MagicMock(spec=[]))
-    monkeypatch.setattr(mgr, "_unified_host", True)
-
-    with pytest.warns(RuntimeWarning, match="cannot limit"):
-        with mgr._cap_allocator_to_host_memory():
-            pass
+    assert mgr.get_batch_memory_budget() == pytest.approx(2048.0 + 0.10 * total_mb)
+    fake.synchronize.assert_not_called()
+    fake.empty_cache.assert_not_called()
 
 
 def test_call_before_configure_raises():
@@ -642,18 +603,4 @@ def test_call_before_configure_raises():
     mgr = InferenceManager(enc_name="tf_col", out_dim=4)
     with pytest.raises(RuntimeError, match="must be configured"):
         mgr(forward_fn=None, inputs=None)
-
-
-def test_call_runs_forward_under_allocator_cap(monkeypatch):
-    """The forward pass runs while the allocator cap is active."""
-    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
-    mgr.configure(device="cpu")
-    cap = MagicMock()
-    monkeypatch.setattr(mgr, "_cap_allocator_to_host_memory", cap)
-
-    def forward_fn(x):
-        cap.return_value.__enter__.assert_called_once()
-        return x
-
-    mgr(forward_fn, OrderedDict(x=torch.zeros(1, 1, 1)))
 
