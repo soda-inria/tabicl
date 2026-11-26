@@ -275,10 +275,10 @@ def test_mps_memory_estimate_uses_recommended_minus_current(monkeypatch):
     In particular, it does not expose mem_get_info, and the available memory is
     therefore estimated as recommended_max_memory minus
     current_allocated_memory. On unified memory the estimate is also capped by host
-    RAM times ``cpu_safety_factor``.
+    RAM times ``unified_memory_safety_factor``.
     """
     mgr = InferenceManager(enc_name="tf_col", out_dim=4)
-    mgr.configure(device="mps", cpu_safety_factor=0.5)
+    mgr.configure(device="mps", unified_memory_safety_factor=0.5)
 
     fake_api = MagicMock()
     fake_api.mem_get_info = None
@@ -302,12 +302,12 @@ def test_allocator_cap_on_integrated_gpu(monkeypatch, previous, expected):
     """On an integrated GPU, inference caps the allocator at the usable host RAM.
 
     With 1 GiB already reserved, 8 GiB of host RAM available and a
-    ``cpu_safety_factor`` of 0.75, a 16 GiB device may use (1 + 8 * 0.75) / 16 of
+    ``unified_memory_safety_factor`` of 0.75, a 16 GiB device may use (1 + 8 * 0.75) / 16 of
     its memory, unless a stricter cap was already set. The previous cap is restored
     afterwards. The backend is faked so this runs without the device.
     """
     mgr = InferenceManager(enc_name="tf_col", out_dim=4)
-    mgr.configure(device="cuda", use_amp=False, use_fa3=False, cpu_safety_factor=0.75)
+    mgr.configure(device="cuda", use_amp=False, use_fa3=False, unified_memory_safety_factor=0.75)
     fake_api = MagicMock()
     fake_api.get_per_process_memory_fraction.return_value = previous
     fake_api.memory_reserved.return_value = 1024**3

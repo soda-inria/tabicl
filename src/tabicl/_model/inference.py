@@ -662,6 +662,7 @@ class InferenceManager:
         self,
         min_batch_size: int = 1,
         safety_factor: float = 0.8,
+        unified_memory_safety_factor: float = 0.5,
         offload: Union[bool, Literal["auto", "gpu", "cpu", "disk"], OffloadMode] = "auto",
         auto_offload_threshold: float = 0.5,
         device: Optional[Union[str, torch.device]] = None,
@@ -694,6 +695,10 @@ class InferenceManager:
         safety_factor : float, default=0.8
             Factor (0-1) to multiply estimated batch size by for conservative memory
             usage. Lower values are safer but may result in more batches.
+
+        unified_memory_safety_factor : float, default=0.5
+            Fraction (0-1) of the available host RAM that device allocations may
+            use on devices that share memory with the host (integrated GPUs, MPS).
 
         offload : Union[bool, str, OffloadMode], default="auto"
             Where to store output tensors during inference:
@@ -754,8 +759,7 @@ class InferenceManager:
 
         cpu_safety_factor : float, default=0.85
             Safety margin for CPU memory. Only this fraction of available CPU
-            memory will be considered usable for offloading, and, on devices that
-            share host RAM (integrated GPUs, MPS), for device allocations.
+            memory will be considered usable for offloading.
 
         disk_safety_factor : float, default=0.95
             Safety margin for disk space. Only this fraction of available disk
@@ -778,6 +782,7 @@ class InferenceManager:
         """
         self.min_batch_size = int(min_batch_size)
         self.safety_factor = float(safety_factor)
+        self.unified_memory_safety_factor = float(unified_memory_safety_factor)
         self.auto_offload_threshold = float(auto_offload_threshold)
         self.use_amp = bool(use_amp)
         self.use_fa3 = bool(use_fa3)
@@ -816,9 +821,10 @@ class InferenceManager:
 
     @contextmanager
     def _cap_allocator_to_host_memory(self):
-        """Limit the device allocator to the usable host RAM (see ``cpu_safety_factor``).
+        """Limit the device allocator to the usable host RAM.
 
-        On integrated CUDA/XPU GPUs, device memory is host RAM. Capping the allocator
+        On integrated CUDA/XPU GPUs, device memory is host RAM, of which inference may
+        use the ``unified_memory_safety_factor`` share. Capping the allocator
         makes an oversized allocation raise ``torch.OutOfMemoryError``, which the
         batching loop recovers from, instead of exhausting system memory. The previous
         limit is restored on exit.
@@ -842,7 +848,7 @@ class InferenceManager:
             return
 
         total = backend_api.get_device_properties(self.exe_device).total_memory
-        host_free = self.get_available_cpu_memory() * self.cpu_safety_factor * 1024 * 1024
+        host_free = self.get_available_cpu_memory() * self.unified_memory_safety_factor * 1024 * 1024
         allowed = backend_api.memory_reserved(self.exe_device) + host_free
         previous = get_fraction(self.exe_device)
         set_fraction(min(previous, allowed / total), self.exe_device)
@@ -942,11 +948,11 @@ class InferenceManager:
         """Get available GPU memory in MB.
 
         When the device may share host RAM, this is also capped by the usable host RAM
-        (see ``cpu_safety_factor``).
+        (see ``unified_memory_safety_factor``).
         """
         free_mb = self._device_free_mb()
         if self._unified_host is not False:
-            free_mb = min(free_mb, self.get_available_cpu_memory() * self.cpu_safety_factor)
+            free_mb = min(free_mb, self.get_available_cpu_memory() * self.unified_memory_safety_factor)
         return max(0.0, free_mb)
 
     def _device_free_mb(self) -> float:
