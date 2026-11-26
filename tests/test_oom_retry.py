@@ -51,3 +51,22 @@ def test_oom_in_single_batch_retries_with_smaller_batches(device):
     out = mgr(forward, OrderedDict(x=x))
     assert batch_sizes == [4, 2, 2]
     assert torch.equal(out, x * 2)
+
+
+@pytest.mark.parametrize("device", ["cuda", "xpu"])
+@pytest.mark.parametrize("n_rows", [1, 4])
+def test_oom_at_minimum_batch_size_mentions_host_ram(monkeypatch, device, n_rows):
+    """On a GPU that may share host RAM, the error at the minimum batch size says so.
+
+    One row fails in the single-batch path, four rows in the batched loop.
+    """
+    skip_if_device_unusable(device)
+    mgr = InferenceManager(enc_name="tf_icl", out_dim=3)
+    mgr.configure(device=device)
+    monkeypatch.setattr(mgr, "_unified_host", True)
+
+    def forward(x):
+        raise torch.OutOfMemoryError("simulated")
+
+    with pytest.raises(RuntimeError, match="minimum batch size.*allocates from host RAM"):
+        mgr(forward, OrderedDict(x=torch.zeros(n_rows, 8, 3, device=device)))

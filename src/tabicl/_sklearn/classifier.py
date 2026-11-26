@@ -185,6 +185,9 @@ class TabICLClassifier(ClassifierMixin, TabICLBaseEstimator):
     disk_offload_dir : Optional[str], default=None
         Directory for memory-mapped files used when ``offload_mode='disk'`` or when
         ``offload_mode='auto'`` falls back to disk offloading.
+        On integrated GPUs, CPU memory is the same RAM as device memory and is only used
+        with ``offload_mode='cpu'``. In the other modes, large outputs can only be moved
+        to this directory.
         It only affects column-wise embedding (COL_CONFIG). For finer-grained control
         over all components, use ``inference_config``.
 

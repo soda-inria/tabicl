@@ -16,7 +16,7 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 
-from tabicl._model.inference import AsyncCopyManager, InferenceManager, devices_match
+from tabicl._model.inference import AsyncCopyManager, DiskTensor, InferenceManager, OffloadMode, devices_match
 
 
 @pytest.mark.parametrize(
@@ -297,9 +297,10 @@ def test_mps_memory_estimate_uses_recommended_minus_current(monkeypatch):
     assert available_mb == pytest.approx(1024.0)
 
 
+@pytest.mark.parametrize("unified_host", [True, None])
 @pytest.mark.parametrize(("previous", "expected"), [(1.0, 7 / 16), (0.25, 0.25)])
-def test_allocator_cap_on_integrated_gpu(monkeypatch, previous, expected):
-    """On an integrated GPU, inference caps the allocator at the usable host RAM.
+def test_allocator_cap_on_integrated_gpu(monkeypatch, unified_host, previous, expected):
+    """On an integrated or unclassified GPU, inference caps the allocator at the usable host RAM.
 
     With 1 GiB already reserved, 8 GiB of host RAM available and a
     ``unified_memory_safety_factor`` of 0.75, a 16 GiB device may use (1 + 8 * 0.75) / 16 of
@@ -313,7 +314,7 @@ def test_allocator_cap_on_integrated_gpu(monkeypatch, previous, expected):
     fake_api.memory_reserved.return_value = 1024**3
     fake_api.get_device_properties.return_value.total_memory = 16 * 1024**3
     monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake_api)
-    monkeypatch.setattr(mgr, "_unified_host", True)
+    monkeypatch.setattr(mgr, "_unified_host", unified_host)
     monkeypatch.setattr(mgr, "get_available_cpu_memory", lambda: 8 * 1024.0)
 
     with mgr._cap_allocator_to_host_memory():
@@ -364,3 +365,73 @@ def test_call_runs_forward_under_allocator_cap(monkeypatch):
         return x
 
     mgr(forward_fn, OrderedDict(x=torch.zeros(1, 1, 1)))
+
+
+@pytest.mark.parametrize(
+    ("unified_host", "offload", "disk_free_mb", "expected"),
+    [
+        (True, "auto", 0.0, OffloadMode.GPU),
+        (True, "auto", 10_000.0, OffloadMode.DISK),
+        (True, "gpu", 0.0, OffloadMode.GPU),
+        (True, "disk", 0.0, OffloadMode.GPU),
+        (True, "cpu", 0.0, OffloadMode.CPU),
+        (None, "auto", 0.0, OffloadMode.GPU),
+    ],
+)
+def test_offload_mode_on_shared_memory_gpu(monkeypatch, tmp_path, unified_host, offload, disk_free_mb, expected):
+    """On an integrated or unclassified GPU, CPU memory may be the same RAM and is only used on request.
+
+    A tight device or a full disk therefore falls back to disk when there is room, or to the device.
+    """
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="xpu", offload=offload, disk_offload_dir=str(tmp_path))
+    monkeypatch.setattr(mgr, "_unified_host", unified_host)
+
+    mode, _ = mgr._resolve_offload_mode(
+        output_mb=600.0, gpu_free_mb=500.0, cpu_free_mb=8000.0, disk_free_mb=disk_free_mb
+    )
+    assert mode is expected
+
+
+def test_auto_offload_keeps_cpu_on_mps():
+    """MPS manages its shared memory itself, so a tight device still offloads to CPU memory."""
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="mps")
+
+    mode, _ = mgr._resolve_offload_mode(output_mb=600.0, gpu_free_mb=500.0, cpu_free_mb=8000.0, disk_free_mb=10_000.0)
+    assert mode is OffloadMode.CPU
+
+
+@pytest.mark.parametrize("device", ["xpu", "mps"])
+def test_cpu_output_not_pinned_on_unified_memory(monkeypatch, device):
+    """A pinned output would take memory the device allocates from, on integrated GPUs and on MPS."""
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device=device)
+    monkeypatch.setattr(mgr, "_unified_host", True)
+
+    out, _ = mgr._allocate_output_buffer(OffloadMode.CPU, (2, 3), torch.float32)
+    assert not out.is_pinned()
+
+
+def test_output_too_large_on_integrated_gpu_suggests_disk_offload(monkeypatch):
+    """Without disk offload, an output that does not fit on an integrated GPU raises with a hint."""
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="xpu")
+    monkeypatch.setattr(mgr, "_unified_host", True)
+    monkeypatch.setattr(torch, "empty", MagicMock(side_effect=RuntimeError("simulated out of memory")))
+
+    with pytest.raises(RuntimeError, match="allocates from host RAM.*disk_offload_dir"):
+        mgr._allocate_output_buffer(OffloadMode.GPU, (2, 3), torch.float32)
+
+
+def test_output_too_large_on_integrated_gpu_goes_to_disk(monkeypatch, tmp_path):
+    """With disk offload, an output that does not fit on an integrated GPU goes to disk without trying CPU memory."""
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="xpu", disk_offload_dir=str(tmp_path))
+    monkeypatch.setattr(mgr, "_unified_host", True)
+    empty = MagicMock(side_effect=RuntimeError("simulated out of memory"))
+    monkeypatch.setattr(torch, "empty", empty)
+
+    out, _ = mgr._allocate_output_buffer(OffloadMode.GPU, (2, 3), torch.float32)
+    assert isinstance(out, DiskTensor)
+    empty.assert_called_once()
