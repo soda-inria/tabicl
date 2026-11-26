@@ -4,47 +4,35 @@
 Behaviour changes
 -----------------
 
-- Auto-batching on accelerators sizes batches from a fixed memory budget:
-  `base_budget_mb + memory_fraction × total device memory`, with the same formula on
-  every device class, including integrated GPUs (Intel XPU, CUDA) and Apple Silicon MPS.
-  `memory_fraction` is the share of **total** device memory added to the flat base and
-  defaults to `0.10`; the flat base itself is now the inference config option
-  `base_budget_mb` (default `1024.0` MB), accepted per stage alongside
-  `memory_fraction`. Total device memory is fetched once per device for the whole
-  process from the backend's own API, so sizing no longer synchronizes the device,
-  flushes the allocator cache or reads free memory before each prediction. The
-  unified-memory protections introduced by
-  [#179](https://github.com/soda-inria/tabicl/pull/179) are deliberately withdrawn here
-  and deferred to the larger overhaul: after this change the only protection on a
-  unified-memory device is the static budget plus the out-of-memory retry, which halves
-  the batch size down to one element. The dynamic clamp of the budget against the
-  currently available host RAM is gone, and so is the allocator ceiling that made an
-  oversized allocation raise `torch.OutOfMemoryError` -- `unified_memory_safety_factor`
-  is removed with it. On integrated GPUs an overshoot that the allocator would
-  previously have refused is now handled by the OS, up to and including the process
-  being killed without a traceback. That is the owner's accepted trade-off, recorded
-  here, not an oversight. A sequence that exceeds the budget even as a single element
-  warns instead of silently overshooting.
+- Auto-batching on every device class (accelerators, integrated GPUs, MPS, and CPU) now
+  sizes batches from a single static `memory_budget` configuration option (default `1024` MB).
+  The previous two-term formula (base + fraction × total device memory)
+  is replaced by this single flat knob, removing all device-memory queries from the sizing
+  path. The flat term already saturates the device — batch sizes are limited by SM count,
+  not VRAM, so the fractional term's device scaling served no purpose. The fixed budget
+  applies identically to every device class and is never read from the backend or clamped
+  to available memory. Sizing no longer synchronizes the device, flushes the allocator
+  cache, reads free memory, or queries total memory before each prediction. The
+  out-of-memory retry handles overestimates by halving the batch size down to one element.
+  A sequence that exceeds the budget even as a single element warns instead of silently
+  overshooting.
 
 - `offload="auto"` compares the output size against the same static budget, with
   `auto_offload_threshold` setting the share of the budget an output may occupy while it
-  stays on the device. Set `memory_fraction` (or an explicit `offload` mode) to tune both.
+  stays on the device. Set `memory_budget` (or an explicit `offload` mode) to tune both.
 
-- Auto-batching now also runs on CPU, with the same formula and no CPU-specific constant
-  or knob: `base_budget_mb + memory_fraction × CPU total memory`. `torch.cpu` exposes no
-  device memory API, so the CPU total is the physical RAM clipped to this process's
-  cgroup memory limit —
-  `min(psutil.virtual_memory().total, cgroup memory.max / memory.limit_in_bytes)`, read
-  once per process like any other device total. Both figures are static: the cgroup
-  *limit*, never its remaining headroom, so the CPU sizing path reads no free memory and
-  does not depend on how busy the machine is. CPU outputs are written into a plain host
-  tensor, and `offload` settings are ignored for CPU execution because a GPU→CPU copy, a
-  pinned buffer and disk offload have no meaning when the output is already in host
-  memory. A CPU allocation failure arrives as `MemoryError` rather than
-  `torch.OutOfMemoryError`, and the halving retry now catches both. As on
-  unified-memory accelerators, an allocation large enough to make the kernel OOM-kill the
-  process (SIGKILL) cannot be caught by any handler: static sizing plus the retry protect
-  a CPU run only up to that point.
+- Auto-batching now also runs on CPU, using the same `memory_budget` value with no
+  CPU-specific constant or knob. `torch.cpu` exposes no device memory API, so there is
+  no backend query path for CPU. Like every other device class, CPU sizing uses the
+  configured `memory_budget` directly, with no reads of physical RAM, cgroup limits, or
+  free memory. The static budget applies identically across all device classes. CPU
+  outputs are written into a plain host tensor, and `offload` settings are ignored for
+  CPU execution because a GPU→CPU copy, a pinned buffer, and disk offload have no meaning
+  when the output is already in host memory. A CPU allocation failure arrives as
+  `MemoryError` rather than `torch.OutOfMemoryError`, and the halving retry now catches
+  both. As on unified-memory accelerators, an allocation large enough to make the kernel
+  OOM-kill the process (SIGKILL) cannot be caught by any handler: static sizing plus the
+  retry protect a CPU run only up to that point.
 
 Bug fixes
 ---------

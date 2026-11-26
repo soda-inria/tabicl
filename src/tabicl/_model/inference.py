@@ -21,29 +21,12 @@ from torch import Tensor
 
 from .kv_cache import KVCache
 from .attention import flash_attn3_toggle
-from ._cgroup_memory import _cgroup_memory_headroom, _cgroup_memory_limit
+from ._cgroup_memory import _cgroup_memory_headroom
 from .._torch_devices import resolve_torch_device
 
 
 # torch.OutOfMemoryError only exists from torch 2.4; earlier versions name it torch.cuda.OutOfMemoryError.
 _OutOfMemoryError = getattr(torch, "OutOfMemoryError", torch.cuda.OutOfMemoryError)
-
-
-# Process-wide cache of total device memory in MB, keyed by execution device. Total memory
-# is a static property of the device, so a full prediction -- one ``InferenceManager`` per
-# stage, each calling ``configure()`` -- queries each device's backend exactly once. A
-# different device is a different key; re-configuring the same device keeps the entry.
-_TOTAL_DEVICE_MEM_MB: Dict[Tuple[str, int], float] = {}
-
-
-def _device_cache_key(device: torch.device) -> Tuple[str, int]:
-    """Key a device by backend type and a concrete index, for the total-memory cache.
-
-    Follows ``devices_match``: an unindexed accelerator device means index 0, and the
-    backend total-memory APIs read the current/default device for it, so ``cuda`` and
-    ``cuda:0`` must share one entry while ``cuda:1`` gets its own.
-    """
-    return device.type, device.index if device.index is not None else 0
 
 
 def devices_match(a: torch.device, b: torch.device) -> bool:
@@ -678,8 +661,7 @@ class InferenceManager:
 
     def configure(
         self,
-        memory_fraction: float = 0.10,
-        base_budget_mb: float = 1024.0,
+        memory_budget: float = 1024.0,
         offload: Union[bool, Literal["auto", "gpu", "cpu", "disk"], OffloadMode] = "auto",
         auto_offload_threshold: float = 0.5,
         device: Optional[Union[str, torch.device]] = None,
@@ -705,20 +687,12 @@ class InferenceManager:
 
         Parameters
         ----------
-        memory_fraction : float, default=0.10
-            Fraction of the device's **total** memory that is added to the
-            ``base_budget_mb`` base to form the auto-batching memory budget
-            (``base_budget_mb + memory_fraction * total``). The budget is a static
-            property of the device: it is not compared against the
-            free memory left at prediction time. Larger values use more of the device and
-            leave less headroom for other allocations; a value that overshoots is caught by
-            the out-of-memory retry, which halves the batch size.
-
-        base_budget_mb : float, default=1024.0
-            Flat term of the auto-batching memory budget, in MB. It leaves room for
-            fixed overheads that do not scale with the device. The same formula
-            (``base_budget_mb + memory_fraction * total device memory``) applies to
-            every device class, including integrated GPUs and MPS.
+        memory_budget : float, default=1024.0
+            Memory budget for auto-batching in MB. This static value is used
+            directly for every device class (accelerators, integrated GPUs, MPS,
+            and CPU) without scaling or clamping. Larger values permit larger
+            batches; if the estimate overshoots, the out-of-memory retry halves
+            the batch size.
 
         offload : Union[bool, str, OffloadMode], default="auto"
             Where to store output tensors during inference:
@@ -733,8 +707,7 @@ class InferenceManager:
         auto_offload_threshold : float, default=0.5
             Share of the auto-batching memory budget (0-1) that an output may occupy
             while staying on the device. Only used when ``offload="auto"``. Outputs
-            larger than this fraction of ``base_budget_mb + memory_fraction * total device
-            memory`` are offloaded to CPU or disk.
+            larger than this fraction of ``memory_budget`` are offloaded to CPU or disk.
 
         device : Optional[str or torch.device], default=None
             Device to use for computation. If None, defaults to CUDA if available,
@@ -801,8 +774,7 @@ class InferenceManager:
             Maximum number of pending async copies before blocking. Higher values
             can improve throughput but increase memory usage for pinned buffers.
         """
-        self.memory_fraction = float(memory_fraction)
-        self.base_budget_mb = float(base_budget_mb)
+        self.memory_budget = float(memory_budget)
         self.auto_offload_threshold = float(auto_offload_threshold)
         self.use_amp = bool(use_amp)
         self.use_fa3 = bool(use_fa3)
@@ -834,8 +806,6 @@ class InferenceManager:
         # Initialize buffer pool
         self._buffer_pool = PinnedBufferPool()
 
-        # Total device memory is cached process-wide, keyed by ``exe_device``: there is no
-        # per-instance copy to reset here, so re-configuring does not force another query.
         self._is_configured = True
 
     def _normalize_offload(self, offload: Any) -> OffloadMode:
@@ -925,89 +895,14 @@ class InferenceManager:
         """Return whether the tensor is already on the configured execution device."""
         return isinstance(tensor, torch.Tensor) and devices_match(tensor.device, self.exe_device)
 
-    def _query_total_device_memory_mb(self) -> float:
-        """Total memory of the execution device in MB, or 0.0 if unknown.
-
-        Reads the *total* half of the backend's memory API: ``mem_get_info`` on
-        backends that expose it (CUDA, XPU), ``recommended_max_memory`` on
-        MPS-style backends that do not. Total memory is a static property of the
-        device, so this deliberately does **not** synchronize the device, flush
-        the allocator cache, or ask how much is currently free.
-
-        CPU has no device memory API. The analogue of "total device memory" is
-        the physical RAM of the machine, clipped to this process's cgroup memory
-        limit when it has one: ``min(psutil total, cgroup limit)``. Both figures
-        are static -- the cgroup *limit*, never its remaining headroom -- so the
-        CPU sizing path does not depend on how much memory happens to be free.
-        """
-        if self.exe_device.type == "cpu":
-            physical = psutil.virtual_memory().total
-            limit = _cgroup_memory_limit()
-            total = physical if limit is None else min(physical, limit)
-            return total / (1024 * 1024)
-
-        backend_api = self._get_device_backend_api()
-        if backend_api is None:
-            return 0.0
-
-        mem_get_info = getattr(backend_api, "mem_get_info", None)
-        if callable(mem_get_info):
-            try:
-                _, total_mem = mem_get_info(self.exe_device)
-            except TypeError:
-                # Some backends may expose mem_get_info() without a device argument.
-                try:
-                    _, total_mem = mem_get_info()
-                except Exception:
-                    return 0.0
-            except Exception:
-                return 0.0
-            return total_mem / (1024 * 1024)
-
-        recommended = getattr(backend_api, "recommended_max_memory", None)
-        if callable(recommended):
-            try:
-                return recommended() / (1024 * 1024)
-            except Exception:
-                return 0.0
-
-        return 0.0
-
-    def get_total_device_memory(self) -> float:
-        """Total memory of the execution device in MB, cached process-wide.
-
-        Total memory is a static property of the device, so the figure is cached in a
-        module-level dict keyed by the resolved execution device: however many
-        ``InferenceManager`` instances run on that device -- a full prediction uses one
-        per stage -- the backend is queried once per device for the lifetime of the
-        process. ``configure()`` does not invalidate the entry; a different execution
-        device is a different key and is queried on its own first use.
-
-        For CPU, the cached figure is ``min(physical RAM, cgroup memory limit)`` in
-        MB -- see ``_query_total_device_memory_mb``.
-
-        Returns 0.0 when an accelerator backend exposes no total-memory API and is
-        never 0.0 for CPU, which always has a physical total.
-        """
-        key = _device_cache_key(self.exe_device)
-        cached = _TOTAL_DEVICE_MEM_MB.get(key)
-        if cached is None:
-            cached = self._query_total_device_memory_mb()
-            _TOTAL_DEVICE_MEM_MB[key] = cached
-        return cached
-
     def get_batch_memory_budget(self) -> float:
         """Memory budget (MB) the auto-batching estimate targets.
 
-        ``base_budget_mb + memory_fraction * total device memory`` for every device
-        class -- discrete accelerators, integrated GPUs, MPS and CPU alike. The base
-        term leaves room for fixed overheads; the fraction term scales with the
-        device (on CPU, ``total device memory`` is ``min(physical RAM, cgroup memory
-        limit)``). The figure is static for a given device and configuration -- it is
-        never clamped against the free memory observed at prediction time, and the
-        sizing path never synchronizes the device or flushes the allocator cache.
+        Returns the configured ``memory_budget`` directly. The same static value
+        is used for every device class -- discrete accelerators, integrated GPUs,
+        MPS and CPU alike -- with no device-specific scaling or clamping.
         """
-        return self.base_budget_mb + self.memory_fraction * self.get_total_device_memory()
+        return self.memory_budget
 
     def get_available_disk_space(self, path: Optional[str]) -> float:
         """Get available disk space at the specified path in MB.
@@ -1061,7 +956,7 @@ class InferenceManager:
 
         Uses pre-computed memory coefficients from profiling to estimate how many
         elements fit in the batching budget, which is
-        ``base_budget_mb + memory_fraction * total device memory`` -- a static property
+        ``memory_budget`` -- a static property
         of the device for every device class, not a live free-memory reading.
 
         Parameters
@@ -1117,7 +1012,7 @@ class InferenceManager:
                     f"Batch memory budget for '{self.enc_name}' is {budget_mb:.0f}MB, but one "
                     f"element with seq_len={seq_len} needs an estimated {smallest_mem:.0f}MB: the "
                     f"real footprint will exceed the target budget and inference may run out of "
-                    f"memory. Lower memory_fraction only if the device has room; otherwise reduce "
+                    f"memory. Lower memory_budget only if the device has room; otherwise reduce "
                     f"the batch dimensions.",
                     RuntimeWarning,
                     stacklevel=2,
@@ -1144,7 +1039,7 @@ class InferenceManager:
             GPU (if within threshold) -> CPU -> DISK -> CPU(swap as last resort).
 
         Note: ``gpu_free_mb`` is the static auto-batching budget
-        (``base_budget_mb + memory_fraction * total device memory``), so AUTO decisions are
+        (``memory_budget``), so AUTO decisions are
         budget-based.
 
         Note: CPU mode can use either pinned or non-pinned memory.
@@ -1385,7 +1280,7 @@ class InferenceManager:
         - Every execution device -- CPU included -- goes through the same auto-batching
           loop: one batch-size estimate, the same split planning and output write-back,
           the same out-of-memory retry. Batch sizes come from a static device memory
-          budget (``base_budget_mb + memory_fraction * total device memory``, total read
+          budget (``memory_budget``, total read
           once per device for the process), never from a live free-memory query. On CPU
           the total is ``min(physical RAM, cgroup memory limit)``, since ``torch.cpu``
           exposes no device memory API.
@@ -1434,7 +1329,7 @@ class InferenceManager:
 
         if self.verbose:
             print(
-                f"\nBatch memory budget: {budget_mb / 1024:.2f}GB ({self.base_budget_mb:.0f}MB + {self.memory_fraction} * total device memory), "
+                f"\nBatch memory budget: {budget_mb / 1024:.2f}GB ({budget_mb:.0f}MB static budget), "
                 f"seq_len: {seq_len}, estimated batch size for {self.enc_name}: {batch_size}"
             )
 

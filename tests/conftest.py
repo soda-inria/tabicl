@@ -43,9 +43,4 @@ def _clear_total_device_memory_cache():
     under test. Tests patch the backend per instance, so without this reset one
     test's figure (or a cached 0.0) would leak into the next.
     """
-    from tabicl._model.inference import _TOTAL_DEVICE_MEM_MB
-
-    _TOTAL_DEVICE_MEM_MB.clear()
-    yield
-    _TOTAL_DEVICE_MEM_MB.clear()
 

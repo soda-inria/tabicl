@@ -20,12 +20,9 @@ class MgrConfig:
 
     **Batching:**
 
-    - ``memory_fraction``: Fraction of the device's **total** memory added to the
-      ``base_budget_mb`` base to form the auto-batching memory budget
-      (``base_budget_mb + memory_fraction * total device memory``). Default is 0.10.
-    - ``base_budget_mb``: Flat term of the auto-batching memory budget, in MB.
-      Default is 1024.0. The same budget formula applies to every device class,
-      including integrated GPUs and MPS.
+    - ``memory_budget``: Memory budget for auto-batching in MB. Default is 1024.
+      This static budget applies to every device class (accelerators, integrated
+      GPUs, MPS, and CPU) and is never scaled by device properties.
 
     **Offloading:**
 
@@ -40,8 +37,8 @@ class MgrConfig:
 
     - ``auto_offload_threshold``: Share of the auto-batching memory budget (0-1) that an
       output may occupy while staying on the device. When ``offload="auto"``, outputs
-      larger than this fraction of ``base_budget_mb + memory_fraction * total device
-      memory`` are offloaded to CPU or disk. Default is 0.5 (50%).
+      larger than this fraction of ``memory_budget`` are offloaded to CPU or disk.
+      Default is 0.5 (50%).
 
     **CPU offloading:**
 
@@ -74,8 +71,7 @@ class MgrConfig:
         "use_fa3",
         "verbose",
         # Batching
-        "memory_fraction",
-        "base_budget_mb",
+        "memory_budget",
         # Offloading
         "offload",
         "auto_offload_threshold",
@@ -105,15 +101,10 @@ class MgrConfig:
         "use_fa3": {"expected_type": bool, "validator": None, "error_msg": "use_fa3 must be a boolean"},
         "verbose": {"expected_type": bool, "validator": None, "error_msg": "verbose must be a boolean"},
         # Batching
-        "memory_fraction": {
-            "expected_type": float,
-            "validator": lambda x: 0.0 <= x <= 1.0,
-            "error_msg": "memory_fraction must be a float between 0 and 1",
-        },
-        "base_budget_mb": {
+        "memory_budget": {
             "expected_type": (int, float),
             "validator": lambda x: x > 0,
-            "error_msg": "base_budget_mb must be a positive number",
+            "error_msg": "memory_budget must be a positive number",
         },
         # Offloading
         "offload": {
@@ -254,24 +245,16 @@ class InferenceConfig:
     learning). Each is a :class:`MgrConfig` accepting the keys described there.
 
     Auto-batching on every device class sizes batches from a **static memory
-    budget** rather than from the free memory left at prediction time::
-
-        budget = base_budget_mb + memory_fraction * total device memory
-
-    The same formula applies to every device class -- discrete accelerators,
-    integrated GPUs, MPS and CPU alike. ``base_budget_mb`` (default ``1024.0`` MB) is
-    the flat overhead allowance; ``memory_fraction`` (default ``0.10``) is the
-    device-scaled term. Total device memory is
-    read once per device from the backend's own API (``mem_get_info`` on CUDA/XPU,
-    ``recommended_max_memory`` on MPS) and cached. On CPU it is
-    ``min(physical RAM, cgroup memory limit)``, since ``torch.cpu`` has no memory
-    API. Backends exposing neither fall back to the flat base alone.
+    budget** rather than from the free memory left at prediction time. The
+    configured ``memory_budget`` (default ``1024`` MB) is used directly, without
+    scaling or clamping. The same budget applies to every device class --
+    discrete accelerators, integrated GPUs, MPS and CPU alike.
 
     Because the budget does not shrink when the device is already busy, an
     over-estimate is handled by the out-of-memory retry, which halves the batch
     size down to a single element. If even one element exceeds the budget, a
     ``RuntimeWarning`` says so; the single element then runs and may still
-    succeed, since the flat base leaves headroom above the estimate.
+    succeed, since the sizing estimate leaves headroom.
 
     The same budget figure is what ``offload="auto"`` compares the output size
     against, so automatic offload decisions are budget-based rather than based on
@@ -294,8 +277,7 @@ class InferenceConfig:
                 use_fa3=True,
                 verbose=False,
                 # Batching
-                memory_fraction=0.10,
-                base_budget_mb=1024.0,
+                memory_budget=1024.0,
                 # Offloading
                 offload="auto",
                 auto_offload_threshold=0.5,
@@ -327,8 +309,7 @@ class InferenceConfig:
                 use_fa3=True,
                 verbose=False,
                 # Batching
-                memory_fraction=0.10,
-                base_budget_mb=1024.0,
+                memory_budget=1024.0,
                 # Offloading
                 offload=False,
                 auto_offload_threshold=0.5,
@@ -360,8 +341,7 @@ class InferenceConfig:
                 use_fa3=True,
                 verbose=False,
                 # Batching
-                memory_fraction=0.10,
-                base_budget_mb=1024.0,
+                memory_budget=1024.0,
                 # Offloading
                 offload=False,
                 auto_offload_threshold=0.5,
