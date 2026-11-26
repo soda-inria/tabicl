@@ -644,6 +644,8 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
             Determines the type of output to return.
 
             - If ``"mean"``, returns the mean over the predicted distribution.
+            - If ``"variance"``, returns the variance of the predicted quantiles,
+              averaged across ensemble members, in squared target units.
             - If ``"median"``, returns the median over the predicted distribution.
             - If ``"quantiles"``, returns the quantiles of the predicted distribution.
               The parameter ``alphas`` determines which quantiles are returned.
@@ -660,8 +662,8 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
         Returns
         -------
         np.ndarray of shape (n_samples,) or dict[str, np.ndarray]
-            An array of shape ``(n_samples,)`` if ``output_type`` is ``"mean"`` or
-            ``"median"``, or an array of shape ``(n_samples, n_quantiles)`` if
+            An array of shape ``(n_samples,)`` if ``output_type`` is ``"mean"``,
+            ``"variance"``, or ``"median"``, or an array of shape ``(n_samples, n_quantiles)`` if
             ``output_type`` is ``"quantiles"`` or ``"raw_quantiles"``.
 
             If ``output_type`` is a list of str, returns a dictionary with keys as
@@ -741,15 +743,17 @@ class TabICLRegressor(RegressorMixin, TabICLBaseEstimator):
             n_estimators = arr.shape[0]
             n_samples = arr.shape[1]
 
-            if arr.ndim == 2:
-                # mean, variance, or median: (n_estimators, n_samples)
+            if key == "variance":
+                # Var(scale * z + mean) = scale**2 * Var(z)
+                arr = arr * self.y_scaler_.scale_[0] ** 2
+            elif arr.ndim == 2:
+                # mean or median: (n_estimators, n_samples)
                 arr = self.y_scaler_.inverse_transform(arr.reshape(-1, 1)).reshape(n_estimators, n_samples)
-                final_results[key] = np.mean(arr, axis=0)
             else:
                 # quantiles: (n_estimators, n_samples, n_quantiles)
                 n_quantiles = arr.shape[2]
                 arr = self.y_scaler_.inverse_transform(arr.reshape(-1, 1)).reshape(n_estimators, n_samples, n_quantiles)
-                final_results[key] = np.mean(arr, axis=0)
+            final_results[key] = np.mean(arr, axis=0)
 
         if self.n_jobs is not None:
             torch.set_num_threads(old_n_threads)

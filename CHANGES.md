@@ -22,6 +22,10 @@ Bug fixes
   memory: the label embeddings were added in place to the in-context learning inputs, so batches
   that had already run got them added a second time. ([PR#185](https://github.com/soda-inria/tabicl/pull/185))
 
+- Fix `TabICLRegressor.predict(output_type="variance")` returning incorrectly scaled values.
+  Variance now scales by the squared target scale without adding the target mean.
+  ([PR#189](https://github.com/soda-inria/tabicl/pull/189))
+
 Maintenance
 -----------
 
