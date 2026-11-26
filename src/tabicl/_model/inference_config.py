@@ -23,6 +23,9 @@ class MgrConfig:
     - ``min_batch_size``: Minimum batch size to try before raising an error.
     - ``safety_factor``: Factor to multiply estimated batch size by for conservative
       memory usage.
+    - ``unified_memory_safety_factor``: Fraction (0-1) of the available host RAM that
+      device allocations may use on devices that share memory with the host
+      (integrated GPUs, MPS).
 
     **Offloading:**
 
@@ -72,6 +75,7 @@ class MgrConfig:
         # Batching
         "min_batch_size",
         "safety_factor",
+        "unified_memory_safety_factor",
         # Offloading
         "offload",
         "auto_offload_threshold",
@@ -110,6 +114,11 @@ class MgrConfig:
             "expected_type": float,
             "validator": lambda x: 0.0 <= x <= 1.0,
             "error_msg": "safety_factor must be a float between 0 and 1",
+        },
+        "unified_memory_safety_factor": {
+            "expected_type": float,
+            "validator": lambda x: 0.0 <= x <= 1.0,
+            "error_msg": "unified_memory_safety_factor must be a float between 0 and 1",
         },
         # Offloading
         "offload": {
@@ -262,6 +271,7 @@ class InferenceConfig:
                 # Batching
                 min_batch_size=1,
                 safety_factor=0.8,
+                unified_memory_safety_factor=0.5,
                 # Offloading
                 offload="auto",
                 auto_offload_threshold=0.5,
@@ -295,6 +305,7 @@ class InferenceConfig:
                 # Batching
                 min_batch_size=1,
                 safety_factor=0.8,
+                unified_memory_safety_factor=0.5,
                 # Offloading
                 offload=False,
                 auto_offload_threshold=0.5,
@@ -328,6 +339,7 @@ class InferenceConfig:
                 # Batching
                 min_batch_size=1,
                 safety_factor=0.8,
+                unified_memory_safety_factor=0.5,
                 # Offloading
                 offload=False,
                 auto_offload_threshold=0.5,
