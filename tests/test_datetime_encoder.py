@@ -135,3 +135,33 @@ class TestDatetimeEncoderNoDuplicateAngles:
         assert not np.allclose(week_1, week_53, atol=1e-10), (
             f"Week 1 and week 53 have identical encodings: {week_1}"
         )
+
+
+class TestDatetimeEncoderEmptyArguments:
+    """``None`` uses the defaults, while empty containers disable features (GitHub issue #171)."""
+
+    def test_none_uses_defaults(self, one_week_df):
+        enc = DatetimeEncoder()
+        assert enc.components == ["year"]
+        assert "day_of_week" in enc.seasonal_features
+        result = enc.generate(one_week_df)
+        assert "year" in result.columns
+        assert "day_of_week_sin" in result.columns
+
+    def test_empty_components_disables_components(self, one_week_df):
+        enc = DatetimeEncoder(components=[])
+        assert enc.components == []
+        result = enc.generate(one_week_df)
+        assert "year" not in result.columns
+        assert "day_of_week_sin" in result.columns
+
+    def test_empty_seasonal_features_disables_seasonal_features(self, one_week_df):
+        enc = DatetimeEncoder(seasonal_features={})
+        assert enc.seasonal_features == {}
+        result = enc.generate(one_week_df)
+        assert list(result.columns) == ["value", "year"]
+
+    def test_both_empty_adds_no_columns(self, one_week_df):
+        enc = DatetimeEncoder(components=[], seasonal_features={})
+        result = enc.generate(one_week_df)
+        pd.testing.assert_frame_equal(result, one_week_df)
