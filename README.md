@@ -445,6 +445,10 @@ please cite our papers for **[TabICL](https://arxiv.org/abs/2502.05564)** and **
 - [David Holzmüller](https://github.com/dholzmueller)
 - [Marine Le Morvan](https://github.com/marineLM)
 
+## Maintainers
+
+Release instructions are in [MAINTAINERS.md](MAINTAINERS.md).
+
 ## Star history
 
 [![Star History Chart](https://star-history.dera.page/svg?repos=soda-inria/tabicl&type=date&legend=top-left)](https://star-history.dera.page/#soda-inria/tabicl&type=date&legend=top-left)

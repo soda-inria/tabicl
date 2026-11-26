@@ -105,3 +105,36 @@ def resolve_torch_device(device: Optional[Union[str, torch.device]] = None) -> t
             stacklevel=2,
         )
     return resolved
+
+
+def device_uses_unified_host_memory(device: Union[str, torch.device]) -> bool | None:
+    """Return whether accelerator memory is the same physical pool as host RAM.
+
+    MPS always is, and CPU or unavailable backends never are. CUDA and XPU use the
+    device's integrated-GPU flag. Returns ``None`` with a warning when that flag is
+    missing (XPU before torch 2.13).
+    """
+    device = torch.device(device)
+    if device.type == "mps":
+        return True
+    if device.type not in ("cuda", "xpu"):
+        return False
+
+    try:
+        props = getattr(torch, device.type).get_device_properties(device)
+    except Exception:  # backend not built or not available
+        return False
+
+    # CUDA names the flag ``is_integrated``, XPU ``is_integrated_gpu``.
+    for name in ("is_integrated", "is_integrated_gpu"):
+        if hasattr(props, name):
+            return bool(getattr(props, name))
+
+    warnings.warn(
+        f"Cannot tell whether {device} shares memory with the host: its device properties "
+        "have no integrated-GPU flag. Batch sizes are limited by both device and host "
+        "memory. Upgrade torch (2.13 or later for XPU) to lift this limit on discrete GPUs.",
+        RuntimeWarning,
+        stacklevel=2,
+    )
+    return None
