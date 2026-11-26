@@ -394,13 +394,23 @@ def test_cpu_total_memory_is_physical_ram_without_a_cgroup_limit(monkeypatch):
     assert mgr.get_batch_memory_budget() == pytest.approx(1024.0 + 0.10 * PHYSICAL / 1024**2)
 
 
-def test_cpu_auto_batching_splits_an_over_budget_input_like_unbatched():
+def test_cpu_auto_batching_splits_an_over_budget_input_like_unbatched(monkeypatch):
     """A CPU input over the budget-derived batch size is split, with equal outputs.
 
-    ``seq_len`` is large enough that the static budget's estimate is a single
-    row, so the 8-row batch dimension must be split: a regression that
-    short-circuits CPU to one forward would leave ``calls == [8]``.
+    The CPU total memory is faked to ``min(PHYSICAL, LIMIT) / 2**20`` MB so the
+    split is host-independent: on a machine with tens of GiB of visible RAM the
+    real budget would fit the whole 8-row batch and the input would never be
+    split. With this budget the estimate is a single row, so the 8-row batch
+    dimension must be split: a regression that short-circuits CPU to one forward
+    would leave ``calls == [8]``.
     """
+    from tabicl._model import inference
+
+    monkeypatch.setattr(
+        inference.psutil, "virtual_memory", lambda: _TotalOnlyVirtualMemory(PHYSICAL)
+    )
+    monkeypatch.setattr(inference, "_cgroup_memory_limit", lambda: LIMIT)
+
     mgr = _cpu_inference_manager()
     torch.manual_seed(0)
 

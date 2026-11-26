@@ -1,7 +1,8 @@
 """Device-agnostic inference plumbing: placement, AMP, auto-batching, async copies.
 
-CUDA, XPU, and MPS share one inference path (CPU is the only early-return
-exception).
+CUDA, XPU, and MPS share one inference path, and CPU goes through the same
+batching loop: the CPU-specific parts are the host-memory total
+(``min(physical RAM, cgroup limit)``) and offload settings being ignored.
 
 CUDA and XPU expose async copy primitives, while MPS does not.
 
