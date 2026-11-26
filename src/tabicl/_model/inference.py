@@ -1246,7 +1246,7 @@ class InferenceManager:
                     raise RuntimeError(
                         f"Not enough memory for the {output_mb:.0f} MB {self.enc_name} output."
                         + self._out_of_memory_hint()
-                        + " Alternatively, set `disk_offload_dir` on the estimator to store outputs on disk."
+                        + " Alternatively, set `disk_offload_dir` to store outputs on disk."
                     ) from e
 
         if mode == OffloadMode.CPU:
