@@ -34,6 +34,22 @@ _OutOfMemoryError = getattr(torch, "OutOfMemoryError", torch.cuda.OutOfMemoryErr
 # ``_BASE_BUDGET_MB + memory_fraction * total_device_memory``. Deliberately not configurable.
 _BASE_BUDGET_MB = 1024.0
 
+# Process-wide cache of total device memory in MB, keyed by execution device. Total memory
+# is a static property of the device, so a full prediction -- one ``InferenceManager`` per
+# stage, each calling ``configure()`` -- queries each device's backend exactly once. A
+# different device is a different key; re-configuring the same device keeps the entry.
+_TOTAL_DEVICE_MEM_MB: Dict[Tuple[str, int], float] = {}
+
+
+def _device_cache_key(device: torch.device) -> Tuple[str, int]:
+    """Key a device by backend type and a concrete index, for the total-memory cache.
+
+    Follows ``devices_match``: an unindexed accelerator device means index 0, and the
+    backend total-memory APIs read the current/default device for it, so ``cuda`` and
+    ``cuda:0`` must share one entry while ``cuda:1`` gets its own.
+    """
+    return device.type, device.index if device.index is not None else 0
+
 
 def devices_match(a: torch.device, b: torch.device) -> bool:
     """Return whether two devices refer to the same backend placement.
@@ -664,7 +680,6 @@ class InferenceManager:
         # Internal state
         self._buffer_pool: Optional[PinnedBufferPool] = None
         self._disk_finalizers: List[weakref.finalize] = []
-        self._total_device_mem_mb: Optional[float] = None
 
     def configure(
         self,
@@ -824,9 +839,8 @@ class InferenceManager:
         # Initialize buffer pool
         self._buffer_pool = PinnedBufferPool()
 
-        # Total device memory is a static device property: queried once, on first use.
-        self._total_device_mem_mb = None
-
+        # Total device memory is cached process-wide, keyed by ``exe_device``: there is no
+        # per-instance copy to reset here, so re-configuring does not force another query.
         self._is_configured = True
 
     @contextmanager
@@ -1052,14 +1066,22 @@ class InferenceManager:
         return 0.0
 
     def get_total_device_memory(self) -> float:
-        """Total memory of the execution device in MB, cached on the instance.
+        """Total memory of the execution device in MB, cached process-wide.
+
+        Total memory is a static property of the device, so the figure is cached in a
+        module-level dict keyed by the resolved execution device: however many
+        ``InferenceManager`` instances run on that device -- a full prediction uses one
+        per stage -- the backend is queried once per device for the lifetime of the
+        process. ``configure()`` does not invalidate the entry; a different execution
+        device is a different key and is queried on its own first use.
 
         Returns 0.0 when the backend exposes no total-memory API.
         """
-        cached = getattr(self, "_total_device_mem_mb", None)
+        key = _device_cache_key(self.exe_device)
+        cached = _TOTAL_DEVICE_MEM_MB.get(key)
         if cached is None:
             cached = self._query_total_device_memory_mb()
-            self._total_device_mem_mb = cached
+            _TOTAL_DEVICE_MEM_MB[key] = cached
         return cached
 
     def get_batch_memory_budget(self) -> float:
@@ -1462,7 +1484,8 @@ class InferenceManager:
           via ``_run_forward`` (optional AMP + input preparation).
         - Accelerator backends use auto-batching and OOM recovery. Batch sizes come from
           a static device memory budget (``1024 MB + memory_fraction * total device
-          memory``, total read once per device), never from a live free-memory query.
+          memory``, total read once per device for the process), never from a live
+          free-memory query.
         - When OOM occurs, batch size is halved and inference is retried.
         - Async copy is used when ``use_async=True`` and offloading to CPU/disk.
         """

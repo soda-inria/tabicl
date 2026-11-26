@@ -16,7 +16,14 @@ from unittest.mock import MagicMock
 import pytest
 import torch
 
-from tabicl._model.inference import AsyncCopyManager, InferenceManager, MemoryEstimator, devices_match
+from tabicl._model.inference import (
+    AsyncCopyManager,
+    InferenceManager,
+    MemoryEstimator,
+    _TOTAL_DEVICE_MEM_MB,
+    _device_cache_key,
+    devices_match,
+)
 from tabicl._model.inference_config import InferenceConfig, MgrConfig
 
 
@@ -207,6 +214,93 @@ def test_batch_sizing_never_synchronizes_flushes_or_queries_free_memory(monkeypa
     # mem_get_info may be probed for its *total* half; sync/cache never run.
     assert "synchronize" not in fake.calls
     assert "empty_cache" not in fake.calls
+
+
+def _batching_stage(monkeypatch, enc_name: str, backend) -> InferenceManager:
+    """One inference stage routed through the accelerator batching path on CPU.
+
+    ``exe_device`` is set to ``mps`` so ``__call__`` takes the auto-batching branch,
+    while every tensor stays on CPU and the forward pass is stubbed: no accelerator is
+    needed, yet the real ``estimate_safe_batch_size`` -> budget path still runs.
+    """
+    mgr = InferenceManager(enc_name=enc_name, out_dim=4)
+    mgr.configure(
+        device="cpu",
+        use_amp=False,
+        use_fa3=False,
+        use_async=False,
+        offload="gpu",
+        max_pinned_memory_mb=0.0,  # pinned memory needs a CUDA driver, absent here
+    )
+    mgr.exe_device = torch.device("mps")
+    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: backend)
+    monkeypatch.setattr(mgr, "_to_exe_device", lambda tensor: tensor)
+    monkeypatch.setattr(
+        mgr,
+        "_run_forward",
+        lambda forward_fn, inputs: torch.zeros(inputs["features"].shape[0], 4),
+    )
+    return mgr
+
+
+def test_total_device_memory_is_queried_once_per_device_for_the_process(monkeypatch):
+    """A full prediction -- three stages, three managers -- queries each device once."""
+    fake = _FakeMemBackend(total_mb=24 * 1024.0)
+    stages = [
+        _batching_stage(monkeypatch, enc_name, fake)
+        for enc_name in ("tf_col", "tf_row", "tf_icl")
+    ]
+    features = torch.randn(8, 4, 2)
+
+    for mgr in stages:
+        out = mgr(lambda x: x, OrderedDict([("features", features)]))
+        assert out.shape[0] == 8, mgr.enc_name
+
+    # Three managers, three configure() calls, one backend query for the process.
+    assert fake.calls == [("mem_get_info", (torch.device("mps"),))]
+
+    # configure() no longer invalidates the entry: a second configuration on the same
+    # device does not re-query the backend.
+    stages[0].configure(
+        device="cpu",
+        use_amp=False,
+        use_fa3=False,
+        use_async=False,
+        offload="gpu",
+        max_pinned_memory_mb=0.0,
+    )
+    stages[0].exe_device = torch.device("mps")
+    monkeypatch.setattr(stages[0], "_get_device_backend_api", lambda: fake)
+    stages[0](lambda x: x, OrderedDict([("features", features)]))
+    assert fake.calls == [("mem_get_info", (torch.device("mps"),))]
+
+
+def test_each_execution_device_gets_its_own_total_memory_entry(monkeypatch):
+    """A different execution device is a distinct cache key and a fresh query."""
+    fake = _FakeMemBackend(total_mb=24 * 1024.0)
+    mgr = _batching_stage(monkeypatch, "tf_col", fake)
+
+    assert mgr.get_total_device_memory() == pytest.approx(24 * 1024.0)
+    assert len(fake.calls) == 1
+
+    mgr.exe_device = torch.device("xpu:1")
+    assert mgr.get_total_device_memory() == pytest.approx(24 * 1024.0)
+    assert fake.calls[1] == ("mem_get_info", (torch.device("xpu:1"),))
+    assert len(fake.calls) == 2
+
+    # Each device keeps its own cached figure, queried once.
+    assert mgr.get_total_device_memory() == pytest.approx(24 * 1024.0)
+    mgr.exe_device = torch.device("mps")
+    assert mgr.get_total_device_memory() == pytest.approx(24 * 1024.0)
+    assert len(fake.calls) == 2
+    assert set(_TOTAL_DEVICE_MEM_MB) == {("mps", 0), ("xpu", 1)}
+
+
+def test_total_device_memory_cache_key_follows_the_devices_match_convention():
+    """``cuda`` and ``cuda:0`` share one entry; a different index or backend does not."""
+    assert _device_cache_key(torch.device("cuda")) == _device_cache_key(torch.device("cuda:0"))
+    assert _device_cache_key(torch.device("cuda:1")) != _device_cache_key(torch.device("cuda:0"))
+    assert _device_cache_key(torch.device("cpu")) != _device_cache_key(torch.device("cuda"))
 
 
 def test_memory_fraction_defaults_to_a_tenth_of_total_device_memory():
