@@ -647,6 +647,19 @@ class InferenceManager:
     out_no_seq : bool, default=False
         Whether to remove the sequence dimension from output tensor. If True,
         output shape will be ``(..., out_dim)`` instead of ``(..., seq_len, out_dim)``.
+
+    Notes
+    -----
+    Out-of-memory recovery assumes a discrete device. The allocation is refused by
+    the device allocator, ``torch.OutOfMemoryError`` is raised where the batch is
+    allocated, and the retry halves the batch size. On a unified-memory host an
+    allocation can succeed against over-committed memory, and the kernel kills the
+    process with SIGKILL once the pages are touched; no Python handler can catch
+    that. A process on such a device bounds its own footprint through the backend's
+    fraction API, used independently of this manager:
+    ``torch.cuda.memory.set_per_process_memory_fraction`` sets the cap and
+    ``torch.cuda.memory.get_per_process_memory_fraction`` reads it back.
+    ``torch.xpu.memory`` exposes equivalents.
     """
 
     def __init__(self, enc_name: str, out_dim: int, out_no_seq: bool = False):
@@ -688,11 +701,10 @@ class InferenceManager:
         Parameters
         ----------
         memory_budget : float, default=1024.0
-            Memory budget for auto-batching in MB. This static value is used
-            directly for every device class (accelerators, integrated GPUs, MPS,
-            and CPU) without scaling or clamping. Larger values permit larger
-            batches; if the estimate overshoots, the out-of-memory retry halves
-            the batch size.
+            Memory budget for auto-batching in MB. This static value is the target
+            batch footprint on every device class (accelerators, integrated GPUs,
+            MPS, and CPU). Larger values permit larger batches; if the estimate
+            overshoots, the out-of-memory retry halves the batch size.
 
         offload : Union[bool, str, OffloadMode], default="auto"
             Where to store output tensors during inference:
@@ -952,12 +964,11 @@ class InferenceManager:
     def estimate_safe_batch_size(
         self, seq_len: int, include_inputs: bool = True, in_dim: Optional[int] = None, max_bs: int = 50000
     ) -> Tuple[float, int]:
-        """Estimate safe batch size from the static device memory budget.
+        """Estimate safe batch size from the configured memory budget.
 
         Uses pre-computed memory coefficients from profiling to estimate how many
-        elements fit in the batching budget, which is
-        ``memory_budget`` -- a static property
-        of the device for every device class, not a live free-memory reading.
+        elements fit in the batching budget, which is the configured
+        ``memory_budget`` value on every device class.
 
         Parameters
         ----------
@@ -991,7 +1002,7 @@ class InferenceManager:
 
         Notes
         -----
-        On a discrete accelerator there is no clamp against free memory: an
+        The batch size follows the budget alone on every device class; an
         over-estimate is caught by the out-of-memory retry of the inference loop,
         which halves the batch size.
         """
@@ -1279,21 +1290,23 @@ class InferenceManager:
         -----
         - Every execution device -- CPU included -- goes through the same auto-batching
           loop: one batch-size estimate, the same split planning and output write-back,
-          the same out-of-memory retry. Batch sizes come from a static device memory
-          budget (``memory_budget``), never from a live free-memory query. ``torch.cpu``
-          exposes no device memory API, so CPU sizing uses the configured budget
-          directly, with no reads of physical RAM, cgroup limits, or free memory.
-        - Offload settings are ignored for CPU execution because GPU->CPU copies,
-          pinned buffers and disk offload have no meaning when outputs are already in
-          host memory: a CPU run writes into a plain host tensor, and no free-memory
-          query is made.
+          the same out-of-memory retry. Sizing uses the configured ``memory_budget``
+          value on every device class, so a batch's target footprint is fixed before
+          the run starts.
+        - On a CPU run the offload resolver is not consulted: the output is written
+          into a plain host tensor. Disk offload exists for GPU runs. There the CPU
+          tier uses pinned memory whenever the output fits under
+          ``max_pinned_memory_mb``, and pinned memory locks physical RAM. An offloaded
+          output larger than that needs a pageable target that may exceed host RAM, so
+          the last tier is a file-backed ``np.memmap``: its pages can be evicted to
+          disk.
         - When an out-of-memory error occurs -- ``torch.OutOfMemoryError`` on an
           accelerator, ``MemoryError`` on CPU -- the batch size is halved and inference
           is retried. An allocation that makes the kernel OOM-kill the process is
           uncatchable by any handler: static sizing plus this retry only protect a CPU
           run up to that point.
-        - Async copy is used when ``use_async=True`` and offloading to CPU/disk; a CPU
-          run never copies, so it never uses the async copy manager.
+        - Async copy overlaps device-to-host movement with computation when
+          ``use_async=True`` and outputs are offloaded to CPU or disk.
         """
         if not self._is_configured:
             raise RuntimeError("InferenceManager must be configured before running inference. Call configure() first.")
@@ -1341,11 +1354,10 @@ class InferenceManager:
         # Estimate output size
         output_mb = self._estimate_tensor_mb(tuple(output_shape), input_dtype, repeat=output_repeat)
 
-        # CPU execution writes host tensors already, so offload settings are ignored:
-        # a GPU->CPU copy, a pinned staging buffer and disk offload have no meaning
-        # when the output never leaves host memory. In particular, the offload
-        # resolution -- which reads free CPU memory and free disk space at prediction
-        # time -- is not consulted, so the CPU path stays purely static.
+        # CPU execution writes host tensors to begin with, so the run targets a plain
+        # host buffer. The offload resolution -- which reads free CPU memory and free
+        # disk space at prediction time -- is not consulted, so the CPU path stays
+        # purely static.
         cpu_exec = self.exe_device.type == "cpu"
         if cpu_exec:
             mode = OffloadMode.CPU
@@ -1400,14 +1412,13 @@ class InferenceManager:
 
         # Multi-batch execution
         if cpu_exec:
-            # Plain host buffer: never pinned, never memory-mapped (see the CPU
-            # offload note above).
+            # The output of a CPU run lives in anonymous host memory.
             outputs = torch.empty(tuple(output_shape), dtype=input_dtype, device="cpu")
         else:
             outputs, _ = self._allocate_output_buffer(mode, tuple(output_shape), input_dtype)
 
-        # Setup async copy manager if using async and offloading. A CPU run never
-        # copies, so it has no use for the async staging machinery.
+        # Setup async copy manager if using async and offloading; it stages
+        # device-to-host movement for a non-CPU execution device.
         async_copy: Optional[AsyncCopyManager] = None
         if self.use_async and not cpu_exec and mode != OffloadMode.GPU:
             async_copy = AsyncCopyManager(

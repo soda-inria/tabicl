@@ -1,4 +1,4 @@
-"""Cgroup-aware CPU memory figures for inference sizing and offload decisions.
+"""Cgroup-aware CPU memory figures for offload decisions.
 
 ``_cgroup_memory_headroom`` returns ``limit - usage`` for this process's cgroup.
 (Live, used only by offload resolution via ``get_available_cpu_memory``.)
@@ -45,8 +45,6 @@ def _read_bytes(path: Path) -> int | None:
         return _parse_bytes(path.read_text())
     except OSError:
         return None
-
-
 
 
 def _headroom_at(directory: Path, limit_name: str, usage_name: str, physical: int) -> int | None:

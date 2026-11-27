@@ -20,7 +20,7 @@ class MgrConfig:
 
     **Batching:**
 
-    - ``memory_budget``: Memory budget for auto-batching in MB. Default is 1024.
+    - ``memory_budget``: Memory budget for auto-batching in MB.
       This static budget applies to every device class (accelerators, integrated
       GPUs, MPS, and CPU) and is never scaled by device properties.
 
@@ -245,21 +245,19 @@ class InferenceConfig:
     learning). Each is a :class:`MgrConfig` accepting the keys described there.
 
     Auto-batching on every device class sizes batches from a **static memory
-    budget** rather than from the free memory left at prediction time. The
-    configured ``memory_budget`` (default ``1024`` MB) is used directly, without
-    scaling or clamping. The same budget applies to every device class --
-    discrete accelerators, integrated GPUs, MPS and CPU alike.
+    budget**: the configured ``memory_budget`` value is the target footprint of
+    every batch. The same value applies to every device class -- discrete
+    accelerators, integrated GPUs, MPS and CPU alike -- and it stays the same
+    whether the device is idle or busy.
 
-    Because the budget does not shrink when the device is already busy, an
-    over-estimate is handled by the out-of-memory retry, which halves the batch
+    An over-estimate is handled by the out-of-memory retry, which halves the batch
     size down to a single element. If even one element exceeds the budget, a
     ``RuntimeWarning`` says so; the single element then runs and may still
     succeed, since the sizing estimate leaves headroom.
 
-    The same budget figure is what ``offload="auto"`` compares the output size
-    against, so automatic offload decisions are budget-based rather than based on
-    live free memory. Offload settings are ignored for CPU execution: outputs are
-    already in host memory, so they are written into a plain host buffer.
+    ``offload="auto"`` compares the output size against the same budget figure, so
+    automatic offload decisions follow the configured budget. A CPU run writes its
+    output into a plain host buffer, and the offload resolver is not consulted.
     """
 
     COL_CONFIG: MgrConfig = None
