@@ -8,14 +8,20 @@ arrives as SIGKILL, with no Python traceback and no CUDA error.
 
 The process cgroup (from ``/proc/self/cgroup``) is often nested, not
 ``/sys/fs/cgroup/memory.max``. Walk ancestors and take the tightest ``limit - usage``.
+
+The second half of this module covers CPU auto-batching's OOM retry and the split
+behavior: CPU now runs the same estimate/split/write-back/retry loop as accelerators
+(except offload is skipped), and both retry sites catch ``MemoryError``.
 """
 
 from __future__ import annotations
 
 import pathlib
+from collections import OrderedDict
 
 import psutil
 import pytest
+import torch
 
 from tabicl._model._cgroup_memory import _cgroup_memory_headroom
 from tabicl._model.inference import InferenceManager
@@ -281,3 +287,48 @@ def test_mountinfo_octal_escapes_in_mountpoint(tmp_path):
         )
         == HEADROOM
     )
+
+
+# ---------------------------------------------------------------------------
+# CPU auto-batching
+#
+# CPU execution goes through the same batching loop as accelerators. Its "total
+# device memory" is ``min(physical RAM, static cgroup limit)``, its sizing path
+# must never read free memory, offload settings are ignored because outputs are
+# already host tensors, and a CPU out-of-memory is a ``MemoryError``.
+# ---------------------------------------------------------------------------
+
+
+class _TotalOnlyVirtualMemory:
+    """``psutil.virtual_memory()`` stand-in that refuses to report free memory."""
+
+    def __init__(self, total: int):
+        self.total = total
+
+    @property
+    def available(self):  # pragma: no cover - only reached on a regression
+        raise AssertionError("the CPU batch-sizing path must not read free memory")
+
+
+def _cpu_inference_manager(**kwargs) -> InferenceManager:
+    mgr = InferenceManager(enc_name="tf_icl", out_dim=3)
+    mgr.configure(device="cpu", use_amp=False, use_fa3=False, use_async=False, **kwargs)
+    return mgr
+
+
+def test_memory_error_on_the_first_cpu_batch_is_retried_halved():
+    """CPU out-of-memory is ``MemoryError``; the halving retry covers it."""
+    mgr = _cpu_inference_manager()
+    batch_sizes = []
+
+    def forward(x):
+        batch_sizes.append(x.shape[0])
+        if len(batch_sizes) == 1:
+            raise MemoryError("simulated CPU out of memory")
+        return x * 2
+
+    x = torch.randn(4, 8, 3)
+    out = mgr(forward, OrderedDict(x=x))
+
+    assert batch_sizes == [4, 2, 2]
+    assert torch.equal(out, x * 2)

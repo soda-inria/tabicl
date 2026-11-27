@@ -32,3 +32,15 @@ def model_path(kind: str) -> dict:
     if _CKPT_DIR is None:
         return {}
     return {"model_path": os.path.join(_CKPT_DIR, _FILENAMES[kind])}
+
+
+@pytest.fixture(autouse=True)
+def _clear_total_device_memory_cache():
+    """Start each test with an empty process-wide total-device-memory cache.
+
+    ``InferenceManager`` caches total device memory at module level, keyed by
+    execution device, for the lifetime of the process -- that is the behaviour
+    under test. Tests patch the backend per instance, so without this reset one
+    test's figure (or a cached 0.0) would leak into the next.
+    """
+

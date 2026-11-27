@@ -1,18 +1,42 @@
 2.2.1
 =====
 
+Behaviour changes
+-----------------
+
+- Auto-batching on every device class (accelerators, integrated GPUs, MPS, and CPU) now
+  sizes batches from a single static `memory_budget` configuration option, applied
+  identically on every device class. The budget is a fixed configured value, the same
+  whether the device is idle or busy. Sizing is purely static: no device synchronization,
+  allocator cache flush, free-memory read or total-memory query happens before a
+  prediction. The out-of-memory retry handles overestimates by halving the batch size down
+  to one element. A sequence that exceeds the budget even as a single element warns instead
+  of silently overshooting.
+
+- `offload="auto"` compares the output size against `auto_offload_threshold`, an
+  absolute size in MB independent of `memory_budget`: an output of at most that size
+  stays on the device, a larger one moves to CPU memory or disk. Set
+  `auto_offload_threshold` (or an explicit `offload` mode) to tune the device
+  retention limit.
+
+- Auto-batching now also runs on CPU, using the same configured `memory_budget` value: a
+  batch's target footprint is fixed before the run starts, on every device class. CPU
+  outputs are written into a plain host tensor; the offload resolver is not consulted on a
+  CPU run, so `offload` settings have no effect there. A CPU allocation failure arrives as
+  `MemoryError`, an accelerator allocation failure as `torch.OutOfMemoryError`, and the
+  halving retry catches both. On a unified-memory host an allocation large enough to
+  exhaust memory can succeed and then make the kernel OOM-kill the process (SIGKILL),
+  which no handler can catch: static sizing plus the retry protect a CPU run only up to
+  that point. To bound the process itself, cap it through the backend's own fraction API —
+  `torch.cuda.memory.set_per_process_memory_fraction`, read back with
+  `torch.cuda.memory.get_per_process_memory_fraction` — or the `torch.xpu` equivalents.
+
 Bug fixes
 ---------
 
 - Fix numpy `bool` columns of a pandas DataFrame being silently dropped with pandas >= 3.1. They
   are now ordinal-encoded like the other categorical columns, and columns that are dropped because
   of their dtype now raise a warning listing their dtypes. ([PR#190](https://github.com/soda-inria/tabicl/pull/190))
-
-- Keep inference on integrated GPUs (Intel XPU, CUDA) and Apple Silicon MPS from exhausting
-  system memory. Batch sizes are limited by the available host RAM scaled by the new inference
-  config option `unified_memory_safety_factor` (default 0.5), and on integrated XPU/CUDA GPUs the
-  torch allocator is capped the same way, so an oversized batch is retried smaller instead of
-  crashing the machine. ([PR#179](https://github.com/soda-inria/tabicl/pull/179))
 
 - Fix storing a `kv_cache="repr"` cache on an accelerator when the row representations are
   offloaded to CPU memory or disk (`ROW_CONFIG` offload settings, or the fallback when they do not

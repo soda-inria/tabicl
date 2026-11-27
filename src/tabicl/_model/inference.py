@@ -8,7 +8,6 @@ import psutil
 import warnings
 import weakref
 import itertools
-from contextlib import contextmanager
 from enum import Enum, auto
 from dataclasses import dataclass
 from collections import OrderedDict
@@ -23,7 +22,7 @@ from torch import Tensor
 from .kv_cache import KVCache
 from .attention import flash_attn3_toggle
 from ._cgroup_memory import _cgroup_memory_headroom
-from .._torch_devices import device_uses_unified_host_memory, resolve_torch_device
+from .._torch_devices import resolve_torch_device
 
 
 # torch.OutOfMemoryError only exists from torch 2.4; earlier versions name it torch.cuda.OutOfMemoryError.
@@ -219,7 +218,7 @@ class OffloadConfig:
     mode: OffloadMode = OffloadMode.AUTO
 
     # Thresholds for AUTO mode
-    auto_offload_threshold: float = 0.5  # Offload if output > this fraction of GPU memory
+    auto_offload_threshold: float = 2048.0  # Offload if output exceeds this size in MB
     cpu_safety_factor: float = 0.85  # Safety margin for CPU memory
     disk_safety_factor: float = 0.95  # Safety margin for disk space
 
@@ -600,8 +599,9 @@ class InferenceManager:
 
     Key Features
     ------------
-    1. Automatic Batch Size Estimation: Estimates safe batch sizes based on
-       available GPU memory using pre-computed memory coefficients from profiling.
+    1. Automatic Batch Size Estimation: Estimates safe batch sizes against a
+       static memory budget -- the configured ``memory_budget``, used directly on
+       every device class -- using pre-computed memory coefficients from profiling.
 
     2. Multi-dimensional Batching: Splits large inputs into smaller batches
        across multiple batch dimensions, processing them sequentially.
@@ -612,7 +612,8 @@ class InferenceManager:
        - Disk: Offload to memory-mapped files for unlimited capacity
 
     4. OOM Recovery: Automatically reduces batch size when out-of-memory errors
-       occur, retrying until inference succeeds or minimum batch size is reached.
+       occur, halving it down to a single element; running out of memory at one
+       element raises, since nothing smaller can be tried.
 
     5. Async Data Transfer: Uses backend stream/event primitives for
        overlapping computation with device-to-CPU data movement when available.
@@ -646,6 +647,19 @@ class InferenceManager:
     out_no_seq : bool, default=False
         Whether to remove the sequence dimension from output tensor. If True,
         output shape will be ``(..., out_dim)`` instead of ``(..., seq_len, out_dim)``.
+
+    Notes
+    -----
+    Out-of-memory recovery assumes a discrete device. The allocation is refused by
+    the device allocator, ``torch.OutOfMemoryError`` is raised where the batch is
+    allocated, and the retry halves the batch size. On a unified-memory host an
+    allocation can succeed against over-committed memory, and the kernel kills the
+    process with SIGKILL once the pages are touched; no Python handler can catch
+    that. A process on such a device bounds its own footprint through the backend's
+    fraction API, used independently of this manager:
+    ``torch.cuda.memory.set_per_process_memory_fraction`` sets the cap and
+    ``torch.cuda.memory.get_per_process_memory_fraction`` reads it back.
+    ``torch.xpu.memory`` exposes equivalents.
     """
 
     def __init__(self, enc_name: str, out_dim: int, out_no_seq: bool = False):
@@ -660,11 +674,9 @@ class InferenceManager:
 
     def configure(
         self,
-        min_batch_size: int = 1,
-        safety_factor: float = 0.8,
-        unified_memory_safety_factor: float = 0.5,
+        memory_budget: float = 1024.0,
         offload: Union[bool, Literal["auto", "gpu", "cpu", "disk"], OffloadMode] = "auto",
-        auto_offload_threshold: float = 0.5,
+        auto_offload_threshold: float = 2048.0,
         device: Optional[Union[str, torch.device]] = None,
         use_amp: bool = True,
         use_fa3: bool = True,
@@ -688,17 +700,11 @@ class InferenceManager:
 
         Parameters
         ----------
-        min_batch_size : int, default=1
-            Minimum batch size to try before raising an error. If OOM occurs even
-            with this batch size, inference cannot proceed and an error is raised.
-
-        safety_factor : float, default=0.8
-            Factor (0-1) to multiply estimated batch size by for conservative memory
-            usage. Lower values are safer but may result in more batches.
-
-        unified_memory_safety_factor : float, default=0.5
-            Fraction (0-1) of the available host RAM that device allocations may
-            use on devices that share memory with the host (integrated GPUs, MPS).
+        memory_budget : float, default=1024.0
+            Memory budget for auto-batching in MB. This static value is the target
+            batch footprint on every device class (accelerators, integrated GPUs,
+            MPS, and CPU). Larger values permit larger batches; if the estimate
+            overshoots, the out-of-memory retry halves the batch size.
 
         offload : Union[bool, str, OffloadMode], default="auto"
             Where to store output tensors during inference:
@@ -707,13 +713,14 @@ class InferenceManager:
             - ``"cpu"`` or ``True``: Offload to CPU memory. Uses pinned memory for
               faster transfers if output size <= ``max_pinned_memory_mb``.
             - ``"disk"``: Offload to memory-mapped files. Supports outputs larger than RAM.
-            - ``"auto"``: Automatically choose based on available memory. Uses
-              ``auto_offload_threshold`` to decide when to offload from GPU.
+            - ``"auto"``: Automatically choose where to store the output (default).
+              Uses ``auto_offload_threshold`` to decide whether it stays on the device.
 
-        auto_offload_threshold : float, default=0.5
-            GPU memory threshold (0-1) for automatic offloading. Only used when
-            ``offload="auto"``. If output size exceeds this fraction of available
-            GPU memory, outputs are offloaded to CPU or disk.
+        auto_offload_threshold : float, default=2048.0
+            Largest output size in MB that stays on the device. Only used when
+            ``offload="auto"``: an output of at most this many megabytes is kept on the
+            device, a larger one is offloaded to CPU or disk. The threshold is
+            independent of ``memory_budget``.
 
         device : Optional[str or torch.device], default=None
             Device to use for computation. If None, defaults to CUDA if available,
@@ -780,9 +787,7 @@ class InferenceManager:
             Maximum number of pending async copies before blocking. Higher values
             can improve throughput but increase memory usage for pinned buffers.
         """
-        self.min_batch_size = int(min_batch_size)
-        self.safety_factor = float(safety_factor)
-        self.unified_memory_safety_factor = float(unified_memory_safety_factor)
+        self.memory_budget = float(memory_budget)
         self.auto_offload_threshold = float(auto_offload_threshold)
         self.use_amp = bool(use_amp)
         self.use_fa3 = bool(use_fa3)
@@ -811,51 +816,10 @@ class InferenceManager:
         # Setup device
         self.exe_device = resolve_torch_device(device)
 
-        # Whether the device allocates from host RAM (None if unknown).
-        self._unified_host = device_uses_unified_host_memory(self.exe_device)
-
         # Initialize buffer pool
         self._buffer_pool = PinnedBufferPool()
 
         self._is_configured = True
-
-    @contextmanager
-    def _cap_allocator_to_host_memory(self):
-        """Limit the device allocator to the usable host RAM.
-
-        On integrated CUDA/XPU GPUs, device memory is host RAM, of which inference may
-        use the ``unified_memory_safety_factor`` share. Capping the allocator
-        makes an oversized allocation raise ``torch.OutOfMemoryError``, which the
-        batching loop recovers from, instead of exhausting system memory. The previous
-        limit is restored on exit.
-        """
-        if self.exe_device.type == "mps" or not self._unified_host:
-            yield
-            return
-
-        backend_api = self._get_device_backend_api()
-        get_fraction = getattr(backend_api, "get_per_process_memory_fraction", None)
-        set_fraction = getattr(backend_api, "set_per_process_memory_fraction", None)
-        if not (callable(get_fraction) and callable(set_fraction)):
-            warnings.warn(
-                f"torch {torch.__version__} cannot limit {self.exe_device.type} allocations, so "
-                "inference on this integrated GPU can exhaust host memory. Upgrade torch "
-                "(2.6 or later for CUDA, 2.10 or later for XPU).",
-                RuntimeWarning,
-                stacklevel=3,
-            )
-            yield
-            return
-
-        total = backend_api.get_device_properties(self.exe_device).total_memory
-        host_free = self.get_available_cpu_memory() * self.unified_memory_safety_factor * 1024 * 1024
-        allowed = backend_api.memory_reserved(self.exe_device) + host_free
-        previous = get_fraction(self.exe_device)
-        set_fraction(min(previous, allowed / total), self.exe_device)
-        try:
-            yield
-        finally:
-            set_fraction(previous, self.exe_device)
 
     def _normalize_offload(self, offload: Any) -> OffloadMode:
         """Normalize various offload specifications to OffloadMode."""
@@ -944,67 +908,6 @@ class InferenceManager:
         """Return whether the tensor is already on the configured execution device."""
         return isinstance(tensor, torch.Tensor) and devices_match(tensor.device, self.exe_device)
 
-    def get_available_gpu_memory(self) -> float:
-        """Get available GPU memory in MB.
-
-        When the device may share host RAM, this is also capped by the usable host RAM
-        (see ``unified_memory_safety_factor``).
-        """
-        free_mb = self._device_free_mb()
-        if self._unified_host is not False:
-            free_mb = min(free_mb, self.get_available_cpu_memory() * self.unified_memory_safety_factor)
-        return max(0.0, free_mb)
-
-    def _device_free_mb(self) -> float:
-        """Get the device's own free memory in MB.
-
-        Synchronizes device operations and clears cache before checking to get
-        an accurate reading of available memory.
-
-        Backends that expose ``mem_get_info`` (CUDA, XPU) use that API. On MPS,
-        which does not provide ``mem_get_info``, free memory is approximated as
-        ``recommended_max_memory - current_allocated_memory`` so that
-        auto-batching can still run.
-
-        Returns
-        -------
-        float
-            Available GPU memory in megabytes, or 0.0 if the selected backend
-            does not expose memory information.
-        """
-        backend_api = self._get_device_backend_api()
-        if backend_api is None:
-            return 0.0
-
-        synchronize = getattr(backend_api, "synchronize", None)
-        if callable(synchronize):
-            synchronize()
-
-        self._empty_backend_cache(backend_api)
-
-        mem_get_info = getattr(backend_api, "mem_get_info", None)
-        if callable(mem_get_info):
-            try:
-                free_mem, _ = mem_get_info(self.exe_device)
-            except TypeError:
-                # Some backends may expose mem_get_info() without a device argument.
-                free_mem, _ = mem_get_info()
-            except Exception:
-                return 0.0
-            return free_mem / (1024 * 1024)
-
-        # MPS (and similar) fallback without mem_get_info.
-        recommended = getattr(backend_api, "recommended_max_memory", None)
-        current = getattr(backend_api, "current_allocated_memory", None)
-        if callable(recommended) and callable(current):
-            try:
-                free_mem = recommended() - current()
-            except Exception:
-                return 0.0
-            return max(0.0, free_mem) / (1024 * 1024)
-
-        return 0.0
-
     def get_available_disk_space(self, path: Optional[str]) -> float:
         """Get available disk space at the specified path in MB.
 
@@ -1053,10 +956,11 @@ class InferenceManager:
     def estimate_safe_batch_size(
         self, seq_len: int, include_inputs: bool = True, in_dim: Optional[int] = None, max_bs: int = 50000
     ) -> Tuple[float, int]:
-        """Estimate safe batch size based on available GPU memory.
+        """Estimate safe batch size from the configured memory budget.
 
         Uses pre-computed memory coefficients from profiling to estimate how many
-        elements can be processed in a single batch without causing OOM.
+        elements fit in the batching budget, which is the configured
+        ``memory_budget`` value on every device class.
 
         Parameters
         ----------
@@ -1070,21 +974,54 @@ class InferenceManager:
             Input dimension. Required if ``include_inputs`` is True.
 
         max_bs : int, default=50000
-            Maximum batch size to return, regardless of available memory.
+            Maximum batch size to return, regardless of the budget.
             This caps batch size to avoid CUDA errors with flash attention.
 
         Returns
         -------
-        available_mem : float
-            Available GPU memory in MB.
+        budget_mb : float
+            Batching memory budget in MB.
 
         safe_bs : int
             Estimated safe batch size (capped by ``max_bs``).
-        """
-        available_mem = self.get_available_gpu_memory()
-        target_mem = available_mem * self.safety_factor
 
-        estimated_bs = MemoryEstimator.estimate_batch_size(seq_len, target_mem, self.enc_name, include_inputs, in_dim)
+        Warns
+        -----
+        RuntimeWarning
+            If a single element of this sequence already exceeds the budget. The
+            batch is then one element, and its real footprint will be larger than
+            the target.
+
+        Notes
+        -----
+        The batch size follows the budget alone on every device class; an
+        over-estimate is caught by the out-of-memory retry of the inference loop,
+        which halves the batch size.
+        """
+        budget_mb = self.memory_budget
+
+        estimated_bs = MemoryEstimator.estimate_batch_size(
+            seq_len, budget_mb, self.enc_name, include_inputs, in_dim
+        )
+        safe_bs = min(max(1, estimated_bs), max_bs)
+
+        # Floor case: the resolved batch is one element and that element already exceeds the
+        # target, so the batch is about to run over budget. ``estimate_peak_mem`` needs
+        # ``in_dim`` when inputs are counted.
+        if safe_bs == 1 and (not include_inputs or in_dim is not None):
+            smallest_mem = MemoryEstimator.estimate_peak_mem(
+                1, seq_len, self.enc_name, include_inputs, in_dim
+            )
+            if smallest_mem > budget_mb:
+                warnings.warn(
+                    f"Batch memory budget for '{self.enc_name}' is {budget_mb:.0f}MB, but one "
+                    f"element with seq_len={seq_len} needs an estimated {smallest_mem:.0f}MB: the "
+                    f"real footprint will exceed the target budget and inference may run out of "
+                    f"memory. Lower memory_budget only if the device has room; otherwise reduce "
+                    f"the batch dimensions.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
 
         if estimated_bs > max_bs and self.verbose:
             print(
@@ -1092,8 +1029,7 @@ class InferenceManager:
                 f"Capping batch size to {max_bs}."
             )
 
-        safe_bs = min(max(self.min_batch_size, estimated_bs), max_bs)
-        return available_mem, safe_bs
+        return budget_mb, safe_bs
 
     def _resolve_offload_mode(
         self, output_mb: float, gpu_free_mb: float, cpu_free_mb: float, disk_free_mb: float
@@ -1104,7 +1040,12 @@ class InferenceManager:
         Otherwise, modes fall back: GPU -> CPU -> DISK -> CPU(swap as last resort).
 
         For AUTO mode, the priority is:
-            GPU (if within threshold) -> CPU -> DISK -> CPU(swap as last resort).
+            GPU (if the output is at most ``auto_offload_threshold`` MB)
+            -> CPU -> DISK -> CPU(swap as last resort).
+
+        Note: ``gpu_free_mb`` is the static auto-batching budget
+        (``memory_budget``). It sizes the GPU fit check for a user-requested GPU
+        mode; the AUTO threshold is an absolute output size in MB.
 
         Note: CPU mode can use either pinned or non-pinned memory.
         - Pinned memory: faster for async GPU-CPU transfers, but locks physical memory
@@ -1130,7 +1071,7 @@ class InferenceManager:
             if requested == OffloadMode.GPU:
                 if gpu_fits:
                     return OffloadMode.GPU, OffloadReason(
-                        "user_gpu_fits", f"{output_mb:.0f}MB <= {gpu_free_mb:.0f}MB gpu free"
+                        "user_gpu_fits", f"{output_mb:.0f}MB <= {gpu_free_mb:.0f}MB device budget"
                     )
                 elif cpu_fits:
                     return OffloadMode.CPU, OffloadReason("user_gpu_fails", "gpu (requested) tight -> cpu")
@@ -1168,13 +1109,12 @@ class InferenceManager:
                     return OffloadMode.CPU, OffloadReason("user_disk_fails", "disk (requested) tight -> cpu (swap)")
 
         # AUTO mode
-        output_pct = output_mb / max(gpu_free_mb, 1e-6) if has_gpu else 1.0
-        gpu_within_threshold = has_gpu and output_pct <= self.auto_offload_threshold
+        gpu_within_threshold = has_gpu and output_mb <= self.auto_offload_threshold
 
         if gpu_within_threshold:
             return OffloadMode.GPU, OffloadReason(
                 "auto_gpu_fits",
-                f"{output_mb:.0f}MB <= {self.auto_offload_threshold * gpu_free_mb:.0f}MB safe gpu free",
+                f"{output_mb:.0f}MB <= {self.auto_offload_threshold:.0f}MB auto offload threshold",
             )
         elif cpu_fits:
             return OffloadMode.CPU, OffloadReason(
@@ -1340,18 +1280,30 @@ class InferenceManager:
 
         Notes
         -----
-        - For CPU execution, batching is not supported and the forward runs once
-          via ``_run_forward`` (optional AMP + input preparation).
-        - Accelerator backends with a usable memory query (CUDA, XPU, and MPS via
-          an approximate free-memory estimate) use auto-batching and OOM recovery.
-        - When OOM occurs, batch size is halved and inference is retried.
-        - Async copy is used when ``use_async=True`` and offloading to CPU/disk.
+        - Every execution device -- CPU included -- goes through the same auto-batching
+          loop: one batch-size estimate, the same split planning and output write-back,
+          the same out-of-memory retry. Sizing uses the configured ``memory_budget``
+          value on every device class, so a batch's target footprint is fixed before
+          the run starts.
+        - On a CPU run the offload resolver is not consulted: the output is written
+          into a plain host tensor. Disk offload exists for GPU runs. There the CPU
+          tier uses pinned memory whenever the output fits under
+          ``max_pinned_memory_mb``, and pinned memory locks physical RAM. An offloaded
+          output larger than that needs a pageable target that may exceed host RAM, so
+          the last tier is a file-backed ``np.memmap``: its pages can be evicted to
+          disk.
+        - When an out-of-memory error occurs -- ``torch.OutOfMemoryError`` on an
+          accelerator, ``MemoryError`` on CPU -- the batch size is halved and inference
+          is retried. An allocation that makes the kernel OOM-kill the process is
+          uncatchable by any handler: static sizing plus this retry only protect a CPU
+          run up to that point.
+        - Async copy overlaps device-to-host movement with computation when
+          ``use_async=True`` and outputs are offloaded to CPU or disk.
         """
         if not self._is_configured:
             raise RuntimeError("InferenceManager must be configured before running inference. Call configure() first.")
 
-        with self._cap_allocator_to_host_memory():
-            return self._call(forward_fn, inputs, auto_batch, output_repeat)
+        return self._call(forward_fn, inputs, auto_batch, output_repeat)
 
     def _call(
         self,
@@ -1362,11 +1314,6 @@ class InferenceManager:
     ) -> Tensor:
         # Non-batched execution
         if not auto_batch:
-            return self._run_forward(forward_fn, self._prepare_inputs(inputs))
-
-        # CPU: no accelerator memory APIs for safe batch sizing; still route
-        # through _run_forward so AMP/no_grad wrapping stays consistent.
-        if self.exe_device.type == "cpu":
             return self._run_forward(forward_fn, self._prepare_inputs(inputs))
 
         # Extract shape/dtype info
@@ -1382,12 +1329,12 @@ class InferenceManager:
         total_bs = math.prod(batch_dims)
 
         # Estimate batch size
-        gpu_mem, batch_size = self.estimate_safe_batch_size(seq_len, include_inputs=not inputs_on_device, in_dim=in_dim)
+        budget_mb, batch_size = self.estimate_safe_batch_size(seq_len, include_inputs=not inputs_on_device, in_dim=in_dim)
 
         if self.verbose:
             print(
-                f"\nAvailable GPU memory: {gpu_mem / 1024:.2f}GB, seq_len: {seq_len}, "
-                f"estimated batch size for {self.enc_name}: {batch_size}"
+                f"\nBatch memory budget: {budget_mb / 1024:.2f}GB ({budget_mb:.0f}MB static budget), "
+                f"seq_len: {seq_len}, estimated batch size for {self.enc_name}: {batch_size}"
             )
 
         # Calculate output shape
@@ -1398,21 +1345,31 @@ class InferenceManager:
 
         # Estimate output size
         output_mb = self._estimate_tensor_mb(tuple(output_shape), input_dtype, repeat=output_repeat)
-        cpu_free = self.get_available_cpu_memory()
-        disk_free = self.get_available_disk_space(self.disk_offload_dir)
 
-        # Resolve offload mode
-        mode, reason = self._resolve_offload_mode(output_mb, gpu_mem, cpu_free, disk_free)
+        # CPU execution writes host tensors to begin with, so the run targets a plain
+        # host buffer. The offload resolution -- which reads free CPU memory and free
+        # disk space at prediction time -- is not consulted, so the CPU path stays
+        # purely static.
+        cpu_exec = self.exe_device.type == "cpu"
+        if cpu_exec:
+            mode = OffloadMode.CPU
+            reason = OffloadReason("cpu_execution", "plain host output buffer")
+        else:
+            cpu_free = self.get_available_cpu_memory()
+            disk_free = self.get_available_disk_space(self.disk_offload_dir)
 
-        if self.verbose:
-            eff_disk = max(0, disk_free - self.disk_min_free_mb)
-            print(
-                f"Offload decision: mode={mode.name} (reason={reason})\n"
-                f"Output size: {output_mb / 1024:.2f}GB (repeat={output_repeat}), "
-                f"CPU free: {cpu_free / 1024:.2f}GB, "
-                f"GPU free: {gpu_mem / 1024:.2f}GB, "
-                f"Disk free (effective): {eff_disk / 1024:.2f}GB @ {self.disk_offload_dir}"
-            )
+            # Resolve offload mode
+            mode, reason = self._resolve_offload_mode(output_mb, budget_mb, cpu_free, disk_free)
+
+            if self.verbose:
+                eff_disk = max(0, disk_free - self.disk_min_free_mb)
+                print(
+                    f"Offload decision: mode={mode.name} (reason={reason})\n"
+                    f"Output size: {output_mb / 1024:.2f}GB (repeat={output_repeat}), "
+                    f"CPU free: {cpu_free / 1024:.2f}GB, "
+                    f"Device budget: {budget_mb / 1024:.2f}GB, "
+                    f"Disk free (effective): {eff_disk / 1024:.2f}GB @ {self.disk_offload_dir}"
+                )
 
         # Identify store-mode caches that need to be accumulated back into the original inputs
         store_cache_keys = {name for name, v in inputs.items() if isinstance(v, KVCache) and not v.is_populated()}
@@ -1421,18 +1378,18 @@ class InferenceManager:
         if batch_size >= total_bs:
             try:
                 out = self._run_forward(forward_fn, self._prepare_inputs(inputs))
-            except _OutOfMemoryError as e:
-                if total_bs <= self.min_batch_size:
+            except (MemoryError, _OutOfMemoryError) as e:
+                if total_bs <= 1:
                     raise RuntimeError(
-                        f"Failed to execute even with minimum batch size {self.min_batch_size}. Error: {e}"
+                        f"Failed to execute even with a batch size of one element. Error: {e}"
                     )
                 # Retry in the batched loop below with half the batch size.
                 for cache_key in store_cache_keys:
                     inputs[cache_key].kv.clear()
                 self._empty_backend_cache()
-                batch_size = max(self.min_batch_size, total_bs // 2)
+                batch_size = max(1, total_bs // 2)
             else:
-                if mode == OffloadMode.GPU:
+                if cpu_exec or mode == OffloadMode.GPU:
                     return out
                 if mode == OffloadMode.CPU:
                     return out.cpu()
@@ -1446,11 +1403,16 @@ class InferenceManager:
                 return outputs
 
         # Multi-batch execution
-        outputs, _ = self._allocate_output_buffer(mode, tuple(output_shape), input_dtype)
+        if cpu_exec:
+            # The output of a CPU run lives in anonymous host memory.
+            outputs = torch.empty(tuple(output_shape), dtype=input_dtype, device="cpu")
+        else:
+            outputs, _ = self._allocate_output_buffer(mode, tuple(output_shape), input_dtype)
 
-        # Setup async copy manager if using async and offloading
+        # Setup async copy manager if using async and offloading; it stages
+        # device-to-host movement for a non-CPU execution device.
         async_copy: Optional[AsyncCopyManager] = None
-        if self.use_async and mode != OffloadMode.GPU:
+        if self.use_async and not cpu_exec and mode != OffloadMode.GPU:
             async_copy = AsyncCopyManager(
                 self.exe_device,
                 max_pending=self.async_depth,
@@ -1490,7 +1452,7 @@ class InferenceManager:
                                 original_cache.preallocate(batch_cache, tuple(batch_dims), device=self.exe_device)
                             original_cache[indices] = batch_cache
 
-                    if mode == OffloadMode.GPU:
+                    if cpu_exec or mode == OffloadMode.GPU:
                         outputs[indices] = out
                     else:
                         if async_copy is not None:
@@ -1525,7 +1487,11 @@ class InferenceManager:
 
                 return outputs
 
-            except _OutOfMemoryError as e:
+            except (MemoryError, _OutOfMemoryError) as e:
+                # CPU allocation failure surfaces as ``MemoryError``; an accelerator
+                # one as ``torch.OutOfMemoryError``. A kernel OOM kill (SIGKILL) is
+                # uncatchable by any handler: only the static batch sizing above and
+                # this halving retry protect a CPU run up to that point.
                 if async_copy is not None:
                     async_copy.clear()
 
@@ -1533,17 +1499,19 @@ class InferenceManager:
                 for cache_key in store_cache_keys:
                     inputs[cache_key].kv.clear()
 
-                if batch_size <= self.min_batch_size:
+                if batch_size <= 1:
                     raise RuntimeError(
-                        f"Failed to execute even with minimum batch size {self.min_batch_size}. Error: {e}"
+                        f"Failed to execute even with a batch size of one element. Error: {e}"
                     )
 
                 if self.verbose:
-                    print(f"OOM with batch_size={batch_size}, reducing to {max(self.min_batch_size, batch_size // 2)}")
+                    print(f"OOM with batch_size={batch_size}, reducing to {max(1, batch_size // 2)}")
 
+                # Release the failed attempt's cached blocks before retrying (OOM recovery only:
+                # batch sizing itself never touches the allocator cache).
                 self._empty_backend_cache()
 
-                batch_size = max(self.min_batch_size, batch_size // 2)
+                batch_size = max(1, batch_size // 2)
 
     @staticmethod
     def compute_split_sizes(batch_dims: Tuple[int], batch_size: int) -> List[int]:

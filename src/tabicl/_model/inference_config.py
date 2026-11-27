@@ -20,12 +20,9 @@ class MgrConfig:
 
     **Batching:**
 
-    - ``min_batch_size``: Minimum batch size to try before raising an error.
-    - ``safety_factor``: Factor to multiply estimated batch size by for conservative
-      memory usage.
-    - ``unified_memory_safety_factor``: Fraction (0-1) of the available host RAM that
-      device allocations may use on devices that share memory with the host
-      (integrated GPUs, MPS).
+    - ``memory_budget``: Memory budget for auto-batching in MB.
+      This static budget applies to every device class (accelerators, integrated
+      GPUs, MPS, and CPU) and is never scaled by device properties.
 
     **Offloading:**
 
@@ -35,12 +32,13 @@ class MgrConfig:
       - ``"cpu"`` or ``True``: Offload to CPU memory. Uses pinned memory for faster
         transfers if output size <= ``max_pinned_memory_mb``.
       - ``"disk"``: Offload to memory-mapped files. Supports outputs larger than RAM.
-      - ``"auto"``: Automatically choose based on available memory (default).
-        Uses ``auto_offload_threshold`` to decide when to offload from GPU.
+      - ``"auto"``: Automatically choose where to store the output (default).
+        Uses ``auto_offload_threshold`` to decide whether it stays on the device.
 
-    - ``auto_offload_threshold``: GPU memory threshold (0-1) for automatic offloading.
-      When ``offload="auto"``, outputs exceeding this fraction of available GPU memory
-      are offloaded to CPU or disk. Default is 0.5 (50%).
+    - ``auto_offload_threshold``: Absolute output size in MB that may stay on the
+      device. When ``offload="auto"``, an output of at most this many megabytes is
+      kept on the device and a larger one is offloaded to CPU or disk. The value is
+      independent of ``memory_budget``.
 
     **CPU offloading:**
 
@@ -73,9 +71,7 @@ class MgrConfig:
         "use_fa3",
         "verbose",
         # Batching
-        "min_batch_size",
-        "safety_factor",
-        "unified_memory_safety_factor",
+        "memory_budget",
         # Offloading
         "offload",
         "auto_offload_threshold",
@@ -105,20 +101,10 @@ class MgrConfig:
         "use_fa3": {"expected_type": bool, "validator": None, "error_msg": "use_fa3 must be a boolean"},
         "verbose": {"expected_type": bool, "validator": None, "error_msg": "verbose must be a boolean"},
         # Batching
-        "min_batch_size": {
-            "expected_type": int,
-            "validator": lambda x: x >= 1,
-            "error_msg": "min_batch_size must be an integer >= 1",
-        },
-        "safety_factor": {
-            "expected_type": float,
-            "validator": lambda x: 0.0 <= x <= 1.0,
-            "error_msg": "safety_factor must be a float between 0 and 1",
-        },
-        "unified_memory_safety_factor": {
-            "expected_type": float,
-            "validator": lambda x: 0.0 <= x <= 1.0,
-            "error_msg": "unified_memory_safety_factor must be a float between 0 and 1",
+        "memory_budget": {
+            "expected_type": (int, float),
+            "validator": lambda x: x > 0,
+            "error_msg": "memory_budget must be a positive number",
         },
         # Offloading
         "offload": {
@@ -127,9 +113,9 @@ class MgrConfig:
             "error_msg": "offload must be a boolean or one of 'auto', 'gpu', 'cpu', 'disk'",
         },
         "auto_offload_threshold": {
-            "expected_type": float,
-            "validator": lambda x: 0.0 <= x <= 1.0,
-            "error_msg": "auto_offload_threshold must be a float between 0 and 1",
+            "expected_type": (int, float),
+            "validator": lambda x: x > 0,
+            "error_msg": "auto_offload_threshold must be a positive number of megabytes",
         },
         # CPU offloading
         "cpu_safety_factor": {
@@ -252,7 +238,28 @@ class MgrConfig:
 
 @dataclass
 class InferenceConfig:
-    """Configuration class for inference."""
+    """Configuration class for inference.
+
+    Three per-component configurations are exposed: ``COL_CONFIG`` (column
+    embedding), ``ROW_CONFIG`` (row interaction) and ``ICL_CONFIG`` (in-context
+    learning). Each is a :class:`MgrConfig` accepting the keys described there.
+
+    Auto-batching on every device class sizes batches from a **static memory
+    budget**: the configured ``memory_budget`` value is the target footprint of
+    every batch. The same value applies to every device class -- discrete
+    accelerators, integrated GPUs, MPS and CPU alike -- and it stays the same
+    whether the device is idle or busy.
+
+    An over-estimate is handled by the out-of-memory retry, which halves the batch
+    size down to a single element. If even one element exceeds the budget, a
+    ``RuntimeWarning`` says so; the single element then runs and may still
+    succeed, since the sizing estimate leaves headroom.
+
+    ``offload="auto"`` keeps an output on the device while its size is at most
+    ``auto_offload_threshold`` megabytes, an absolute size independent of
+    ``memory_budget``; a larger output moves to CPU memory or disk. A CPU run writes
+    its output into a plain host buffer, and the offload resolver is not consulted.
+    """
 
     COL_CONFIG: MgrConfig = None
     ROW_CONFIG: MgrConfig = None
@@ -269,12 +276,10 @@ class InferenceConfig:
                 use_fa3=True,
                 verbose=False,
                 # Batching
-                min_batch_size=1,
-                safety_factor=0.8,
-                unified_memory_safety_factor=0.5,
+                memory_budget=1024.0,
                 # Offloading
                 offload="auto",
-                auto_offload_threshold=0.5,
+                auto_offload_threshold=2048.0,
                 # CPU offloading
                 cpu_safety_factor=0.85,
                 max_pinned_memory_mb=32768.0,  # 32 GB
@@ -303,12 +308,10 @@ class InferenceConfig:
                 use_fa3=True,
                 verbose=False,
                 # Batching
-                min_batch_size=1,
-                safety_factor=0.8,
-                unified_memory_safety_factor=0.5,
+                memory_budget=1024.0,
                 # Offloading
                 offload=False,
-                auto_offload_threshold=0.5,
+                auto_offload_threshold=2048.0,
                 # CPU offloading
                 cpu_safety_factor=0.85,
                 max_pinned_memory_mb=32768.0,  # 32 GB
@@ -337,12 +340,10 @@ class InferenceConfig:
                 use_fa3=True,
                 verbose=False,
                 # Batching
-                min_batch_size=1,
-                safety_factor=0.8,
-                unified_memory_safety_factor=0.5,
+                memory_budget=1024.0,
                 # Offloading
                 offload=False,
-                auto_offload_threshold=0.5,
+                auto_offload_threshold=2048.0,
                 # CPU offloading
                 cpu_safety_factor=0.85,
                 max_pinned_memory_mb=32768.0,  # 32 GB

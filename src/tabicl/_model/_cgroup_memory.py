@@ -1,4 +1,7 @@
-"""Cgroup-aware CPU memory headroom for inference offload decisions.
+"""Cgroup-aware CPU memory figures for offload decisions.
+
+``_cgroup_memory_headroom`` returns ``limit - usage`` for this process's cgroup.
+(Live, used only by offload resolution via ``get_available_cpu_memory``.)
 
 ``psutil.virtual_memory().available`` is the host's free RAM. The real cap for a
 container is ``limit - usage`` on this process's cgroup, which is often not
