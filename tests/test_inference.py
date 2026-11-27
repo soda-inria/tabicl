@@ -21,6 +21,8 @@ from tabicl._model.inference import (
     AsyncCopyManager,
     InferenceManager,
     MemoryEstimator,
+    OffloadConfig,
+    OffloadMode,
     devices_match,
 )
 from tabicl._model.inference_config import InferenceConfig, MgrConfig
@@ -494,3 +496,56 @@ def test_memory_budget_defaults_to_1024_and_validates():
     assert mgr.memory_budget == pytest.approx(2048.0)
     with pytest.raises(ValueError, match="memory_budget must be a positive number"):
         MgrConfig(memory_budget=0)
+
+
+def test_auto_offload_threshold_defaults_to_an_absolute_size():
+    """The AUTO threshold is an absolute MB size on every configuration object."""
+    assert OffloadConfig().auto_offload_threshold == pytest.approx(2048.0)
+    config = InferenceConfig()
+    for stage_config in (config.COL_CONFIG, config.ROW_CONFIG, config.ICL_CONFIG):
+        assert stage_config.auto_offload_threshold == pytest.approx(2048.0)
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(device="cpu", use_amp=False, use_fa3=False, use_async=False)
+    assert mgr.auto_offload_threshold == pytest.approx(2048.0)
+
+
+def test_auto_offload_threshold_validates_as_megabytes():
+    """Any positive size in MB is accepted; zero and negative sizes are rejected."""
+    assert MgrConfig(auto_offload_threshold=512).auto_offload_threshold == 512
+    assert MgrConfig(auto_offload_threshold=2048.0).auto_offload_threshold == pytest.approx(2048.0)
+    with pytest.raises(ValueError, match="auto_offload_threshold must be a positive number of megabytes"):
+        MgrConfig(auto_offload_threshold=0)
+    with pytest.raises(ValueError, match="auto_offload_threshold must be a positive number of megabytes"):
+        MgrConfig(auto_offload_threshold=-1.0)
+
+
+@pytest.mark.parametrize(
+    "output_mb, expected_mode, expected_reason",
+    [
+        (1024.0, OffloadMode.GPU, "auto_gpu_fits"),
+        (1024.1, OffloadMode.CPU, "auto_cpu_fits"),
+    ],
+)
+def test_auto_offload_compares_the_output_size_to_the_mb_threshold(
+    output_mb, expected_mode, expected_reason
+):
+    """``offload="auto"`` retains an output up to the threshold, then offloads.
+
+    The batch budget is 256 MB and the threshold 1024 MB, so the output that is
+    retained sits above the budget.
+    """
+    mgr = InferenceManager(enc_name="tf_col", out_dim=4)
+    mgr.configure(
+        device="cpu",
+        use_amp=False,
+        use_fa3=False,
+        use_async=False,
+        offload="auto",
+        memory_budget=256.0,
+        auto_offload_threshold=1024.0,
+    )
+    mode, reason = mgr._resolve_offload_mode(
+        output_mb, gpu_free_mb=256.0, cpu_free_mb=65536.0, disk_free_mb=0.0
+    )
+    assert mode is expected_mode
+    assert reason.key == expected_reason

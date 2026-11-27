@@ -218,7 +218,7 @@ class OffloadConfig:
     mode: OffloadMode = OffloadMode.AUTO
 
     # Thresholds for AUTO mode
-    auto_offload_threshold: float = 0.5  # Offload if output > this fraction of the memory budget
+    auto_offload_threshold: float = 2048.0  # Offload if output exceeds this size in MB
     cpu_safety_factor: float = 0.85  # Safety margin for CPU memory
     disk_safety_factor: float = 0.95  # Safety margin for disk space
 
@@ -676,7 +676,7 @@ class InferenceManager:
         self,
         memory_budget: float = 1024.0,
         offload: Union[bool, Literal["auto", "gpu", "cpu", "disk"], OffloadMode] = "auto",
-        auto_offload_threshold: float = 0.5,
+        auto_offload_threshold: float = 2048.0,
         device: Optional[Union[str, torch.device]] = None,
         use_amp: bool = True,
         use_fa3: bool = True,
@@ -713,13 +713,14 @@ class InferenceManager:
             - ``"cpu"`` or ``True``: Offload to CPU memory. Uses pinned memory for
               faster transfers if output size <= ``max_pinned_memory_mb``.
             - ``"disk"``: Offload to memory-mapped files. Supports outputs larger than RAM.
-            - ``"auto"``: Automatically choose based on available memory. Uses
-              ``auto_offload_threshold`` to decide when to offload from GPU.
+            - ``"auto"``: Automatically choose where to store the output (default).
+              Uses ``auto_offload_threshold`` to decide whether it stays on the device.
 
-        auto_offload_threshold : float, default=0.5
-            Share of the auto-batching memory budget (0-1) that an output may occupy
-            while staying on the device. Only used when ``offload="auto"``. Outputs
-            larger than this fraction of ``memory_budget`` are offloaded to CPU or disk.
+        auto_offload_threshold : float, default=2048.0
+            Largest output size in MB that stays on the device. Only used when
+            ``offload="auto"``: an output of at most this many megabytes is kept on the
+            device, a larger one is offloaded to CPU or disk. The threshold is
+            independent of ``memory_budget``.
 
         device : Optional[str or torch.device], default=None
             Device to use for computation. If None, defaults to CUDA if available,
@@ -1047,11 +1048,12 @@ class InferenceManager:
         Otherwise, modes fall back: GPU -> CPU -> DISK -> CPU(swap as last resort).
 
         For AUTO mode, the priority is:
-            GPU (if within threshold) -> CPU -> DISK -> CPU(swap as last resort).
+            GPU (if the output is at most ``auto_offload_threshold`` MB)
+            -> CPU -> DISK -> CPU(swap as last resort).
 
         Note: ``gpu_free_mb`` is the static auto-batching budget
-        (``memory_budget``), so AUTO decisions are
-        budget-based.
+        (``memory_budget``). It sizes the GPU fit check for a user-requested GPU
+        mode; the AUTO threshold is an absolute output size in MB.
 
         Note: CPU mode can use either pinned or non-pinned memory.
         - Pinned memory: faster for async GPU-CPU transfers, but locks physical memory
@@ -1115,14 +1117,12 @@ class InferenceManager:
                     return OffloadMode.CPU, OffloadReason("user_disk_fails", "disk (requested) tight -> cpu (swap)")
 
         # AUTO mode
-        output_pct = output_mb / max(gpu_free_mb, 1e-6) if has_gpu else 1.0
-        gpu_within_threshold = has_gpu and output_pct <= self.auto_offload_threshold
+        gpu_within_threshold = has_gpu and output_mb <= self.auto_offload_threshold
 
         if gpu_within_threshold:
             return OffloadMode.GPU, OffloadReason(
                 "auto_gpu_fits",
-                f"{output_mb:.0f}MB <= {self.auto_offload_threshold * gpu_free_mb:.0f}MB "
-                f"({self.auto_offload_threshold:.0%} of the device budget)",
+                f"{output_mb:.0f}MB <= {self.auto_offload_threshold:.0f}MB auto offload threshold",
             )
         elif cpu_fits:
             return OffloadMode.CPU, OffloadReason(

@@ -13,9 +13,11 @@ Behaviour changes
   to one element. A sequence that exceeds the budget even as a single element warns instead
   of silently overshooting.
 
-- `offload="auto"` compares the output size against the same static budget, with
-  `auto_offload_threshold` setting the share of the budget an output may occupy while it
-  stays on the device. Set `memory_budget` (or an explicit `offload` mode) to tune both.
+- `offload="auto"` compares the output size against `auto_offload_threshold`, an
+  absolute size in MB independent of `memory_budget`: an output of at most that size
+  stays on the device, a larger one moves to CPU memory or disk. Set
+  `auto_offload_threshold` (or an explicit `offload` mode) to tune the device
+  retention limit.
 
 - Auto-batching now also runs on CPU, using the same configured `memory_budget` value: a
   batch's target footprint is fixed before the run starts, on every device class. CPU

@@ -32,13 +32,13 @@ class MgrConfig:
       - ``"cpu"`` or ``True``: Offload to CPU memory. Uses pinned memory for faster
         transfers if output size <= ``max_pinned_memory_mb``.
       - ``"disk"``: Offload to memory-mapped files. Supports outputs larger than RAM.
-      - ``"auto"``: Automatically choose based on available memory (default).
-        Uses ``auto_offload_threshold`` to decide when to offload from GPU.
+      - ``"auto"``: Automatically choose where to store the output (default).
+        Uses ``auto_offload_threshold`` to decide whether it stays on the device.
 
-    - ``auto_offload_threshold``: Share of the auto-batching memory budget (0-1) that an
-      output may occupy while staying on the device. When ``offload="auto"``, outputs
-      larger than this fraction of ``memory_budget`` are offloaded to CPU or disk.
-      Default is 0.5 (50%).
+    - ``auto_offload_threshold``: Absolute output size in MB that may stay on the
+      device. When ``offload="auto"``, an output of at most this many megabytes is
+      kept on the device and a larger one is offloaded to CPU or disk. The value is
+      independent of ``memory_budget``.
 
     **CPU offloading:**
 
@@ -113,9 +113,9 @@ class MgrConfig:
             "error_msg": "offload must be a boolean or one of 'auto', 'gpu', 'cpu', 'disk'",
         },
         "auto_offload_threshold": {
-            "expected_type": float,
-            "validator": lambda x: 0.0 <= x <= 1.0,
-            "error_msg": "auto_offload_threshold must be a float between 0 and 1",
+            "expected_type": (int, float),
+            "validator": lambda x: x > 0,
+            "error_msg": "auto_offload_threshold must be a positive number of megabytes",
         },
         # CPU offloading
         "cpu_safety_factor": {
@@ -255,9 +255,10 @@ class InferenceConfig:
     ``RuntimeWarning`` says so; the single element then runs and may still
     succeed, since the sizing estimate leaves headroom.
 
-    ``offload="auto"`` compares the output size against the same budget figure, so
-    automatic offload decisions follow the configured budget. A CPU run writes its
-    output into a plain host buffer, and the offload resolver is not consulted.
+    ``offload="auto"`` keeps an output on the device while its size is at most
+    ``auto_offload_threshold`` megabytes, an absolute size independent of
+    ``memory_budget``; a larger output moves to CPU memory or disk. A CPU run writes
+    its output into a plain host buffer, and the offload resolver is not consulted.
     """
 
     COL_CONFIG: MgrConfig = None
@@ -278,7 +279,7 @@ class InferenceConfig:
                 memory_budget=1024.0,
                 # Offloading
                 offload="auto",
-                auto_offload_threshold=0.5,
+                auto_offload_threshold=2048.0,
                 # CPU offloading
                 cpu_safety_factor=0.85,
                 max_pinned_memory_mb=32768.0,  # 32 GB
@@ -310,7 +311,7 @@ class InferenceConfig:
                 memory_budget=1024.0,
                 # Offloading
                 offload=False,
-                auto_offload_threshold=0.5,
+                auto_offload_threshold=2048.0,
                 # CPU offloading
                 cpu_safety_factor=0.85,
                 max_pinned_memory_mb=32768.0,  # 32 GB
@@ -342,7 +343,7 @@ class InferenceConfig:
                 memory_budget=1024.0,
                 # Offloading
                 offload=False,
-                auto_offload_threshold=0.5,
+                auto_offload_threshold=2048.0,
                 # CPU offloading
                 cpu_safety_factor=0.85,
                 max_pinned_memory_mb=32768.0,  # 32 GB
