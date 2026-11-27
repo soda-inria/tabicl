@@ -208,6 +208,30 @@ def test_floor_case_warns_when_one_element_exceeds_the_budget(monkeypatch):
     assert MemoryEstimator.estimate_peak_mem(1, seq_len, "tf_col", True, 8) > budget_mb
 
 
+def test_floor_case_warning_is_skipped_when_the_batch_is_larger_than_one(monkeypatch):
+    """The floor check runs only when the resolved batch is a single element.
+
+    A stubbed estimator reports a batch of four while the per-element estimate stays
+    above the budget: the warning would fire without the guard and stays silent here.
+    """
+    mgr = _cpu_manager(memory_budget=1024.0)
+    monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: None)
+    monkeypatch.setattr(
+        MemoryEstimator, "estimate_batch_size", staticmethod(lambda *args, **kwargs: 4)
+    )
+
+    seq_len = 400_000
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        budget_mb, batch_size = mgr.estimate_safe_batch_size(
+            seq_len=seq_len, include_inputs=True, in_dim=8
+        )
+
+    assert batch_size == 4
+    assert MemoryEstimator.estimate_peak_mem(1, seq_len, "tf_col", True, 8) > budget_mb
+    assert not any(issubclass(w.category, RuntimeWarning) for w in caught)
+
+
 def _cpu_batching_manager(monkeypatch) -> InferenceManager:
     """A CPU-bound manager routed through the accelerator batching path.
 
@@ -455,7 +479,7 @@ def test_batch_budget_is_static_for_unified_memory_devices(monkeypatch):
     fake.mem_get_info.return_value = (1, int(total_mb * 1024**2))  # (free, total)
     monkeypatch.setattr(mgr, "_get_device_backend_api", lambda: fake)
 
-    assert mgr.get_batch_memory_budget() == pytest.approx(2048.0)
+    assert mgr.memory_budget == pytest.approx(2048.0)
     fake.synchronize.assert_not_called()
     fake.empty_cache.assert_not_called()
 

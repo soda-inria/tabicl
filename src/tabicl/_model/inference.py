@@ -908,15 +908,6 @@ class InferenceManager:
         """Return whether the tensor is already on the configured execution device."""
         return isinstance(tensor, torch.Tensor) and devices_match(tensor.device, self.exe_device)
 
-    def get_batch_memory_budget(self) -> float:
-        """Memory budget (MB) the auto-batching estimate targets.
-
-        Returns the configured ``memory_budget`` directly. The same static value
-        is used for every device class -- discrete accelerators, integrated GPUs,
-        MPS and CPU alike -- with no device-specific scaling or clamping.
-        """
-        return self.memory_budget
-
     def get_available_disk_space(self, path: Optional[str]) -> float:
         """Get available disk space at the specified path in MB.
 
@@ -1007,15 +998,17 @@ class InferenceManager:
         over-estimate is caught by the out-of-memory retry of the inference loop,
         which halves the batch size.
         """
-        budget_mb = self.get_batch_memory_budget()
+        budget_mb = self.memory_budget
 
         estimated_bs = MemoryEstimator.estimate_batch_size(
             seq_len, budget_mb, self.enc_name, include_inputs, in_dim
         )
+        safe_bs = min(max(1, estimated_bs), max_bs)
 
-        # Floor case: even one element already exceeds the target, so the batch is about to
-        # run over budget. ``estimate_peak_mem`` needs ``in_dim`` when inputs are counted.
-        if not include_inputs or in_dim is not None:
+        # Floor case: the resolved batch is one element and that element already exceeds the
+        # target, so the batch is about to run over budget. ``estimate_peak_mem`` needs
+        # ``in_dim`` when inputs are counted.
+        if safe_bs == 1 and (not include_inputs or in_dim is not None):
             smallest_mem = MemoryEstimator.estimate_peak_mem(
                 1, seq_len, self.enc_name, include_inputs, in_dim
             )
@@ -1036,7 +1029,6 @@ class InferenceManager:
                 f"Capping batch size to {max_bs}."
             )
 
-        safe_bs = min(max(1, estimated_bs), max_bs)
         return budget_mb, safe_bs
 
     def _resolve_offload_mode(
